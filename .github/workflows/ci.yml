@@ -141,8 +141,30 @@ jobs:
         working-directory: engine
         run: npm audit --omit=dev --audit-level=high
 
-      # Scans the whole repository, kit files included.
+      # Scans the working tree, kit files included — not a commit range.
+      #
+      # gitleaks-action@v2 is deliberately not used. It builds its own argument
+      # list in code and always diffs the pushed range `<before>^..<after>`,
+      # with no input or environment variable to change it (it declares no
+      # action inputs at all). That construction cannot work when the first
+      # commit is in the range: a root commit has no parent, so git refuses the
+      # argument and gitleaks exits non-zero having read nothing.
+      #
+      # That is exactly how this job failed in the distribution repository,
+      # whose history is rewritten by every publish — so its root commit keeps
+      # moving and the failure would recur on every release.
+      #
+      # Running the binary directly asks the only question that means anything
+      # for generated code: does what this repository contains right now hold a
+      # secret? Same answer in both repositories, and no rewrite can break it.
       - name: Scan for committed secrets
-        uses: gitleaks/gitleaks-action@v2
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITLEAKS_VERSION: 8.24.3
+        run: |
+          set -euo pipefail
+          curl -fsSL -o /tmp/gitleaks.tar.gz \
+            "https://github.com/gitleaks/gitleaks/releases/download/v${GITLEAKS_VERSION}/gitleaks_${GITLEAKS_VERSION}_linux_x64.tar.gz"
+          tar -xzf /tmp/gitleaks.tar.gz -C /tmp gitleaks
+          # --no-git: scan the files as they stand, not the commit graph.
+          # Exits 1 on a finding, which fails the job.
+          /tmp/gitleaks detect --source . --no-git --redact -v --exit-code 1

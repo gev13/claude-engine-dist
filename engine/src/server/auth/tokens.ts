@@ -3,6 +3,7 @@ import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
 import { env } from '@/lib/env';
+import type { Role } from '@/lib/roles';
 import { db } from '@/server/db';
 import { refreshTokens } from '@/server/db/schema';
 
@@ -13,7 +14,7 @@ const AUDIENCE = 'house-edge-admin';
 export type AccessClaims = {
   sub: string;
   email: string;
-  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
+  role: Role;
   /** Session family, so an access token can be tied to its refresh family. */
   fam: string;
 };

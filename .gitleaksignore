@@ -1,6 +1,21 @@
 # Reviewed findings, one gitleaks fingerprint per line.
 #
-# The first commit hard-coded the CI smoke-test administrator's password in the
-# workflow. It was a throwaway for an ephemeral CI database that is destroyed
-# with each job, never a real credential, and CI now generates it per run.
-91e74ba0210ccffbf96932fe23d28d0b817886aa:.github/workflows/ci.yml:generic-api-key:49
+# The scan runs with --no-git (see the "Scan for committed secrets" step in
+# .github/workflows/ci.yml), so it examines the working tree rather than a
+# range of commits. Fingerprints are therefore `file:rule:line` — no commit
+# hash. A history-pinned fingerprint from the old commit-range scan would not
+# match, in either repository.
+#
+# Why the scan changed: the action's default is to diff `<before>^..<after>`,
+# which cannot work when the first commit is in that range — a root commit has
+# no parent. The distribution repository's history is rewritten by every
+# publish, so its root commit keeps moving and that scan kept failing having
+# read nothing at all. Scanning the tree asks the question that actually
+# matters for generated code: does what this repository contains right now hold
+# a secret?
+#
+# Nothing is currently suppressed. The entry that used to live here covered a
+# smoke-test administrator password hard-coded in the workflow; it is generated
+# per run now, so the finding no longer exists to ignore. Add a line here only
+# for a finding somebody has read and judged safe, with the reason written
+# above it.

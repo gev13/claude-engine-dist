@@ -1,6 +1,8 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
+import { ROLES } from '@/lib/roles';
+import { can } from '@/server/auth/rbac';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Nobody registers themselves
@@ -69,14 +71,11 @@ describe('account creation', () => {
 
 describe('users:write', () => {
   it('belongs to the administrator alone', () => {
-    // Read as text rather than imported: rbac.ts is server-only, and the point
-    // is the declaration itself, not what a running app resolves it to.
-    const rbac = readFileSync(path.join(process.cwd(), 'src', 'server', 'auth', 'rbac.ts'), 'utf8');
-
-    for (const permission of ['users:read', 'users:write', 'users:delete']) {
-      const line = new RegExp(`'${permission}':\\s*\\[([^\\]]*)\\]`).exec(rbac);
-      expect(line, `${permission} is missing from PERMISSIONS`).not.toBeNull();
-      expect(line![1]!.replace(/['\s]/g, '').split(',').filter(Boolean)).toEqual(['admin']);
+    // Asserted against the real map rather than by grepping the file for a
+    // pattern: `server-only` is stubbed under the test runner, so the module
+    // imports, and a regex that stops matching passes for the wrong reason.
+    for (const permission of ['users:read', 'users:write', 'users:delete'] as const) {
+      expect(ROLES.filter((role) => can({ role }, permission)), permission).toEqual(['admin']);
     }
   });
 });

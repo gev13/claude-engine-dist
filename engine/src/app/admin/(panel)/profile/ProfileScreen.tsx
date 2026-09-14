@@ -7,6 +7,7 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Badge, Field, Input, Panel, Spinner } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
+import type { Role } from '@/lib/roles';
 import { errorMessage } from '../_shared';
 
 type Profile = {
@@ -16,7 +17,7 @@ type Profile = {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
+  role: Role;
   totpEnabledAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;

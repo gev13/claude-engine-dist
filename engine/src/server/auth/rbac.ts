@@ -1,5 +1,8 @@
 import 'server-only';
+import type { Role } from '@/lib/roles';
 import type { SessionUser } from './session';
+
+export type { Role };
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Roles
@@ -24,8 +27,10 @@ import type { SessionUser } from './session';
    Two things that never widen: `users:*`, because an account that can create
    accounts is an account that can promote itself; and the export/erase half of
    the newsletter and form submissions, because those are personal data.
+
+   The list itself lives in `@/lib/roles`, which imports nothing — the admin
+   screens cannot import this module, because it is server-only.
    ═══════════════════════════════════════════════════════════════════════════ */
-export type Role = 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
 
 /**
  * Every capability the admin panel exposes. Permission is decided here and

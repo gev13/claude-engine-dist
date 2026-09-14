@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
+import { ROLES } from '@/lib/roles';
 import { badRequest, conflict, handle, noContent, notFound, ok, readJson } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
@@ -35,7 +36,7 @@ const updateSchema = z.object({
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
   phone: z.string().max(40).nullable().optional(),
-  role: z.enum(['admin', 'manager', 'editor', 'author', 'reviewer']).optional(),
+  role: z.enum(ROLES).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(1).max(200).optional(),
   /** Clears TOTP so the user must enrol again — for a lost authenticator. */

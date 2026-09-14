@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { and, asc, ilike, or, sql, type SQL } from 'drizzle-orm';
+import { ROLES } from '@/lib/roles';
 import { readListParams } from '@/server/api/schemas';
 import { badRequest, conflict, created, handle, ok, readJson } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
@@ -35,7 +36,7 @@ const createSchema = z.object({
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
   phone: z.string().max(40).nullable().optional(),
-  role: z.enum(['admin', 'manager', 'editor', 'author', 'reviewer']),
+  role: z.enum(ROLES),
   password: z.string().min(1).max(200),
   isActive: z.boolean().optional(),
 });

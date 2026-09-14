@@ -2,6 +2,7 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import { eq } from 'drizzle-orm';
 import { env, isProd } from '@/lib/env';
+import type { Role } from '@/lib/roles';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
 import { type AccessClaims, signAccessToken, verifyAccessToken } from './tokens';
@@ -63,7 +64,7 @@ export type SessionUser = {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
+  role: Role;
   totpEnabled: boolean;
 };
 
@@ -104,7 +105,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export async function mintAccessFor(user: {
   id: string;
   email: string;
-  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
+  role: Role;
 }, familyId: string) {
   return signAccessToken({ sub: user.id, email: user.email, role: user.role, fam: familyId });
 }

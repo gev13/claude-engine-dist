@@ -18,20 +18,8 @@ import {
 } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
+import { ROLE_CHOICES, type Role } from '@/lib/roles';
 import { ConfirmDelete, Pagination, errorMessage, useDebounced } from '../_shared';
-
-/* Mirrors Role in server/auth/rbac.ts, which is server-only and so cannot be
-   imported here. Adding a role means changing both. */
-type Role = 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
-
-/** What each role can do, in the words of somebody choosing one. */
-const ROLE_CHOICES: { value: Role; label: string; hint: string }[] = [
-  { value: 'reviewer', label: 'Reviewer', hint: 'reads the site and handles enquiries; changes nothing' },
-  { value: 'author', label: 'Author', hint: 'writes their own pages and posts, but cannot publish' },
-  { value: 'editor', label: 'Editor', hint: 'writes and publishes their own content' },
-  { value: 'manager', label: 'Manager', hint: 'all content, plus the theme, menus, popups and redirects' },
-  { value: 'admin', label: 'Administrator', hint: 'everything, including accounts, security and backups' },
-];
 
 type UserRow = {
   id: string;
