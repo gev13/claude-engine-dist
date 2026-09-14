@@ -12,12 +12,36 @@ If you only want to try it on your own machine, skip to
 
 | | |
 | --- | --- |
-| A server | 2 GB of memory is comfortable; 1 GB works if nothing else runs on it |
+| A server | **2 vCPU, 4 GB RAM, 40 GB disk** is the comfortable choice. See below for the minimum |
+| **OS** | Ubuntu 24.04 LTS (tested). Debian 12 or any current Linux works |
 | **Node** | 22.12 or newer, or 24 |
 | **PostgreSQL** | 16 or newer |
 | A domain | pointed at the server's IP address |
 
-You do **not** need Docker, a build toolchain, or any paid service.
+You do **not** need Docker, a compiler, or any paid service. The build tools
+arrive from npm along with everything else — which is why step 3 installs with
+plain `npm ci` rather than `--omit=dev`.
+
+### How much server, really
+
+Measured on this engine:
+
+| | Uses |
+| --- | --- |
+| Running the site | ~70 MB idle, ~250 MB under load |
+| **Building it** | **~1 GB peak**, ~30 seconds, two cores if available |
+| Installed files | ~1 GB — 640 MB dependencies, 350 MB build cache, 20 MB built site |
+| Each sign-in | ~19 MB and a brief burst of CPU |
+| Uploads | one image at a time, briefly; nothing is re-encoded when visitors view it |
+
+**1 GB of RAM is not enough**, and it fails in a confusing way: the site runs
+happily, then your first build is killed by the kernel with no useful error.
+If you only have 2 GB, add swap before you build — step 3 tells you when.
+
+Cores matter more than gigahertz. Two cores at any modern clock speed will
+serve a business site without trouble; four if you expect heavy traffic or a
+large media library. Disk is mostly your uploads and your backups — backups
+are full copies, so allow several times your media size.
 
 ---
 
@@ -61,6 +85,16 @@ never type it again.
 
 ## 3. Get the code
 
+**If your server has 2 GB of RAM, add swap first.** The build peaks at about
+1 GB, and without swap the kernel kills it — you get no useful error, just a
+failed build on a machine that otherwise seems fine. Skip this on 4 GB or more:
+
+```bash
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile
+sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
+```
+
 ```bash
 sudo mkdir -p /var/www && sudo chown "$USER" /var/www
 git clone https://github.com/gev13/claude-engine-dist.git /var/www/mysite
@@ -68,6 +102,10 @@ cd /var/www/mysite/engine
 npm ci
 npm run build
 ```
+
+`npm ci` installs development dependencies as well as runtime ones, and that is
+deliberate: the build needs them. Do not use `--omit=dev` here or the build
+will fail.
 
 `npm run build` takes a few minutes. **Every command from here on runs in
 `/var/www/mysite/engine`.**
@@ -321,7 +359,7 @@ you installed in step 1.
 ```bash
 git clone https://github.com/gev13/claude-engine-dist.git mysite
 cd mysite/engine
-npm install
+npm ci
 npm run dev
 ```
 
