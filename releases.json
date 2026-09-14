@@ -1,0 +1,13 @@
+{
+  "latest": "1.0.0",
+  "releases": [
+    {
+      "version": "1.0.0",
+      "date": "2026-09-14",
+      "summary": "The first release: block builder, templates, sliders, forms, popups, email, security, backups, and a browser installer that writes its own configuration.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    }
+  ]
+}

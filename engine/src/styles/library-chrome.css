@@ -1,0 +1,181 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Site chrome — package 2 headers and menus
+   ──────────────────────────────────────────────────────────────────────────
+   HD5 logo between split links · HD6 logo over the links · HD7 floating box ·
+   HD8 sidebar · HD9 rail · MN5–MN7 full-screen menus. The base header, the
+   collapse tiers and the other menus are in library.css; this only moves the
+   same slots. The sidebar and the rail sit beside the page from 1024px up and
+   are an ordinary top bar below that.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes he-menu-rise {
+  from { opacity: 0; transform: translateY(18px); }
+  to { opacity: 1; transform: none; }
+}
+
+@layer components {
+  /* ── HD5: logo between split links ───────────────────────────────────── */
+
+  .he-hdr--splitLogo .he-hdr__inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .he-hdr__side { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .he-hdr--splitLogo .he-hdr__nav { justify-self: auto; }
+  /* The left links sit against the logo; collapsed, the menu button takes the far left. */
+  .he-hdr__side.is-left .he-hdr__nav { margin-left: auto; }
+  .he-hdr__side.is-right .he-hdr__actions { margin-left: auto; }
+  .he-hdr--splitLogo .he-hdr__logo { justify-self: center; }
+
+  /* ── HD6: logo on its own row, links centred below ───────────────────── */
+
+  .he-hdr--stacked .he-hdr__inner {
+    grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-template-areas: 'toggle logo actions' 'nav nav nav';
+    row-gap: 0;
+    padding-top: 12px;
+  }
+  .he-hdr--stacked .he-hdr__logo { grid-area: logo; justify-self: center; }
+  .he-hdr--stacked .he-hdr__actions { grid-area: actions; }
+  .he-hdr--stacked .he-hdr__toggle { grid-area: toggle; justify-self: start; }
+  .he-hdr--stacked .he-hdr__nav { grid-area: nav; justify-self: stretch; margin-top: 12px; border-top: 1px solid var(--color-hairline); }
+  .he-hdr--stacked .he-hdr__nav > ul { justify-content: center; }
+
+  /* ── HD7: the bar in a floating rounded box ──────────────────────────── */
+
+  .he-hdr--boxed .he-hdr__bar { padding: 12px 16px 0; border-bottom: 0; background: transparent; backdrop-filter: none; }
+  .he-hdr--boxed .he-hdr__inner {
+    max-width: var(--container-shell, 1200px);
+    margin-inline: auto;
+    padding-inline: 20px;
+    border: 1px solid var(--color-hairline);
+    border-radius: 18px;
+    background: var(--hdr-bg);
+    box-shadow: 0 18px 40px -28px rgb(0 0 0 / 0.7);
+    backdrop-filter: blur(12px);
+  }
+  .he-hdr--boxed.is-overlay:not(.is-solid) .he-hdr__inner { border-color: rgb(255 255 255 / 0.22); background: rgb(0 0 0 / 0.24); box-shadow: none; }
+  @media (width >= 64rem) {
+    .he-hdr--boxed .he-hdr__bar { padding: 16px var(--spacing-gutter) 0; }
+    .he-hdr--boxed .he-hdr__inner { padding-inline: 28px; }
+  }
+
+  /* ── HD9: the rail has no links; its menu button is the navigation ───── */
+
+  .he-hdr--rail .he-hdr__nav { display: none; }
+  .he-hdr--rail .he-hdr__toggle { display: inline-flex; }
+  .he-hdr--rail .he-hdr__inner { grid-template-columns: auto minmax(0, 1fr) auto; }
+  .he-hdr--rail .he-hdr__toggle { grid-row: 1; grid-column: 3; }
+  .he-hdr--rail .he-hdr__actions { grid-row: 1; grid-column: 2; }
+
+  /* ── HD8 / HD9 beside the page, from 1024px up ───────────────────────── */
+
+  @media (width > 64rem) {
+    .he-site[data-header='sidebar'] { --he-side-w: 280px; }
+    .he-site[data-header='rail'] { --he-side-w: 84px; }
+    .he-site:is([data-header='sidebar'], [data-header='rail']) > .he-shift { padding-left: var(--he-side-w); }
+    /* Nothing sits under a header that is beside the page; the script's inline value would say otherwise. */
+    :root:has(.he-site:is([data-header='sidebar'], [data-header='rail'])) { --he-header-h: 0px !important; }
+
+    .he-hdr:is(.he-hdr--sidebar, .he-hdr--rail) { position: fixed; top: 0; bottom: 0; left: 0; width: var(--he-side-w); }
+    .he-hdr:is(.he-hdr--sidebar, .he-hdr--rail) .he-announce { display: none; }
+    .he-hdr:is(.he-hdr--sidebar, .he-hdr--rail) .he-hdr__bar {
+      height: 100%;
+      border-right: 1px solid var(--color-hairline);
+      border-bottom: 0;
+      background: var(--color-ink);
+      backdrop-filter: none;
+    }
+
+    .he-hdr--sidebar .he-hdr__inner { display: flex; flex-direction: column; align-items: stretch; gap: 36px; height: 100%; padding: 36px 28px 28px; }
+    .he-hdr--sidebar .he-hdr__nav { justify-self: auto; }
+    .he-hdr--sidebar .he-hdr__nav > ul { flex-direction: column; align-items: stretch; gap: 0; }
+    .he-hdr--sidebar .he-hdr__link { justify-content: space-between; width: 100%; padding: 13px 0; border-bottom: 1px solid var(--color-hairline); font-size: 13px; }
+    .he-hdr--sidebar .he-hdr__chev,
+    .he-hdr--sidebar .he-hdr__link[aria-expanded='true'] .he-hdr__chev { transform: rotate(-90deg); }
+    .he-hdr--sidebar .he-hdr__actions { flex-direction: column; align-items: stretch; margin-top: auto; }
+    .he-hdr--sidebar .he-hdr__secondary { text-align: center; }
+    /* Dropdowns open beside the sidebar rather than under their link. */
+    .he-hdr--sidebar .he-hdr__item .he-mega--compact { top: -8px; right: auto; left: calc(100% + 29px); transform: none; translate: none; }
+
+    .he-hdr--rail .he-hdr__inner { display: flex; flex-direction: column; align-items: center; gap: 24px; height: 100%; padding: 28px 0; }
+    .he-hdr--rail .he-hdr__actions { display: none; }
+    .he-hdr--rail .he-hdr__toggle { flex-direction: column; gap: 14px; padding: 10px; }
+    .he-hdr--rail .he-hdr__toggle-label { transform: rotate(180deg); writing-mode: vertical-rl; }
+    .he-hdr--rail.is-rail-center .he-hdr__toggle { margin-block: auto; }
+    /* A wordmark cannot fit an 84px rail; the mark or the logo image stays. */
+    .he-hdr--rail .he-hdr__logo > :not(.he-hdr__mark, .he-hdr__img) { display: none; }
+    .he-hdr--rail .he-hdr__img { max-width: 56px; height: auto; }
+  }
+
+  /* ── MN5–MN7: full-screen menus ──────────────────────────────────────── */
+
+  .he-menu.is-fullscreen { padding: 0 clamp(20px, 5vw, 72px) 32px; }
+  .he-menu.is-fullscreen .he-menu__top { min-height: 80px; }
+  .he-menu.is-fullscreen .he-menu__row {
+    padding: 10px 0;
+    border-bottom: 0;
+    font-family: var(--font-display);
+    font-size: clamp(32px, 6vw, 72px);
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    transition: color 150ms;
+  }
+  .he-menu.is-fullscreen .he-menu__row:hover { color: var(--color-flare-soft); }
+  .he-menu.is-fullscreen .he-menu__sub { padding: 4px 0 18px; }
+  .he-menu.is-fullscreen .he-menu__sub a { font-size: 18px; }
+  .he-menu__plus {
+    display: grid;
+    flex-shrink: 0;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    transition: transform 250ms, border-color 250ms;
+  }
+  .he-menu__plus.is-open { border-color: var(--color-flare); transform: rotate(45deg); }
+  .he-menu.is-fullscreen .he-menu__list > li { animation: he-menu-rise 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(2) { animation-delay: 50ms; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(3) { animation-delay: 100ms; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(4) { animation-delay: 150ms; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(5) { animation-delay: 200ms; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(n + 6) { animation-delay: 250ms; }
+
+  .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
+  .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }
+  .he-menu--fullscreenCentered :is(.he-menu__sub, .he-menu__services) { text-align: center; }
+
+  .he-menu--fullscreenCreative .he-menu__row { font-size: clamp(40px, 8vw, 104px); letter-spacing: -0.04em; }
+  .he-menu__aside { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--color-hairline); }
+  .he-menu__email { display: inline-block; margin-top: 8px; font-family: var(--font-display); font-size: 22px; font-weight: 700; color: var(--color-bone); text-decoration: underline; text-underline-offset: 5px; }
+  .he-menu__address { margin: 16px 0 0; line-height: 1.6; white-space: pre-line; color: var(--color-ash); }
+  .he-menu__social { display: flex; gap: 10px; margin: 20px 0 0; padding: 0; list-style: none; }
+  .he-menu__social a { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--color-hairline); border-radius: 999px; color: var(--color-bone); }
+  .he-menu__social a:hover { border-color: var(--color-bone); }
+  .he-menu__social svg { width: 18px; height: 18px; }
+  @media (width >= 64rem) {
+    /* `:not([hidden])` so this display never overrides the closed menu's display: none. */
+    .he-menu--fullscreenCreative.has-contact:not([hidden]) {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(260px, 340px);
+      grid-template-rows: auto auto 1fr auto;
+      align-content: start;
+      column-gap: 72px;
+    }
+    .he-menu--fullscreenCreative.has-contact > .he-menu__top { grid-column: 1 / -1; }
+    .he-menu--fullscreenCreative.has-contact > .he-menu__aside {
+      grid-row: 2 / span 3;
+      grid-column: 2;
+      align-self: center;
+      margin: 0;
+      padding: 0 0 0 40px;
+      border-top: 0;
+      border-left: 1px solid var(--color-hairline);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-menu.is-fullscreen .he-menu__list > li { animation: none; }
+    .he-menu__plus { transition: none; }
+  }
+  .he-reduce-motion .he-menu.is-fullscreen .he-menu__list > li { animation: none; }
+}

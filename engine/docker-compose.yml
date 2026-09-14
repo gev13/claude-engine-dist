@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: engine-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: engine
+    ports: ['5435:5432']
+    volumes: ['engine-pgdata:/var/lib/postgresql/data']
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d engine']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.11
+    container_name: engine-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_MASTER_KEY: masterKeyChangeMe
+      MEILI_ENV: development
+    ports: ['7701:7700']
+    volumes: ['engine-meili:/meili_data']
+
+volumes:
+  engine-pgdata:
+  engine-meili:

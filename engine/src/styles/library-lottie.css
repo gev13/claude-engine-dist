@@ -1,0 +1,39 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Lottie animations (package 3, phase F)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  .he-lot__fig { width: 100%; margin: 0; }
+  .he-lot.is-small .he-lot__fig { max-width: 240px; }
+  .he-lot.is-medium .he-lot__fig { max-width: 420px; }
+  .he-lot.is-large .he-lot__fig { max-width: 720px; }
+  .he-lot.is-center .he-lot__fig { margin-inline: auto; }
+  .he-lot.is-right .he-lot__fig { margin-left: auto; }
+
+  /* The file's own proportions arrive inline; square until then. */
+  .he-lot__stage { width: 100%; aspect-ratio: 1 / 1; }
+  .he-lot__stage > svg { display: block; }
+  .he-lot__stage[hidden] { display: none; }
+
+  /* Repaint every drawn shape in one theme colour; the player writes colours
+     as attributes, which any stylesheet rule outranks. */
+  .he-lot.is-accent .he-lot__stage :is(path, rect, ellipse, circle)[fill]:not([fill='none']) { fill: var(--color-flare); }
+  .he-lot.is-accent .he-lot__stage :is(path, rect, ellipse, circle)[stroke]:not([stroke='none']) { stroke: var(--color-flare); }
+  .he-lot.is-text .he-lot__stage :is(path, rect, ellipse, circle)[fill]:not([fill='none']) { fill: var(--color-bone); }
+  .he-lot.is-text .he-lot__stage :is(path, rect, ellipse, circle)[stroke]:not([stroke='none']) { stroke: var(--color-bone); }
+
+  .he-lot__cap {
+    margin-top: 14px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+  }
+  .he-lot.is-center .he-lot__cap { text-align: center; }
+  .he-lot.is-right .he-lot__cap { text-align: right; }
+
+  @media (max-width: 768px) {
+    .he-lot.is-medium .he-lot__fig { max-width: 320px; }
+  }
+}

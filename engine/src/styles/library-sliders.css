@@ -1,0 +1,274 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Sliders, heroes and carousels (package 4)
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── P4-A2 · a filmstrip of the slides ──────────────────────────────────── */
+  .he-ind--thumbs { flex-wrap: wrap; gap: 8px; }
+  .he-ind__thumb {
+    width: 68px;
+    height: 44px;
+    padding: 0;
+    overflow: hidden;
+    border: 1.5px solid transparent;
+    border-radius: 8px;
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    color: inherit;
+    opacity: 0.55;
+    cursor: pointer;
+    transition: opacity 160ms, border-color 160ms;
+  }
+  .he-ind__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .he-ind__thumb:hover, .he-ind__thumb:focus-visible { opacity: 0.85; }
+  .he-ind__thumb.is-active { opacity: 1; border-color: var(--color-flare); }
+  .he-ind__thumbnum {
+    display: grid;
+    place-items: center;
+    width: 100%;
+    height: 100%;
+    font-family: var(--font-mono);
+    font-size: 12px;
+  }
+
+  /* ── P4-A2 · the slide titles as the navigation ─────────────────────────── */
+  .he-ind--chapters { flex-direction: column; align-items: flex-start; gap: 2px; }
+  .he-ind__chapter {
+    display: flex;
+    gap: 12px;
+    align-items: baseline;
+    padding: 6px 0;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+    opacity: 0.5;
+    cursor: pointer;
+    transition: opacity 160ms;
+  }
+  .he-ind__chapter:hover, .he-ind__chapter:focus-visible { opacity: 0.85; }
+  .he-ind__chapter.is-active { opacity: 1; }
+  .he-ind__chapternum { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; }
+  .he-ind__chaptertext { font-size: 14px; }
+  .he-ind__chapter.is-active .he-ind__chaptertext { text-decoration: underline; text-underline-offset: 4px; }
+
+  /* ── P4-A3 · a specification list beside a picture ──────────────────────── */
+  .he-mslide__specs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px 24px;
+    margin: 18px 0 0;
+  }
+  .he-mslide__spec dt {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+  }
+  .he-mslide__spec dd { margin: 4px 0 0; font-size: 14px; }
+
+  /* ── P4-A4 · the slow drift and zoom, never for reduced motion ──────────── */
+  @media (prefers-reduced-motion: no-preference) {
+    .he-cslide.is-kenburns .he-cslide__slide.is-active .he-cslide__media,
+    .he-mslide.is-kenburns .he-mslide__slide.is-active .he-mslide__media {
+      animation: he-kenburns 16s ease-out both;
+    }
+  }
+  .he-reduce-motion .he-cslide.is-kenburns .he-cslide__media,
+  .he-reduce-motion .he-mslide.is-kenburns .he-mslide__media { animation: none !important; }
+
+  @keyframes he-kenburns {
+    from { transform: scale(1); }
+    to { transform: scale(1.12) translate3d(-1.5%, -1.5%, 0); }
+  }
+
+  /* ── P4-A7 · dragging a track with a mouse ──────────────────────────────── */
+  .he-car.is-draggable .he-car__track { cursor: grab; }
+  .he-car.is-draggable .he-car__track.is-grabbing {
+    cursor: grabbing;
+    scroll-snap-type: none;
+    scroll-behavior: auto;
+    user-select: none;
+  }
+
+  /* ── P4-A1 · split screen ───────────────────────────────────────────────── */
+  .he-split { position: relative; background: var(--color-ink); }
+  .he-split__stage {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    height: min(100svh, 940px);
+    min-height: 520px;
+    overflow: hidden;
+  }
+  /* Each half clips its own slides, so a stacked phone layout cannot widen the page. */
+  .he-split__half { position: relative; overflow: hidden; min-width: 0; }
+  .he-split__half.is-text { display: grid; align-items: center; padding: 0 clamp(24px, 4vw, 64px); }
+  .he-split__panel,
+  .he-split__pane {
+    grid-area: 1 / 1;
+    visibility: hidden;
+    transition: transform 800ms cubic-bezier(0.7, 0, 0.2, 1), opacity 800ms, visibility 0s 800ms;
+  }
+  /* The halves travel opposite ways: words up, picture down. */
+  .he-split__panel { transform: translateY(46%); opacity: 0; }
+  .he-split__panel.is-before { transform: translateY(-46%); }
+  .he-split__panel.is-active { visibility: visible; transform: none; opacity: 1; transition-delay: 0s; }
+  .he-split__half.is-media { display: grid; }
+  .he-split__pane { position: relative; transform: translateY(-100%); }
+  .he-split__pane.is-before { transform: translateY(100%); }
+  .he-split__pane.is-active { visibility: visible; transform: none; transition-delay: 0s; }
+  .he-split__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+  .he-split__eyebrow {
+    margin-bottom: 14px;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+  }
+  .he-split__title { max-width: 14ch; }
+  .he-split__body { margin: 16px 0 0; max-width: 44ch; font-size: 17px; color: var(--color-ash); }
+  .he-split__cta { display: inline-flex; align-items: center; gap: 10px; margin-top: 26px; font-weight: 600; }
+
+  .he-split__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+    padding: 18px clamp(24px, 4vw, 64px);
+    border-top: 2px solid var(--color-hairline);
+  }
+  .he-split__count { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--color-smoke); }
+  .he-split__nav { display: flex; gap: 8px; margin-inline-start: auto; }
+  .he-split__step {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border: 1px solid color-mix(in srgb, currentColor 28%, transparent);
+    border-radius: 999px;
+    background: transparent;
+    color: inherit;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: background-color 150ms, color 150ms;
+  }
+  .he-split__step:hover:not(:disabled) { background: var(--color-bone); color: var(--color-ink); }
+  .he-split__step:disabled { opacity: 0.35; cursor: default; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .he-split.is-kenburns .he-split__pane.is-active .he-split__media { animation: he-kenburns 16s ease-out both; }
+  }
+
+  @media (max-width: 768px) {
+    .he-split__stage { grid-template-columns: 1fr; height: auto; min-height: 0; }
+    .he-split__half.is-media { aspect-ratio: 4 / 3; }
+    .he-split__half.is-text { padding: 32px 24px 8px; }
+    .he-split__panel { transform: translateY(24%); }
+    .he-split__title { max-width: none; }
+  }
+
+  /* ── P4-A6 · filmstrip ──────────────────────────────────────────────────── */
+  .he-film { padding-block: 80px; border-bottom: 2px solid var(--color-hairline); background: var(--color-ink); }
+  .he-film.is-raised { background: var(--color-surface); }
+  .he-film.is-flare { background: var(--color-flare); color: var(--color-ink); }
+  .he-film__head { margin-bottom: 40px; }
+  .he-film__stage {
+    position: relative;
+    height: clamp(300px, 46vw, 520px);
+    /* The far frames sit well outside the viewport; clip them, or they widen
+       the page on anything narrower than their spread. */
+    overflow: hidden;
+    perspective: 1400px;
+    transform-style: preserve-3d;
+  }
+  .he-film__frame {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: clamp(200px, 26vw, 340px);
+    height: clamp(260px, 34vw, 440px);
+    padding: 0;
+    overflow: hidden;
+    border: 0;
+    border-radius: 14px;
+    background: var(--color-surface);
+    opacity: var(--o, 1);
+    cursor: pointer;
+    transform: translate(-50%, -50%) translateX(var(--x, 0)) rotateY(var(--r, 0deg)) scale(var(--s, 1));
+    filter: blur(var(--blur, 0px));
+    transition: transform 620ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 620ms, filter 620ms;
+  }
+  .he-film__frame.is-active { cursor: default; box-shadow: 0 30px 70px rgb(0 0 0 / 0.45); }
+  .he-film__media { width: 100%; height: 100%; object-fit: cover; }
+  .he-film__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 40px; }
+  .he-film__caption { margin: 0; font-size: 15px; color: var(--color-ash); }
+  .he-film__controls { display: flex; align-items: center; gap: 14px; margin-inline-start: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-film__frame { transition: none; }
+  }
+
+  /* ── P4-A5 · the layered hero ───────────────────────────────────────────── */
+  .he-hero--layered { position: relative; overflow: hidden; }
+  .he-hero__layers { position: absolute; inset: 0; z-index: 0; }
+  .he-hero__layers .he-hero__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  /* Layers are sized and placed rather than full-bleed, so photographs read as
+     a composition with depth; a cut-out PNG simply sits where it is put. */
+  .he-hero__layer {
+    position: absolute;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 24px 60px rgb(0 0 0 / 0.4);
+    /* Each depth answers the scroll and the pointer by its own amount. */
+    transform: translate3d(calc(var(--px, 0) * var(--lean, 0px)), calc(var(--sy, 0) * var(--travel, 0px) + var(--py, 0) * var(--lean, 0px)), 0);
+    transition: transform 220ms ease-out;
+    will-change: transform;
+  }
+  .he-hero__layer.is-back {
+    --travel: -40px;
+    --lean: 6px;
+    top: 6%;
+    right: 4%;
+    width: min(52%, 620px);
+    aspect-ratio: 16 / 10;
+    opacity: 0.85;
+  }
+  .he-hero__layer.is-middle {
+    --travel: -110px;
+    --lean: 14px;
+    right: 14%;
+    bottom: 6%;
+    width: min(38%, 440px);
+    aspect-ratio: 4 / 3;
+  }
+  .he-hero__layer.is-front {
+    --travel: -220px;
+    --lean: 26px;
+    right: 3%;
+    bottom: 16%;
+    width: min(26%, 300px);
+    aspect-ratio: 1 / 1;
+  }
+
+  @media (max-width: 1024px) {
+    .he-hero__layer.is-back { width: 56%; }
+    .he-hero__layer.is-middle { width: 42%; }
+    .he-hero__layer.is-front { width: 30%; }
+  }
+  @media (max-width: 768px) {
+    /* On a phone the words need the room; one picture stays for depth. */
+    .he-hero__layer.is-middle, .he-hero__layer.is-front { display: none; }
+    .he-hero__layer.is-back { top: auto; bottom: 4%; right: 4%; width: 62%; opacity: 0.7; }
+  }
+  .he-hero--layered .he-hero__inner { position: relative; z-index: 1; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-hero__layer { transform: none; transition: none; }
+  }
+  .he-reduce-motion .he-hero__layer { transform: none !important; }
+}

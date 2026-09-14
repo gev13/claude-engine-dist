@@ -1,0 +1,82 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Popups (package 3, phase D)
+   ──────────────────────────────────────────────────────────────────────────
+   A native <dialog> per popup. Centred and full-screen ones are modals (the
+   top layer, with ::backdrop); corners, bars and the side panel sit fixed
+   over the page without trapping focus.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes he-popup-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+@layer components {
+  .he-popup {
+    --pw: 620px;
+    position: fixed;
+    z-index: 80;
+    width: min(var(--pw), calc(100vw - 32px));
+    max-width: none;
+    max-height: calc(100dvh - 32px);
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    border: 1px solid var(--color-hairline);
+    border-radius: 20px;
+    background: var(--color-surface);
+    color: var(--color-bone);
+    box-shadow: 0 40px 90px -30px rgb(0 0 0 / 0.75);
+  }
+  .he-popup:not([open]) { display: none; }
+  .he-popup[open] { animation: he-popup-in 280ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-popup.is-small { --pw: 420px; }
+  .he-popup.is-large { --pw: 900px; }
+  .he-popup.is-center { inset: 0; margin: auto; height: fit-content; }
+  .he-popup.is-fullscreen { inset: 0; width: 100vw; height: 100dvh; max-height: none; border: 0; border-radius: 0; }
+  .he-popup:is(.is-bottom-right, .is-bottom-left) { --pw: 440px; }
+  .he-popup:is(.is-bottom-right, .is-bottom-left).is-small { --pw: 340px; }
+  .he-popup:is(.is-bottom-right, .is-bottom-left).is-large { --pw: 600px; }
+  .he-popup.is-bottom-right { inset: auto 20px 20px auto; }
+  .he-popup.is-bottom-left { inset: auto auto 20px 20px; }
+  .he-popup.is-side-right { inset: 0 0 0 auto; width: min(var(--pw), 100vw); height: 100dvh; max-height: none; border-width: 0 0 0 1px; border-radius: 0; }
+  .he-popup:is(.is-top-bar, .is-bottom-bar) { width: 100vw; border-width: 0; border-radius: 0; }
+  .he-popup.is-top-bar { inset: 0 0 auto 0; border-bottom-width: 1px; }
+  .he-popup.is-bottom-bar { inset: auto 0 0 0; border-top-width: 1px; }
+  .he-popup::backdrop { background: transparent; }
+  .he-popup.has-overlay::backdrop { background: rgb(8 8 8 / 0.62); }
+  .he-popup__close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 1px solid var(--color-hairline);
+    border-radius: 50%;
+    background: var(--color-ink);
+    color: var(--color-bone);
+    cursor: pointer;
+  }
+  .he-popup__close:hover { border-color: var(--color-rule); }
+
+  @media (width <= 48rem) {
+    /* Corner popups become a sheet along the bottom of a phone — sized from the
+       viewport width, not from `inset`, which some browsers resolve against a
+       wider layout viewport. */
+    .he-popup:is(.is-bottom-right, .is-bottom-left) { inset: auto auto 12px 12px; width: calc(100vw - 24px); }
+    .he-popup.is-center { width: calc(100vw - 24px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-popup[open] { animation: none; }
+  }
+  .he-reduce-motion .he-popup[open] { animation: none; }
+}
+
+/* Unlayered: blocks inside a popup lose the tall padding of a page section,
+   which their own utilities and component rules set. */
+.he-popup__body :is(section, .he-lsec, .he-crumbs-sec) { padding-block: 28px; }
+.he-popup__body > :first-child :is(section, .he-lsec) { padding-top: 40px; }
+.he-popup.is-fullscreen .he-popup__body { display: grid; min-height: 100%; align-content: center; }
+.he-popup:is(.is-top-bar, .is-bottom-bar) .he-popup__body :is(section, .he-lsec) { padding-block: 14px; }

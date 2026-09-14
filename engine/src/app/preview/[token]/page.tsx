@@ -1,0 +1,54 @@
+import type { Metadata } from 'next';
+import { notFound } from 'next/navigation';
+import { eq } from 'drizzle-orm';
+import { BlockRenderer } from '@/components/blocks/Renderer';
+import { verifyPreviewToken } from '@/server/content/preview';
+import { pageTrail } from '@/server/content/trail';
+import { db } from '@/server/db';
+import { pages, posts } from '@/server/db/schema';
+
+/** Never cached, never indexed: this is unpublished content. */
+export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false, nocache: true },
+};
+
+type Props = { params: Promise<{ token: string }> };
+
+/**
+ * Render one unpublished page or post from a signed link.
+ *
+ * A dedicated route rather than a `?preview=` parameter on the public
+ * catch-all: reading a search parameter there would make every request to
+ * every page dynamic and take ISR with it.
+ */
+export default async function PreviewPage({ params }: Props) {
+  const { token } = await params;
+  const result = verifyPreviewToken(token);
+  if (!result.ok) notFound();
+
+  const { entityType, entityId } = result.target;
+
+  const row =
+    entityType === 'page'
+      ? (await db.select().from(pages).where(eq(pages.id, entityId)).limit(1))[0]
+      : (await db.select().from(posts).where(eq(posts.id, entityId)).limit(1))[0];
+
+  if (!row) notFound();
+
+  // A page previews with the trail it will have once published; a post has none.
+  const trail = 'path' in row && typeof row.path === 'string' ? await pageTrail(row.path, row.title) : undefined;
+
+  return (
+    <div className="he-site">
+      <div className="border-b-2 border-flare bg-flare px-5 py-2.5 text-center font-mono text-[11px] uppercase tracking-[0.12em] text-ink">
+        Preview · {row.status} · not visible to the public · link expires{' '}
+        {result.expiresAt.toLocaleDateString()}
+      </div>
+      <main>
+        <BlockRenderer blocks={row.blocks} trail={trail} />
+      </main>
+    </div>
+  );
+}

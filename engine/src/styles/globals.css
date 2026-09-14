@@ -1,0 +1,644 @@
+@import 'tailwindcss';
+@import './fonts.css';
+@import './library.css';
+@import './library-blocks.css';
+@import './library-content.css';
+@import './library-motion.css';
+@import './library-elements.css';
+@import './library-showcase.css';
+@import './library-variants.css';
+@import './library-layouts.css';
+@import './library-chrome.css';
+@import './library-blog.css';
+@import './library-widgets.css';
+@import './library-upgrades.css';
+@import './library-effects.css';
+@import './library-popups.css';
+@import './library-forms.css';
+@import './library-lottie.css';
+@import './library-sliders.css';
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Stock theme — design tokens (inherited from House Edge; a new site replaces them)
+   Extracted verbatim from mochup/. Do not invent new values: add them here.
+   ══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  /* Surfaces */
+  --color-ink: #201e1d;          /* page background */
+  --color-surface: #2d2b2b;      /* raised panels, cards, alt sections */
+  --color-surface-2: #444141;    /* hover / third level */
+
+  /* Text */
+  --color-bone: #f3f2f2;         /* primary text */
+  --color-ash: #bab6b6;          /* body copy */
+  --color-smoke: #9b9797;        /* labels, meta, eyebrows */
+
+  /* Accent */
+  --color-flare: #ec3013;        /* brand red */
+  --color-flare-hot: #ff563c;    /* hover / numerals */
+  --color-flare-soft: #ff9783;   /* link hover */
+
+  /* Rules */
+  --color-hairline: rgb(243 242 242 / 0.14);
+  --color-rule: rgb(243 242 242 / 0.32);
+
+  /* Typography */
+  --font-display: 'Bricolage Grotesque', 'Archivo', system-ui, sans-serif;
+  --font-sans: 'Archivo', system-ui, -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+
+  /* Layout */
+  --spacing-gutter: 48px;
+  --container-shell: 1200px;
+
+  /* Motion */
+  --ease-edge: cubic-bezier(0.2, 0.7, 0.2, 1);
+
+  --animate-rule: he-rule 0.8s var(--ease-edge) both;
+  --animate-rise: he-rise 0.7s ease both;
+  --animate-dash: he-dash 9s linear infinite;
+  --animate-pulse-dot: he-pulse 2.6s ease-in-out infinite;
+  --animate-blink: edge-blink 5.5s steps(1, end) infinite;
+  --animate-visor: edge-visor 5s linear infinite;
+  --animate-crown: edge-crown 6s steps(1, end) infinite;
+  --animate-bob: edge-bob 4.5s ease-in-out infinite;
+}
+
+@keyframes he-rule   { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes he-rise   { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes he-dash   { to { stroke-dashoffset: -320; } }
+@keyframes he-pulse  { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+@keyframes edge-blink { 0%, 92% { opacity: 1; } 95%, 97% { opacity: 0.06; } 100% { opacity: 1; } }
+@keyframes edge-visor { 0% { transform: translateX(-30px); } 100% { transform: translateX(90px); } }
+@keyframes edge-crown { 0%, 88% { opacity: 1; } 92% { opacity: 0.35; } 96%, 100% { opacity: 1; } }
+@keyframes edge-bob  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Themeable properties
+   ──────────────────────────────────────────────────────────────────────────
+   Every value the admin's Appearance screen can change, declared here with the
+   mockup value as its default. The saved theme is emitted as an *unlayered*
+   <style> element, and an unlayered rule beats a layered one whatever the
+   document order — so these defaults hold until somebody edits them, and lose
+   cleanly the moment they do.
+
+   Element rules live in `base` on purpose: a utility class in a component
+   (`text-flare` on a heading, say) must still win over the theme's colour.
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  :root {
+    --he-link: var(--color-flare-soft);
+    --he-link-hover: var(--color-flare-hot);
+    --he-selection: var(--color-flare);
+    --he-radius: 0px;
+
+    --he-body-family: var(--font-sans);
+    --he-body-size: 16px;
+    --he-body-weight: 400;
+    --he-body-style: normal;
+    --he-body-color: var(--color-bone);
+    --he-body-transform: none;
+    --he-body-decoration: none;
+    --he-body-line: 1.62;
+    --he-body-tracking: 0em;
+
+    --he-lede-family: var(--font-display);
+    --he-lede-size: clamp(19px, 2.6vw, 27px);
+    --he-lede-weight: 600;
+    --he-lede-style: normal;
+    --he-lede-color: var(--color-bone);
+    --he-lede-transform: none;
+    --he-lede-decoration: none;
+    --he-lede-line: 1.24;
+    --he-lede-tracking: -0.03em;
+
+    --he-eyebrow-family: var(--font-mono);
+    --he-eyebrow-size: 11px;
+    --he-eyebrow-weight: 400;
+    --he-eyebrow-style: normal;
+    --he-eyebrow-color: var(--color-smoke);
+    --he-eyebrow-transform: uppercase;
+    --he-eyebrow-decoration: none;
+    --he-eyebrow-line: 1.25;
+    --he-eyebrow-tracking: 0.14em;
+
+    --he-h1-family: var(--font-display);
+    --he-h1-size: clamp(36px, 7vw, 66px);
+    --he-h1-weight: 800;
+    --he-h1-style: normal;
+    --he-h1-color: var(--color-bone);
+    --he-h1-transform: none;
+    --he-h1-decoration: none;
+    --he-h1-line: 1.02;
+    --he-h1-tracking: -0.03em;
+
+    --he-h2-family: var(--font-display);
+    --he-h2-size: clamp(28px, 4.6vw, 40px);
+    --he-h2-weight: 800;
+    --he-h2-style: normal;
+    --he-h2-color: var(--color-bone);
+    --he-h2-transform: none;
+    --he-h2-decoration: none;
+    --he-h2-line: 1.02;
+    --he-h2-tracking: -0.03em;
+
+    --he-h3-family: var(--font-display);
+    --he-h3-size: clamp(20px, 2.6vw, 27px);
+    --he-h3-weight: 800;
+    --he-h3-style: normal;
+    --he-h3-color: var(--color-bone);
+    --he-h3-transform: none;
+    --he-h3-decoration: none;
+    --he-h3-line: 1.02;
+    --he-h3-tracking: -0.03em;
+
+    --he-h4-family: var(--font-display);
+    --he-h4-size: 18px;
+    --he-h4-weight: 700;
+    --he-h4-style: normal;
+    --he-h4-color: var(--color-bone);
+    --he-h4-transform: none;
+    --he-h4-decoration: none;
+    --he-h4-line: 1.3;
+    --he-h4-tracking: -0.01em;
+
+    --he-h5-family: var(--font-sans);
+    --he-h5-size: 15px;
+    --he-h5-weight: 700;
+    --he-h5-style: normal;
+    --he-h5-color: var(--color-bone);
+    --he-h5-transform: none;
+    --he-h5-decoration: none;
+    --he-h5-line: 1.35;
+    --he-h5-tracking: 0em;
+
+    --he-h6-family: var(--font-mono);
+    --he-h6-size: 13px;
+    --he-h6-weight: 700;
+    --he-h6-style: normal;
+    --he-h6-color: var(--color-bone);
+    --he-h6-transform: none;
+    --he-h6-decoration: none;
+    --he-h6-line: 1.4;
+    --he-h6-tracking: 0.02em;
+
+    --he-btn-radius: 0px;
+    --he-btn-px: 22px;
+    --he-btn-py: 15px;
+    --he-btn-size: 12px;
+    --he-btn-tracking: 0.08em;
+    --he-btn-transform: uppercase;
+
+    --he-btn-primary-border-width: 0px;
+    --he-btn-outline-border-width: 2px;
+    --he-btn-ghost-border-width: 0px;
+
+    --he-btn-primary-bg: var(--color-flare);
+    --he-btn-primary-text: var(--color-bone);
+    --he-btn-primary-border: transparent;
+    --he-btn-primary-hover-bg: var(--color-flare-hot);
+    --he-btn-primary-hover-text: var(--color-ink);
+    --he-btn-primary-hover-border: transparent;
+
+    --he-btn-outline-bg: transparent;
+    --he-btn-outline-text: var(--color-bone);
+    --he-btn-outline-border: var(--color-rule);
+    --he-btn-outline-hover-bg: var(--color-surface);
+    --he-btn-outline-hover-text: var(--color-bone);
+    --he-btn-outline-hover-border: var(--color-bone);
+
+    --he-btn-ghost-bg: transparent;
+    --he-btn-ghost-text: var(--color-bone);
+    --he-btn-ghost-border: transparent;
+    --he-btn-ghost-hover-bg: transparent;
+    --he-btn-ghost-hover-text: var(--color-flare-soft);
+    --he-btn-ghost-hover-border: transparent;
+
+    --he-logo-height: 32px;
+  }
+
+  /* Scoped to the public site: the admin panel has its own, fixed type scale
+     and must not follow a theme an editor is halfway through changing. */
+  .he-site {
+    font-family: var(--he-body-family);
+    font-size: var(--he-body-size);
+    font-weight: var(--he-body-weight);
+    line-height: var(--he-body-line);
+    letter-spacing: var(--he-body-tracking);
+    color: var(--he-body-color);
+  }
+
+  .he-site h1 {
+    font-family: var(--he-h1-family);
+    font-size: var(--he-h1-size);
+    font-weight: var(--he-h1-weight);
+    font-style: var(--he-h1-style);
+    line-height: var(--he-h1-line);
+    letter-spacing: var(--he-h1-tracking);
+    color: var(--he-h1-color);
+    text-transform: var(--he-h1-transform);
+    text-decoration: var(--he-h1-decoration);
+  }
+
+  .he-site h2 {
+    font-family: var(--he-h2-family);
+    font-size: var(--he-h2-size);
+    font-weight: var(--he-h2-weight);
+    font-style: var(--he-h2-style);
+    line-height: var(--he-h2-line);
+    letter-spacing: var(--he-h2-tracking);
+    color: var(--he-h2-color);
+    text-transform: var(--he-h2-transform);
+    text-decoration: var(--he-h2-decoration);
+  }
+
+  .he-site h3 {
+    font-family: var(--he-h3-family);
+    font-size: var(--he-h3-size);
+    font-weight: var(--he-h3-weight);
+    font-style: var(--he-h3-style);
+    line-height: var(--he-h3-line);
+    letter-spacing: var(--he-h3-tracking);
+    color: var(--he-h3-color);
+    text-transform: var(--he-h3-transform);
+    text-decoration: var(--he-h3-decoration);
+  }
+
+  .he-site h4 {
+    font-family: var(--he-h4-family);
+    font-size: var(--he-h4-size);
+    font-weight: var(--he-h4-weight);
+    font-style: var(--he-h4-style);
+    line-height: var(--he-h4-line);
+    letter-spacing: var(--he-h4-tracking);
+    color: var(--he-h4-color);
+    text-transform: var(--he-h4-transform);
+    text-decoration: var(--he-h4-decoration);
+  }
+
+  .he-site h5 {
+    font-family: var(--he-h5-family);
+    font-size: var(--he-h5-size);
+    font-weight: var(--he-h5-weight);
+    font-style: var(--he-h5-style);
+    line-height: var(--he-h5-line);
+    letter-spacing: var(--he-h5-tracking);
+    color: var(--he-h5-color);
+    text-transform: var(--he-h5-transform);
+    text-decoration: var(--he-h5-decoration);
+  }
+
+  .he-site h6 {
+    font-family: var(--he-h6-family);
+    font-size: var(--he-h6-size);
+    font-weight: var(--he-h6-weight);
+    font-style: var(--he-h6-style);
+    line-height: var(--he-h6-line);
+    letter-spacing: var(--he-h6-tracking);
+    color: var(--he-h6-color);
+    text-transform: var(--he-h6-transform);
+    text-decoration: var(--he-h6-decoration);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Base
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--color-ink);
+    color: var(--color-bone);
+    font-family: var(--font-sans);
+    font-size: 16px;
+    line-height: 1.62;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  a { color: inherit; text-decoration: none; }
+  p { text-wrap: pretty; }
+  h1, h2, h3, h4 { text-wrap: balance; }
+
+  summary { list-style: none; cursor: pointer; }
+  summary::-webkit-details-marker { display: none; }
+
+  input, textarea, select, button { font-family: inherit; font-size: inherit; color: inherit; }
+
+  ::selection { background: var(--he-selection); color: var(--color-bone); }
+
+  :focus-visible { outline: 2px solid var(--color-flare-hot); outline-offset: 2px; }
+
+  img, svg, video { max-width: 100%; }
+
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Utilities — the recurring mockup idioms, as named classes
+   ══════════════════════════════════════════════════════════════════════════ */
+@utility shell {
+  width: 100%;
+  max-width: var(--container-shell);
+  margin-inline: auto;
+  padding-inline: 20px;
+  @media (width >= 48rem) { padding-inline: 32px; }
+  @media (width >= 64rem) { padding-inline: var(--spacing-gutter); }
+}
+
+@utility label-mono {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-smoke);
+}
+
+@utility display {
+  font-family: var(--font-display);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+}
+
+/* Section widths. The inner `.shell` reads --container-shell, so overriding it
+   on a wrapper is all a width needs to be — no second layout system. */
+@utility he-w-narrow { --container-shell: 820px; }
+@utility he-w-wide   { --container-shell: 1440px; }
+@utility he-w-full {
+  --container-shell: 100%;
+  & .shell { padding-inline: 0; }
+}
+
+/* Themed type roles that are not an HTML tag. Utilities rather than base
+   rules, because a component that opts in should also be able to opt out with
+   a plain Tailwind class. */
+@utility type-lede {
+  font-family: var(--he-lede-family);
+  font-size: var(--he-lede-size);
+  font-weight: var(--he-lede-weight);
+  font-style: var(--he-lede-style);
+  line-height: var(--he-lede-line);
+  letter-spacing: var(--he-lede-tracking);
+  color: var(--he-lede-color);
+  text-transform: var(--he-lede-transform);
+  text-decoration: var(--he-lede-decoration);
+}
+
+@utility type-eyebrow {
+  font-family: var(--he-eyebrow-family);
+  font-size: var(--he-eyebrow-size);
+  font-weight: var(--he-eyebrow-weight);
+  font-style: var(--he-eyebrow-style);
+  line-height: var(--he-eyebrow-line);
+  letter-spacing: var(--he-eyebrow-tracking);
+  color: var(--he-eyebrow-color);
+  text-transform: var(--he-eyebrow-transform);
+  text-decoration: var(--he-eyebrow-decoration);
+}
+
+/* Buttons. Border width is a variable of its own so that giving a variant a
+   border colour cannot silently change its box model. */
+@utility he-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: var(--he-btn-py) var(--he-btn-px);
+  font-family: var(--font-mono);
+  font-size: var(--he-btn-size);
+  line-height: 1;
+  text-transform: var(--he-btn-transform);
+  letter-spacing: var(--he-btn-tracking);
+  border-radius: var(--he-btn-radius);
+  border-style: solid;
+  transition: color 150ms, background-color 150ms, border-color 150ms;
+
+  &:disabled { cursor: not-allowed; opacity: 0.55; }
+}
+
+@utility he-btn-primary {
+  background-color: var(--he-btn-primary-bg);
+  color: var(--he-btn-primary-text);
+  border-color: var(--he-btn-primary-border);
+  border-width: var(--he-btn-primary-border-width);
+
+  &:hover {
+    background-color: var(--he-btn-primary-hover-bg);
+    color: var(--he-btn-primary-hover-text);
+    border-color: var(--he-btn-primary-hover-border);
+  }
+}
+
+@utility he-btn-outline {
+  background-color: var(--he-btn-outline-bg);
+  color: var(--he-btn-outline-text);
+  border-color: var(--he-btn-outline-border);
+  border-width: var(--he-btn-outline-border-width);
+
+  &:hover {
+    background-color: var(--he-btn-outline-hover-bg);
+    color: var(--he-btn-outline-hover-text);
+    border-color: var(--he-btn-outline-hover-border);
+  }
+}
+
+@utility he-btn-ghost {
+  background-color: var(--he-btn-ghost-bg);
+  color: var(--he-btn-ghost-text);
+  border-color: var(--he-btn-ghost-border);
+  border-width: var(--he-btn-ghost-border-width);
+
+  &:hover {
+    background-color: var(--he-btn-ghost-hover-bg);
+    color: var(--he-btn-ghost-hover-text);
+    border-color: var(--he-btn-ghost-hover-border);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Rows and nested blocks
+   ──────────────────────────────────────────────────────────────────────────
+   Block components each render a full-bleed band: a background, a bottom rule,
+   generous vertical padding and a centred 1200px column. That is right at the
+   top level of a page and wrong inside a column, which already provides all
+   four. Rather than teach eighteen components that they might be nested — and
+   context does not reach a server component anyway — the chrome is removed in
+   CSS from anything under `.he-nested`.
+
+   These rules are UNLAYERED on purpose, so they beat the Tailwind utilities
+   that put the padding there in the first place.
+   ══════════════════════════════════════════════════════════════════════════ */
+.he-nested section {
+  background: transparent;
+  border-bottom-width: 0;
+}
+
+.he-nested .shell {
+  max-width: none;
+  margin-inline: 0;
+  padding-inline: 0;
+  padding-block: 0;
+}
+
+/* Block components size their internal grids against the *viewport*, because
+   until columns existed they always spanned it. A three-up card grid inside a
+   240px column therefore still tried to be three-up, and the text shredded.
+
+   A container query is the only thing that knows how wide the column actually
+   is. `container-type: inline-size` turns each column into a query container;
+   the rules below then collapse any grid inside one that has become too narrow
+   to hold its tracks, whatever the viewport is doing.
+
+   Unlayered, so they beat the `sm:grid-cols-2` utilities that put the tracks
+   there in the first place. */
+.he-nested {
+  container-type: inline-size;
+}
+
+/* The two ranges are mutually exclusive on purpose. Written as overlapping
+   max-widths, the wider rule came second in the stylesheet and beat the
+   narrower one at equal specificity — so a 240px column got two tracks
+   instead of one. */
+@container (width <= 30rem) {
+  .he-nested :is([class*='grid-cols-'], [class*='grid-cols']) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (30rem < width <= 46rem) {
+  /* Wide enough for two tracks, never for three or four. */
+  .he-nested :is([class*='grid-cols-3'], [class*='grid-cols-4']) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* A row's own vertical rhythm. In `@layer base`, so a padding set in Design
+   Options — which is emitted unlayered — wins over it. */
+@layer base {
+  .he-row { padding-block: 56px; }
+
+  @media (width < 48rem) {
+    .he-row { padding-block: 40px; }
+  }
+}
+
+/* The spacer block. Its heights arrive as custom properties so the mobile
+   value can live in a real media query rather than an inline style. */
+@utility he-spacer {
+  height: var(--he-spacer-h, 48px);
+  display: flex;
+  align-items: center;
+
+  @media (width < 48rem) {
+    height: var(--he-spacer-hm, var(--he-spacer-h, 48px));
+  }
+}
+
+/* Rich text rendered from TinyMCE output */
+@utility prose-edge {
+  color: var(--color-ash);
+  font-size: 17px;
+  line-height: 1.72;
+
+  & > * + * { margin-top: 1.1em; }
+
+  /* Rich-text headings follow the theme, but scaled down.
+     A heading inside a flow of prose is a quieter thing than a section
+     heading, and the mockups draw it that way. Deriving the size from the
+     theme with a ratio keeps both properties: change the H2 size in Appearance
+     and these move with it, while staying subordinate to a real section
+     heading. The ratios reproduce the mockup sizes exactly at the default
+     scale (40px → 34px, 27px → 24px). */
+  & h2 {
+    font-family: var(--he-h2-family);
+    font-weight: var(--he-h2-weight);
+    font-style: var(--he-h2-style);
+    letter-spacing: var(--he-h2-tracking);
+    line-height: var(--he-h2-line);
+    font-size: calc(var(--he-h2-size) * 0.85);
+    color: var(--he-h2-color);
+    text-transform: var(--he-h2-transform);
+    margin-top: 2em;
+  }
+  & h3 {
+    font-family: var(--he-h3-family);
+    font-weight: var(--he-h3-weight);
+    font-style: var(--he-h3-style);
+    letter-spacing: var(--he-h3-tracking);
+    line-height: var(--he-h3-line);
+    font-size: calc(var(--he-h3-size) * 0.9);
+    color: var(--he-h3-color);
+    text-transform: var(--he-h3-transform);
+    margin-top: 1.7em;
+  }
+  & h4 {
+    font-family: var(--he-h4-family);
+    font-weight: var(--he-h4-weight);
+    letter-spacing: var(--he-h4-tracking);
+    line-height: var(--he-h4-line);
+    font-size: var(--he-h4-size);
+    color: var(--he-h4-color);
+    margin-top: 1.5em;
+  }
+  & a { color: var(--color-flare-soft); text-decoration: underline; text-underline-offset: 3px; }
+  & a:hover { color: var(--color-flare-hot); }
+  & strong { color: var(--color-bone); font-weight: 700; }
+  & ul, & ol { padding-left: 1.2em; }
+  & ul { list-style: none; padding-left: 0; }
+  & ul > li { position: relative; padding-left: 22px; }
+  & ul > li::before {
+    content: ''; position: absolute; left: 0; top: 0.72em;
+    width: 8px; height: 2px; background: var(--color-flare);
+  }
+  & ol { list-style: decimal; }
+  & ol > li::marker { color: var(--color-flare); font-family: var(--font-mono); font-size: 0.85em; }
+  & li + li { margin-top: 0.5em; }
+  & blockquote {
+    border-left: 2px solid var(--color-flare);
+    padding: 4px 0 4px 22px;
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    font-size: clamp(19px, 2.2vw, 23px);
+    line-height: 1.28;
+    color: var(--color-bone);
+  }
+  & code {
+    font-family: var(--font-mono);
+    font-size: 0.88em;
+    background: var(--color-surface);
+    padding: 2px 6px;
+    color: var(--color-flare-soft);
+  }
+  & pre {
+    background: var(--color-surface);
+    border-left: 2px solid var(--color-flare);
+    padding: 20px 22px;
+    overflow-x: auto;
+    font-family: var(--font-mono);
+    font-size: 13px;
+    line-height: 1.7;
+  }
+  & pre code { background: none; padding: 0; color: var(--color-ash); }
+  & img { display: block; width: 100%; height: auto; }
+  & figure { margin: 2em 0; }
+  & figcaption { margin-top: 10px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-smoke); }
+  & hr { border: 0; border-top: 2px solid var(--color-hairline); margin: 2.4em 0; }
+  & table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  & th, & td { border: 1px solid var(--color-hairline); padding: 10px 14px; text-align: left; }
+  & th { background: var(--color-surface); color: var(--color-bone); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+}

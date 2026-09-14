@@ -1,0 +1,6 @@
+# Reviewed findings, one gitleaks fingerprint per line.
+#
+# The first commit hard-coded the CI smoke-test administrator's password in the
+# workflow. It was a throwaway for an ephemeral CI database that is destroyed
+# with each job, never a real credential, and CI now generates it per run.
+91e74ba0210ccffbf96932fe23d28d0b817886aa:.github/workflows/ci.yml:generic-api-key:49

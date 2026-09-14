@@ -1,0 +1,148 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Matches engine/.nvmrc and "engines" in engine/package.json.
+  NODE_VERSION: '24'
+
+jobs:
+  quality:
+    name: Lint, typecheck, test, build, install, smoke
+    runs-on: ubuntu-latest
+
+    # The repository is the site kit; the application lives in engine/.
+    defaults:
+      run:
+        working-directory: engine
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: engine_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/engine_test
+      NEXT_PUBLIC_SITE_URL: http://127.0.0.1:3000
+      AUTH_ACCESS_SECRET: ci-access-secret-that-is-long-enough-to-pass
+      AUTH_REFRESH_SECRET: ci-refresh-secret-that-is-long-enough-to-pass
+      AUTH_REQUIRE_2FA: 'true'
+      # The administrator CI creates through the installer, and the account the
+      # smoke suite signs in with. Throwaway: the database dies with the job.
+      # Its password is generated per run — see the first step.
+      SMOKE_EMAIL: ci-admin@example.com
+
+    steps:
+      # Generated rather than written here: a password in this file is a
+      # committed secret as far as the secret scan is concerned, and the
+      # account only has to outlive this job. The suffix guarantees the three
+      # character classes the password policy asks for.
+      - name: Generate the CI administrator's password
+        run: |
+          pw="$(openssl rand -hex 16)-Ci9"
+          echo "::add-mask::$pw"
+          echo "SMOKE_PASSWORD=$pw" >> "$GITHUB_ENV"
+        working-directory: .
+
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Apply schema
+        run: npm run setup
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+      # The smoke suite needs a running server. Started in the background; it
+      # keeps running for the remaining steps of this job.
+      - name: Start the server
+        run: |
+          npm start -- -p 3000 > /tmp/next.log 2>&1 &
+          for i in $(seq 1 60); do
+            curl -fsS http://127.0.0.1:3000/api/health && exit 0
+            sleep 1
+          done
+          cat /tmp/next.log
+          exit 1
+
+      # Exactly what a person does at /install, through the same endpoint — so
+      # CI covers the installer end to end, not just a seeded database.
+      - name: Install the site
+        run: |
+          curl -fsS -X POST http://127.0.0.1:3000/api/install \
+            -H 'content-type: application/json' \
+            -d "{\"admin\":{\"firstName\":\"CI\",\"username\":\"ci-admin\",\"email\":\"$SMOKE_EMAIL\",\"password\":\"$SMOKE_PASSWORD\"},\"site\":{\"name\":\"CI Site\",\"tagline\":\"Installed by CI\"}}"
+
+      - name: Integration smoke test
+        run: npm run test:smoke -- http://127.0.0.1:3000
+
+      - name: Server log
+        if: failure()
+        run: cat /tmp/next.log || true
+
+  security:
+    name: Dependency and secret scanning
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: engine/package-lock.json
+
+      - name: Install dependencies
+        working-directory: engine
+        run: npm ci
+
+      # Fails the build on a known high or critical advisory in a runtime
+      # dependency. Dev-only advisories are reported but do not block.
+      - name: Audit dependencies
+        working-directory: engine
+        run: npm audit --omit=dev --audit-level=high
+
+      # Scans the whole repository, kit files included.
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

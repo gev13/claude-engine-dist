@@ -1,0 +1,83 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Pattern library — package 3 effects (phase C)
+   ──────────────────────────────────────────────────────────────────────────
+   Options in every block's Design tab: entrances (P3-C1), hover effects
+   (P3-C2), shape dividers (P3-C3), the animated gradient (P3-C4), sticky
+   blocks and snapping (P3-C5), and the reading-progress bar on posts
+   (P3-C6). Nothing here hides content before a script arms it, and nothing
+   moves for reduced motion.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes he-grad {
+  from { background-position: 0% 50%; }
+  to { background-position: 100% 50%; }
+}
+
+@layer components {
+  /* ── P3-C1: more entrances ───────────────────────────────────────────── */
+
+  .he-reveal--blur { transition: opacity 700ms ease-out, filter 900ms ease-out, transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-reveal-on .he-reveal--zoom:not(.is-in) { transform: scale(0.94); }
+  .he-reveal-on .he-reveal--blur:not(.is-in) { filter: blur(14px); }
+  /* A sideways entrance moves the content, never the block: the block stays
+     put and clips sideways, so a section waiting to slide in cannot widen the
+     page. (Clipping <body> does not work — its overflow is handed to the
+     viewport, where `clip` behaves differently.) */
+  .he-reveal:is(.he-reveal--left, .he-reveal--right) { overflow-x: clip; }
+  .he-reveal:is(.he-reveal--left, .he-reveal--right) .shell { transition: transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-reveal-on .he-reveal--left:not(.is-in) .shell { transform: translateX(-56px); }
+  .he-reveal-on .he-reveal--right:not(.is-in) .shell { transform: translateX(56px); }
+
+  /* ── P3-C2: hover effects ────────────────────────────────────────────── */
+
+  .he-hover { transition: transform 320ms cubic-bezier(0.2, 0.7, 0.2, 1), box-shadow 320ms; }
+  .he-hover--tilt { transform: perspective(1100px) rotateX(var(--he-tilt-x, 0deg)) rotateY(var(--he-tilt-y, 0deg)); }
+  @media (hover: hover) {
+    .he-hover--lift:hover { transform: translateY(-6px); }
+    .he-hover--grow:hover { transform: scale(1.02); }
+    .he-hover--shadow:hover { box-shadow: 0 34px 70px -34px rgb(0 0 0 / 0.7); }
+    .he-hover--lift:hover, .he-hover--grow:hover { box-shadow: 0 24px 48px -30px rgb(0 0 0 / 0.55); }
+  }
+
+  /* ── P3-C3: shape dividers ───────────────────────────────────────────── */
+
+  .he-has-shape { position: relative; }
+  .he-shape { --shh: 80px; position: absolute; right: 0; left: 0; z-index: 1; color: var(--color-ink); line-height: 0; pointer-events: none; }
+  .he-shape.is-small { --shh: 40px; }
+  .he-shape.is-large { --shh: 140px; }
+  .he-shape.is-top { top: -1px; }
+  .he-shape.is-bottom { bottom: -1px; }
+  .he-shape svg { display: block; width: 100%; height: var(--shh); }
+  .he-shape.is-bottom svg { transform: scaleY(-1); }
+  .he-shape.is-flip svg { transform: scaleX(-1); }
+  .he-shape.is-bottom.is-flip svg { transform: scale(-1, -1); }
+
+  /* ── P3-C5: sticky blocks and snapping ───────────────────────────────── */
+
+  .he-sticky { position: sticky; top: var(--he-header-h, 0px); z-index: 20; }
+  .he-nested .he-sticky { top: calc(var(--he-header-h, 0px) + 24px); }
+  .he-snap { scroll-snap-align: start; scroll-margin-top: var(--he-header-h, 0px); }
+
+  /* ── P3-C6: reading progress ─────────────────────────────────────────── */
+
+  .he-readbar { position: fixed; top: 0; right: 0; left: 0; z-index: 70; height: 3px; pointer-events: none; }
+  .he-readbar__fill { height: 100%; background: var(--color-flare); transform: scaleX(var(--he-read, 0)); transform-origin: left; }
+
+  /* ── Mobile ≤ 768px ──────────────────────────────────────────────────── */
+  @media (width <= 48rem) {
+    .he-shape { --shh: 48px; }
+    .he-shape.is-small { --shh: 26px; }
+    .he-shape.is-large { --shh: 84px; }
+    .he-reveal-on .he-reveal--left:not(.is-in) .shell { transform: translateX(-28px); }
+    .he-reveal-on .he-reveal--right:not(.is-in) .shell { transform: translateX(28px); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-hover--lift:hover, .he-hover--grow:hover, .he-hover--tilt { transform: none; }
+  }
+  .he-reduce-motion :is(.he-hover--lift:hover, .he-hover--grow:hover, .he-hover--tilt) { transform: none; }
+
+  @media print {
+    .he-readbar { display: none; }
+  }
+}

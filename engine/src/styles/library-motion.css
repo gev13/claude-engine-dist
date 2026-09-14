@@ -1,0 +1,224 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Pattern library — scroll effects, calls to action and forms
+   ──────────────────────────────────────────────────────────────────────────
+   Reveal on scroll (SC4), kinetic statement (SC3), scrollStory (SC1),
+   pinnedMedia (SC2), cta big / card (CF1), newsletter (CF2), the split
+   contact form (CF3) and footnotes (CF4).
+
+   Everything that moves has a resting state that is already readable, and
+   stands still for reduced motion.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── SC4: reveal on scroll ───────────────────────────────────────────── */
+
+  /* `he-reveal-on` is set on <html> by RevealObserver, only when motion is
+     allowed; without it nothing here applies and every section is visible. */
+  .he-reveal { transition: opacity 700ms ease-out, transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-reveal-on .he-reveal:not(.is-in) { opacity: 0; }
+  .he-reveal-on .he-reveal--rise:not(.is-in) { transform: translateY(36px); }
+
+  /* ── SC3: kinetic statement ──────────────────────────────────────────── */
+
+  .he-kinetic__w { opacity: 0.32; transition: opacity 300ms ease-out; }
+  .he-kinetic__w.is-lit { opacity: 1; }
+
+  /* ── SC1: scroll story ───────────────────────────────────────────────── */
+
+  .he-story__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 72px; margin-top: 48px; }
+  .he-story__list { margin: 0; padding: 0; list-style: none; }
+  .he-story__item {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 62vh;
+    padding-block: 32px;
+    border-top: 1px solid var(--color-hairline);
+    opacity: 0.42;
+    transition: opacity 350ms;
+  }
+  .he-story__item:first-child { border-top: 0; }
+  .he-story__item.is-active { opacity: 1; }
+  .he-story__num { margin-bottom: 10px; font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.14em; color: var(--color-flare); }
+  .he-story__title { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.2vw, 30px); font-weight: 700; line-height: 1.15; }
+  .he-story__title::after {
+    content: '';
+    display: block;
+    width: 0;
+    height: 2px;
+    margin-top: 14px;
+    background: var(--color-flare);
+    transition: width 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .he-story__item.is-active .he-story__title::after { width: 56px; }
+  .he-story__body { max-width: 46ch; margin: 14px 0 0; font-size: 16px; color: var(--color-ash); }
+  .he-story__inline { display: none; }
+  .he-story__stage {
+    position: sticky;
+    top: calc(var(--he-subnav-top, 0px) + 12vh);
+    align-self: start;
+    height: 76vh;
+    overflow: hidden;
+    border-radius: 24px;
+    background: var(--color-surface);
+  }
+  .he-story__img { position: absolute; inset: 0; opacity: 0; transform: scale(1.03); transition: opacity 500ms, transform 700ms; }
+  .he-story__img.is-active { opacity: 1; transform: none; }
+
+  /* ── SC2: pinned media ───────────────────────────────────────────────── */
+
+  .he-pin { position: relative; border-bottom: 2px solid var(--color-hairline); background: var(--color-ink); }
+  .he-pin.is-raised { background: var(--color-surface); }
+  .he-pin.is-flare { background: var(--color-flare); color: var(--color-ink); }
+  .he-pin.is-short { height: 180vh; }
+  .he-pin.is-medium { height: 260vh; }
+  .he-pin.is-long { height: 340vh; }
+  .he-pin__sticky {
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 32px;
+    height: 100svh;
+    overflow: hidden;
+    padding-block: 48px;
+  }
+  .he-pin__head { text-align: center; }
+  .he-pin__head .he-lbody { margin-inline: auto; }
+  .he-pin__frame {
+    --p: 0;
+    position: relative;
+    width: min(1180px, 88vw);
+    max-height: 64svh;
+    margin-inline: auto;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 24px;
+    background: var(--color-surface);
+  }
+  .he-pin__img { transform: scale(calc(1 + var(--p) * 0.14)); transform-origin: 50% 60%; }
+  .he-pin__bar { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--color-flare); transform: scaleX(var(--p)); transform-origin: left; }
+  .he-pin.is-still { height: auto; }
+  .he-pin.is-still .he-pin__sticky { position: static; height: auto; padding-block: 88px; }
+  .he-pin.is-still .he-pin__bar { display: none; }
+
+  /* ── CF1: big and card calls to action ───────────────────────────────── */
+
+  .he-cta-big { padding-block: 120px; text-align: center; }
+  .he-cta-big__title {
+    max-width: 16ch;
+    margin-inline: auto;
+    font-family: var(--font-display);
+    font-size: clamp(44px, 7vw, 112px);
+    font-weight: 700;
+    line-height: 0.98;
+    letter-spacing: -0.035em;
+  }
+  .he-cta-big .he-lbody { margin-inline: auto; }
+  .he-cta-big .he-actions { justify-content: center; margin-top: 40px; }
+  .he-cta-card {
+    position: relative;
+    max-width: 560px;
+    padding: 40px;
+    overflow: hidden;
+    border: 1px solid var(--color-hairline);
+    border-radius: 20px;
+    background:
+      radial-gradient(120% 140% at 0% 0%, color-mix(in srgb, var(--color-flare) 34%, transparent), transparent 58%),
+      linear-gradient(160deg, var(--color-surface-2), var(--color-surface));
+  }
+  .he-cta-card__title { font-family: var(--font-display); font-size: clamp(26px, 2.6vw, 36px); font-weight: 700; line-height: 1.1; }
+
+  /* ── CF2: newsletter ─────────────────────────────────────────────────── */
+
+  .he-nl__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; }
+  .he-nl__band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px 48px; }
+  .he-nl__head { max-width: 560px; }
+  .he-nl__row {
+    display: flex;
+    gap: 6px;
+    padding: 6px;
+    border: 1px solid var(--color-hairline);
+    border-radius: 999px;
+    background: var(--color-surface);
+  }
+  .he-nl__row:focus-within { border-color: var(--color-flare); }
+  .he-nl__input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 18px;
+    border: 0;
+    background: transparent;
+    color: var(--color-bone);
+    font-size: 16px;
+  }
+  .he-nl__input::placeholder { color: var(--color-smoke); }
+  .he-nl__input:focus { outline: none; }
+  .he-nl__consent { display: flex; align-items: flex-start; gap: 10px; margin-top: 16px; font-size: 13px; line-height: 1.5; color: var(--color-ash); cursor: pointer; }
+  .he-nl__consent input { flex-shrink: 0; width: 16px; height: 16px; margin-top: 2px; accent-color: var(--color-flare); }
+  .he-nl__error { margin: 12px 0 0; padding-left: 12px; border-left: 2px solid var(--color-flare); font-size: 14px; color: var(--color-flare-soft); }
+  .he-nl__done { margin: 0; padding: 20px 24px; border-radius: 16px; background: var(--color-surface); font-size: 17px; }
+
+  /* ── CF3: split contact form ─────────────────────────────────────────── */
+
+  .he-cform { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 64px; align-items: start; }
+  .he-cform__media { margin-top: 32px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-cform__card { padding: 36px; border: 1px solid var(--color-hairline); border-radius: 20px; background: var(--color-surface); }
+
+  /* ── Desktop ≤ 1440px ────────────────────────────────────────────────── */
+  @media (width <= 90rem) {
+    .he-story__grid, .he-nl__grid, .he-cform { gap: 48px; }
+  }
+
+  /* ── Tablet ≤ 1024px ─────────────────────────────────────────────────── */
+  @media (width <= 64rem) {
+    .he-story__grid { gap: 36px; }
+    .he-story__item { min-height: 54vh; }
+    .he-cta-big { padding-block: 88px; }
+    .he-nl__grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
+    .he-cform { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .he-cform__media { display: none; }
+    .he-pin__frame { width: 92vw; }
+  }
+
+  /* ── Mobile ≤ 768px ──────────────────────────────────────────────────── */
+  @media (width <= 48rem) {
+    .he-story__grid { grid-template-columns: minmax(0, 1fr); margin-top: 32px; }
+    .he-story__stage { display: none; }
+    .he-story__item { min-height: 0; padding-block: 28px; opacity: 1; }
+    .he-story__item .he-story__title::after { width: 40px; }
+    .he-story__inline { display: block; aspect-ratio: 4 / 3; margin-bottom: 18px; overflow: hidden; border-radius: 16px; }
+
+    .he-pin.is-short { height: 150vh; }
+    .he-pin.is-medium { height: 200vh; }
+    .he-pin.is-long { height: 260vh; }
+    .he-pin__frame { aspect-ratio: 4 / 5; max-height: 58svh; border-radius: 16px; }
+
+    .he-cta-big { padding-block: 64px; }
+    .he-cta-card { padding: 28px 22px; }
+
+    .he-nl__band { flex-direction: column; align-items: stretch; }
+    .he-nl__row { flex-direction: column; border-radius: 16px; }
+    .he-nl__submit { width: 100%; }
+
+    .he-cform__card { padding: 22px 18px; }
+  }
+
+  @media print {
+    .he-reveal { opacity: 1 !important; transform: none !important; }
+    .he-kinetic__w { opacity: 1 !important; }
+  }
+}
+
+/* ── CF4: footnotes ───────────────────────────────────────────────────────
+   Unlayered: the Prose component sets its text size with utilities, which
+   beat anything in a layer. */
+.he-footnotes,
+.he-footnotes :is(p, li) {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--color-smoke);
+}
+.he-footnotes :is(ol, ul) { padding-left: 1.4em; }
+.he-footnotes li + li { margin-top: 6px; }

@@ -1,0 +1,5 @@
+# Repository root: the site kit. The engine's own rules are in engine/.gitignore.
+.DS_Store
+.env
+.env.local
+node_modules/

@@ -1,0 +1,73 @@
+name: Deploy
+
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: Deploy to server
+    runs-on: ubuntu-latest
+    # Skipped until deployment is configured — the SITE_URL repository
+    # variable is the switch — and never deploys a commit that did not pass CI.
+    if: >-
+      vars.SITE_URL != '' && (
+        github.event_name == 'workflow_dispatch' ||
+        github.event.workflow_run.conclusion == 'success'
+      )
+    environment:
+      name: production
+      url: ${{ vars.SITE_URL }}
+
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.DEPLOY_HOST }}
+          username: ${{ secrets.DEPLOY_USER }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          port: ${{ secrets.DEPLOY_PORT || 22 }}
+          script_stop: true
+          script: |
+            set -euo pipefail
+            cd ${{ secrets.DEPLOY_PATH }}
+
+            git fetch --all
+            git reset --hard origin/main
+
+            # The repository is the site kit; the application lives in engine/.
+            cd engine
+
+            npm ci --omit=dev --include=dev
+            # A database created by `drizzle-kit push` has no migration
+            # history, and the migrator would then try to create tables that
+            # already exist. This records the baseline as applied when the
+            # schema is already there, and does nothing otherwise.
+            node scripts/baseline-migrations.mjs
+            npx drizzle-kit migrate
+            node scripts/apply-sql.mjs
+            npm run build
+
+            # Zero-downtime reload; falls back to a start if not yet running.
+            pm2 reload engine --update-env || pm2 start npm --name engine -- start
+            pm2 save
+
+      - name: Verify the deployment is healthy
+        run: |
+          for i in $(seq 1 10); do
+            if curl -fsS "${{ vars.SITE_URL }}/api/health" > /dev/null; then
+              echo "Healthy."
+              exit 0
+            fi
+            echo "Waiting for the site to come back (attempt $i)…"
+            sleep 6
+          done
+          echo "Health check never passed."
+          exit 1
