@@ -19,7 +19,10 @@ import {
    Enums
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const userRole = pgEnum('user_role', ['admin', 'editor']);
+/* Five roles, added in order of authority. 'admin' and 'editor' are the
+   original two and keep exactly the access they always had, so no existing
+   account changes when the others appear. */
+export const userRole = pgEnum('user_role', ['admin', 'manager', 'editor', 'author', 'reviewer']);
 export const contentStatus = pgEnum('content_status', ['draft', 'published', 'archived']);
 export const postKind = pgEnum('post_kind', ['article', 'research']);
 export const enquiryStatus = pgEnum('enquiry_status', ['new', 'read', 'replied', 'spam']);

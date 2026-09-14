@@ -9,6 +9,31 @@ told about before taking it.
 
 ---
 
+## 1.1.0 — 2026-09-14
+
+**Changes the database.** A backup is taken before it is applied.
+
+**Three more roles**, alongside the existing administrator and editor. Neither
+of those changes, so no existing account gains or loses anything.
+
+- **Manager** — an editor who also owns the site's look: appearance, menus,
+  popups and redirects. Not accounts, settings, email, security, updates,
+  backups or the audit log. For whoever runs the site day to day without being
+  its technical owner.
+- **Author** — writes and deletes their own pages and posts, and cannot
+  publish. For contributors whose work should be reviewed before it is public.
+- **Reviewer** — reads the site and handles enquiries, and changes nothing
+  else. For a client who wants visibility without the ability to break
+  anything.
+
+Creating accounts stays with the administrator alone, and so does exporting or
+erasing newsletter sign-ups and form submissions — those are personal data.
+
+The role picker now explains what each role can do, rather than listing names
+that only mean something once somebody cannot publish.
+
+---
+
 ## 1.0.0 — 2026-09-14
 
 The first release. Everything below was built before versioning began, and is

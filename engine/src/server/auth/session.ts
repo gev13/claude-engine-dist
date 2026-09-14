@@ -63,7 +63,7 @@ export type SessionUser = {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
   totpEnabled: boolean;
 };
 
@@ -104,7 +104,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
 export async function mintAccessFor(user: {
   id: string;
   email: string;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
 }, familyId: string) {
   return signAccessToken({ sub: user.id, email: user.email, role: user.role, fam: familyId });
 }

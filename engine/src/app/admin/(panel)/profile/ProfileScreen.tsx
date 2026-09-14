@@ -16,7 +16,7 @@ type Profile = {
   firstName: string;
   lastName: string;
   phone: string | null;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
   totpEnabledAt: string | null;
   lastLoginAt: string | null;
   createdAt: string;

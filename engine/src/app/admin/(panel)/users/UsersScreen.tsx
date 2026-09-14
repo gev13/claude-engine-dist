@@ -20,7 +20,18 @@ import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
 import { ConfirmDelete, Pagination, errorMessage, useDebounced } from '../_shared';
 
-type Role = 'admin' | 'editor';
+/* Mirrors Role in server/auth/rbac.ts, which is server-only and so cannot be
+   imported here. Adding a role means changing both. */
+type Role = 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
+
+/** What each role can do, in the words of somebody choosing one. */
+const ROLE_CHOICES: { value: Role; label: string; hint: string }[] = [
+  { value: 'reviewer', label: 'Reviewer', hint: 'reads the site and handles enquiries; changes nothing' },
+  { value: 'author', label: 'Author', hint: 'writes their own pages and posts, but cannot publish' },
+  { value: 'editor', label: 'Editor', hint: 'writes and publishes their own content' },
+  { value: 'manager', label: 'Manager', hint: 'all content, plus the theme, menus, popups and redirects' },
+  { value: 'admin', label: 'Administrator', hint: 'everything, including accounts, security and backups' },
+];
 
 type UserRow = {
   id: string;
@@ -306,14 +317,21 @@ function UsersScreenInner({ currentUserId }: { currentUserId: string }) {
                     maxLength={40}
                   />
                 </Field>
-                <Field label="Role" htmlFor="user-role">
+                <Field
+                  label="Role"
+                  htmlFor="user-role"
+                  hint={ROLE_CHOICES.find((r) => r.value === form.role)?.hint}
+                >
                   <Select
                     id="user-role"
                     value={form.role}
                     onChange={(event) => setForm({ ...form, role: event.target.value as Role })}
                   >
-                    <option value="editor">Editor</option>
-                    <option value="admin">Administrator</option>
+                    {ROLE_CHOICES.map((role) => (
+                      <option key={role.value} value={role.value}>
+                        {role.label}
+                      </option>
+                    ))}
                   </Select>
                 </Field>
               </div>
@@ -424,7 +442,9 @@ function UsersScreenInner({ currentUserId }: { currentUserId: string }) {
                   <Td>{row.username}</Td>
                   <Td>{row.email}</Td>
                   <Td>
-                    <Badge tone={row.role === 'admin' ? 'alert' : 'neutral'}>{row.role}</Badge>
+                    <Badge tone={row.role === 'admin' || row.role === 'manager' ? 'alert' : 'neutral'}>
+                      {row.role}
+                    </Badge>
                   </Td>
                   <Td>
                     <Badge tone={row.isActive ? 'live' : 'archived'}>{row.isActive ? 'active' : 'disabled'}</Badge>

@@ -35,7 +35,7 @@ const updateSchema = z.object({
   firstName: z.string().max(100).optional(),
   lastName: z.string().max(100).optional(),
   phone: z.string().max(40).nullable().optional(),
-  role: z.enum(['admin', 'editor']).optional(),
+  role: z.enum(['admin', 'manager', 'editor', 'author', 'reviewer']).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(1).max(200).optional(),
   /** Clears TOTP so the user must enrol again — for a lost authenticator. */

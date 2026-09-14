@@ -13,7 +13,7 @@ const AUDIENCE = 'house-edge-admin';
 export type AccessClaims = {
   sub: string;
   email: string;
-  role: 'admin' | 'editor';
+  role: 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
   /** Session family, so an access token can be tied to its refresh family. */
   fam: string;
 };

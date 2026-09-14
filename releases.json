@@ -1,6 +1,14 @@
 {
-  "latest": "1.0.0",
+  "latest": "1.1.0",
   "releases": [
+    {
+      "version": "1.1.0",
+      "date": "2026-09-14",
+      "summary": "Three more roles — manager, author and reviewer — alongside administrator and editor. Existing accounts are unchanged.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "1.0.0",
       "date": "2026-09-14",

@@ -1,7 +1,31 @@
 import 'server-only';
 import type { SessionUser } from './session';
 
-export type Role = 'admin' | 'editor';
+/* ═══════════════════════════════════════════════════════════════════════════
+   Roles
+   ───────────────────────────────────────────────────────────────────────────
+   Five, in order of authority. 'admin' and 'editor' are the original two and
+   keep exactly what they always had — adding the others changes no existing
+   account's access.
+
+     admin     everything, including who else has an account
+     manager   an editor who also owns the site's chrome: appearance, menus,
+               popups, redirects. Not users, settings, email, security,
+               updates, backups or the audit log — the technical owner keeps
+               those.
+     editor    writes and publishes content, their own only (ownsOrAdmin)
+     author    writes and deletes their own drafts, and cannot publish
+               anything. The most-asked-for split in any CMS: somebody who
+               writes without being able to put it on the live site.
+     reviewer  reads content and enquiries, changes nothing but their own
+               profile. For a client who wants to see the site and handle
+               enquiries without being able to break either.
+
+   Two things that never widen: `users:*`, because an account that can create
+   accounts is an account that can promote itself; and the export/erase half of
+   the newsletter and form submissions, because those are personal data.
+   ═══════════════════════════════════════════════════════════════════════════ */
+export type Role = 'admin' | 'manager' | 'editor' | 'author' | 'reviewer';
 
 /**
  * Every capability the admin panel exposes. Permission is decided here and
@@ -9,36 +33,39 @@ export type Role = 'admin' | 'editor';
  * but hiding is never the control.
  */
 export const PERMISSIONS = {
-  'dashboard:view': ['admin', 'editor'],
+  'dashboard:view': ['admin', 'manager', 'editor', 'author', 'reviewer'],
 
-  'pages:read': ['admin', 'editor'],
-  'pages:write': ['admin', 'editor'],
-  'pages:delete': ['admin', 'editor'],
-  'pages:publish': ['admin', 'editor'],
+  'pages:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'pages:write': ['admin', 'manager', 'editor', 'author'],
+  'pages:delete': ['admin', 'manager', 'editor', 'author'],
+  // An author writes; an author does not decide what the public sees.
+  'pages:publish': ['admin', 'manager', 'editor'],
 
-  'posts:read': ['admin', 'editor'],
-  'posts:write': ['admin', 'editor'],
-  'posts:delete': ['admin', 'editor'],
-  'posts:publish': ['admin', 'editor'],
+  'posts:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'posts:write': ['admin', 'manager', 'editor', 'author'],
+  'posts:delete': ['admin', 'manager', 'editor', 'author'],
+  'posts:publish': ['admin', 'manager', 'editor'],
 
-  'categories:read': ['admin', 'editor'],
-  'categories:write': ['admin', 'editor'],
-  'categories:delete': ['admin', 'editor'],
+  'categories:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  // A category is site-wide furniture, not one person's content.
+  'categories:write': ['admin', 'manager', 'editor'],
+  'categories:delete': ['admin', 'manager', 'editor'],
 
-  'media:read': ['admin', 'editor'],
-  'media:write': ['admin', 'editor'],
-  'media:delete': ['admin', 'editor'],
+  'media:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'media:write': ['admin', 'manager', 'editor', 'author'],
+  // Deleting a file can empty an image on a page somebody else wrote.
+  'media:delete': ['admin', 'manager', 'editor'],
 
-  'enquiries:read': ['admin', 'editor'],
-  'enquiries:write': ['admin', 'editor'],
+  'enquiries:read': ['admin', 'manager', 'editor', 'reviewer'],
+  'enquiries:write': ['admin', 'manager', 'editor', 'reviewer'],
 
   // Sign-up addresses are personal data: whoever handles enquiries may see
   // the list; only an administrator may export or erase it.
-  'newsletter:read': ['admin', 'editor'],
+  'newsletter:read': ['admin', 'manager', 'editor', 'reviewer'],
   'newsletter:write': ['admin'],
 
   // Form answers are personal data too: the same split as the newsletter.
-  'submissions:read': ['admin', 'editor'],
+  'submissions:read': ['admin', 'manager', 'editor', 'reviewer'],
   'submissions:write': ['admin'],
 
   // Admin only — the Users section is hidden entirely from editors.
@@ -63,30 +90,30 @@ export const PERMISSIONS = {
   'backups:write': ['admin'],
   // The theme rewrites the look of every public page, so it sits with the
   // other admin-only capabilities rather than with content editing.
-  'appearance:read': ['admin', 'editor'],
-  'appearance:write': ['admin'],
+  'appearance:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'appearance:write': ['admin', 'manager'],
 
-  // Menus change every page's chrome, so they sit with the other admin-only
-  // capabilities rather than with content editing.
-  'navigation:read': ['admin', 'editor'],
-  'navigation:write': ['admin'],
+  // Menus change every page's chrome, so they stay with whoever owns the
+  // site's look rather than with content editing.
+  'navigation:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'navigation:write': ['admin', 'manager'],
 
   // A popup appears over every page it targets, so it sits with the menus.
-  'popups:read': ['admin', 'editor'],
-  'popups:write': ['admin'],
+  'popups:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'popups:write': ['admin', 'manager'],
 
   // History follows the content it describes: anyone who may edit a page may
   // see and restore its revisions, subject to the same ownership check.
-  'revisions:read': ['admin', 'editor'],
-  'revisions:restore': ['admin', 'editor'],
+  'revisions:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'revisions:restore': ['admin', 'manager', 'editor', 'author'],
 
-  // A redirect can send every visitor to an arbitrary URL, so it sits with the
-  // admin-only capabilities rather than with content editing.
-  'redirects:read': ['admin', 'editor'],
-  'redirects:write': ['admin'],
+  // A redirect can send every visitor to an arbitrary URL, so it stays with
+  // the roles that own the site rather than with content editing.
+  'redirects:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'redirects:write': ['admin', 'manager'],
   'audit:read': ['admin'],
 
-  'profile:write': ['admin', 'editor'],
+  'profile:write': ['admin', 'manager', 'editor', 'author', 'reviewer'],
 } as const satisfies Record<string, readonly Role[]>;
 
 export type Permission = keyof typeof PERMISSIONS;
@@ -108,15 +135,18 @@ export function assertCan(user: Pick<SessionUser, 'role'> | null | undefined, pe
 }
 
 /**
- * Row-level ownership. Admins may act on anything; an editor may only mutate
- * a resource they authored. Applied on top of the permission check, never
- * instead of it.
+ * Row-level ownership. Applied on top of the permission check, never instead
+ * of it.
+ *
+ * An administrator or a manager may act on anything — a manager runs the site
+ * day to day and cannot do that while locked out of other people's drafts.
+ * Everyone else may only mutate what they authored.
  */
 export function ownsOrAdmin(
   user: Pick<SessionUser, 'id' | 'role'> | null | undefined,
   resourceAuthorId: string | null | undefined,
 ): boolean {
   if (!user) return false;
-  if (user.role === 'admin') return true;
+  if (user.role === 'admin' || user.role === 'manager') return true;
   return Boolean(resourceAuthorId) && resourceAuthorId === user.id;
 }
