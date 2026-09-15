@@ -45,6 +45,11 @@ happening — including an honest statement of what these measures cannot do.
 panel, download it, restore it. When a new engine release exists, the panel
 says so, and can apply it for you if you allow it.
 
+**Move a site's content to another site.** Export the pages, posts, media and
+design as one file and import it somewhere else — staging to production, or a
+rebuild. It carries no accounts and no visitor data: enquiries, newsletter
+sign-ups and form answers stay with the site they were given to.
+
 ---
 
 ## Requirements

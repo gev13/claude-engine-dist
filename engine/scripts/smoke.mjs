@@ -265,6 +265,7 @@ async function main() {
     '/api/admin/security',
     '/api/admin/updates',
     '/api/admin/backups',
+    '/api/admin/transfer',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

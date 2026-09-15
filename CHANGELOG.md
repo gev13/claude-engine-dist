@@ -9,6 +9,32 @@ told about before taking it.
 
 ---
 
+## 1.2.0 — 2026-09-15
+
+**Move a site's content to another site.** A new **Export & import** screen
+takes every page, post, category, redirect and — if you want them — the media
+files and the design, as one file you can import into a different site.
+Staging to production, a rebuild, or handing a site to somebody else.
+
+It carries **no people**. Not the accounts, and not the visitors either:
+enquiries, newsletter sign-ups and form answers stay with the site they were
+given to. Use a backup when you want a complete copy of one site; use this
+when you want its content somewhere else. Each screen says which is which.
+
+Two things worth knowing before you use it:
+
+- **Everything imported is credited to whoever imports it.** An export carries
+  no accounts, so it cannot carry authors.
+- **An import replaces all content and clears revision history**, and takes a
+  backup of the site as it stands first. Your accounts, enquiries and settings
+  are left alone, and nobody is signed out.
+
+**Fixed:** a manager could not see Appearance, Menus, Popups or Redirects in
+the navigation despite being allowed to use them, and an author was shown
+Contact enquiries, which they cannot open. Introduced in 1.1.0.
+
+---
+
 ## 1.1.0 — 2026-09-14
 
 **Changes the database.** A backup is taken before it is applied.

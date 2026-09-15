@@ -89,6 +89,8 @@ describe('the boundaries that must not move', () => {
       'security:write',
       'backups:read',
       'backups:write',
+      'transfer:read',
+      'transfer:write',
       'updates:read',
       'updates:write',
       'settings:write',

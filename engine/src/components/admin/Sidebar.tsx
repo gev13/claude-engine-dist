@@ -25,28 +25,32 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
   {
     section: 'Enquiries',
     items: [
-      { label: 'Contact enquiries', href: '/admin/enquiries' },
-      { label: 'Newsletter sign-ups', href: '/admin/newsletter' },
-      { label: 'Form submissions', href: '/admin/submissions' },
+      // An author writes; they do not handle the people who write back.
+      { label: 'Contact enquiries', href: '/admin/enquiries', roles: ['admin', 'manager', 'editor', 'reviewer'] },
+      { label: 'Newsletter sign-ups', href: '/admin/newsletter', roles: ['admin', 'manager', 'editor', 'reviewer'] },
+      { label: 'Form submissions', href: '/admin/submissions', roles: ['admin', 'manager', 'editor', 'reviewer'] },
     ],
   },
   {
     section: 'Design',
     items: [
-      { label: 'Appearance', href: '/admin/appearance', roles: ['admin'] },
-      { label: 'Menus', href: '/admin/navigation', roles: ['admin'] },
-      { label: 'Popups', href: '/admin/popups', roles: ['admin'] },
+      // A manager owns the site's chrome — these must match rbac.ts, or the nav
+      // hides something the role is allowed to do.
+      { label: 'Appearance', href: '/admin/appearance', roles: ['admin', 'manager'] },
+      { label: 'Menus', href: '/admin/navigation', roles: ['admin', 'manager'] },
+      { label: 'Popups', href: '/admin/popups', roles: ['admin', 'manager'] },
     ],
   },
   {
     section: 'Administration',
     items: [
       { label: 'Users', href: '/admin/users', roles: ['admin'] },
-      { label: 'Redirects', href: '/admin/redirects', roles: ['admin'] },
+      { label: 'Redirects', href: '/admin/redirects', roles: ['admin', 'manager'] },
       { label: 'Email', href: '/admin/email', roles: ['admin'] },
       { label: 'Security', href: '/admin/security', roles: ['admin'] },
       { label: 'Updates', href: '/admin/updates', roles: ['admin'] },
       { label: 'Backups', href: '/admin/backups', roles: ['admin'] },
+      { label: 'Export & import', href: '/admin/transfer', roles: ['admin'] },
       { label: 'Audit log', href: '/admin/audit', roles: ['admin'] },
       { label: 'Settings', href: '/admin/settings', roles: ['admin'] },
       { label: 'Profile', href: '/admin/profile' },

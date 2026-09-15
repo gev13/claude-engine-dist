@@ -93,6 +93,10 @@ export const PERMISSIONS = {
   // above all restoring one, is the administrator's alone.
   'backups:read': ['admin'],
   'backups:write': ['admin'],
+  // Exporting carries every page and every uploaded file off the server;
+  // importing replaces all of it. Both stay with the administrator.
+  'transfer:read': ['admin'],
+  'transfer:write': ['admin'],
   // The theme rewrites the look of every public page, so it sits with the
   // other admin-only capabilities rather than with content editing.
   'appearance:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],

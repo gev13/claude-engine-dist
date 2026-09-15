@@ -1,6 +1,14 @@
 {
-  "latest": "1.1.0",
+  "latest": "1.2.0",
   "releases": [
+    {
+      "version": "1.2.0",
+      "date": "2026-09-15",
+      "summary": "Export a site's content — pages, posts, media and design — and import it into another site. No accounts and no visitor data travel with it.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "1.1.0",
       "date": "2026-09-14",
