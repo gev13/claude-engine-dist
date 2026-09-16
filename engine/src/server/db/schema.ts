@@ -253,6 +253,19 @@ export const pages = pgTable(
     slug: varchar('slug', { length: 200 }).notNull(),
     /** Full public path, e.g. /services/api-security-testing. */
     path: varchar('path', { length: 300 }).notNull(),
+    /* Package 8. Every existing row is English, which is why the default is
+       'en' rather than nullable — a page always has a language. */
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    /**
+     * Translations of one another share a group. It is what the language
+     * switcher reads, what hreflang pairs are built from, and what the admin
+     * uses to say which languages a page is missing.
+     *
+     * `defaultRandom()` is deliberate: adding this column gives every existing
+     * row its own group, so nothing is accidentally declared a translation of
+     * anything else.
+     */
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
     title: varchar('title', { length: 300 }).notNull(),
     /** Short label used in nav and breadcrumbs. */
     navLabel: varchar('nav_label', { length: 120 }),
@@ -292,7 +305,10 @@ export const pages = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('pages_path_key').on(t.path),
+    /* A path is unique *within* a language: /about in English and /about in
+       Russian are different pages, not a collision. */
+    uniqueIndex('pages_path_key').on(t.locale, t.path),
+    index('pages_translation_idx').on(t.translationGroupId),
     index('pages_slug_idx').on(t.slug),
     index('pages_status_idx').on(t.status),
     index('pages_parent_idx').on(t.parentId),
@@ -308,6 +324,9 @@ export const categories = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     slug: varchar('slug', { length: 200 }).notNull(),
+    /** Package 8 — see the note on `pages.locale`. */
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
     name: varchar('name', { length: 200 }).notNull(),
     description: text('description').notNull().default(''),
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
@@ -317,7 +336,11 @@ export const categories = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('categories_slug_key').on(t.slug), index('categories_parent_idx').on(t.parentId)],
+  (t) => [
+    uniqueIndex('categories_slug_key').on(t.locale, t.slug),
+    index('categories_translation_idx').on(t.translationGroupId),
+    index('categories_parent_idx').on(t.parentId),
+  ],
 );
 
 export const posts = pgTable(
@@ -325,6 +348,9 @@ export const posts = pgTable(
   {
     id: uuid('id').primaryKey().defaultRandom(),
     slug: varchar('slug', { length: 200 }).notNull(),
+    /** Package 8 — see the note on `pages.locale`. */
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
     title: varchar('title', { length: 300 }).notNull(),
     excerpt: text('excerpt').notNull().default(''),
     /** Sanitised TinyMCE HTML. */
@@ -351,7 +377,8 @@ export const posts = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    uniqueIndex('posts_slug_key').on(t.slug),
+    uniqueIndex('posts_slug_key').on(t.locale, t.slug),
+    index('posts_translation_idx').on(t.translationGroupId),
     index('posts_status_published_idx').on(t.status, t.publishedAt),
     index('posts_kind_idx').on(t.kind),
     index('posts_category_idx').on(t.primaryCategoryId),
@@ -616,6 +643,129 @@ export const refreshTokensRelations = relations(refreshTokens, ({ one }) => ({
   user: one(users, { fields: [refreshTokens.userId], references: [users.id] }),
 }));
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Jobs and applications (package 9)
+   ───────────────────────────────────────────────────────────────────────────
+   A job is a content type rather than a block, for the same reason a post is:
+   it has a listing, a page of its own and something people do on it. It gets
+   the same shape as pages and posts — a language, a translation group, a
+   status, a soft delete, an author — so everything built for those works here
+   too.
+
+   The six columns between `location` and `department` are the meta grid the
+   design draws. They are free text rather than enums on purpose: "Yerevan,
+   Armenia" and "Hybrid — 3 days in office" are both real answers, and a fixed
+   list would be wrong within a year.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export const applicationStatus = pgEnum('application_status', [
+  'new',
+  'read',
+  'shortlisted',
+  'rejected',
+]);
+
+export const jobs = pgTable(
+  'jobs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: varchar('slug', { length: 200 }).notNull(),
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
+    title: varchar('title', { length: 300 }).notNull(),
+    /** The truncated line on the listing card. */
+    excerpt: text('excerpt').notNull().default(''),
+
+    /* The meta grid, in the order the design shows it. */
+    location: varchar('location', { length: 160 }).notNull().default(''),
+    contractType: varchar('contract_type', { length: 120 }).notNull().default(''),
+    workingTime: varchar('working_time', { length: 120 }).notNull().default(''),
+    seniority: varchar('seniority', { length: 120 }).notNull().default(''),
+    workweek: varchar('workweek', { length: 120 }).notNull().default(''),
+    department: varchar('department', { length: 160 }).notNull().default(''),
+
+    /* The three body sections, each sanitised rich text. */
+    description: text('description').notNull().default(''),
+    responsibilities: text('responsibilities').notNull().default(''),
+    benefits: text('benefits').notNull().default(''),
+
+    coverMediaId: uuid('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
+    seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
+
+    /** Shown as "Posted 12 days ago"; the deadline as "12 days left". */
+    postedAt: timestamp('posted_at', { withTimezone: true }),
+    deadline: timestamp('deadline', { withTimezone: true }),
+    /** Closed by hand, independently of the deadline passing. */
+    isOpen: boolean('is_open').notNull().default(true),
+
+    status: contentStatus('status').notNull().default('draft'),
+    sortOrder: integer('sort_order').notNull().default(0),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('jobs_slug_key').on(t.locale, t.slug),
+    index('jobs_translation_idx').on(t.translationGroupId),
+    index('jobs_status_idx').on(t.status, t.publishedAt),
+    index('jobs_open_idx').on(t.isOpen),
+  ],
+);
+
+/**
+ * An application is a form submission with a file attached.
+ *
+ * The CV is referenced by the name this engine generated, never by whatever
+ * the applicant called theirs — that is kept alongside, for the inbox to show.
+ * Deleting an application deletes the row; the file is removed by the code
+ * that handles it, because a database cannot unlink.
+ */
+export const applications = pgTable(
+  'applications',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    jobId: uuid('job_id')
+      .notNull()
+      .references(() => jobs.id, { onDelete: 'cascade' }),
+    /** Kept beside the id, so a deleted job still names itself in the inbox. */
+    jobTitle: varchar('job_title', { length: 300 }).notNull().default(''),
+
+    name: varchar('name', { length: 200 }).notNull(),
+    email: varchar('email', { length: 255 }).notNull(),
+    phone: varchar('phone', { length: 60 }).notNull().default(''),
+    coverLetter: text('cover_letter').notNull().default(''),
+
+    /** Generated: a uuid and an extension. See server/applications/storage.ts. */
+    cvFilename: varchar('cv_filename', { length: 80 }),
+    /** What the applicant called it. Display only; never a path. */
+    cvOriginalName: varchar('cv_original_name', { length: 160 }).notNull().default(''),
+    cvBytes: integer('cv_bytes').notNull().default(0),
+
+    status: applicationStatus('status').notNull().default('new'),
+    /** Truncated, never used for anything but abuse triage. */
+    ip: varchar('ip', { length: 64 }),
+    userAgent: varchar('user_agent', { length: 400 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index('applications_job_idx').on(t.jobId),
+    index('applications_status_idx').on(t.status),
+    index('applications_created_idx').on(t.createdAt),
+  ],
+);
+
+export const jobsRelations = relations(jobs, ({ one, many }) => ({
+  author: one(users, { fields: [jobs.authorId], references: [users.id] }),
+  cover: one(media, { fields: [jobs.coverMediaId], references: [media.id] }),
+  applications: many(applications),
+}));
+
+export const applicationsRelations = relations(applications, ({ one }) => ({
+  job: one(jobs, { fields: [applications.jobId], references: [jobs.id] }),
+}));
+
 /* Inferred row types */
 export type User = typeof users.$inferSelect;
 export type NewUser = typeof users.$inferInsert;
@@ -625,3 +775,6 @@ export type Category = typeof categories.$inferSelect;
 export type Media = typeof media.$inferSelect;
 export type Enquiry = typeof enquiries.$inferSelect;
 export type AuditEntry = typeof auditLog.$inferSelect;
+export type Job = typeof jobs.$inferSelect;
+export type NewJob = typeof jobs.$inferInsert;
+export type Application = typeof applications.$inferSelect;

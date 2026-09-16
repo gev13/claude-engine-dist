@@ -9,6 +9,94 @@ told about before taking it.
 
 ---
 
+## 2.0.0 — 2026-09-16
+
+**Changes the database, and changes how some pages look.** A backup is taken
+before the migrations are applied. Read the last section before you take it.
+
+### Your site can speak more than one language
+
+Pick a main language while installing; add others from **Languages** in the
+admin. The main language stays at the addresses it already has — `/about` is
+still `/about` — and the others sit under a prefix, `/hy/about`. A site that
+speaks one language is unchanged and pays nothing for this.
+
+Pages, posts, categories, menus, site details and the engine's own words all
+translate. **Translations** gives you the original beside the translation, so
+you are never guessing what a field was. The admin panel itself stays in
+English.
+
+The SEO comes with it: canonical and `hreflang` on every page, alternates in
+the sitemaps, and the right `og:locale`.
+
+### Careers
+
+A **Roles** screen for job adverts and a careers section for visitors:
+a listing at `/careers`, a page per role with the six-fact grid the design
+asks for, and an application form that takes a CV.
+
+A filled role is closed by hand and **keeps its page** — somebody following a
+months-old link gets an explanation and a link to what is open, not a 404. It
+stops taking applications, leaves the sitemap, and stops telling search
+engines it is a vacancy.
+
+Applications arrive in their own inbox under Enquiries. **A CV is never put in
+the media library**: it is stored outside it, reachable only through an
+admin-only route that logs every download.
+
+### Things are deleted when they should be
+
+Applications, form submissions and contact enquiries are now kept for a period
+— a year by default — and then deleted, files and all. Set it on each inbox,
+or set it to zero to keep everything for ever, which is now a decision rather
+than an accident.
+
+The sweep runs as the site is used, at most once every six hours. A site with
+a deadline to meet can run `npm run retention:sweep` from its own cron.
+
+### Fifty-five more typefaces, and Armenian at last
+
+The engine self-hosts a catalogue of Google Fonts alongside its own three, and
+**Fonts by language** lets each language use a different one. This matters more
+than it sounds: the three original faces have no Armenian or Cyrillic glyphs,
+so those languages were rendering in whatever the reader's device substituted.
+The Appearance screen now says so when a face cannot draw a language.
+
+### Building pages
+
+- **Rows nest three deep**, so a two-column section can hold a three-up grid.
+- **A grid can become a swipeable track on small screens** — three or four
+  across on a desktop, one at a time under a thumb. Set it in the Design tab
+  of any section with a grid in it. Nothing is hidden: every card stays on the
+  page and reachable by keyboard.
+- **A cookie notice**, off by default, with your own wording, accept and
+  reject, and a `#cookie-settings` link that reopens it.
+- **Mosaic**, a new card-grid layout with tiles of two sizes.
+- **A badge on a card** — "New", "Coming soon", "Sold out".
+- **A file question in the form builder**, stored outside the media library
+  like a CV, and downloadable only from the admin.
+- **Search the block list** when adding one, instead of scrolling sixty.
+- Pressing Enter in a plain text block now starts a new line on the site too.
+- Empty fields in the Design tab and in Appearance now **show the value they
+  inherit** instead of the word "inherit".
+
+### Read this before upgrading
+
+- **A padding you set in the Design tab now replaces the section's own**
+  rather than adding to it. This was the point — setting it to `0` used to do
+  nothing at all — but a section you have already styled may sit tighter than
+  it did. Worth a look at pages where you have set section padding by hand.
+- **Two database migrations.** A backup is taken first.
+- The engine is about 13 MB larger, all of it fonts.
+
+**Fixed:** a manager was still bounced off Appearance, Menus, Popups and
+Redirects when they opened them, even after 1.2.0 fixed the navigation. Also
+fixed: you could not nest a row, the block picker had no search, section
+padding and borders could not really be overridden, and Enter in a plain text
+block was lost.
+
+---
+
 ## 1.2.0 — 2026-09-15
 
 **Move a site's content to another site.** A new **Export & import** screen

@@ -2,26 +2,44 @@
 
 import { Field, Input, Select } from '@/components/admin/ui';
 import { isColor, isLength, isLineHeight } from '@/lib/theme';
+import { cn } from '@/lib/utils';
 
 /* Small controls shared by every tab of the Appearance screen.
 
    All three follow the same contract: an empty string means "not set", and a
    value that would fail the theme schema is flagged here rather than at save,
-   so an editor sees the problem beside the field they typed it in. */
+   so an editor sees the problem beside the field they typed it in.
+
+   Each also takes `inherited`: the value that applies while the field is
+   empty. "inherit" on its own is true and useless — an editor cannot tell
+   whether the heading they are about to change is 40px or 66px — so where the
+   caller knows the answer, the field shows it rather than the word. */
 
 export function ColorField({
   label,
   hint,
   value,
+  inherited,
   onChange,
 }: {
   label: string;
   hint?: string;
   value: string | undefined;
+  /** The colour in force while this field is empty. */
+  inherited?: string;
   onChange: (next: string | undefined) => void;
 }) {
   const current = value ?? '';
   const invalid = current !== '' && !isColor(current);
+
+  // The swatch showed black for every unset colour, which read as a *choice*
+  // of black. Falling back to the inherited colour makes it show what is
+  // actually on the page.
+  const shown = /^#[0-9a-fA-F]{6}$/.test(current)
+    ? current
+    : inherited && /^#[0-9a-fA-F]{6}$/.test(inherited)
+      ? inherited
+      : '#000000';
 
   return (
     <Field label={label} hint={hint} error={invalid ? 'Use a hex, rgb() or hsl() colour.' : undefined}>
@@ -29,15 +47,16 @@ export function ColorField({
         <input
           type="color"
           aria-label={`${label} colour picker`}
-          // A picker cannot represent "unset", so it shows the placeholder
-          // black until a real value exists.
-          value={/^#[0-9a-fA-F]{6}$/.test(current) ? current : '#000000'}
+          value={shown}
           onChange={(e) => onChange(e.target.value)}
-          className="h-9 w-10 shrink-0 cursor-pointer border-2 border-hairline bg-ink p-0.5"
+          className={cn(
+            'h-9 w-10 shrink-0 cursor-pointer border-2 bg-ink p-0.5',
+            current === '' ? 'border-dashed border-smoke' : 'border-hairline',
+          )}
         />
         <Input
           value={current}
-          placeholder="inherit"
+          placeholder={inherited || 'inherit'}
           spellCheck={false}
           onChange={(e) => onChange(e.target.value.trim() || undefined)}
         />
@@ -60,6 +79,7 @@ export function LengthField({
   hint,
   placeholder,
   value,
+  inherited,
   onChange,
   kind = 'length',
 }: {
@@ -67,6 +87,8 @@ export function LengthField({
   hint?: string;
   placeholder?: string;
   value: string | undefined;
+  /** The value in force while this field is empty. */
+  inherited?: string;
   onChange: (next: string | undefined) => void;
   kind?: 'length' | 'lineHeight';
 }) {
@@ -88,10 +110,15 @@ export function LengthField({
     >
       <Input
         value={current}
-        placeholder={placeholder ?? 'inherit'}
+        // An explicit placeholder is guidance the caller wrote ("e.g. 66px");
+        // the inherited value is a fact, so it comes first.
+        placeholder={inherited || placeholder || 'inherit'}
         spellCheck={false}
         onChange={(e) => onChange(e.target.value.trim() || undefined)}
       />
+      {inherited && placeholder && current === '' && (
+        <p className="m-0 mt-1 text-[11px] text-smoke">{placeholder}</p>
+      )}
     </Field>
   );
 }
@@ -101,23 +128,47 @@ export function ChoiceField<T extends string>({
   hint,
   value,
   options,
+  groups,
+  inherited,
   onChange,
 }: {
   label: string;
   hint?: string;
   value: T | undefined;
-  options: readonly { value: T; label: string }[];
+  options?: readonly { value: T; label: string }[];
+  /**
+   * Options under headings, for a list long enough that a flat one stops
+   * being a menu — sixty typefaces, say.
+   */
+  groups?: readonly { label: string; options: readonly { value: T; label: string }[] }[];
+  /** The value in force while nothing is chosen. */
+  inherited?: string;
   onChange: (next: T | undefined) => void;
 }) {
+  const flat = groups ? groups.flatMap((g) => g.options) : (options ?? []);
+  // Name the default rather than calling it "Default": the list already holds
+  // the value, so showing which one is in force costs a lookup and nothing else.
+  const named = inherited && flat.find((o) => o.value === inherited)?.label;
+
   return (
     <Field label={label} hint={hint}>
       <Select value={value ?? ''} onChange={(e) => onChange((e.target.value || undefined) as T | undefined)}>
-        <option value="">Default</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        <option value="">{named ? `Default — ${named}` : inherited ? `Default — ${inherited}` : 'Default'}</option>
+        {groups
+          ? groups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.options.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </optgroup>
+            ))
+          : flat.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
       </Select>
     </Field>
   );

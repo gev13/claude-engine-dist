@@ -27,7 +27,7 @@ describe('section style to CSS', () => {
 
   it('scopes every rule to the block class', () => {
     const css = blockStyleToCss('b1', parse({ spacing: { base: { paddingTop: '40px' } } }));
-    expect(css).toBe('.he-b-b1{padding-top:40px}');
+    expect(css).toBe('.he-b-b1{padding-top:40px}.he-b-b1>*,.he-b-b1>*>.shell{padding-top:0}');
   });
 
   it('puts a breakpoint override in a media query', () => {
@@ -36,7 +36,90 @@ describe('section style to CSS', () => {
       parse({ spacing: { base: { paddingTop: '80px' }, mobile: { paddingTop: '24px' } } }),
     );
     expect(css).toContain('.he-b-b1{padding-top:80px}');
-    expect(css).toContain('@media (max-width:768px){.he-b-b1{padding-top:24px}}');
+    expect(css).toContain('@media (max-width:768px){.he-b-b1{padding-top:24px}');
+  });
+
+  /* ── The band steps aside ───────────────────────────────────────────────────
+     A block paints a full-bleed band with its own padding, in a layer; the
+     wrapper these rules style sits outside it. Without flattening the band the
+     two add up, and a padding of 0 does nothing whatsoever — which is what
+     "I can't edit this section's padding" turned out to mean.
+     ───────────────────────────────────────────────────────────────────────── */
+
+  it('flattens the band on the sides a padding was set, and only those', () => {
+    const css = blockStyleToCss('b1', parse({ spacing: { base: { paddingTop: '0px' } } }));
+    expect(css).toContain('.he-b-b1>*,.he-b-b1>*>.shell{padding-top:0}');
+    // The sides nobody touched keep the block's own rhythm.
+    expect(css).not.toContain('padding-bottom');
+  });
+
+  it('leaves the band alone when only a margin was set', () => {
+    const css = blockStyleToCss('b1', parse({ spacing: { base: { marginTop: '40px' } } }));
+    expect(css).toBe('.he-b-b1{margin-top:40px}');
+  });
+
+  it('flattens the band per breakpoint, not once for all of them', () => {
+    const css = blockStyleToCss('b1', parse({ spacing: { mobile: { paddingTop: '0px' } } }));
+    expect(css).toContain('@media (max-width:768px){.he-b-b1{padding-top:0px}.he-b-b1>*,.he-b-b1>*>.shell{padding-top:0}}');
+    // Nothing outside the media query: the wider widths were not asked about.
+    expect(css.startsWith('@media')).toBe(true);
+  });
+
+  it('drops the band’s own rule when the editor takes charge of the border', () => {
+    expect(blockStyleToCss('b1', parse({ border: { bottomWidth: '4px' } }))).toContain('.he-b-b1>*{border-width:0}');
+    expect(blockStyleToCss('b1', parse({ border: { style: 'dashed' } }))).toContain('.he-b-b1>*{border-width:0}');
+    // A radius or a colour describes a border rather than asking for one.
+    expect(blockStyleToCss('b1', parse({ border: { radius: '8px' } }))).not.toContain('border-width:0');
+  });
+
+  /* A column's children are whole blocks; their bands are not the column's to
+     flatten, so the column prefix never emits the escape hatch. */
+  it('never flattens a band from a column’s own style', () => {
+    const css = blockStyleToCss('colA', parse({ spacing: { base: { paddingTop: '40px' } } }), 'he-c');
+    expect(css).toBe('.he-c-colA{padding-top:40px}');
+  });
+
+  /* ── Swiping sideways ───────────────────────────────────────────────────────
+     A grid on a desktop, a scroll-snap track under a thumb. CSS only, so every
+     card stays in the DOM and in the tab order — and a row keeps its grid
+     somewhere else from every other block, which is the whole reason
+     `blockStyleToCss` has to be told which it is looking at.
+     ───────────────────────────────────────────────────────────────────────── */
+
+  it('turns a block’s grid into a track below the chosen width', () => {
+    const css = blockStyleToCss('b1', parse({ swipeOn: 'mobile' }));
+    expect(css).toContain('@media (max-width:768px)');
+    expect(css).toContain('.he-b-b1 [class*="grid-cols-"]{display:flex');
+    expect(css).toContain('scroll-snap-type:x mandatory');
+    expect(css).toContain('scroll-snap-align:start');
+    // Never at the wider widths.
+    expect(css).not.toContain('max-width:1440px');
+    expect(css).not.toContain('max-width:1024px');
+  });
+
+  it('aims at a row’s own grid, not at the grids of the blocks inside it', () => {
+    const row = blockStyleToCss('r1', parse({ swipeOn: 'mobile' }), 'he-b', true);
+    expect(row).toContain('.he-b-r1>.shell>[class^="he-r-"]{display:flex');
+    /* The child-combinator path is exact, so a swipe set on an outer row
+       cannot reach a row nested inside it — and it never matches the
+       `grid-cols-*` of a card grid sitting in one of its columns. */
+    expect(row).not.toContain('grid-cols-');
+  });
+
+  it('says which way the track runs, because reverseOnMobile has an opinion', () => {
+    // `rowToCss` already emits `flex-direction:column-reverse` at this width
+    // for a reversed row; swiping wins, and has to say so.
+    expect(blockStyleToCss('r1', parse({ swipeOn: 'mobile' }), 'he-b', true)).toContain('flex-direction:row');
+  });
+
+  it('follows the width it was given, not always the phone', () => {
+    expect(blockStyleToCss('b1', parse({ swipeOn: 'tablet' }))).toContain('@media (max-width:1024px)');
+    expect(blockStyleToCss('b1', parse({ swipeOn: 'laptop' }))).toContain('@media (max-width:1440px)');
+  });
+
+  it('emits nothing when nobody asked for it', () => {
+    expect(blockStyleToCss('b1', parse({ hideOn: ['mobile'] }))).not.toContain('scroll-snap');
+    expect(blockStyleSchema.safeParse({ swipeOn: 'phone' }).success).toBe(false);
   });
 
   it('hides a block at the widths it was told to', () => {
@@ -72,7 +155,9 @@ describe('section style to CSS', () => {
       { id: 'b', style: undefined },
       { id: 'c', style: parse({ spacing: { base: { paddingTop: '20px' } } }) },
     ]);
-    expect(css).toBe('.he-b-a{padding-top:10px}.he-b-c{padding-top:20px}');
+    expect(css).toBe(
+      '.he-b-a{padding-top:10px}.he-b-a>*,.he-b-a>*>.shell{padding-top:0}.he-b-c{padding-top:20px}.he-b-c>*,.he-b-c>*>.shell{padding-top:0}',
+    );
   });
 });
 

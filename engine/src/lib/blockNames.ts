@@ -36,6 +36,7 @@ export const CAROUSEL_LABELS: Record<(typeof CAROUSEL_MODES)[number], string> = 
 export const CARD_GRID_LABELS: Record<(typeof CARD_GRID_VARIANTS)[number], string> = {
   cards: 'Cards',
   tiles: 'Image tiles, edge to edge',
+  mosaic: 'Mosaic — tiles of two sizes',
   icons: 'Icon features',
   imageCards: 'Image cards',
   rows: 'Rows with a checklist',
@@ -69,7 +70,7 @@ const VARIANTS: Partial<Record<BlockType, VariantInfo>> = {
     prop: 'variant',
     fallback: 'cards',
     labels: CARD_GRID_LABELS,
-    patterns: { tiles: 'CT4', icons: 'CT5', imageCards: 'CT5', rows: 'V2', overlay: 'V3' },
+    patterns: { tiles: 'CT4', mosaic: 'CT4', icons: 'CT5', imageCards: 'CT5', rows: 'V2', overlay: 'V3' },
   },
   stats: {
     prop: 'variant',

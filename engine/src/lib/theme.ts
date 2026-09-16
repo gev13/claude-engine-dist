@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { blogSchema } from './blog';
 import { chromeSchema } from './chrome';
+import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Global theme
@@ -74,7 +75,15 @@ const lineHeight = z.string().trim().refine(isLineHeight, 'Not a valid line heig
    Adding a face means adding it to public/fonts, to fonts.css, and here.
    ──────────────────────────────────────────────────────────────────────────── */
 
-export const FONT_STACKS = {
+/**
+ * The five the engine was built with: three self-hosted brand faces and two
+ * that resolve to whatever the reader's device has.
+ *
+ * These keep their short names because they are stored in every theme and
+ * every block style already written — `display` means Bricolage Grotesque and
+ * always will.
+ */
+export const BRAND_STACKS = {
   display: "'Bricolage Grotesque', 'Archivo', system-ui, sans-serif",
   sans: "'Archivo', system-ui, -apple-system, sans-serif",
   mono: "'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace",
@@ -82,7 +91,29 @@ export const FONT_STACKS = {
   serif: "Georgia, 'Times New Roman', Times, serif",
 } as const;
 
-export type FontKey = keyof typeof FONT_STACKS;
+/** What a catalogue family falls back to while its file loads, or if it fails. */
+const FALLBACK: Record<CatalogueRole, string> = {
+  sans: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  serif: "Georgia, 'Times New Roman', Times, serif",
+  display: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  mono: "ui-monospace, 'SFMono-Regular', monospace",
+};
+
+/**
+ * Every face an editor may choose: the five above plus the self-hosted Google
+ * Fonts catalogue.
+ *
+ * Built from `fontCatalogue.ts`, which `scripts/fetch-fonts.mjs` generates
+ * beside the files themselves — so a family cannot be offered unless its
+ * `.woff2` is actually on disk, which is the mistake this arrangement exists
+ * to make impossible.
+ */
+export const FONT_STACKS: Record<string, string> = {
+  ...BRAND_STACKS,
+  ...Object.fromEntries(FONT_CATALOGUE.map((f) => [f.key, `'${f.family}', ${FALLBACK[f.role]}`])),
+};
+
+export type FontKey = string;
 
 export const FONT_LABELS: Record<FontKey, string> = {
   display: 'Bricolage Grotesque (display)',
@@ -90,9 +121,29 @@ export const FONT_LABELS: Record<FontKey, string> = {
   mono: 'JetBrains Mono (labels)',
   system: 'System sans',
   serif: 'Serif',
+  ...Object.fromEntries(FONT_CATALOGUE.map((f) => [f.key, f.family])),
 };
 
-const fontKey = z.enum(['display', 'sans', 'mono', 'system', 'serif']);
+/** What each face is for, so a picker can group fifty of them usefully. */
+export const FONT_ROLES: Record<FontKey, CatalogueRole> = {
+  display: 'display',
+  sans: 'sans',
+  mono: 'mono',
+  system: 'sans',
+  serif: 'serif',
+  ...Object.fromEntries(FONT_CATALOGUE.map((f) => [f.key, f.role])),
+};
+
+/** The five the engine ships with, which need no download. */
+export const BRAND_KEYS = Object.keys(BRAND_STACKS) as FontKey[];
+
+/**
+ * A face, checked against the list rather than typed.
+ *
+ * It is interpolated into a `<style>` element, so it stays an allowlist —
+ * the list is simply longer now, and generated.
+ */
+const fontKey = z.string().refine((value) => value in FONT_STACKS, 'Not a font this site has');
 
 /* ── Typography ───────────────────────────────────────────────────────────── */
 
@@ -211,6 +262,13 @@ const palette = z.object({
 
 export type Palette = z.infer<typeof palette>;
 
+/** The three family variables, any of which a language may override. */
+const localeFontSchema = z.object({
+  display: fontKey.optional(),
+  sans: fontKey.optional(),
+  mono: fontKey.optional(),
+});
+
 export const themeSchema = z.object({
   colors: palette.optional(),
 
@@ -227,6 +285,20 @@ export const themeSchema = z.object({
   blog: blogSchema.optional(),
 
   linkUnderline: z.boolean().optional(),
+
+  /**
+   * The typeface each language uses, when one face cannot draw them all.
+   *
+   * Package 8 said "no per-locale theme — one design, three languages", and
+   * that still holds for the palette and the layout. A typeface is the
+   * exception, because a face that has no Armenian glyphs is not a design
+   * choice being overridden: it is a page rendering in whatever the reader's
+   * device happened to substitute. This narrows the rule rather than breaking
+   * it — only the three family variables move, and only per language.
+   *
+   * Keyed by locale; a language with no entry uses the site's own fonts.
+   */
+  localeFonts: z.record(z.string().trim().min(2).max(5), localeFontSchema).optional(),
 
   typography: z
     .object(

@@ -177,6 +177,47 @@ async function main() {
   check('blog search view renders', search.res.status === 200, `got ${search.res.status}`);
   check('  search view canonicalises to /blog', /rel="canonical" href="[^"]*\/blog"/.test(search.body));
 
+  /* Careers */
+  section('Careers');
+
+  const careersMap = await text('/sitemaps/careers.xml');
+  const careerPaths = sitemapPaths(careersMap.body);
+
+  // The listing exists whether or not anybody has written a page for it.
+  await checkPage('/careers');
+
+  const jobPath = careerPaths.find((p) => /^\/careers\/[^/]+$/.test(p));
+  if (jobPath) {
+    const html = await checkPage(jobPath);
+    check('  open role emits JobPosting structured data', html.includes('"@type":"JobPosting"'));
+    check('  open role is indexable', !/name="robots" content="[^"]*noindex/.test(html));
+    check(
+      '  open role offers the application form',
+      html.includes('name="cv"') && html.includes('type="file"'),
+    );
+  } else {
+    skip('published role renders', 'no open roles published yet');
+  }
+
+  /* A filled role keeps its page and loses its listing: no JobPosting, and
+     noindex, so a search result never sends anybody to a vacancy that has
+     gone. The sitemap is the check — a closed role must not be in it. */
+  check(
+    '  careers sitemap lists only the listing and open roles',
+    careerPaths.every((p) => p === '/careers' || /^\/careers\/[^/]+$/.test(p)),
+    `listed: ${careerPaths.join(', ') || 'nothing'}`,
+  );
+
+  /* The endpoint is reachable and refuses a body it cannot read. 429 counts
+     as a pass: the limiter is five an hour, and a few smoke runs will trip it
+     — which is the feature working, not a regression. */
+  const applyAnon = await get('/api/applications', { method: 'POST' });
+  check(
+    '  application endpoint refuses a request with no role',
+    applyAnon.status === 400 || applyAnon.status === 429,
+    `got ${applyAnon.status}`,
+  );
+
   /* SEO surfaces */
   section('SEO surfaces');
 
@@ -187,13 +228,16 @@ async function main() {
   const sitemap = await text('/sitemap.xml');
   check('sitemap index served', sitemap.res.status === 200);
   check(
-    '  references the three segments',
-    ['/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml'].every((s) => sitemap.body.includes(s)),
+    '  references the four segments',
+    ['/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml', '/sitemaps/careers.xml'].every((s) =>
+      sitemap.body.includes(s),
+    ),
   );
   for (const [name, map] of [
     ['pages', pagesMap],
     ['services', servicesMap],
     ['blog', blogMap],
+    ['careers', careersMap],
   ]) {
     check(`  ${name} sitemap is a urlset`, map.res.status === 200 && map.body.includes('<urlset'), `got ${map.res.status}`);
   }
@@ -266,6 +310,12 @@ async function main() {
     '/api/admin/updates',
     '/api/admin/backups',
     '/api/admin/transfer',
+    '/api/admin/languages',
+    '/api/admin/translations',
+    '/api/admin/site-translations',
+    '/api/admin/jobs',
+    '/api/admin/applications',
+    '/api/admin/cookies',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

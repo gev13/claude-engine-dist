@@ -39,7 +39,19 @@ const run = promisify(execFile);
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /** Written and inserted in this order: parents before the rows that need them. */
-export const CONTENT_TABLES = ['media', 'categories', 'pages', 'posts', 'post_categories', 'redirects'] as const;
+export const CONTENT_TABLES = [
+  'media',
+  'categories',
+  'pages',
+  'posts',
+  'post_categories',
+  /* Jobs are content — an open role is something a site says. Applications are
+     NOT, and are deliberately absent: an applicant sent their CV to one
+     company for one job, and carrying that to another site is the same
+     mistake as carrying somebody's contact enquiries. */
+  'jobs',
+  'redirects',
+] as const;
 
 export type ContentTable = (typeof CONTENT_TABLES)[number];
 
@@ -49,6 +61,7 @@ const TABLE_OBJECTS: Record<ContentTable, unknown> = {
   pages: schema.pages,
   posts: schema.posts,
   post_categories: schema.postCategories,
+  jobs: schema.jobs,
   redirects: schema.redirects,
 };
 
@@ -60,6 +73,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
   media: ['uploadedById'],
   pages: ['authorId'],
   posts: ['authorId'],
+  jobs: ['authorId'],
   redirects: ['createdById'],
   settings: ['updatedById'],
 };

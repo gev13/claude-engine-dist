@@ -20,7 +20,7 @@ const store = vi.hoisted(() => ({ current: null as unknown }));
 vi.mock('swr', () => ({ default: () => ({ data: store.current, isLoading: false, mutate: vi.fn() }) }));
 vi.mock('@/lib/admin/client', () => ({ api: vi.fn(), fetcher: vi.fn() }));
 
-const { UpdatesScreen } = await import('../../src/app/admin/(panel)/updates/UpdatesScreen');
+const { UpdatesScreen } = await import('../../src/app/(system)/admin/(panel)/updates/UpdatesScreen');
 
 type Over = Record<string, unknown>;
 

@@ -230,7 +230,8 @@ function collectCss(blocks: ParsedBlock[]): string {
   const parts: string[] = [];
 
   for (const block of blocks) {
-    parts.push(blockStyleToCss(block.id, block.style));
+    // A row keeps its grid one level in, so `swipeOn` has to aim differently.
+    parts.push(blockStyleToCss(block.id, block.style, 'he-b', block.type === 'row'));
 
     if (block.type === 'row') {
       const props = block.props as ParsedRowProps;

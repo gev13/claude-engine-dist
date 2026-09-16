@@ -30,6 +30,10 @@ export const INSTALLER_KEYS = [
   'SETTINGS_SECRET',
   'NEXT_PUBLIC_SITE_URL',
   'AUTH_REQUIRE_2FA',
+  /* Package 8. Written by the installer and edited in Settings → Languages.
+     It lives in .env rather than the database because the routing layer reads
+     it on the Edge runtime, which cannot reach Postgres. */
+  'ENGINE_LOCALES',
 ] as const;
 
 export type InstallerKey = (typeof INSTALLER_KEYS)[number];

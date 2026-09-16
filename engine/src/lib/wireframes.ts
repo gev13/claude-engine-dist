@@ -150,6 +150,22 @@ export const CARD_GRID_WIREFRAMES: Record<CardGridVariant, readonly Shape[]> = {
     ['txt', 30, 80, 20, 1, 3, 'lt'], ['big', 20, 85, 40, 1, 'lt'],
     ['txt', 110, 80, 20, 1, 3, 'lt'], ['big', 100, 85, 40, 1, 'lt'],
   ],
+  /* The point of the mosaic is that the tiles are not all the same size, so
+     the thumbnail has to show one big tile and four small ones — a uniform
+     four-up would be indistinguishable from `tiles`. */
+  mosaic: [
+    ['img', 0, 0, 80, 80],
+    ['img', 80, 0, 40, 40, 0, 'alt'],
+    ['img', 120, 0, 40, 40],
+    ['img', 80, 40, 40, 40],
+    ['img', 120, 40, 40, 40, 0, 'alt'],
+    ['big', 8, 60, 46, 1, 'lt'],
+    ['txt', 8, 68, 56, 1, 3, 'lt'],
+    ['big', 86, 26, 26, 1, 'lt'],
+    ['big', 126, 26, 26, 1, 'lt'],
+    ['big', 86, 66, 26, 1, 'lt'],
+    ['big', 126, 66, 26, 1, 'lt'],
+  ],
   icons: iconGrid,
   imageCards: [
     ['big', 8, 8, 50, 1],

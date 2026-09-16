@@ -10,7 +10,7 @@ import { z } from 'zod';
    questions the form actually asks.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'textarea', 'select', 'radio', 'checkboxes', 'date', 'consent', 'step'] as const;
+export const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'textarea', 'select', 'radio', 'checkboxes', 'date', 'file', 'consent', 'step'] as const;
 export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];
 
 export const FORM_FIELD_LABELS: Record<FormFieldType, string> = {
@@ -23,6 +23,7 @@ export const FORM_FIELD_LABELS: Record<FormFieldType, string> = {
   radio: 'One choice',
   checkboxes: 'Several choices',
   date: 'Date',
+  file: 'File upload',
   consent: 'Tick box (consent)',
   step: 'New step',
 };
@@ -44,7 +45,22 @@ export const formFieldSchema = z
   .refine((f) => !CHOICE_TYPES.includes(f.type) || f.options.length > 0, 'Give this question at least one option');
 
 export type FormField = z.output<typeof formFieldSchema>;
-export type Answer = { id: string; label: string; value: string | string[] | boolean };
+/**
+ * A file that came with a submission.
+ *
+ * `name` is the generated name on disk and the only thing that ever reaches
+ * the filesystem; `originalName` is what the visitor called it and is display
+ * only. The same split as a CV, for the same reason.
+ */
+export type AnswerFile = { name: string; originalName: string; bytes: number };
+
+export type Answer = {
+  id: string;
+  label: string;
+  value: string | string[] | boolean;
+  /** Present only on a `file` answer. */
+  file?: AnswerFile;
+};
 
 /** The fields between step markers; a form with no markers is one step. */
 export function formSteps(fields: FormField[]): { title?: string; fields: FormField[] }[] {
@@ -91,6 +107,17 @@ export function validateAnswers(fields: FormField[], input: unknown): { ok: true
       continue;
     }
 
+    /* A file lives in the multipart body, not in the answers, so the only
+       thing this function can check is whether one came: the caller passes
+       `true` for a field that has a file. The server replaces the answer
+       afterwards with the stored name — it is the only side with the bytes. */
+    if (field.type === 'file') {
+      const attached = value === true;
+      if (field.required && !attached) return { ok: false, error: `${field.label}: attach a file.` };
+      answers.push({ id: field.id, label: field.label, value: '' });
+      continue;
+    }
+
     if (field.type === 'consent') {
       const checked = value === true;
       if (field.required && !checked) return { ok: false, error: `Tick the box to continue: ${field.label}` };
@@ -117,4 +144,16 @@ export function validateAnswers(fields: FormField[], input: unknown): { ok: true
 export function answerText(value: Answer['value']): string {
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
   return Array.isArray(value) ? value.join(', ') : value;
+}
+
+/**
+ * One line for an answer, including a file's own name.
+ *
+ * The export and the inbox both want "photo.jpg", not the uuid the file is
+ * stored under — and a submission whose file has been erased should say so
+ * rather than show an empty cell.
+ */
+export function answerLine(answer: Answer): string {
+  if (answer.file) return `${answer.file.originalName} (${Math.max(1, Math.round(answer.file.bytes / 1024))} KB)`;
+  return answerText(answer.value);
 }

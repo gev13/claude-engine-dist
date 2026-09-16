@@ -17,6 +17,9 @@ const trimmed = (max: number) => z.string().trim().max(max);
 export const mailEventsSchema = z.object({
   enquiry: z.boolean().default(true),
   formSubmission: z.boolean().default(true),
+  /** Somebody applied for a role. On by default: a job advert nobody watches
+      is worse than a little noise, and applications are rarer than enquiries. */
+  application: z.boolean().default(true),
   newsletter: z.boolean().default(false),
   security: z.boolean().default(true),
   /** A newer engine is available (package 6). One message per version. */
@@ -38,7 +41,7 @@ export const mailSettingsSchema = z.object({
   replyTo: trimmed(255).default(''),
   /** Who receives admin notifications; empty falls back to the site contact address. */
   notifyEmails: z.array(z.string().trim().email().max(255)).max(5).default([]),
-  events: mailEventsSchema.default({ enquiry: true, formSubmission: true, newsletter: false, security: true, engineUpdate: true }),
+  events: mailEventsSchema.default({ enquiry: true, formSubmission: true, application: true, newsletter: false, security: true, engineUpdate: true }),
 });
 
 export type MailSettings = z.output<typeof mailSettingsSchema>;

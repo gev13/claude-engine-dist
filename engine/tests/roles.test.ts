@@ -80,6 +80,17 @@ describe('the boundaries that must not move', () => {
   it('keeps personal data export and erasure with the administrator', () => {
     expect(only('newsletter:write')).toEqual(['admin']);
     expect(only('submissions:write')).toEqual(['admin']);
+    // A job application is a named person's CV, phone number and covering
+    // letter. It follows these two, not the job advert it answers.
+    expect(only('applications:write')).toEqual(['admin']);
+  });
+
+  /* An author writes a job advert and cannot publish it — the same split as
+     pages and posts, and the reason `jobs:publish` exists separately. */
+  it('does not let an author put a role on the careers page', () => {
+    expect(can({ role: 'author' }, 'jobs:write')).toBe(true);
+    expect(can({ role: 'author' }, 'jobs:publish')).toBe(false);
+    expect(can({ role: 'reviewer' }, 'jobs:write')).toBe(false);
   });
 
   it('keeps the audit log, security, backups, updates and settings admin-only', () => {

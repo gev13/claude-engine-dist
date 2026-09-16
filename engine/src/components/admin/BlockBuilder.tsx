@@ -289,6 +289,24 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
   const [addTab, setAddTab] = useState<'blocks' | 'sections'>('blocks');
+  /* Sixty-three blocks is too many to scan by eye. */
+  const [blockQuery, setBlockQuery] = useState('');
+
+  /**
+   * `null` while the box is empty — the grouped view is the better way to
+   * browse, and should be what somebody sees until they actually type.
+   *
+   * Matching the type as well as the label is deliberate: somebody who knows
+   * the engine will type "postList" faster than "Post list", and the labels
+   * already carry the common synonyms ("Carousel / slider").
+   */
+  const matchingBlocks = useMemo(() => {
+    const query = blockQuery.trim().toLowerCase();
+    if (!query) return null;
+    return blockTypes.filter(
+      (type) => blockLabels[type].toLowerCase().includes(query) || type.toLowerCase().includes(query),
+    );
+  }, [blockQuery]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -426,6 +444,43 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
               <ReadySections onInsert={insert} />
             ) : (
               <>
+            {/* Typing narrows the whole vocabulary to one flat list; empty
+                restores the groups, which are the better way to browse. */}
+            <div className="mb-4">
+              <input
+                type="search"
+                value={blockQuery}
+                onChange={(event) => setBlockQuery(event.target.value)}
+                placeholder="Search blocks — carousel, form, gallery…"
+                aria-label="Search blocks"
+                className="w-full border-2 border-hairline bg-ink px-3 py-2 text-[14px] text-bone placeholder:text-smoke"
+              />
+            </div>
+
+            {matchingBlocks !== null ? (
+              matchingBlocks.length === 0 ? (
+                <p className="m-0 py-6 text-center text-[14px] text-smoke">
+                  Nothing matches &ldquo;{blockQuery}&rdquo;.
+                </p>
+              ) : (
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
+                  {matchingBlocks.map((type) => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => add(type)}
+                      className="group cursor-pointer border-2 border-hairline bg-ink p-2 text-left transition-colors hover:border-flare focus-visible:border-flare"
+                    >
+                      <Wireframe shapes={BLOCK_WIREFRAMES[type]} />
+                      <span className="mt-2 block text-[12px] leading-snug text-ash group-hover:text-bone">
+                        {blockLabels[type]}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )
+            ) : (
+              <>
             <div className="flex flex-col gap-6">
               {GROUPS.map((group) => (
                 <section key={group.label}>
@@ -466,6 +521,8 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
                     </button>
                   ))}
               </div>
+            )}
+              </>
             )}
               </>
             )}

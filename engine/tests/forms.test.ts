@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { blockSchemas } from '../src/lib/blocks';
-import { type FormField, answerText, formFieldSchema, formSteps, validateAnswers } from '../src/lib/forms';
+import { type FormField, answerLine, answerText, formFieldSchema, formSteps, validateAnswers } from '../src/lib/forms';
 
 const field = (input: Record<string, unknown>) => formFieldSchema.parse({ id: String(input.id ?? input.type), label: 'Q', ...input }) as FormField;
 
@@ -56,5 +56,62 @@ describe('checking answers', () => {
     expect(result.ok).toBe(true);
     expect(answerText(['X', 'Y'])).toBe('X, Y');
     expect(answerText(true)).toBe('Yes');
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The file question
+   ───────────────────────────────────────────────────────────────────────────
+   A file lives in the multipart body, not in the answers, so `validateAnswers`
+   cannot see one. Both sides hand it `true` for a field that has a file —
+   the browser from its own state, the server from the parts that arrived —
+   so both ask exactly the same question and a required attachment cannot be
+   skipped by talking to the endpoint directly.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('a file question', () => {
+  const cv = field({ id: 'cv', type: 'file', label: 'Your CV', required: true });
+  const extra = field({ id: 'extra', type: 'file', label: 'Anything else' });
+
+  it('refuses a required attachment that did not come', () => {
+    const result = validateAnswers([cv], { cv: false });
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error).toContain('attach a file');
+  });
+
+  it('accepts one that did, without inventing a value for it', () => {
+    const result = validateAnswers([cv], { cv: true });
+    expect(result.ok).toBe(true);
+    /* Empty on purpose: the server is the only side with the bytes, and it
+       overwrites this with the stored name. A placeholder here could reach
+       the inbox if the server ever forgot to. */
+    if (result.ok) expect(result.answers[0]).toEqual({ id: 'cv', label: 'Your CV', value: '' });
+  });
+
+  it('lets an optional one stay empty', () => {
+    const result = validateAnswers([extra], {});
+    expect(result.ok).toBe(true);
+    if (result.ok) expect(result.answers).toHaveLength(1);
+  });
+
+  /* A string is what a script would send if it tried to answer a file
+     question with text rather than a file. Only `true` counts. */
+  it('does not accept a claim that a file came', () => {
+    expect(validateAnswers([cv], { cv: 'photo.jpg' }).ok).toBe(false);
+    expect(validateAnswers([cv], { cv: 1 }).ok).toBe(false);
+    expect(validateAnswers([cv], { cv: 'true' }).ok).toBe(false);
+  });
+
+  it('names the visitor’s own file in the inbox and the export', () => {
+    expect(
+      answerLine({
+        id: 'cv',
+        label: 'Your CV',
+        value: 'anna-cv.pdf',
+        file: { name: '0f3b.pdf', originalName: 'anna-cv.pdf', bytes: 204800 },
+      }),
+    ).toBe('anna-cv.pdf (200 KB)');
+    // Without a file it is the plain answer, as before.
+    expect(answerLine({ id: 'a', label: 'Q', value: 'Yes' })).toBe('Yes');
   });
 });

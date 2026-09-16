@@ -179,6 +179,81 @@ export function articleNode(opts: {
   };
 }
 
+/* ── A job advert ───────────────────────────────────────────────────────────
+   `JobPosting` is the one node here with a duty attached to it: a search
+   engine that indexes an advert will keep sending people to it, so a role
+   that has been filled must stop emitting this — see `jobPostingNode`'s
+   caller, which does not render it once `isOpen` is false.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * The engine's free-text contract field, mapped onto schema.org's closed list.
+ *
+ * Unmapped is left out entirely rather than guessed: "Hybrid — 3 days in
+ * office" is a working pattern, not an employment type, and a wrong enum value
+ * is worse than a missing optional one.
+ */
+const EMPLOYMENT_TYPES: Record<string, string> = {
+  'full time': 'FULL_TIME',
+  'full-time': 'FULL_TIME',
+  fulltime: 'FULL_TIME',
+  'part time': 'PART_TIME',
+  'part-time': 'PART_TIME',
+  parttime: 'PART_TIME',
+  contract: 'CONTRACTOR',
+  contractor: 'CONTRACTOR',
+  freelance: 'CONTRACTOR',
+  temporary: 'TEMPORARY',
+  temp: 'TEMPORARY',
+  internship: 'INTERN',
+  intern: 'INTERN',
+  volunteer: 'VOLUNTEER',
+};
+
+export function employmentType(contractType: string | null | undefined): string | null {
+  return EMPLOYMENT_TYPES[(contractType ?? '').trim().toLowerCase()] ?? null;
+}
+
+export function jobPostingNode(opts: {
+  path: string;
+  title: string;
+  description: string;
+  datePosted?: string;
+  validThrough?: string;
+  location?: string;
+  contractType?: string;
+  department?: string;
+  organisationName: string;
+}): Node {
+  const url = `${SITE_URL}${opts.path}`;
+  const type = employmentType(opts.contractType);
+
+  return {
+    '@type': 'JobPosting',
+    '@id': `${url}#job`,
+    title: opts.title,
+    description: opts.description,
+    url,
+    mainEntityOfPage: { '@id': `${url}#webpage` },
+    /* Named rather than referenced: Google reads `hiringOrganization` on its
+       own and a bare @id reference to the Organization node is not always
+       resolved. The site's own name is the honest answer. */
+    hiringOrganization: { '@type': 'Organization', name: opts.organisationName, '@id': ORG_ID },
+    ...(opts.datePosted ? { datePosted: opts.datePosted } : {}),
+    ...(opts.validThrough ? { validThrough: opts.validThrough } : {}),
+    ...(type ? { employmentType: type } : {}),
+    ...(opts.department ? { occupationalCategory: opts.department } : {}),
+    ...(opts.location
+      ? {
+          jobLocation: {
+            '@type': 'Place',
+            address: { '@type': 'PostalAddress', addressLocality: opts.location },
+          },
+        }
+      : {}),
+  };
+}
+
 /** Pulled automatically out of any `faq` block on the page. */
 export function faqFromBlocks(blocks: AnyBlock[] | null | undefined, path: string): Node | null {
   const faq = (blocks ?? []).find((b) => b.type === 'faq');

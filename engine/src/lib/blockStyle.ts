@@ -216,6 +216,22 @@ export const blockStyleSchema = z.object({
   /** P3-C5 — the page settles on this block when scrolling stops near it. */
   snap: z.boolean().optional(),
 
+  /**
+   * P10-C — below this width the block's grid becomes a swipeable track.
+   *
+   * Three or four things across on a desktop, one at a time under a thumb on
+   * a phone: the layout the design asks for, and the reason it is a *style*
+   * rather than an option on six separate blocks. Every block with a grid in
+   * it gets this, and a row gets it for its columns.
+   *
+   * CSS only — scroll-snap, which the browser drives. Nothing is hidden, so
+   * every card stays in the DOM, in the tab order, and reachable by a screen
+   * reader; focusing one scrolls it into view for free. A JavaScript carousel
+   * that renders one slide at a time buys animation and pays for it in
+   * everything above.
+   */
+  swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
+
   /** Hidden at these widths and below. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),
 

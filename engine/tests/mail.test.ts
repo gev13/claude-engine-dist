@@ -70,7 +70,7 @@ describe('mail settings', () => {
   it('accept a stored row and fill in what it does not carry', () => {
     const parsed = mailSettingsSchema.parse({ host: 'smtp.example.com', port: '465', secure: true });
     expect(parsed.port).toBe(465);
-    expect(parsed.events).toEqual({ enquiry: true, formSubmission: true, newsletter: false, security: true, engineUpdate: true });
+    expect(parsed.events).toEqual({ enquiry: true, formSubmission: true, application: true, newsletter: false, security: true, engineUpdate: true });
     expect(parsed.notifyEmails).toEqual([]);
   });
 

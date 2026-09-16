@@ -94,6 +94,38 @@ function gradientValue(g: NonNullable<BlockStyle['background']>['gradient']): st
   return `linear-gradient(${angle}deg,${stops.join(',')})`;
 }
 
+/**
+ * The sides of the block's own band that a chosen padding replaces.
+ *
+ * Every block paints a full-bleed band with its own vertical rhythm — `py-24`
+ * as a Tailwind utility, `padding-block: 88px` in the components layer. Both
+ * sit in a layer, and the rules here do not, so a padding chosen in the Design
+ * panel wins on the wrapper — but the wrapper is *outside* the band, so the two
+ * used to add up, and setting a padding to 0 changed nothing at all. That is
+ * the "I can't edit this section's padding" report.
+ *
+ * So a side the editor sets takes the band's side with it; a side they leave
+ * alone keeps the block's own rhythm. Same bargain the background already
+ * strikes when it makes the band transparent.
+ */
+function neutralisePadding(root: string, box: SpacingBox | undefined): string {
+  if (!box) return '';
+  const decls: Decl[] = [];
+  for (const [key, property] of Object.entries(CSS_SIDE) as [keyof SpacingBox, string][]) {
+    if (!property.startsWith('padding')) continue;
+    const clean = safe(box[key]);
+    if (clean && isLength(clean)) decls.push([property, '0']);
+  }
+
+  /* Two places, because the blocks disagree about where the band's padding
+     lives: the library sections carry it themselves (`padding-block: 88px` on
+     the section), while the older blocks put it on the inner `.shell`
+     (`py-14 md:py-20`). Both are one or two steps below the wrapper and
+     nowhere near a nested block's own section, which is why this is written
+     structurally rather than as a descendant sweep. */
+  return block(`${root}>*,${root}>*>.shell`, decls);
+}
+
 function borderDecls(style: BlockStyle): Decl[] {
   const out: Decl[] = [];
   const border = style.border;
@@ -139,14 +171,73 @@ function block(selector: string, decls: Decl[]): string {
  * Returns an empty string for a block that has no style, which is the common
  * case — an unstyled page ships no per-block CSS at all.
  */
-export function blockStyleToCss(id: string, style: BlockStyle | undefined, prefix = 'he-b'): string {
+/**
+ * The element a `swipeOn` turns into a track, which is not the same element
+ * for a row as for everything else.
+ *
+ * A row's tracks are its own generated grid, one level inside the shell —
+ * matched exactly, so setting swipe on an outer row does not also flatten the
+ * rows nested inside it. Every other block draws its grid with Tailwind's
+ * `grid-cols-*`, which only ever appears once in a block that is not a row.
+ */
+function swipeTarget(root: string, isRow: boolean): string {
+  return isRow ? `${root}>.shell>[class^="he-r-"]` : `${root} [class*="grid-cols-"]`;
+}
+
+/**
+ * Turn a grid into a horizontal scroll-snap track.
+ *
+ * `flex-direction` is set explicitly because a row with `reverseOnMobile`
+ * has already been told `column-reverse` at this width; swiping wins, and
+ * has to say so rather than inherit a stacking rule.
+ */
+function swipeCss(root: string, isRow: boolean, maxWidth: number): string {
+  const target = swipeTarget(root, isRow);
+  return (
+    `@media (max-width:${maxWidth}px){` +
+    `${target}{display:flex;flex-direction:row;grid-template-columns:none;` +
+    `overflow-x:auto;scroll-snap-type:x mandatory;` +
+    `scroll-padding-inline:var(--spacing-gutter,24px);` +
+    `scrollbar-width:none;-webkit-overflow-scrolling:touch}` +
+    `${target}::-webkit-scrollbar{display:none}` +
+    /* A card shy of full width, so the sliver of the next one is the thing
+       that says "this scrolls" — no arrows, no dots, no script. */
+    `${target}>*{flex:0 0 84%;min-width:0;scroll-snap-align:start}` +
+    `}`
+  );
+}
+
+export function blockStyleToCss(
+  id: string,
+  style: BlockStyle | undefined,
+  prefix = 'he-b',
+  /** Rows keep their grid somewhere else; see `swipeTarget`. */
+  isRow = false,
+): string {
   if (!style || !isSafeBlockId(id)) return '';
 
   const root = `.${prefix}-${id}`;
   const parts: string[] = [];
 
+  /* Only a block's own wrapper stands directly outside the band it paints. A
+     column's children are whole blocks, and their bands are not the column's
+     to flatten. */
+  const ownsBand = prefix === 'he-b';
+
   const background = backgroundDecls(style);
-  parts.push(block(root, [...boxDecls(style.spacing?.base), ...background, ...borderDecls(style)]));
+  const border = borderDecls(style);
+  parts.push(block(root, [...boxDecls(style.spacing?.base), ...background, ...border]));
+
+  if (ownsBand) {
+    parts.push(neutralisePadding(root, style.spacing?.base));
+
+    /* Setting a width or a style is taking charge of the block's edges, so the
+       band's own hairline rule goes. Radius and colour alone are not: they
+       describe a border rather than ask for one. */
+    if (border.some(([property]) => property.endsWith('-width') || property === 'border-style')) {
+      parts.push(`${root}>*{border-width:0}`);
+    }
+  }
 
   /* Every block paints its own band. With a background chosen here, that band
      steps aside so the choice is actually seen — unlayered, so it beats the
@@ -183,8 +274,14 @@ export function blockStyleToCss(id: string, style: BlockStyle | undefined, prefi
     const hidden = style.hideOn?.includes(key);
     const inner: string[] = [];
     if (decls.length) inner.push(block(root, decls));
+    if (ownsBand) inner.push(neutralisePadding(root, style.spacing?.[key]));
     if (hidden) inner.push(`${root}{display:none}`);
-    if (inner.length) parts.push(`@media (max-width:${maxWidth}px){${inner.join('')}}`);
+    if (inner.filter(Boolean).length) parts.push(`@media (max-width:${maxWidth}px){${inner.join('')}}`);
+
+    /* Its own media query rather than a line in the one above: the track
+       rules carry their own selectors, and folding two selector sets into one
+       block would mean emitting the wider one's declarations for both. */
+    if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth));
   }
 
   /* A fixed background is the parallax effect, and it has two well-known

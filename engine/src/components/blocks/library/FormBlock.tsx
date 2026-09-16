@@ -18,9 +18,14 @@ import { BlockHead } from '../parts';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type P = z.output<(typeof blockSchemas)['form']> & { blockId?: string };
-type Values = Record<string, string | string[] | boolean>;
+type Values = Record<string, string | string[] | boolean | File>;
 
 const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
+
+/* Mirrors ATTACHMENT_KINDS in server/applications/storage.ts. The server
+   checks the bytes; this only spares somebody the upload. */
+const FILE_ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png';
+const FILE_HINT = 'PDF, Word, JPG or PNG, up to 8 MB.';
 
 function Field({ field, uid, value, onChange }: { field: FormField; uid: string; value: Values[string] | undefined; onChange: (next: Values[string]) => void }) {
   const id = `${uid}-${field.id}`;
@@ -77,6 +82,24 @@ function Field({ field, uid, value, onChange }: { field: FormField; uid: string;
     );
   }
 
+  if (field.type === 'file') {
+    const chosen = value instanceof File ? value : null;
+    return (
+      <div className={cn('he-fb__field', `is-${field.width}`)}>
+        {label}
+        <input
+          {...common}
+          type="file"
+          accept={FILE_ACCEPT}
+          className="he-fb__input he-apply__file"
+          onChange={(e) => onChange(e.target.files?.[0] ?? '')}
+        />
+        <p className="he-fb__help">{chosen ? `Attached: ${chosen.name}` : FILE_HINT}</p>
+        {field.help && <p className="he-fb__help">{field.help}</p>}
+      </div>
+    );
+  }
+
   return (
     <div className={cn('he-fb__field', `is-${field.width}`)}>
       {label}
@@ -107,6 +130,13 @@ function Field({ field, uid, value, onChange }: { field: FormField; uid: string;
   );
 }
 
+/** What the validator and the envelope see: a File is reduced to "one came". */
+function asAnswers(values: Values): Record<string, string | string[] | boolean> {
+  const out: Record<string, string | string[] | boolean> = {};
+  for (const [id, value] of Object.entries(values)) out[id] = value instanceof File ? true : value;
+  return out;
+}
+
 export function FormBlock(p: P) {
   const uid = useId();
   const path = usePathname();
@@ -123,18 +153,37 @@ export function FormBlock(p: P) {
 
   async function next(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const check = validateAnswers(current.fields, values);
+    /* `validateAnswers` cannot see a File, so a file field is handed `true`
+       when one has been chosen — the server does exactly the same with the
+       multipart body, so both sides ask the same question. */
+    const check = validateAnswers(current.fields, asAnswers(values));
     if (!check.ok) return setError(check.error);
     setError('');
     if (!last) return setStep(step + 1);
 
     setState('sending');
     try {
-      const res = await fetch('/api/forms', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ formId: p.blockId, source: path, answers: values, website: trap }),
-      });
+      /* Multipart only when there is actually a file: a form of text questions
+         keeps the cheaper JSON path it has always used. */
+      const files = Object.entries(values).filter((entry): entry is [string, File] => entry[1] instanceof File);
+
+      let res: Response;
+      if (files.length > 0) {
+        const data = new FormData();
+        data.set('formId', p.blockId ?? '');
+        data.set('source', path);
+        data.set('answers', JSON.stringify(asAnswers(values)));
+        data.set('website', trap);
+        for (const [id, file] of files) data.set(`file:${id}`, file);
+        // No content-type header: only the browser knows the boundary.
+        res = await fetch('/api/forms', { method: 'POST', body: data });
+      } else {
+        res = await fetch('/api/forms', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ formId: p.blockId, source: path, answers: values, website: trap }),
+        });
+      }
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
         throw new Error(body.error ?? 'Something went wrong. Please try again.');

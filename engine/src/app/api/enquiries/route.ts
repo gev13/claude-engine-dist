@@ -6,6 +6,7 @@ import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { db } from '@/server/db';
 import { enquiries } from '@/server/db/schema';
 import { notifyEnquiry } from '@/server/mail/notify';
+import { sweep } from '@/server/retention';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -83,6 +84,12 @@ export async function POST(request: Request) {
       message: body.message.trim(),
       ip,
     });
+
+    /* The retention sweep, throttled and never thrown: the engine has no
+       scheduler, so the honest trigger is the traffic the site already has —
+       and somebody sending an enquiry must never see a failure because a
+       tidy-up went wrong behind them. */
+    void sweep('enquiries');
 
     // Deliberately no id, no echo of the submission: nothing for an attacker
     // to enumerate.

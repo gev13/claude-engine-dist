@@ -58,7 +58,7 @@ describe('demo pages', () => {
     const expected = [
       ...['classic', 'mediaCenter', 'mediaBottomLeft', 'split', 'statementFrame', 'shaped'].map((v) => `hero · variant: ${v}`),
       ...['cards', 'products', 'heroCards', 'hero', 'media', 'coverflow'].map((v) => `carousel · mode: ${v}`),
-      ...['cards', 'tiles', 'icons', 'imageCards'].map((v) => `cardGrid · variant: ${v}`),
+      ...['cards', 'tiles', 'mosaic', 'icons', 'imageCards'].map((v) => `cardGrid · variant: ${v}`),
       'stats · variant: figures', 'faq · variant: media', 'postList · variant: news', 'image · captionStyle: lead',
       'cta · variant: big', 'cta · variant: card', 'contactForm · layout: split', 'heading · size: lede', 'prose · variant: footnotes',
       'marquee · kind: quotes', 'marquee · kind: chips',

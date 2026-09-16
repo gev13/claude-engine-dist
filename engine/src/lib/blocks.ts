@@ -83,7 +83,7 @@ const perView = z.number().min(1).max(6);
 const libraryLinks = z.array(libraryLink).max(2).default([]);
 
 /** CT4 image tiles · CT5 icon features · CT5 image cards · V2 rows · V3 text over a picture; `cards` is the original grid. */
-export const CARD_GRID_VARIANTS = ['cards', 'tiles', 'icons', 'imageCards', 'rows', 'overlay'] as const;
+export const CARD_GRID_VARIANTS = ['cards', 'tiles', 'mosaic', 'icons', 'imageCards', 'rows', 'overlay'] as const;
 
 /** CT3 — where text sits on a full-width media band. */
 export const MEDIA_BAND_POSITIONS = ['center', 'bottomLeft', 'topLeft', 'right', 'left'] as const;
@@ -253,6 +253,14 @@ export const blockSchemas = {
         imageUrl: mediaUrl.optional(),
         alt: text(200),
         buttonLabel: text(40),
+        /**
+         * P10-D — a short flag in the corner: "New", "Coming soon", "Sold out".
+         *
+         * Free text rather than a status enum, because the vocabulary is the
+         * site's: a studio says "Fully booked" where a shop says "Sold out",
+         * and neither is a state this engine tracks.
+         */
+        badge: text(24),
         /** V2 — the checklist a row shows beside its text. */
         points: z.array(z.string().trim().min(1).max(120)).max(8).optional(),
       }),
@@ -1528,13 +1536,27 @@ export type ParsedRowProps = {
 };
 
 /**
+ * How many rows may nest inside one another.
+ *
+ * Three: a row, a row inside one of its columns, and a row inside one of
+ * *those* columns. That covers every real layout — a two-column section whose
+ * left half is a three-up grid, say — without letting a page become a tree
+ * nobody can edit.
+ *
+ * The limit exists at all because each level is a grid inside a grid: the
+ * columns are container-query contexts, and blocks size their internals
+ * against the container. Past three the widths stop meaning anything.
+ */
+export const MAX_ROW_DEPTH = 3;
+
+/**
  * Parse a row's columns and the blocks inside them.
  *
- * A nested row is dropped rather than rendered: the schema cannot express
- * "anything but a row" without becoming recursive, so the rule is enforced
- * here, in the one place that builds the tree.
+ * The depth rule is enforced here, in the one place that builds the tree,
+ * because the schema cannot express "a row, but only this far down" without
+ * becoming recursive.
  */
-function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>): ParsedRowProps {
+function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>, depth: number): ParsedRowProps {
   return {
     ...props,
     columns: props.columns.map((column) => ({
@@ -1542,8 +1564,8 @@ function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>): ParsedRowP
       width: column.width,
       style: column.style && Object.keys(column.style).length > 0 ? column.style : undefined,
       blocks: (column.blocks as AnyBlock[])
-        .map((child) => (child && typeof child === 'object' ? parseBlock(child) : null))
-        .filter((child): child is ParsedBlock => child !== null && child.type !== 'row'),
+        .map((child) => (child && typeof child === 'object' ? parseBlock(child, depth + 1) : null))
+        .filter((child): child is ParsedBlock => child !== null),
     })),
   };
 }
@@ -1628,10 +1650,14 @@ export function migrateBlocks(blocks: AnyBlock[]): AnyBlock[] {
   });
 }
 
-export function parseBlock(input: AnyBlock): ParsedBlock | null {
+export function parseBlock(input: AnyBlock, depth = 1): ParsedBlock | null {
   const block = migrateBlock(input);
   if (!isBlockType(block.type)) return null;
   if (!BLOCK_ID_PATTERN.test(block.id ?? '')) return null;
+
+  /* A row deeper than the limit is dropped rather than rendered. Every other
+     block type nests as deep as its row does. */
+  if (block.type === 'row' && depth > MAX_ROW_DEPTH) return null;
 
   const result = blockSchemas[block.type].safeParse(block.props ?? {});
   if (!result.success) return null;
@@ -1645,7 +1671,7 @@ export function parseBlock(input: AnyBlock): ParsedBlock | null {
     type: block.type,
     props:
       block.type === 'row'
-        ? parseRowProps(result.data as z.infer<(typeof blockSchemas)['row']>)
+        ? parseRowProps(result.data as z.infer<(typeof blockSchemas)['row']>, depth)
         : result.data,
     style: style.success && Object.keys(style.data).length > 0 ? style.data : undefined,
   };
@@ -1656,13 +1682,25 @@ export function parseBlock(input: AnyBlock): ParsedBlock | null {
  * for an editor to find it. Recurses into rows, because a broken block three
  * levels into a layout is exactly the one nobody notices.
  */
-export function collectInvalidBlocks(blocks: AnyBlock[] | null | undefined, path = ''): string[] {
+export function collectInvalidBlocks(
+  blocks: AnyBlock[] | null | undefined,
+  path = '',
+  depth = 1,
+): string[] {
   const problems: string[] = [];
 
   (blocks ?? []).forEach((block, index) => {
     const where = path ? `${path} → block ${index + 1}` : `Block ${index + 1}`;
 
-    if (parseBlock(block) === null) {
+    /* Named rather than reported as invalid: the row is well formed, it is
+       only too deep to render, and "not valid for its type" would send the
+       editor looking for a typo that is not there. */
+    if (block?.type === 'row' && depth > MAX_ROW_DEPTH) {
+      problems.push(`${where} ("row") is nested more than ${MAX_ROW_DEPTH} rows deep and will not show`);
+      return;
+    }
+
+    if (parseBlock(block, depth) === null) {
       problems.push(`${where} ("${block?.type ?? 'unknown'}") is not valid for its type`);
       return;
     }
@@ -1670,7 +1708,7 @@ export function collectInvalidBlocks(blocks: AnyBlock[] | null | undefined, path
     if (block.type === 'row') {
       const columns = (block.props?.columns ?? []) as { blocks?: AnyBlock[] }[];
       columns.forEach((column, ci) => {
-        problems.push(...collectInvalidBlocks(column?.blocks ?? [], `${where}, column ${ci + 1}`));
+        problems.push(...collectInvalidBlocks(column?.blocks ?? [], `${where}, column ${ci + 1}`, depth + 1));
       });
     }
   });
@@ -1679,5 +1717,9 @@ export function collectInvalidBlocks(blocks: AnyBlock[] | null | undefined, path
 }
 
 export function parseBlocks(blocks: AnyBlock[] | null | undefined) {
-  return (blocks ?? []).map(parseBlock).filter((b): b is NonNullable<typeof b> => b !== null);
+  /* Not point-free: `map` would hand `parseBlock` the array index as its
+     depth, and every block after the third would be treated as too deep. */
+  return (blocks ?? [])
+    .map((block) => parseBlock(block))
+    .filter((b): b is NonNullable<typeof b> => b !== null);
 }

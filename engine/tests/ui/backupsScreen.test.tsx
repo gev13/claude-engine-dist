@@ -44,7 +44,7 @@ const loaded = {
 vi.mock('swr', () => ({ default: () => ({ data: loaded, isLoading: false, mutate: vi.fn() }) }));
 vi.mock('@/lib/admin/client', () => ({ api: vi.fn(), fetcher: vi.fn() }));
 
-const { BackupsScreen } = await import('../../src/app/admin/(panel)/backups/BackupsScreen');
+const { BackupsScreen } = await import('../../src/app/(system)/admin/(panel)/backups/BackupsScreen');
 
 afterEach(cleanup);
 

@@ -15,6 +15,8 @@ import {
 } from '@/server/auth/session';
 import { issueRefreshToken } from '@/server/auth/tokens';
 import { revalidateEverything } from '@/server/content/revalidate';
+import { localeConfig } from '@/lib/locales';
+import { writeEnvFile } from '@/server/install/env';
 import { INSTALL_SETTING_KEY, getInstallState } from '@/server/install/status';
 import { starterPage } from '@/server/install/starter';
 import { db } from '@/server/db';
@@ -36,6 +38,12 @@ const schema = z.object({
     tagline: z.string().trim().max(200).default(''),
     url: z.string().trim().url().max(300).optional(),
     timeZone: z.string().trim().max(60).default('UTC'),
+    /**
+     * The site's main language (package 8). One only: more are added in
+     * Settings → Languages, which is the natural place to decide a site is
+     * multilingual — an installer is not.
+     */
+    locale: z.string().trim().min(2).max(8).default('en'),
   }),
 });
 
@@ -132,6 +140,16 @@ export async function POST(request: Request) {
       throw error;
     }
 
+    /* The main language goes to .env, where the routing layer can read it on
+       the Edge runtime. Writing it only when it differs keeps the common case
+       — an English site — free of a restart it does not need. */
+    const config = localeConfig();
+    const localeChanged = site.locale !== config.defaultLocale;
+    if (localeChanged) {
+      const rest = config.locales.filter((code) => code !== site.locale);
+      await writeEnvFile({ ENGINE_LOCALES: [site.locale, ...rest].join(',') });
+    }
+
     /* Every page visited before this point was rendered — and cached — as a
        redirect to the installer. Without this the freshly installed site keeps
        bouncing back to /install until those entries expire. */
@@ -171,6 +189,12 @@ export async function POST(request: Request) {
     return NextResponse.json({
       status: 'ok' as const,
       redirectTo: env.AUTH_REQUIRE_2FA ? '/admin/two-factor?setup=1&next=%2Fadmin' : '/admin',
+      /* The language was written to .env, which this process read at boot — so
+         the site keeps rendering in the old one until it is restarted. Saying
+         nothing here would leave somebody wondering why their Armenian site is
+         in English. */
+      restartRequired: localeChanged,
+      locale: site.locale,
     });
   });
 }

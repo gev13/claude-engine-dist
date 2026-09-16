@@ -37,6 +37,7 @@ export function Card({
   title,
   children,
   meta,
+  badge,
   className,
   interactive = true,
 }: {
@@ -45,6 +46,8 @@ export function Card({
   title?: React.ReactNode;
   children?: React.ReactNode;
   meta?: React.ReactNode;
+  /** A short flag in the corner: "New", "Coming soon", "Sold out". */
+  badge?: string;
   className?: string;
   interactive?: boolean;
 }) {
@@ -53,9 +56,14 @@ export function Card({
       className={cn(
         'group flex h-full flex-col bg-surface px-6 py-7 transition-colors duration-150',
         interactive && href && 'hover:bg-surface-2',
+        badge && 'relative',
         className,
       )}
     >
+      {/* Before the eyebrow in the DOM as well as on the screen: "Coming soon"
+          changes how the rest of the card should be read, so it has to be
+          heard first too. */}
+      {badge && <span className="he-badge">{badge}</span>}
       {eyebrow && (
         <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{eyebrow}</div>
       )}

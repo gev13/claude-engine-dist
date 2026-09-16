@@ -1,11 +1,10 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
 import { nanoid } from 'nanoid';
 import { type FooterColumn, type NavItem, type Navigation, type SocialLink, parseNavigation } from '@/lib/navigation';
 import { footerNav, headerCta, mainNav, servicePath } from '@/lib/site';
+import type { Locale } from '@/lib/locales';
+import { readLocalised } from './localisedSettings';
 import { getServiceCatalogue } from './services';
-import { db } from '@/server/db';
-import { settings } from '@/server/db/schema';
 
 export const NAVIGATION_SETTING_KEY = 'navigation';
 
@@ -78,19 +77,17 @@ export type ResolvedNavigation = {
  * A saved navigation that omits a section falls back for that section only, so
  * editing the header does not silently empty the footer.
  */
-export async function getNavigation(): Promise<ResolvedNavigation> {
+export async function getNavigation(locale?: Locale): Promise<ResolvedNavigation> {
   const bundled = await bundledNavigation();
 
   let saved: Navigation = {};
   let fallback = true;
   try {
-    const [row] = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, NAVIGATION_SETTING_KEY))
-      .limit(1);
-    if (row) {
-      saved = parseNavigation(row.value);
+    /* `navigation:hy` when it exists, `navigation` otherwise — so a language
+       whose menus nobody has translated yet still gets menus. */
+    const value = await readLocalised(NAVIGATION_SETTING_KEY, locale);
+    if (value !== undefined) {
+      saved = parseNavigation(value);
       fallback = Object.keys(saved).length === 0;
     }
   } catch {

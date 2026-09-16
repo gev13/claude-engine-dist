@@ -21,7 +21,7 @@ const loaded = {
     fromEmail: 'hello@example.com',
     replyTo: 'replies@example.com',
     notifyEmails: ['alerts@example.com', 'second@example.com'],
-    events: { enquiry: true, formSubmission: false, newsletter: false, security: true, engineUpdate: true },
+    events: { enquiry: true, formSubmission: false, application: true, newsletter: false, security: true, engineUpdate: true },
     passwordSet: true,
   },
   problem: null,
@@ -36,7 +36,7 @@ vi.mock('@/lib/admin/client', () => ({
   fetcher: vi.fn(),
 }));
 
-const { EmailScreen } = await import('../../src/app/admin/(panel)/email/EmailScreen');
+const { EmailScreen } = await import('../../src/app/(system)/admin/(panel)/email/EmailScreen');
 
 afterEach(cleanup);
 
@@ -75,8 +75,8 @@ describe('the email screen', () => {
     const { container } = render(<EmailScreen canWrite />);
     const boxes = [...container.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')];
     // Sending on; forget-password off; then enquiry on, form submissions off,
-    // newsletter off, security on, engine updates on.
-    expect(boxes.map((box) => box.checked)).toEqual([true, false, true, false, false, true, true]);
+    // applications on, newsletter off, security on, engine updates on.
+    expect(boxes.map((box) => box.checked)).toEqual([true, false, true, false, true, false, true, true]);
   });
 
   it('gives a reader nothing to type in', () => {

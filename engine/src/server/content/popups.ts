@@ -1,8 +1,7 @@
 import 'server-only';
-import { eq } from 'drizzle-orm';
 import { type Popup, popupsSchema } from '@/lib/popups';
-import { db } from '@/server/db';
-import { settings } from '@/server/db/schema';
+import type { Locale } from '@/lib/locales';
+import { readLocalised } from './localisedSettings';
 
 export const POPUPS_SETTING_KEY = 'popups';
 
@@ -11,10 +10,10 @@ export const POPUPS_SETTING_KEY = 'popups';
  * unreachable database all mean "no popups", so a popup can never take the
  * site down.
  */
-export async function getPopups(): Promise<Popup[]> {
+export async function getPopups(locale?: Locale): Promise<Popup[]> {
   try {
-    const [row] = await db.select().from(settings).where(eq(settings.key, POPUPS_SETTING_KEY)).limit(1);
-    const parsed = popupsSchema.safeParse(row?.value ?? []);
+    const value = await readLocalised(POPUPS_SETTING_KEY, locale);
+    const parsed = popupsSchema.safeParse(value ?? []);
     return parsed.success ? parsed.data : [];
   } catch {
     return [];

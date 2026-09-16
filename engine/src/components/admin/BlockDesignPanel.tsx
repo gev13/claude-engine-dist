@@ -15,7 +15,8 @@ import {
   type SpacingBox,
   type StyleBreakpoint,
 } from '@/lib/blockStyle';
-import { FONT_LABELS, TIER_LABELS, type FontKey } from '@/lib/theme';
+import { TIER_LABELS } from '@/lib/theme';
+import { FONT_GROUPS } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
 
 /* The Design panel for one block — the equivalent of WPBakery's Design Options,
@@ -55,7 +56,8 @@ const SPACING_TABS = [
   ...STYLE_BREAKPOINTS.map((key) => ({ key, label: `${TIER_LABELS[key]} ≤${TIER_WIDTH[key]}` })),
 ] as const;
 
-const FONT_OPTIONS = (Object.keys(FONT_LABELS) as FontKey[]).map((value) => ({ value, label: FONT_LABELS[value] }));
+/* Sixty faces: grouped, or the picker stops being a menu. */
+const FONT_OPTIONS = FONT_GROUPS;
 const ALIGN_OPTIONS = (['left', 'center', 'right'] as const).map((value) => ({ value, label: value }));
 const WEIGHT_OPTIONS = (['300', '400', '500', '600', '700', '800', '900'] as const).map((value) => ({
   value,
@@ -110,6 +112,24 @@ export function BlockDesignPanel({
 
   const spacingPath = ['spacing', spacingTab] as const;
 
+  /**
+   * The value a spacing field inherits while it is empty.
+   *
+   * A screen size falls back to the next one up, and "All screens" falls back
+   * to the block's own band — which is CSS, per block type, and not a number
+   * this panel can know. So the wider tabs name a value and the base tab says
+   * plainly that the block decides, instead of every field saying "inherit"
+   * and leaving an editor to guess which.
+   */
+  const inheritedSpacing = (key: keyof SpacingBox): string | undefined => {
+    const order = ['base', ...STYLE_BREAKPOINTS] as const;
+    for (let i = order.indexOf(spacingTab) - 1; i >= 0; i -= 1) {
+      const value = getIn(current, ['spacing', order[i]!, key]);
+      if (typeof value === 'string' && value) return value;
+    }
+    return undefined;
+  };
+
   return (
     <div className="flex flex-col gap-5">
       {/* ── Layout ─────────────────────────────────────────────────────── */}
@@ -153,7 +173,9 @@ export function BlockDesignPanel({
       <section>
         <PanelTitle>Spacing</PanelTitle>
         <p className="m-0 mb-3 text-[12px] text-smoke">
-          A screen size overrides &ldquo;All screens&rdquo; at that width and below. Leave a field empty to inherit.
+          A screen size overrides &ldquo;All screens&rdquo; at that width and below. An empty field shows the value it
+          inherits, greyed out. Setting a padding replaces the section&rsquo;s own on that side, so{' '}
+          <code className="font-mono text-flare-soft">0px</code> really does remove it.
         </p>
 
         <div className="mb-3 flex flex-wrap gap-1 border-b-2 border-hairline">
@@ -182,6 +204,8 @@ export function BlockDesignPanel({
               key={key}
               label={label}
               value={get([...spacingPath, key])}
+              inherited={inheritedSpacing(key as keyof SpacingBox)}
+              placeholder={spacingTab === 'base' ? 'the block’s own' : undefined}
               onChange={set([...spacingPath, key as keyof SpacingBox])}
             />
           ))}
@@ -327,7 +351,7 @@ export function BlockDesignPanel({
               <ChoiceField
                 label="Font"
                 value={get(['typography', role, 'family']) as never}
-                options={FONT_OPTIONS}
+                groups={FONT_OPTIONS}
                 onChange={set(['typography', role, 'family'])}
               />
               <LengthField label="Size" value={get(['typography', role, 'size'])} onChange={set(['typography', role, 'size'])} />
@@ -418,7 +442,31 @@ export function BlockDesignPanel({
 
       <section>
         <PanelTitle>Visibility</PanelTitle>
-        <div className="flex flex-wrap gap-4">
+
+        {/* Not "carousel": there are no arrows and no dots, and calling it one
+            would have people looking for controls that are not there. */}
+        <Field
+          label="Swipe sideways on small screens"
+          hint="three or four across on a desktop, one at a time under a thumb"
+        >
+          <Select
+            value={current.swipeOn ?? ''}
+            onChange={(e) => set(['swipeOn'])(e.target.value || undefined)}
+          >
+            <option value="">Never — always a grid</option>
+            {STYLE_BREAKPOINTS.map((bp) => (
+              <option key={bp} value={bp}>
+                {TIER_LABELS[bp]} and below (≤{TIER_WIDTH[bp]}px)
+              </option>
+            ))}
+          </Select>
+          <p className="m-0 mt-2 text-[12px] leading-relaxed text-smoke">
+            Works on any section with a grid in it, and on a row&rsquo;s columns. Nothing is hidden — every card
+            stays on the page and in the tab order.
+          </p>
+        </Field>
+
+        <div className="mt-4 flex flex-wrap gap-4">
           {STYLE_BREAKPOINTS.map((bp) => (
             <label key={bp} className="flex items-center gap-2 text-[13px] text-ash">
               <input

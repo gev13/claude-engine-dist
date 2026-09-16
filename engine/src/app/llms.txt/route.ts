@@ -1,5 +1,7 @@
 import { SITE_URL } from '@/lib/env';
+import { CAREERS_PATH } from '@/lib/careers';
 import { servicePath, site } from '@/lib/site';
+import { listJobs } from '@/server/content/jobs';
 import { allPublishedPagePaths } from '@/server/content/pages';
 import { getServiceCatalogue } from '@/server/content/services';
 import { listPosts } from '@/server/content/posts';
@@ -20,11 +22,12 @@ const link = (title: string, path: string, note?: string | null) =>
  * it is left out rather than listed empty or filled with links that 404.
  */
 export async function GET() {
-  const [settings, pages, catalogue, posts] = await Promise.all([
+  const [settings, pages, catalogue, posts, openRoles] = await Promise.all([
     getSiteSettings(),
     allPublishedPagePaths(),
     getServiceCatalogue(),
     listPosts({ limit: 15 }),
+    listJobs({ limit: 25, openOnly: true }),
   ]);
 
   const lines: string[] = [`# ${settings.name}`, '', `> ${settings.description}`];
@@ -50,6 +53,19 @@ export async function GET() {
       '',
       link(site.blogLabel, site.blogBase),
       ...posts.map((p) => link(p.title, `${site.blogBase}/${p.slug}`, p.excerpt)),
+    );
+  }
+
+  /* Open roles only. A filled advert is `noindex` and carries no JobPosting,
+     so listing it here would point an answer engine at the one page the rest
+     of the site is trying to keep out of results. */
+  if (openRoles.length > 0) {
+    lines.push(
+      '',
+      '## Careers',
+      '',
+      link('Open roles', CAREERS_PATH),
+      ...openRoles.map((job) => link(job.title, `${CAREERS_PATH}/${job.slug}`, job.excerpt || job.location)),
     );
   }
 

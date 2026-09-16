@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { collectInvalidBlocks, parseBlock, type AnyBlock, type ParsedRowProps } from '@/lib/blocks';
+import { collectInvalidBlocks, parseBlock, parseBlocks, type AnyBlock, type ParsedRowProps } from '@/lib/blocks';
 import { rowToCss } from '@/lib/blockStyle-css';
 
 const row = (overrides: Record<string, unknown> = {}): AnyBlock => ({
@@ -23,14 +23,76 @@ describe('row parsing', () => {
     expect(props.columns[1]!.blocks[0]!.type).toBe('image');
   });
 
-  /* Nesting stops at one level. The schema cannot say "anything but a row"
-     without becoming recursive, so the rule lives in the parser. */
-  it('drops a row nested inside a column', () => {
-    const nested = row({
-      columns: [{ id: 'colA', width: { base: 12 }, blocks: [row()] }],
-    });
-    const props = parseBlock(nested)?.props as ParsedRowProps;
-    expect(props.columns[0]!.blocks).toHaveLength(0);
+  /* ── Nesting ──────────────────────────────────────────────────────────────
+     Rows nest three deep. The schema cannot say "a row, but only this far
+     down" without becoming recursive, so the rule lives in the parser — and
+     these tests are the only thing holding the editor's picker and the
+     renderer to the same number.
+     ──────────────────────────────────────────────────────────────────────── */
+
+  /** A row `levels` deep, each row holding the next in its single column. */
+  const stack = (levels: number): AnyBlock => {
+    let inner: AnyBlock = {
+      id: `leaf`,
+      type: 'cta',
+      props: { title: 'Bottom' },
+    };
+    for (let level = levels; level >= 1; level -= 1) {
+      inner = {
+        id: `r${level}`,
+        type: 'row',
+        props: { columns: [{ id: `c${level}`, width: { base: 12 }, blocks: [inner] }] },
+      };
+    }
+    return inner;
+  };
+
+  /** Walk down the single column of each row, returning what sits at the bottom. */
+  const descend = (block: AnyBlock, levels: number) => {
+    let node = parseBlock(block);
+    for (let i = 1; i < levels; i += 1) {
+      node = (node?.props as ParsedRowProps).columns[0]!.blocks[0] ?? null;
+    }
+    return (node?.props as ParsedRowProps | undefined)?.columns[0]?.blocks ?? [];
+  };
+
+  it('keeps a row inside a row inside a row', () => {
+    expect(descend(stack(3), 3)).toHaveLength(1);
+    expect(descend(stack(3), 3)[0]!.type).toBe('cta');
+  });
+
+  it('keeps every level of a three-deep stack', () => {
+    const parsed = parseBlock(stack(3));
+    const second = (parsed?.props as ParsedRowProps).columns[0]!.blocks[0]!;
+    expect(second.type).toBe('row');
+    const third = (second.props as ParsedRowProps).columns[0]!.blocks[0]!;
+    expect(third.type).toBe('row');
+  });
+
+  it('drops a fourth row rather than rendering it', () => {
+    // The fourth row is dropped; the three above it are untouched.
+    expect(descend(stack(4), 3)).toHaveLength(0);
+  });
+
+  it('names a too-deep row on save instead of letting it vanish', () => {
+    const problems = collectInvalidBlocks([stack(4)]);
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/nested more than 3 rows deep/);
+  });
+
+  /* `parseBlocks` maps over an array, and `map` passes the index as the
+     second argument — so a point-free `.map(parseBlock)` would hand every
+     block its position as a depth and silently drop the fourth row on a
+     page. It was written that way until rows learned to nest. */
+  it('does not mistake a block’s position for its nesting depth', () => {
+    const page = [
+      { id: 'p0', type: 'cta', props: { title: 'One' } },
+      { id: 'p1', type: 'cta', props: { title: 'Two' } },
+      { id: 'p2', type: 'cta', props: { title: 'Three' } },
+      row({ columns: [{ id: 'cX', width: { base: 12 }, blocks: [] }] }),
+      row({ columns: [{ id: 'cY', width: { base: 12 }, blocks: [] }] }),
+    ] as AnyBlock[];
+    expect(parseBlocks(page)).toHaveLength(5);
   });
 
   it('drops a child that is invalid for its type but keeps the rest', () => {

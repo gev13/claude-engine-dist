@@ -57,7 +57,7 @@ const isKeyword = (allowed: readonly string[]) => (v: string) => allowed.include
  * the codebase (`bg-ink`, `text-ash`, `border-hairline`) follows the theme for
  * free.
  */
-const COLOR_TOKENS: Record<string, string> = {
+export const COLOR_TOKENS: Record<string, string> = {
   background: '--color-ink',
   surface: '--color-surface',
   surfaceRaised: '--color-surface-2',
@@ -170,6 +170,35 @@ function buttonDecls(theme: Theme): Decl[] {
   return out;
 }
 
+/**
+ * The typeface overrides for each language, as `:lang()` rules.
+ *
+ * `<html lang>` already follows the locale — it is what a screen reader
+ * switches pronunciation on — so the language is already in the document and
+ * CSS can read it. No JavaScript, no per-page branching, and a rule that
+ * costs nothing on a site that speaks one language, because none is emitted.
+ *
+ * The locale is interpolated into a selector, so it is held to the shape a
+ * locale actually has rather than trusted.
+ */
+const LOCALE_PATTERN = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})?$/;
+
+function localeFontCss(theme: Theme, selector: string): string {
+  const byLocale = theme.localeFonts ?? {};
+  const parts: string[] = [];
+
+  for (const [locale, fonts] of Object.entries(byLocale)) {
+    if (!LOCALE_PATTERN.test(locale)) continue;
+    const decls: Decl[] = [];
+    if (fonts?.display && fonts.display in FONT_STACKS) decls.push(['--font-display', FONT_STACKS[fonts.display]]);
+    if (fonts?.sans && fonts.sans in FONT_STACKS) decls.push(['--font-sans', FONT_STACKS[fonts.sans]]);
+    if (fonts?.mono && fonts.mono in FONT_STACKS) decls.push(['--font-mono', FONT_STACKS[fonts.mono]]);
+    if (decls.length) parts.push(block(`${selector}:lang(${locale})`, decls));
+  }
+
+  return parts.join('');
+}
+
 function brandDecls(theme: Theme): Decl[] {
   const out: Decl[] = [];
   push(out, '--he-logo-height', theme.brand?.logoHeight, isLength);
@@ -232,6 +261,8 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   if (theme.chrome?.themeToggle && safeSelector === ':root') {
     parts.push(block(':root[data-scheme="alt"]', colorDecls(theme, 'colorsAlt')));
   }
+
+  parts.push(localeFontCss(theme, safeSelector));
 
   // Link underline is a rule rather than a variable: there is no sensible
   // "unset" value for text-decoration that inherits correctly.

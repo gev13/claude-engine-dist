@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import './fonts.css';
+@import './fonts-google.css';
 @import './library.css';
 @import './library-blocks.css';
 @import './library-content.css';
@@ -15,6 +16,7 @@
 @import './library-effects.css';
 @import './library-popups.css';
 @import './library-forms.css';
+@import './library-careers.css';
 @import './library-lottie.css';
 @import './library-sliders.css';
 
@@ -534,6 +536,18 @@
   @media (width < 48rem) {
     .he-row { padding-block: 40px; }
   }
+}
+
+/* A row inside a column is a block like any other, so it loses the band
+   rhythm the same way the rest of them do — the column's own spacing and the
+   parent row's gap already put air around it, and three levels of 56px would
+   be nothing but air.
+
+   Both halves are wrapped in `:where()`, which contributes no specificity at
+   all, so the rule beats the layered default above (unlayered always does)
+   while losing to the single class a Design panel padding writes. */
+:where(.he-nested) :where(.he-row) {
+  padding-block: 0;
 }
 
 /* The spacer block. Its heights arrive as custom properties so the mobile

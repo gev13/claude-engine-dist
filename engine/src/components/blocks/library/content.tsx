@@ -117,15 +117,23 @@ export function CardGridVariant(p: P<'cardGrid'>) {
   );
   const cols = { '--cols': p.columns } as React.CSSProperties;
 
-  if (p.variant === 'tiles') {
+  /* The mosaic is the tile grid with two tile sizes, not a second component:
+     same markup, same fields, same editor — the difference is which cells the
+     tiles occupy, which is a stylesheet's job. */
+  if (p.variant === 'tiles' || p.variant === 'mosaic') {
+    const mosaic = p.variant === 'mosaic';
     return (
       <section className={cn('he-tiles', toneClass(p.tone))}>
         {head && <div className="shell he-tiles__head">{head}</div>}
-        <div className={cn('he-tiles__grid', p.columns > 2 && 'is-many')} style={cols}>
+        <div
+          className={cn('he-tiles__grid', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many')}
+          style={cols}
+        >
           {p.cards.map((c, i) => {
             const inner = (
               <>
                 <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-tile__bg" />
+                {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className="he-tile__text">
                   {c.eyebrow && <div className="he-tile__eyebrow">{c.eyebrow}</div>}
                   <h3 className="he-tile__title">{c.title}</h3>
@@ -220,6 +228,7 @@ export function CardGridVariant(p: P<'cardGrid'>) {
               return (
                 <li key={c.title + i} className="he-fgrid__item he-ocard">
                   <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-fill he-ocard__bg" />
+                  {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
                     {c.eyebrow && <div className="he-ocard__eyebrow">{c.eyebrow}</div>}
                     <h3 className="he-ocard__title">{title}</h3>
@@ -235,6 +244,7 @@ export function CardGridVariant(p: P<'cardGrid'>) {
             }
             return (
               <li key={c.title + i} className="he-fgrid__item">
+                {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className={icons ? 'he-feat__icon' : 'he-icard__media'}>
                   <MediaFill imageUrl={c.imageUrl} alt={icons ? '' : c.alt} className={icons ? 'he-feat__img' : 'he-fill'} />
                 </div>

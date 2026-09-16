@@ -1,0 +1,230 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Careers (package 8)
+   ──────────────────────────────────────────────────────────────────────────
+   The application form borrows the form builder's `he-fb__*` vocabulary
+   wholesale, so only what is genuinely new lives here: the file input, the
+   honeypot, the listing cards and the advert's meta grid.
+
+   Class names are global, so these are `he-job*` / `he-apply*` — grep the
+   stylesheets before naming a new block's classes.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── The listing ───────────────────────────────────────────────────────── */
+
+  .he-jobs { display: grid; gap: 16px; }
+
+  .he-job-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 12px 28px;
+    padding: 26px 28px;
+    border: 1.5px solid var(--color-hairline);
+    border-radius: 16px;
+    background: var(--color-surface);
+    transition: border-color 150ms, background-color 150ms;
+  }
+
+  .he-job-card:hover { border-color: var(--color-rule); background: var(--color-surface-2); }
+
+  /* Closed roles stay on the page — somebody holding the link still gets an
+     answer — but must never read as available. */
+  .he-job-card.is-closed { opacity: 0.66; }
+  .he-job-card.is-closed:hover { opacity: 1; }
+
+  .he-job-card__title { margin: 0; font-family: var(--font-display); font-size: clamp(20px, 2.2vw, 26px); font-weight: 700; line-height: 1.2; }
+  .he-job-card__title a { color: inherit; text-decoration: none; }
+  .he-job-card__title a:hover { color: var(--color-flare-soft); }
+
+  /* The whole card is a target, without nesting a link inside a link. */
+  .he-job-card__title a::after { content: ''; position: absolute; inset: 0; }
+  .he-job-card { position: relative; }
+
+  .he-job-card__excerpt { margin: 10px 0 0; max-width: 62ch; font-size: 15px; line-height: 1.6; color: var(--color-ash); }
+
+  .he-job-card__meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 18px;
+    margin: 14px 0 0;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+  }
+
+  .he-job-card__side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right; }
+
+  .he-job-tag {
+    display: inline-flex;
+    padding: 5px 12px;
+    border: 1.5px solid var(--color-hairline);
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-smoke);
+    white-space: nowrap;
+  }
+
+  .he-job-tag.is-open { border-color: var(--color-flare); color: var(--color-flare-soft); }
+
+  .he-job-card__when { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--color-smoke); }
+
+  /* ── One advert ────────────────────────────────────────────────────────── */
+
+  .he-job__meta {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 20px 28px;
+    margin: 36px 0 0;
+    padding: 26px 0;
+    border-top: 1.5px solid var(--color-hairline);
+    border-bottom: 1.5px solid var(--color-hairline);
+  }
+
+  .he-job__meta dt { margin: 0 0 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-job__meta dd { margin: 0; font-size: 16px; line-height: 1.4; color: var(--color-bone); }
+
+  .he-job__section { margin-top: 48px; }
+  .he-job__section h2 { margin: 0 0 18px; }
+
+  /* A role that has been filled says so where the form would have been. */
+  .he-job__closed {
+    padding: 24px 26px;
+    border: 1.5px solid var(--color-hairline);
+    border-radius: 16px;
+    background: var(--color-surface);
+  }
+  .he-job__closed p { margin: 0; font-size: 16px; line-height: 1.6; color: var(--color-ash); }
+  .he-job__closed p + p { margin-top: 12px; }
+
+  /* ── The application form ──────────────────────────────────────────────── */
+
+  /* A file input is a button, not a text box, so it does not want the text
+     box's padding — only its border, background and focus ring. */
+  .he-apply__file { padding: 10px 12px; font-size: 14px; color: var(--color-ash); cursor: pointer; }
+  .he-apply__file::file-selector-button {
+    margin-right: 12px;
+    padding: 7px 14px;
+    border: 1.5px solid var(--color-hairline);
+    border-radius: 8px;
+    background: var(--color-surface);
+    color: var(--color-bone);
+    font: inherit;
+    cursor: pointer;
+  }
+  .he-apply__file::file-selector-button:hover { border-color: var(--color-flare); }
+
+  /* Out of the layout and out of the accessibility tree, but still focusable
+     by a script — which is the point. `display: none` would let some bots
+     skip it. */
+  .he-apply__trap {
+    position: absolute;
+    left: -9999px;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
+  .he-apply__note { margin-top: 18px; max-width: 62ch; }
+
+  @media (width <= 48rem) {
+    .he-job-card { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
+    .he-job-card__side { align-items: flex-start; text-align: left; }
+    .he-job__meta { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 18px 20px; }
+  }
+
+  /* ── The card badge ────────────────────────────────────────────────────────
+     "New", "Coming soon", "Sold out" — a flag in the corner of a card. One
+     style, because the word carries the meaning and a palette of tones would
+     only invite a guess about which one "Coming soon" is.
+
+     `.he-badge`, not `.he-card__badge`: it sits on four different card shapes
+     that share no other class between them.
+     ─────────────────────────────────────────────────────────────────────── */
+
+  .he-badge {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    z-index: 2;
+    display: inline-flex;
+    padding: 5px 11px;
+    border: 1.5px solid var(--color-flare);
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--color-ink) 82%, transparent);
+    backdrop-filter: blur(4px);
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1;
+    color: var(--color-flare-soft);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
+  /* Each host has to establish a containing block, or the badge escapes to
+     the nearest positioned ancestor and lands in the corner of the page. */
+  .he-tile,
+  .he-ocard,
+  .he-fgrid__item { position: relative; }
+
+  /* ── The cookie notice ─────────────────────────────────────────────────────
+     Above everything, including the popups, because it is the one thing a
+     visitor is being asked to answer before they carry on.
+     ─────────────────────────────────────────────────────────────────────── */
+
+  .he-cookie {
+    position: fixed;
+    z-index: 90;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 28px;
+    padding: 20px 24px;
+    border: 1.5px solid var(--color-hairline);
+    background: var(--color-surface);
+    box-shadow: 0 18px 50px rgb(0 0 0 / 0.35);
+  }
+
+  .he-cookie.is-bottom-bar { inset: auto 0 0 0; border-inline: 0; border-bottom: 0; justify-content: center; }
+  .he-cookie.is-bottom-left { inset: auto auto 24px 24px; max-width: 420px; border-radius: 16px; }
+  .he-cookie.is-bottom-right { inset: auto 24px 24px auto; max-width: 420px; border-radius: 16px; }
+  .he-cookie.is-centre {
+    inset: 50% auto auto 50%;
+    translate: -50% -50%;
+    z-index: 92;
+    max-width: 520px;
+    border-radius: 18px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .he-cookie__scrim { position: fixed; inset: 0; z-index: 91; background: rgb(0 0 0 / 0.55); }
+
+  /* The bar centres one readable column rather than stretching a sentence
+     across a 2560px screen. */
+  .he-cookie.is-bottom-bar .he-cookie__text { max-width: 74ch; }
+
+  .he-cookie__text { flex: 1 1 320px; min-width: 0; }
+  .he-cookie__title { margin: 0 0 6px; font-family: var(--font-display); font-size: 17px; font-weight: 700; }
+  .he-cookie__body { margin: 0; font-size: 14px; line-height: 1.6; color: var(--color-ash); }
+  .he-cookie__link { display: inline-block; margin-top: 8px; font-size: 14px; color: var(--color-flare-soft); }
+  .he-cookie__link:hover { color: var(--color-flare-hot); }
+
+  .he-cookie__actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+
+  @media (width <= 48rem) {
+    .he-cookie { padding: 18px 18px; gap: 14px; }
+    .he-cookie.is-bottom-left,
+    .he-cookie.is-bottom-right { inset: auto 12px 12px 12px; max-width: none; }
+    .he-cookie.is-centre { inset: auto 12px 12px 12px; translate: none; max-width: none; }
+    .he-cookie__actions { width: 100%; }
+    .he-cookie__actions > * { flex: 1 1 auto; justify-content: center; }
+  }
+}

@@ -15,6 +15,20 @@
       "when": 1789386730935,
       "tag": "0001_common_blackheart",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789541568222,
+      "tag": "0002_chemical_trish_tilby",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789549099385,
+      "tag": "0003_stormy_killer_shrike",
+      "breakpoints": true
     }
   ]
 }

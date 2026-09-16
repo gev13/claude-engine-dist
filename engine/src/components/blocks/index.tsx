@@ -111,7 +111,12 @@ export function ProseBlock(p: P<'prose'>) {
           {p.columns === 'one' &&
             !p.html &&
             p.paragraphs.map((text, i) => (
-              <p key={i} className="mt-4 max-w-[62ch] text-[17px] text-ash first:mt-5">
+              /* `whitespace-pre-line`: a line break typed in the editor is a
+                 line break on the page. Without it HTML collapses it and the
+                 text silently runs together — reported from real use. Runs of
+                 spaces are still collapsed, so it does not turn prose into
+                 preformatted text. */
+              <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[17px] text-ash first:mt-5">
                 {text}
               </p>
             ))}
@@ -122,7 +127,7 @@ export function ProseBlock(p: P<'prose'>) {
               <Prose html={p.html} />
             ) : (
               p.paragraphs.map((text, i) => (
-                <p key={i} className="mt-4 max-w-[62ch] text-[17px] text-ash first:mt-0">
+                <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[17px] text-ash first:mt-0">
                   {text}
                 </p>
               ))
@@ -167,7 +172,7 @@ export function CardGridBlock(p: P<'cardGrid'>) {
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       <CardGrid cols={p.columns}>
         {p.cards.map((c) => (
-          <Card key={c.title} eyebrow={c.eyebrow} title={c.title} href={c.href}>
+          <Card key={c.title} eyebrow={c.eyebrow} title={c.title} href={c.href} badge={c.badge}>
             {c.body}
           </Card>
         ))}

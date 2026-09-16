@@ -142,7 +142,22 @@ describe('reattribute', () => {
 
 describe('the tables that travel', () => {
   it('carries content and nothing that belongs to a person', () => {
-    expect([...CONTENT_TABLES]).toEqual(['media', 'categories', 'pages', 'posts', 'post_categories', 'redirects']);
+    expect([...CONTENT_TABLES]).toEqual([
+      'media',
+      'categories',
+      'pages',
+      'posts',
+      'post_categories',
+      'jobs',
+      'redirects',
+    ]);
+  });
+
+  it('carries open jobs but never the people who applied for them', () => {
+    // An open role is something a site says; an application is a CV somebody
+    // sent to one company for one job.
+    expect(CONTENT_TABLES as readonly string[]).toContain('jobs');
+    expect(CONTENT_TABLES as readonly string[]).not.toContain('applications');
   });
 
   it('leaves out every table holding people, whether staff or visitors', () => {
@@ -154,6 +169,7 @@ describe('the tables that travel', () => {
       'enquiries',
       'newsletter_subscribers',
       'form_submissions',
+      'applications',
       'blocked_ips',
       'content_revisions',
       'not_found_log',

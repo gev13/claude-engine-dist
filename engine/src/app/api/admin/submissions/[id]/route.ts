@@ -4,6 +4,8 @@ import { handle, noContent, notFound } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
+import type { Answer } from '@/lib/forms';
+import { deleteStoredFile } from '@/server/applications/storage';
 import { db } from '@/server/db';
 import { formSubmissions } from '@/server/db/schema';
 
@@ -27,8 +29,19 @@ export async function DELETE(request: Request, ctx: Ctx) {
     const [row] = await db
       .delete(formSubmissions)
       .where(eq(formSubmissions.id, id))
-      .returning({ id: formSubmissions.id, formName: formSubmissions.formName });
+      .returning({
+        id: formSubmissions.id,
+        formName: formSubmissions.formName,
+        answers: formSubmissions.answers,
+      });
     if (!row) return notFound('That submission no longer exists.');
+
+    /* A database cannot unlink. The answers were returned by the delete for
+       exactly this: afterwards nothing says which files were this
+       submission's, and they would sit in the directory for ever. */
+    for (const answer of (row.answers ?? []) as Answer[]) {
+      if (answer.file?.name) await deleteStoredFile(answer.file.name);
+    }
 
     // The answers stay out of the audit log, which is append-only.
     await audit({

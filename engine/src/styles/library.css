@@ -124,6 +124,47 @@
   .he-hdr__icon { display: inline-grid; place-items: center; width: 40px; height: 40px; color: inherit; }
   .he-hdr__icon:hover { color: var(--color-flare-soft); }
 
+  /* Language switcher (package 8). The element carries `he-keep` in
+     Header.tsx so it survives the breakpoint that collapses the rest of the
+     actions — a switcher that disappears on a phone is one a reader cannot
+     use, and a multilingual site is exactly where that matters. */
+  .he-lang { position: relative; }
+  .he-lang__button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 4px;
+    font-family: var(--he-nav-family);
+    font-size: var(--he-nav-size);
+    letter-spacing: var(--he-nav-tracking);
+    text-transform: uppercase;
+    color: inherit;
+    cursor: pointer;
+  }
+  .he-lang__button:hover { color: var(--color-flare-soft); }
+  .he-lang__chev { transition: transform 0.18s var(--ease-edge); }
+  .he-lang__button[aria-expanded='true'] .he-lang__chev { transform: rotate(180deg); }
+  .he-lang__list {
+    position: absolute;
+    top: calc(100% + 6px);
+    right: 0;
+    z-index: 40;
+    min-width: 170px;
+    margin: 0;
+    padding: 6px;
+    list-style: none;
+    background: var(--color-surface);
+    border: 2px solid var(--color-hairline);
+  }
+  .he-lang__item {
+    display: block;
+    padding: 8px 10px;
+    color: var(--color-ash);
+    font-size: 14px;
+  }
+  .he-lang__item:hover { color: var(--color-bone); background: var(--color-ink); }
+  .he-lang__item[aria-current='true'] { color: var(--color-flare-soft); }
+
   .he-hdr__toggle {
     display: none;
     align-items: center;

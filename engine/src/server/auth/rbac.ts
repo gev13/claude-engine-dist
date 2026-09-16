@@ -51,6 +51,21 @@ export const PERMISSIONS = {
   'posts:delete': ['admin', 'manager', 'editor', 'author'],
   'posts:publish': ['admin', 'manager', 'editor'],
 
+  // A job advert is content, and follows the content rules exactly: an author
+  // may write one and may not put it on the careers page.
+  'jobs:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'jobs:write': ['admin', 'manager', 'editor', 'author'],
+  'jobs:delete': ['admin', 'manager', 'editor', 'author'],
+  'jobs:publish': ['admin', 'manager', 'editor'],
+
+  /* An application is not content. It is a named person's CV, phone number and
+     covering letter, given to this company for one purpose — so it follows the
+     newsletter and the form submissions, not the job advert it answers:
+     whoever handles applications may read them, and only an administrator may
+     export or erase them. `tests/roles.test.ts` fails if that moves. */
+  'applications:read': ['admin', 'manager', 'editor', 'reviewer'],
+  'applications:write': ['admin'],
+
   'categories:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
   // A category is site-wide furniture, not one person's content.
   'categories:write': ['admin', 'manager', 'editor'],

@@ -139,6 +139,42 @@ export function notifyFormSubmission(input: { formName: string; source: string; 
   });
 }
 
+/**
+ * Somebody applied for a role.
+ *
+ * The applicant's covering letter and CV stay on the server, like every other
+ * notification here: the message says what arrived and where to read it. The
+ * name and email *are* included, because whoever watches a careers inbox needs
+ * to know who applied without opening the admin — and unlike the enquiry
+ * notification there is no reply-to, since replying to a job application is a
+ * decision, not a reflex.
+ */
+export function notifyApplication(input: { jobTitle: string; name: string; email: string; hasCv: boolean }): void {
+  sendInBackground(async () => {
+    const mail = await getMailSettings();
+    if (!mail.events.application) return null;
+    const to = await notifyRecipients(mail);
+    if (to.length === 0) return null;
+
+    const brand = await mailBrand();
+    const message = notificationEmail({
+      ...brand,
+      title: `New application for “${input.jobTitle}”`,
+      intro: 'Somebody applied through the careers pages. The covering letter and CV are in the admin.',
+      facts: [
+        ['Role', input.jobTitle],
+        ['Applicant', input.name],
+        ['Email', input.email],
+        ['CV', input.hasCv ? 'Attached' : 'None'],
+        ['Received', when()],
+      ],
+      adminUrl: adminUrl('/admin/applications'),
+      adminLabel: 'Read the application',
+    });
+    return { message: { ...message, to }, event: 'application' };
+  });
+}
+
 /** A newsletter sign-up. Off by default — a busy list would be noise. */
 export function notifyNewsletter(input: { email: string; source: string }): void {
   sendInBackground(async () => {

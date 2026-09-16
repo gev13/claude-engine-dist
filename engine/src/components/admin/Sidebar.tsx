@@ -19,6 +19,7 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Pages', href: '/admin/pages' },
       { label: 'Posts', href: '/admin/posts' },
       { label: 'Categories', href: '/admin/categories' },
+      { label: 'Roles', href: '/admin/jobs' },
       { label: 'Media', href: '/admin/media' },
     ],
   },
@@ -29,6 +30,9 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Contact enquiries', href: '/admin/enquiries', roles: ['admin', 'manager', 'editor', 'reviewer'] },
       { label: 'Newsletter sign-ups', href: '/admin/newsletter', roles: ['admin', 'manager', 'editor', 'reviewer'] },
       { label: 'Form submissions', href: '/admin/submissions', roles: ['admin', 'manager', 'editor', 'reviewer'] },
+      // A CV is personal data, so this follows the three above rather than the
+      // advert it answers. Must match `applications:read` in rbac.ts.
+      { label: 'Applications', href: '/admin/applications', roles: ['admin', 'manager', 'editor', 'reviewer'] },
     ],
   },
   {
@@ -39,6 +43,7 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Appearance', href: '/admin/appearance', roles: ['admin', 'manager'] },
       { label: 'Menus', href: '/admin/navigation', roles: ['admin', 'manager'] },
       { label: 'Popups', href: '/admin/popups', roles: ['admin', 'manager'] },
+      { label: 'Cookie notice', href: '/admin/cookies', roles: ['admin', 'manager'] },
     ],
   },
   {
@@ -52,6 +57,8 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Backups', href: '/admin/backups', roles: ['admin'] },
       { label: 'Export & import', href: '/admin/transfer', roles: ['admin'] },
       { label: 'Audit log', href: '/admin/audit', roles: ['admin'] },
+      { label: 'Languages', href: '/admin/languages', roles: ['admin'] },
+      { label: 'Site translations', href: '/admin/translations', roles: ['admin'] },
       { label: 'Settings', href: '/admin/settings', roles: ['admin'] },
       { label: 'Profile', href: '/admin/profile' },
     ],

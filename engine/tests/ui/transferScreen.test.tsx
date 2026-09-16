@@ -30,7 +30,7 @@ const store = vi.hoisted(() => ({
 vi.mock('swr', () => ({ default: () => ({ data: store.loaded, isLoading: false, mutate: vi.fn() }) }));
 vi.mock('@/lib/admin/client', () => ({ api: store.api, fetcher: vi.fn() }));
 
-const { TransferScreen } = await import('../../src/app/admin/(panel)/transfer/TransferScreen');
+const { TransferScreen } = await import('../../src/app/(system)/admin/(panel)/transfer/TransferScreen');
 
 afterEach(() => {
   cleanup();

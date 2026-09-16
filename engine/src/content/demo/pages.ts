@@ -1067,6 +1067,19 @@ const libraryCollections: PageDefinition = {
         { eyebrow: 'Explore', title: 'Find us', href: '/contact', imageUrl: img('arch-facade'), buttonLabel: 'Discover' },
       ],
     }),
+    b('cardGrid', {
+      variant: 'mosaic',
+      eyebrow: 'Mosaic',
+      title: 'Two sizes of tile',
+      columns: 3,
+      cards: [
+        { eyebrow: 'Lead', title: 'The workshop', body: 'Every fifth tile leads, at twice the size.', href: '/about', imageUrl: img('interior-workshop'), badge: 'New' },
+        { eyebrow: 'Range', title: 'Speakers', href: '/services', imageUrl: img('product-graphite') },
+        { eyebrow: 'Range', title: 'Lamps', href: '/services', imageUrl: img('interior-lounge') },
+        { eyebrow: 'Range', title: 'Desks', href: '/services', imageUrl: img('interior-studio'), badge: 'Coming soon' },
+        { eyebrow: 'Range', title: 'Outdoors', href: '/services', imageUrl: img('scene-forest') },
+      ],
+    }),
     b('cardGrid', { variant: 'icons', eyebrow: 'Features', title: 'Everything included', columns: 3, cards: featureCards() }),
     b('cardGrid', {
       variant: 'imageCards',

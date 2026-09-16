@@ -10,6 +10,7 @@ import { type ServiceRef, servicePath } from '@/lib/site';
 import type { Theme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { Icon, SocialIcon } from './icons';
+import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './SiteExtras';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -41,6 +42,10 @@ export type HeaderProps = {
   secondaryServices: readonly ServiceLink[];
   /** The contact column of the MN7 menu. */
   contact?: HeaderContact;
+  /** Package 8. Absent or single-entry means no switcher is rendered. */
+  locales?: string[];
+  locale?: string;
+  defaultLocale?: string;
 };
 
 export type HeaderContact = { email?: string; address?: string; social: { network: SocialNetwork; href: string }[] };
@@ -238,6 +243,13 @@ export function Header(props: HeaderProps) {
   const actions = (
     <div className="he-hdr__actions">
       {h.variant !== 'pill' && search}
+      {props.locales && props.locales.length > 1 && (
+        <LanguageSwitcher
+          locales={props.locales}
+          current={props.locale ?? props.locales[0]!}
+          defaultLocale={props.defaultLocale ?? props.locales[0]!}
+        />
+      )}
       {secondaryCta && h.variant !== 'pill' && (
         <Link href={secondaryCta.href} className="he-hdr__secondary">
           {secondaryCta.label}

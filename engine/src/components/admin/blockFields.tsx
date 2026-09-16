@@ -1,7 +1,7 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
 import { AdminButton, Field, Input, Select, Textarea } from '@/components/admin/ui';
 import { MediaPicker } from '@/components/admin/MediaPicker';
@@ -11,6 +11,7 @@ import {
   CAROUSEL_INDICATORS,
   CAROUSEL_MODES,
   HERO_VARIANTS,
+  MAX_ROW_DEPTH,
   type BlockType,
   blockLabels,
   blockSchemas,
@@ -408,13 +409,41 @@ function LinksRepeater({ items, onChange }: { items: LinkItem[]; onChange: (n: L
   );
 }
 
-function StringListRepeater({ label, items, onChange }: { label: string; items: string[]; onChange: (n: string[]) => void }) {
+/**
+ * A list of strings, one control each.
+ *
+ * `multiline` gives each entry a textarea instead of a single-line input. That
+ * matters for prose: in a plain `<input>` the Enter key does nothing at all, so
+ * a line break could not even be typed, let alone rendered. Lists of short
+ * things — options, features, tags — stay single-line, where Enter has no
+ * business anyway.
+ */
+function StringListRepeater({
+  label,
+  items,
+  onChange,
+  multiline = false,
+  hint,
+}: {
+  label: string;
+  items: string[];
+  onChange: (n: string[]) => void;
+  multiline?: boolean;
+  hint?: string;
+}) {
+  const update = (i: number, next: string) => onChange(items.map((v, j) => (j === i ? next : v)));
+
   return (
     <div>
       <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">{label}</div>
+      {hint && <p className="m-0 mb-2 text-[12px] leading-relaxed text-smoke">{hint}</p>}
       {items.map((item, i) => (
-        <div key={i} className="mb-2 flex items-center gap-2">
-          <Input value={item} onChange={(e) => onChange(items.map((v, j) => (j === i ? e.target.value : v)))} />
+        <div key={i} className={cn('mb-2 flex gap-2', multiline ? 'items-start' : 'items-center')}>
+          {multiline ? (
+            <Textarea rows={3} value={item} onChange={(e) => update(i, e.target.value)} />
+          ) : (
+            <Input value={item} onChange={(e) => update(i, e.target.value)} />
+          )}
           <AdminButton
             variant="ghost"
             type="button"
@@ -750,7 +779,7 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type GridCard = { eyebrow?: string; title: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; points?: string[] };
+type GridCard = { eyebrow?: string; title: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[] };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -1422,9 +1451,12 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
 }
 
 /* ── Rows and columns ─────────────────────────────────────────────────────────
-   The one editor that edits other blocks. Nesting stops at one level, so a
-   column's block list never needs a builder of its own — it needs add, reorder,
-   delete and an expandable editor, which is what this provides.
+   The one editor that edits other blocks. A column's block list needs add,
+   reorder, delete and an expandable editor, which is what this provides — and
+   because a column may hold another row, this editor reaches itself through
+   `BlockFields`, carrying a depth so it stops where the renderer stops
+   (`MAX_ROW_DEPTH`). Offering a row the renderer would drop is the one thing
+   worse than not offering it at all.
 
    Reordering here is buttons rather than drag-and-drop: dragging *between*
    containers is a different problem from dragging within one, and buttons are
@@ -1442,7 +1474,14 @@ type AnyBlockLike = { id: string; type: string; props: Record<string, unknown>; 
 
 const readColumns = (props: Props): Column[] => (Array.isArray(props.columns) ? (props.columns as Column[]) : []);
 
-function RowFields({ props, set }: { props: Props; set: Setter }) {
+/** The width a breakpoint takes when nobody has set one — the same chain `rowToCss` walks. */
+function inheritedSpan(width: Column['width'], key: 'laptop' | 'tablet' | 'mobile'): number {
+  if (key === 'laptop') return width.base;
+  if (key === 'tablet') return width.laptop ?? width.base;
+  return width.tablet ?? width.laptop ?? width.base;
+}
+
+function RowFields({ props, set, depth }: { props: Props; set: Setter; depth: number }) {
   const columns = readColumns(props);
   const [openColumn, setOpenColumn] = useState<string | null>(columns[0]?.id ?? null);
 
@@ -1542,6 +1581,7 @@ function RowFields({ props, set }: { props: Props; set: Setter }) {
             open={openColumn === column.id}
             onToggle={() => setOpenColumn(openColumn === column.id ? null : column.id)}
             onChange={(next) => setColumns(columns.map((c) => (c.id === column.id ? next : c)))}
+            depth={depth}
           />
         ))}
       </div>
@@ -1556,6 +1596,7 @@ function ColumnEditor({
   open,
   onToggle,
   onChange,
+  depth,
 }: {
   column: Column;
   index: number;
@@ -1563,10 +1604,25 @@ function ColumnEditor({
   open: boolean;
   onToggle: () => void;
   onChange: (next: Column) => void;
+  /** The depth of this column's own row; its blocks sit one deeper. */
+  depth: number;
 }) {
   const [tab, setTab] = useState<'blocks' | 'design'>('blocks');
   const [adding, setAdding] = useState(false);
   const [openBlock, setOpenBlock] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+
+  const childDepth = depth + 1;
+  const canNestRow = childDepth <= MAX_ROW_DEPTH;
+
+  const choices = useMemo(() => {
+    const available = canNestRow ? blockTypes : blockTypes.filter((t) => t !== 'row');
+    const q = query.trim().toLowerCase();
+    if (!q) return available;
+    return available.filter(
+      (type) => blockLabels[type].toLowerCase().includes(q) || type.toLowerCase().includes(q),
+    );
+  }, [canNestRow, query]);
 
   const setBlocks = (blocks: AnyBlockLike[]) => onChange({ ...column, blocks });
 
@@ -1636,7 +1692,9 @@ function ColumnEditor({
                         onChange({ ...column, width });
                       }}
                     >
-                      {key !== 'base' && <option value="">Inherit</option>}
+                      {/* "Inherit" alone made every unset width look the same;
+                          naming the width it inherits is the whole answer. */}
+                      {key !== 'base' && <option value="">Inherit — {inheritedSpan(column.width, key)}/12</option>}
                       {COLUMN_SPANS.map((n) => (
                         <option key={n} value={n}>
                           {n}/12
@@ -1720,6 +1778,7 @@ function ColumnEditor({
                       <BlockFields
                         type={child.type as BlockType}
                         props={child.props ?? {}}
+                        depth={childDepth}
                         set={(next) =>
                           setBlocks(column.blocks.map((b) => (b.id === child.id ? { ...b, props: next } : b)))
                         }
@@ -1760,24 +1819,41 @@ function ColumnEditor({
                       Cancel
                     </AdminButton>
                   </div>
+                  <input
+                    type="search"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search blocks…"
+                    aria-label="Search blocks"
+                    className="mb-2 w-full border-2 border-hairline bg-ink px-2.5 py-1.5 text-[12px] text-bone placeholder:text-smoke focus:border-flare focus:outline-none"
+                  />
+                  {/* Past the nesting limit the renderer drops a row, so the
+                      editor stops offering one — and says why, rather than
+                      leaving somebody hunting for a block that used to be
+                      in the list. */}
+                  {!canNestRow && (
+                    <p className="m-0 mb-2 text-[11px] text-smoke">
+                      Rows nest {MAX_ROW_DEPTH} deep; this column is already at the limit.
+                    </p>
+                  )}
                   <div className="grid grid-cols-2 gap-1.5 sm:grid-cols-3">
-                    {/* A row cannot go inside a column: the renderer drops it,
-                        so the editor must not offer it. */}
-                    {blockTypes
-                      .filter((t) => t !== 'row')
-                      .map((type) => (
-                        <button
-                          key={type}
-                          type="button"
-                          onClick={() => {
-                            setBlocks([...column.blocks, { id: nanoid(10), type, props: blankProps(type) }]);
-                            setAdding(false);
-                          }}
-                          className="border-2 border-hairline px-2 py-1.5 text-left text-[12px] text-ash hover:border-flare hover:text-bone"
-                        >
-                          {blockLabels[type]}
-                        </button>
-                      ))}
+                    {choices.map((type) => (
+                      <button
+                        key={type}
+                        type="button"
+                        onClick={() => {
+                          setBlocks([...column.blocks, { id: nanoid(10), type, props: blankProps(type) }]);
+                          setAdding(false);
+                          setQuery('');
+                        }}
+                        className="border-2 border-hairline px-2 py-1.5 text-left text-[12px] text-ash hover:border-flare hover:text-bone"
+                      >
+                        {blockLabels[type]}
+                      </button>
+                    ))}
+                    {choices.length === 0 && (
+                      <p className="m-0 col-span-full py-2 text-[12px] text-smoke">No block matches “{query}”.</p>
+                    )}
                   </div>
                 </div>
               ) : (
@@ -1830,16 +1906,37 @@ function TitleTag({ type, props, set }: { type: BlockType; props: Props; set: Se
   );
 }
 
-export function BlockFields({ type, props, set }: { type: BlockType; props: Props; set: Setter }) {
+export function BlockFields({
+  type,
+  props,
+  set,
+  depth = 1,
+}: {
+  type: BlockType;
+  props: Props;
+  set: Setter;
+  /** How many rows this block sits inside, counting itself if it is one. */
+  depth?: number;
+}) {
   return (
     <>
-      <TypeFields type={type} props={props} set={set} />
+      <TypeFields type={type} props={props} set={set} depth={depth} />
       <TitleTag type={type} props={props} set={set} />
     </>
   );
 }
 
-function TypeFields({ type, props, set }: { type: BlockType; props: Props; set: Setter }) {
+function TypeFields({
+  type,
+  props,
+  set,
+  depth,
+}: {
+  type: BlockType;
+  props: Props;
+  set: Setter;
+  depth: number;
+}) {
   switch (type) {
     case 'hero': {
       const variant = str(props, 'variant') || 'classic';
@@ -3929,6 +4026,8 @@ function TypeFields({ type, props, set }: { type: BlockType; props: Props; set: 
           </Field>
           <StringListRepeater
             label="Paragraphs"
+            hint="One box per paragraph. Enter starts a new line inside the same paragraph."
+            multiline
             items={arr<string>(props, 'paragraphs')}
             onChange={(paragraphs) => set({ ...props, paragraphs })}
           />
@@ -4028,6 +4127,14 @@ function TypeFields({ type, props, set }: { type: BlockType; props: Props; set: 
                     <Input value={item.href ?? ''} placeholder="/services/…" onChange={(e) => update({ href: e.target.value })} />
                   </Field>
                 </div>
+                <Field label="Badge" hint="a flag in the corner — “New”, “Coming soon”, “Sold out”">
+                  <Input
+                    value={item.badge ?? ''}
+                    maxLength={24}
+                    placeholder="none"
+                    onChange={(e) => update({ badge: e.target.value || undefined })}
+                  />
+                </Field>
                 <Field label="Title">
                   <Input value={item.title ?? ''} onChange={(e) => update({ title: e.target.value })} />
                 </Field>
@@ -4473,7 +4580,7 @@ function TypeFields({ type, props, set }: { type: BlockType; props: Props; set: 
         </>
       );
     case 'row':
-      return <RowFields props={props} set={set} />;
+      return <RowFields props={props} set={set} depth={depth} />;
     case 'table':
       return (
         <>

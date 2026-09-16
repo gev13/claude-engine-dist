@@ -1,9 +1,8 @@
 import 'server-only';
-import { inArray } from 'drizzle-orm';
 import { type SiteSettings, parseSiteSettings } from '@/lib/siteSettings';
 import { site } from '@/lib/site';
-import { db } from '@/server/db';
-import { settings } from '@/server/db/schema';
+import type { Locale } from '@/lib/locales';
+import { readLocalisedMany } from './localisedSettings';
 
 /**
  * The keys the Settings screen writes. They are stored one row per key rather
@@ -41,19 +40,18 @@ export type ResolvedSiteSettings = Required<Pick<SiteSettings, 'name' | 'tagline
  * Field-by-field rather than all-or-nothing: setting a tagline should not blank
  * the site name.
  */
-export async function getSiteSettings(): Promise<ResolvedSiteSettings> {
+export async function getSiteSettings(locale?: Locale): Promise<ResolvedSiteSettings> {
   let saved: SiteSettings = {};
 
   try {
-    const rows = await db
-      .select()
-      .from(settings)
-      .where(inArray(settings.key, [...SITE_SETTING_KEYS]));
+    /* Each key falls back to its shared value on its own, so a site can
+       translate its tagline without having to restate its time zone. */
+    const values = await readLocalisedMany(SITE_SETTING_KEYS, locale);
 
     const shaped: Record<string, unknown> = {};
-    for (const row of rows) {
-      const field = KEY_TO_FIELD[row.key];
-      if (field) shaped[field] = row.value;
+    for (const [key, value] of Object.entries(values)) {
+      const field = KEY_TO_FIELD[key];
+      if (field && value !== undefined) shaped[field] = value;
     }
     saved = parseSiteSettings(shaped);
   } catch {

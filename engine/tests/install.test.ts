@@ -47,10 +47,10 @@ describe('install gate', () => {
 
 describe('install gate on the pages that matter', () => {
   const gated = [
-    'src/app/admin/(panel)/layout.tsx',
-    'src/app/admin/login/page.tsx',
-    'src/app/(site)/layout.tsx',
-    'src/app/install/page.tsx',
+    'src/app/(system)/admin/(panel)/layout.tsx',
+    'src/app/(system)/admin/login/page.tsx',
+    'src/app/(site)/[locale]/layout.tsx',
+    'src/app/(system)/install/page.tsx',
   ];
 
   it('every entry point checks the install state', () => {
@@ -60,7 +60,7 @@ describe('install gate on the pages that matter', () => {
   });
 
   it('the installer itself refuses to render once installed', () => {
-    const page = readFileSync('src/app/install/page.tsx', 'utf8');
+    const page = readFileSync('src/app/(system)/install/page.tsx', 'utf8');
     expect(page).toContain("if (await isInstalled()) redirect('/admin')");
   });
 });
