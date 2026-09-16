@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "private": true,
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
@@ -27,6 +27,7 @@
     "db:seed:demo:force": "NODE_OPTIONS=--conditions=react-server tsx src/server/db/seed-demo.ts --force",
     "db:sql": "node scripts/apply-sql.mjs",
     "db:baseline": "node scripts/baseline-migrations.mjs",
+    "db:status": "node scripts/db-status.mjs",
     "db:generate": "drizzle-kit generate",
     "test:smoke": "node scripts/smoke.mjs",
     "setup:demo": "npm run setup && npm run db:seed",

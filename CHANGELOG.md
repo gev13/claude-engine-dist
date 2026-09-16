@@ -9,6 +9,42 @@ told about before taking it.
 
 ---
 
+## 2.0.1 — 2026-09-16
+
+**Fixes updating.** If 2.0.0 left your site broken, this is the release that
+explains why and stops it happening again. No database changes.
+
+**The update did not restart your site.** It ran `pm2 reload engine` — a
+hardcoded name — and when your process was called something else it reported
+"Built and ready" and carried on. The new build sat on disk while the old
+process kept serving from memory, which is a crash waiting for the first
+visitor. The update now *finds* the process by the directory it runs from, so
+a server hosting several sites can never have the wrong one reloaded, and when
+it finds none it says so plainly instead of claiming success.
+
+**A failed migration no longer passes silently.** The update caught every
+error from the migrator and continued to the rebuild, which could leave new
+code running against an old database. It now stops.
+
+**`npm run db:baseline` only records what it can verify.** It used to mark the
+whole migration list as applied. On a database that was behind, that told the
+migrator the new tables existed when they did not — and there was then no way
+to create them. It now probes each migration for the table, column, type or
+enum value it creates, and stops at the first one genuinely absent.
+
+**New: `npm run db:status`.** What state is this database in, which migrations
+have run, and is anything missing. It reads the site's own `.env`, because
+`psql "$DATABASE_URL"` from a shell silently connects somewhere else and tells
+you something untrue about your own site — a bad thing to discover in the
+middle of a failed update.
+
+### If you are on 2.0.0 and your site is down
+
+Your database is almost certainly fine. Take this version, rebuild, and
+restart the process by its real name — `pm2 list` will tell you what that is.
+
+---
+
 ## 2.0.0 — 2026-09-16
 
 **Changes the database, and changes how some pages look.** A backup is taken

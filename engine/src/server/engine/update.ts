@@ -87,6 +87,26 @@ function appDir(): string {
   return process.cwd();
 }
 
+/**
+ * The pm2 process serving *this* directory, or null.
+ *
+ * Matched on the working directory rather than the name, because the name is
+ * whatever whoever installed it chose. A server running several sites under
+ * pm2 must not have the wrong one reloaded.
+ */
+async function pm2ProcessName(): Promise<string | null> {
+  try {
+    const { stdout } = await run('pm2', ['jlist'], { cwd: appDir(), timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
+    const list = JSON.parse(stdout) as { name?: string; pm2_env?: { pm_cwd?: string } }[];
+    const here = appDir();
+    const match = list.find((p) => p.pm2_env?.pm_cwd === here && typeof p.name === 'string');
+    return match?.name ?? null;
+  } catch {
+    // pm2 absent, or its output not what we expect. Either way: do not guess.
+    return null;
+  }
+}
+
 async function git(args: string[]): Promise<string> {
   const { stdout } = await run('git', args, { cwd: repoRoot(), timeout: 120_000, maxBuffer: 4 * 1024 * 1024 });
   return stdout.trim();
@@ -162,13 +182,29 @@ async function runStep(step: Step, target: string): Promise<StepResult> {
       return { detail: 'Installed dependencies.' };
 
     case 'migrate': {
-      await run('npx', ['drizzle-kit', 'migrate'], { cwd: appDir(), timeout: 10 * 60_000, maxBuffer: 4 * 1024 * 1024 }).catch(
-        async () => {
-          // A site set up with push rather than migrations has no journal;
-          // the hand-written SQL still has to run.
-          return undefined;
-        },
-      );
+      /* Baseline first, then migrate, and let either one fail loudly.
+         
+         This step used to swallow every error from the migrator, on the
+         theory that a site built with `push` has no journal and the migrator
+         would rightly complain. It does complain — and the update then
+         carried on and rebuilt, leaving new code running against an old
+         schema. A site went down that way. A database that cannot be brought
+         up to date is a reason to stop, not a reason to continue.
+         
+         `db:baseline` is what makes the migrator usable on a `push`-built
+         database: it records the migrations whose tables are *verifiably*
+         already there and leaves the rest to be applied. It is a no-op on a
+         database that already has history. */
+      await run('node', ['scripts/baseline-migrations.mjs'], {
+        cwd: appDir(),
+        timeout: 5 * 60_000,
+        maxBuffer: 2 * 1024 * 1024,
+      });
+      await run('npx', ['drizzle-kit', 'migrate'], {
+        cwd: appDir(),
+        timeout: 10 * 60_000,
+        maxBuffer: 4 * 1024 * 1024,
+      });
       await run('node', ['scripts/apply-sql.mjs'], { cwd: appDir(), timeout: 5 * 60_000, maxBuffer: 2 * 1024 * 1024 });
       return { detail: 'Applied database changes.' };
     }
@@ -178,12 +214,22 @@ async function runStep(step: Step, target: string): Promise<StepResult> {
       return { detail: 'Rebuilt the site.' };
 
     case 'reload': {
-      try {
-        await run('pm2', ['reload', 'engine', '--update-env'], { cwd: appDir(), timeout: 120_000 });
-        return { detail: 'Reloaded through pm2.' };
-      } catch {
-        return { detail: 'Built and ready — restart the site to finish (this deployment does not use pm2).' };
+      /* The process is *found*, not assumed to be called "engine".
+         
+         This used to run `pm2 reload engine` and, when that failed, report
+         "this deployment does not use pm2" — which on a server whose process
+         is called something else was wrong in both directions: pm2 was there,
+         and the update claimed to have finished while the site went on
+         serving the code it had before. */
+      const name = await pm2ProcessName();
+      if (!name) {
+        return {
+          detail:
+            'Built and ready. Nothing was restarted — no pm2 process was found running from this directory, so restart the site yourself to pick up the new version.',
+        };
       }
+      await run('pm2', ['reload', name, '--update-env'], { cwd: appDir(), timeout: 120_000 });
+      return { detail: `Reloaded ${name} through pm2.` };
     }
 
     default:
