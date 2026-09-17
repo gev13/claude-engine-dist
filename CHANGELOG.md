@@ -9,6 +9,24 @@ told about before taking it.
 
 ---
 
+## 2.5.0 — 2026-09-17
+
+**Colours and borders now show their real values too.** 2.4.1 fixed the
+spacing fields; the background colour, the border widths, the border colour
+and the corner radius all still said "inherit". They now show what the block
+actually has — the colour of the band it paints, the width of the rule it
+draws — read off the block itself, the same way the spacing is.
+
+**And the fields that inherit nothing now say `none` instead of "inherit".**
+An overlay and the three gradient stops are things the engine draws only once
+you ask for one. There is no value being handed down from anywhere, so
+"inherit" was describing something that does not exist and sending people
+looking for where it was set.
+
+No database changes.
+
+---
+
 ## 2.4.1 — 2026-09-17
 
 **The block spacing added in 2.2.0 never actually appeared.** The Design tab

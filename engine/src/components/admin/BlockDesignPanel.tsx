@@ -18,7 +18,7 @@ import {
 import { TIER_LABELS } from '@/lib/theme';
 import { FONT_GROUPS } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
-import { useBandPadding } from './useBandPadding';
+import { useBandStyle } from './useBandStyle';
 
 /* The Design panel for one block — the equivalent of WPBakery's Design Options,
    with spacing extended to a value per breakpoint (see docs/builder-model.md).
@@ -104,7 +104,7 @@ export function BlockDesignPanel({
   /** Used to measure what this kind of block already pads itself by. */
   blockType?: string;
 }) {
-  const bandPadding = useBandPadding(blockType);
+  const band = useBandStyle(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
   const [picking, setPicking] = useState(false);
 
@@ -138,7 +138,7 @@ export function BlockDesignPanel({
        up in a table that would quietly go out of date. Only the two vertical
        sides: a band pads top and bottom, and its horizontal space comes from
        the shell, which this panel does not govern. */
-    return bandPadding[spacingTab]?.[key];
+    return band.spacing[spacingTab]?.[key];
   };
 
   return (
@@ -227,7 +227,7 @@ export function BlockDesignPanel({
               inherited={inheritedSpacing(key as keyof SpacingBox)}
               placeholder={spacingTab === 'base' ? 'the block’s own' : undefined}
               hint={
-                spacingTab === 'base' && bandPadding.base?.[key as keyof SpacingBox]
+                spacingTab === 'base' && band.spacing.base?.[key as keyof SpacingBox]
                   ? 'the block’s own — typing here replaces it'
                   : undefined
               }
@@ -241,11 +241,21 @@ export function BlockDesignPanel({
       <section>
         <PanelTitle>Background</PanelTitle>
         <div className="grid gap-4 sm:grid-cols-2">
-          <ColorField label="Colour" value={get(['background', 'color'])} onChange={set(['background', 'color'])} />
+          <ColorField
+            label="Colour"
+            value={get(['background', 'color'])}
+            inherited={band.box.background}
+            placeholder="none — the block paints its own"
+            onChange={set(['background', 'color'])}
+          />
+          {/* An overlay and the gradient stops inherit nothing: the engine
+              draws them only once you ask for one, so "inherit" would name a
+              value that does not exist anywhere. */}
           <ColorField
             label="Overlay"
             hint="laid over the image so text stays readable"
             value={get(['background', 'overlay'])}
+            placeholder="none"
             onChange={set(['background', 'overlay'])}
           />
           <ChoiceField
@@ -273,9 +283,9 @@ export function BlockDesignPanel({
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <ColorField label="Gradient from" value={get(['background', 'gradient', 'from'])} onChange={set(['background', 'gradient', 'from'])} />
-          <ColorField label="Through (optional)" value={get(['background', 'gradient', 'via'])} onChange={set(['background', 'gradient', 'via'])} />
-          <ColorField label="Gradient to" value={get(['background', 'gradient', 'to'])} onChange={set(['background', 'gradient', 'to'])} />
+          <ColorField label="Gradient from" placeholder="none" value={get(['background', 'gradient', 'from'])} onChange={set(['background', 'gradient', 'from'])} />
+          <ColorField label="Through (optional)" placeholder="none" value={get(['background', 'gradient', 'via'])} onChange={set(['background', 'gradient', 'via'])} />
+          <ColorField label="Gradient to" placeholder="none" value={get(['background', 'gradient', 'to'])} onChange={set(['background', 'gradient', 'to'])} />
           <ChoiceField
             label="Gradient direction"
             value={current.background?.gradient?.angle}
@@ -337,13 +347,13 @@ export function BlockDesignPanel({
       <section>
         <PanelTitle>Border</PanelTitle>
         <div className="grid gap-3 sm:grid-cols-4">
-          <LengthField label="Top" value={get(['border', 'topWidth'])} onChange={set(['border', 'topWidth'])} />
-          <LengthField label="Right" value={get(['border', 'rightWidth'])} onChange={set(['border', 'rightWidth'])} />
-          <LengthField label="Bottom" value={get(['border', 'bottomWidth'])} onChange={set(['border', 'bottomWidth'])} />
-          <LengthField label="Left" value={get(['border', 'leftWidth'])} onChange={set(['border', 'leftWidth'])} />
+          <LengthField label="Top" value={get(['border', 'topWidth'])} inherited={band.box.topWidth} emptyLabel="none" onChange={set(['border', 'topWidth'])} />
+          <LengthField label="Right" value={get(['border', 'rightWidth'])} inherited={band.box.rightWidth} emptyLabel="none" onChange={set(['border', 'rightWidth'])} />
+          <LengthField label="Bottom" value={get(['border', 'bottomWidth'])} inherited={band.box.bottomWidth} emptyLabel="none" onChange={set(['border', 'bottomWidth'])} />
+          <LengthField label="Left" value={get(['border', 'leftWidth'])} inherited={band.box.leftWidth} emptyLabel="none" onChange={set(['border', 'leftWidth'])} />
         </div>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
-          <ColorField label="Colour" value={get(['border', 'color'])} onChange={set(['border', 'color'])} />
+          <ColorField label="Colour" value={get(['border', 'color'])} inherited={band.box.color} placeholder="none" onChange={set(['border', 'color'])} />
           <ChoiceField
             label="Style"
             value={get(['border', 'style']) as never}
@@ -356,7 +366,7 @@ export function BlockDesignPanel({
             ]}
             onChange={set(['border', 'style'])}
           />
-          <LengthField label="Radius" value={get(['border', 'radius'])} onChange={set(['border', 'radius'])} />
+          <LengthField label="Radius" value={get(['border', 'radius'])} inherited={band.box.radius} emptyLabel="none" onChange={set(['border', 'radius'])} />
         </div>
       </section>
 

@@ -20,6 +20,7 @@ export function ColorField({
   hint,
   value,
   inherited,
+  placeholder,
   onChange,
 }: {
   label: string;
@@ -27,6 +28,15 @@ export function ColorField({
   value: string | undefined;
   /** The colour in force while this field is empty. */
   inherited?: string;
+  /**
+   * What to say when nothing is inherited.
+   *
+   * Some of these fields inherit a real colour off the block's own band and
+   * some — an overlay, a gradient stop — are things the engine only draws
+   * once you ask for them. Saying "inherit" on the second kind describes a
+   * value that does not exist; "none" is what is actually true.
+   */
+  placeholder?: string;
   onChange: (next: string | undefined) => void;
 }) {
   const current = value ?? '';
@@ -56,7 +66,7 @@ export function ColorField({
         />
         <Input
           value={current}
-          placeholder={inherited || 'inherit'}
+          placeholder={inherited || placeholder || 'inherit'}
           spellCheck={false}
           onChange={(e) => onChange(e.target.value.trim() || undefined)}
         />
@@ -78,6 +88,7 @@ export function LengthField({
   label,
   hint,
   placeholder,
+  emptyLabel,
   value,
   inherited,
   onChange,
@@ -85,7 +96,17 @@ export function LengthField({
 }: {
   label: string;
   hint?: string;
+  /** Guidance shown *beneath* the box once an inherited value fills it. */
   placeholder?: string;
+  /**
+   * What the empty box says when nothing is inherited.
+   *
+   * Separate from `placeholder` because the two are different claims, and
+   * conflating them printed nonsense: a border that measures 2px would show
+   * "2px" in the box and "none" underneath. "inherit" is wrong here too — a
+   * border nobody drew is `none`, not a value handed down from somewhere.
+   */
+  emptyLabel?: string;
   value: string | undefined;
   /** The value in force while this field is empty. */
   inherited?: string;
@@ -112,7 +133,7 @@ export function LengthField({
         value={current}
         // An explicit placeholder is guidance the caller wrote ("e.g. 66px");
         // the inherited value is a fact, so it comes first.
-        placeholder={inherited || placeholder || 'inherit'}
+        placeholder={inherited || emptyLabel || placeholder || 'inherit'}
         spellCheck={false}
         onChange={(e) => onChange(e.target.value.trim() || undefined)}
         /* `56` becomes `56px` as you leave the field. The schema does this
