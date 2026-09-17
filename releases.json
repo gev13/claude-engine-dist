@@ -1,6 +1,14 @@
 {
-  "latest": "2.7.0",
+  "latest": "2.7.1",
   "releases": [
+    {
+      "version": "2.7.1",
+      "date": "2026-09-17",
+      "summary": "npm run release:merge now finishes after a conflict. It told you to merge by hand and run it again, then stopped because there was nothing left to merge \u2014 so it never checked or tagged. Only relevant to sites kept in their own repository.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.7.0",
       "date": "2026-09-17",

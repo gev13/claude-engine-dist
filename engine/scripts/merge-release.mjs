@@ -84,6 +84,15 @@ export function pickRemote(remotes, named) {
   throw new Error(`Several remotes could be the engine (${candidates.join(', ')}). Pass --remote <name>.`);
 }
 
+/** Does this repository already carry a tag for that release? */
+const existingTag = (version) => {
+  try {
+    return git(['tag', '-l', `v${version}`]) !== '';
+  } catch {
+    return false;
+  }
+};
+
 /** The version in a package.json, or nothing if it cannot be read. */
 export function versionOf(packageJson) {
   try {
@@ -148,7 +157,17 @@ function main() {
 
   const already = git(['rev-list', '--count', `${releaseRef}..HEAD`]) !== '0';
   const behind = git(['rev-list', '--count', `HEAD..${releaseRef}`]);
-  if (behind === '0') die(`Already up to date — ${releaseRef} holds nothing this branch does not.`);
+
+  /* Nothing left to merge. That is either a repeat run, or — the case that
+     matters — somebody has just done the merge by hand after a conflict,
+     which is what this script tells them to do. Bailing out here made that
+     instruction a lie: it sent them back to a command that then refused,
+     with the checking and tagging never done. So it carries on to the
+     verification instead, and only the merge is skipped. */
+  const merged = behind === '0';
+  if (merged && existingTag(target)) {
+    die(`Already up to date, and v${target} is already tagged here. Nothing to do.`);
+  }
 
   /* Which files are this site's own? Anything its commits touched that the
      release does not contain. After the merge these must still differ from
@@ -158,9 +177,14 @@ function main() {
     : [];
   if (ours.length > 0) say(`  ${ours.length} file(s) are this site's own: ${ours.slice(0, 5).join(', ')}${ours.length > 5 ? ', …' : ''}`);
 
-  say(`  Merging v${target} (${behind} commit(s)).`);
+  if (merged) {
+    say(`  v${target} is already merged here — checking it, then tagging.`);
+  } else {
+    say(`  Merging v${target} (${behind} commit(s)).`);
+  }
+
   try {
-    git(['merge', '--no-ff', releaseRef, '-m', `Merge engine ${target}`]);
+    if (!merged) git(['merge', '--no-ff', releaseRef, '-m', `Merge engine ${target}`]);
   } catch (error) {
     const conflicted = git(['diff', '--name-only', '--diff-filter=U']) || '(see git status)';
     try {
@@ -174,10 +198,10 @@ function main() {
   }
 
   /* Mistake (2): a merge that resolved the wrong way. */
-  const merged = versionOf(git(['show', 'HEAD:engine/package.json']));
-  if (merged !== target) {
+  const mergedVersion = versionOf(git(['show', 'HEAD:engine/package.json']));
+  if (mergedVersion !== target) {
     die(
-      `The merge succeeded but engine/package.json says ${merged ?? 'nothing'}, not ${target}.\n  The merge resolved the wrong way. Fix it, then run this again — nothing has been tagged.`,
+      `The merge succeeded but engine/package.json says ${mergedVersion ?? 'nothing'}, not ${target}.\n  The merge resolved the wrong way. Fix it, then run this again — nothing has been tagged.`,
     );
   }
 

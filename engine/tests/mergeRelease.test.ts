@@ -82,8 +82,30 @@ describe('what the script must never do', () => {
   });
 });
 
+describe('after a conflict is resolved by hand', () => {
+  /* The script tells you to merge by hand and run it again to check and tag.
+     It then found nothing to merge and bailed out, so the instruction it
+     printed was a lie and the checking and tagging never happened. */
+  it('carries on to the checking rather than bailing out', () => {
+    expect(source).toContain('const merged = behind === ');
+    expect(source).toMatch(/already merged here/);
+  });
+
+  it('skips only the merge, not the verification', () => {
+    expect(source).toContain('if (!merged) git([\'merge\'');
+  });
+
+  it('still refuses to tag the same release twice', () => {
+    expect(source).toContain('existingTag(target)');
+    expect(source).toMatch(/already tagged here/);
+  });
+});
+
 describe('the refusals on the way to a tag', () => {
-  const beforeTag = source.slice(0, source.indexOf("git(['tag'"));
+  /* `lastIndexOf`: the helper that *reads* tags also matches this, and it is
+     defined near the top — anchoring on the first occurrence sliced away the
+     whole run and every assertion below passed against an empty string. */
+  const beforeTag = source.slice(0, source.lastIndexOf("git(['tag'"));
 
   it('refuses to merge over uncommitted work', () => {
     expect(beforeTag).toMatch(/uncommitted changes/);

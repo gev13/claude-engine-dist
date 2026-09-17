@@ -9,6 +9,24 @@ told about before taking it.
 
 ---
 
+## 2.7.1 — 2026-09-17
+
+**`npm run release:merge` now finishes the job after a conflict.** When a
+release did not merge cleanly it told you to merge by hand and run it again to
+check and tag — and running it again found nothing left to merge and stopped,
+so the checking and tagging never happened and the instruction it printed was
+untrue.
+
+It now carries on to the verification when the merge is already in place: the
+version is still confirmed, your own files are still checked for having
+survived, and the tag is still written. Only the merge itself is skipped.
+Running it twice on an already-tagged release still stops, because that really
+is nothing to do.
+
+No database changes.
+
+---
+
 ## 2.7.0 — 2026-09-17
 
 **Line breaks you type now appear on the page.** Press Enter twice in a Body,
