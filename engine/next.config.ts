@@ -36,6 +36,23 @@ const csp = [
   'upgrade-insecure-requests',
 ].join('; ');
 
+/* The one route that may be framed, and only by this site.
+   ───────────────────────────────────────────────────────────────────────────
+   `/admin/band/<type>` renders a single demo block so the Design panel can
+   *measure* the padding that block already has. Measuring means a real
+   viewport — media queries answer to one — so the panel loads it in a hidden
+   iframe sized to each breakpoint, which `frame-ancestors 'none'` forbids.
+
+   The exception is narrow on purpose, and it is worth stating why framing this
+   is not worth a clickjacker's time: the route is behind the admin gate, it
+   renders demo content rather than the site's, and it has no form, no control
+   and no action to trick anybody into clicking. `'self'` keeps it framable
+   only from this origin. Nothing else moves — `tests/securityHeaders.test.ts`
+   fails if `frame-ancestors 'none'` stops applying to any other path. */
+export const BAND_PROBE_PATH = '/admin/band';
+
+const probeCsp = csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'");
+
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
   { key: 'X-Content-Type-Options', value: 'nosniff' },
@@ -75,7 +92,22 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      { source: '/:path*', headers: securityHeaders },
+      /* Everything but the probe. A negative lookahead rather than a second
+         rule layered on top, because two rules matching one path send two
+         `Content-Security-Policy` headers and a browser then enforces the
+         *intersection* — which would leave the probe unframable and the
+         reason invisible. */
+      { source: '/((?!admin/band$|admin/band/).*)', headers: securityHeaders },
+      {
+        source: '/admin/band/:path*',
+        headers: securityHeaders.map((header) =>
+          header.key === 'Content-Security-Policy'
+            ? { key: header.key, value: probeCsp }
+            : header.key === 'X-Frame-Options'
+              ? { key: header.key, value: 'SAMEORIGIN' }
+              : header,
+        ),
+      },
       { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
       { source: '/api/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
     ];

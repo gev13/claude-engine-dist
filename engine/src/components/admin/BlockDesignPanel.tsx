@@ -18,6 +18,7 @@ import {
 import { TIER_LABELS } from '@/lib/theme';
 import { FONT_GROUPS } from '@/lib/fonts';
 import { cn } from '@/lib/utils';
+import { useBandPadding } from './useBandPadding';
 
 /* The Design panel for one block — the equivalent of WPBakery's Design Options,
    with spacing extended to a value per breakpoint (see docs/builder-model.md).
@@ -96,10 +97,14 @@ const SHAPE_HEIGHTS = [
 export function BlockDesignPanel({
   style,
   onChange,
+  blockType,
 }: {
   style: BlockStyle | undefined;
   onChange: (next: BlockStyle | undefined) => void;
+  /** Used to measure what this kind of block already pads itself by. */
+  blockType?: string;
 }) {
+  const bandPadding = useBandPadding(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
   const [picking, setPicking] = useState(false);
 
@@ -127,7 +132,13 @@ export function BlockDesignPanel({
       const value = getIn(current, ['spacing', order[i]!, key]);
       if (typeof value === 'string' && value) return value;
     }
-    return undefined;
+
+    /* Nothing set above this tab, so what applies is the block's own band —
+       measured from the real component at this tab's width rather than looked
+       up in a table that would quietly go out of date. Only the two vertical
+       sides: a band pads top and bottom, and its horizontal space comes from
+       the shell, which this panel does not govern. */
+    return bandPadding[spacingTab]?.[key];
   };
 
   return (
@@ -215,6 +226,11 @@ export function BlockDesignPanel({
               value={get([...spacingPath, key])}
               inherited={inheritedSpacing(key as keyof SpacingBox)}
               placeholder={spacingTab === 'base' ? 'the block’s own' : undefined}
+              hint={
+                spacingTab === 'base' && bandPadding.base?.[key as keyof SpacingBox]
+                  ? 'the block’s own — typing here replaces it'
+                  : undefined
+              }
               onChange={set([...spacingPath, key as keyof SpacingBox])}
             />
           ))}

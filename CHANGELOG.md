@@ -9,6 +9,32 @@ told about before taking it.
 
 ---
 
+## 2.2.0 — 2026-09-17
+
+**The Design tab now tells you what the spacing already is.** Opening a
+block's Design tab used to show empty padding and margin fields with nothing
+to go on, so setting a value meant guessing what you were replacing. The
+fields now name the block's real number — 88px, 64px — and a different one on
+each screen-size tab where the block changes with the width.
+
+It is measured, not looked up. Every block paints its own band in its own
+stylesheet, and there are far too many of those for a list in the code to stay
+honest; a list like that is right the day it is written and wrong quietly
+afterwards. So the panel renders one real example of the block and asks the
+browser, at each breakpoint in turn. A block added in a future release is
+measured the same way, with nothing to keep up to date.
+
+**One route on the site may now be framed, by the site itself.** Measuring
+needs a real viewport, and the engine refuses to be put in a frame anywhere —
+so the small admin-only page that renders the example is the single exception,
+and only from your own domain. It is behind the admin login, shows example
+content rather than your site's, and has no form or button on it. Every other
+page, including every other admin page, still refuses outright.
+
+No database changes.
+
+---
+
 ## 2.1.1 — 2026-09-17
 
 **An update could not record its own success.** If your site updated and the

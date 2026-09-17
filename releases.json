@@ -1,6 +1,14 @@
 {
-  "latest": "2.1.1",
+  "latest": "2.2.0",
   "releases": [
+    {
+      "version": "2.2.0",
+      "date": "2026-09-17",
+      "summary": "A block\u2019s Design tab now shows the spacing it already has, per screen size, instead of leaving you to guess what a value would replace. Measured from the block itself rather than read from a list, so it stays true as blocks change.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.1.1",
       "date": "2026-09-17",

@@ -215,6 +215,7 @@ function SortableBlock({
             />
           ) : (
             <BlockDesignPanel
+              blockType={block.type}
               style={style}
               onChange={(next) => {
                 const { style: _drop, ...rest } = block;

@@ -1789,6 +1789,7 @@ function ColumnEditor({
                         </summary>
                         <div className="pt-4">
                           <BlockDesignPanel
+                            blockType={child.type}
                             style={child.style}
                             onChange={(style) =>
                               setBlocks(
