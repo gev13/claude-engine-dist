@@ -1,6 +1,14 @@
 {
-  "latest": "2.3.0",
+  "latest": "2.4.0",
   "releases": [
+    {
+      "version": "2.4.0",
+      "date": "2026-09-17",
+      "summary": "One command \u2014 npm run release:merge \u2014 takes a release into a site that has changes of its own, and refuses to tag anything it cannot verify: a conflicted merge, a wrong version, or a merge that quietly replaced a file you had changed.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.3.0",
       "date": "2026-09-17",

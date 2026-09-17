@@ -9,6 +9,35 @@ told about before taking it.
 
 ---
 
+## 2.4.0 — 2026-09-17
+
+**One command to take a release into a site that has changes of its own.**
+
+If your site lives in its own repository — with its own ports, container names
+or deployment settings — a release has to be merged into it and tagged before
+the admin panel will offer it. That was four commands typed by hand, and two of
+them had a way of going wrong that nobody notices until a site loses its
+settings.
+
+    npm run release:merge              # merge the newest release and tag it
+    npm run release:merge -- 2.4.0     # or a particular one
+    npm run release:merge -- --push    # and push the tag when it passes
+
+It will not tag anything it is not sure about. It stops, leaving your checkout
+exactly as it was, if the release does not merge cleanly, if the merged copy
+is not the version it claims, or — the important one — if the merge quietly
+took the engine's copy of a file you had deliberately changed. It tells you
+which file, and it never pushes your branch: on a site whose CI deploys from
+`main`, pushing the branch *is* a deployment, and it takes no backup where the
+admin panel's update does.
+
+It also never fetches the engine's tags into your repository. Two different
+things called `v2.4.0` in one place is how the wrong one ends up on a server.
+
+No database changes.
+
+---
+
 ## 2.3.0 — 2026-09-17
 
 **Updating is safer, and says what is wrong when it will not run.**
