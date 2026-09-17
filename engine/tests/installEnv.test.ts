@@ -143,3 +143,25 @@ describe('generateSecret', () => {
     expect(a).not.toBe(b);
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   NODE_ENV does not belong in .env
+   ───────────────────────────────────────────────────────────────────────────
+   Next decides it from the command, so a value here cannot change what the
+   site runs as. What it can do is leak: `dotenv` loads this file for every
+   command-line script, and sourcing it into a shell before `npm run build`
+   produces a development build whose /404 prerender fails outright. That
+   happened to a real site.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('the example environment', () => {
+  it('does not set NODE_ENV', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const { fileURLToPath } = await import('node:url');
+    const example = await readFile(fileURLToPath(new URL('../.env.example', import.meta.url)), 'utf8');
+    const assignment = example
+      .split('\n')
+      .find((line) => /^\s*NODE_ENV\s*=/.test(line));
+    expect(assignment, 'NODE_ENV must not be assigned in .env.example').toBeUndefined();
+  });
+});

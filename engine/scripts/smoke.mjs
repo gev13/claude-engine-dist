@@ -316,6 +316,7 @@ async function main() {
     '/api/admin/jobs',
     '/api/admin/applications',
     '/api/admin/cookies',
+    '/api/admin/code',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);
@@ -329,6 +330,14 @@ async function main() {
     body: JSON.stringify({ entityType: 'page', entityId: '11111111-1111-1111-1111-111111111111' }),
   });
   check('anonymous POST /api/admin/preview -> 401', anonPreview.status === 401, `got ${anonPreview.status}`);
+
+  // Purging every rendered page is POST-only too.
+  const anonPurge = await get('/api/admin/cache', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: '{}',
+  });
+  check('anonymous POST /api/admin/cache -> 401', anonPurge.status === 401, `got ${anonPurge.status}`);
 
   const anonPost = await get('/api/admin/pages', {
     method: 'POST',

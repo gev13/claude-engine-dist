@@ -21,6 +21,8 @@ export type PublicPage = {
   priorityTier: string | null;
   blocks: AnyBlock[];
   seo: SeoFields;
+  /** CSS for this page alone, written into a <style> after the theme. */
+  customCss: string;
   updatedAt: Date;
   publishedAt: Date | null;
   /** True when this came from the bundled definitions, not the database. */
@@ -52,6 +54,7 @@ function fromDefinition(path: string, locale: Locale): PublicPage | null {
     priorityTier: def.priorityTier ?? null,
     blocks: def.blocks,
     seo: def.seo,
+    customCss: '',
     updatedAt: new Date(),
     publishedAt: new Date(),
     fallback: true,
@@ -87,6 +90,7 @@ function toPublic(row: typeof pages.$inferSelect): PublicPage {
     priorityTier: row.priorityTier,
     blocks: (row.blocks ?? []) as AnyBlock[],
     seo: (row.seo ?? {}) as SeoFields,
+    customCss: row.customCss ?? '',
     updatedAt: row.updatedAt,
     publishedAt: row.publishedAt,
     fallback: false,

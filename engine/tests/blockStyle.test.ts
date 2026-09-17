@@ -231,3 +231,55 @@ describe('publish scheduling', () => {
     }
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   A bare number means pixels
+   ───────────────────────────────────────────────────────────────────────────
+   Typing `56` in a padding field is what everybody does. It used to be
+   accepted, stored, and emitted as `padding-top: 56` — not valid CSS, so the
+   browser dropped the declaration and the padding simply never appeared, with
+   nothing anywhere saying why. A site shipped like that.
+
+   The completion happens at the schema, which is what makes values *already
+   saved* as `56` start working on the next render instead of needing to be
+   typed again.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('lengths without a unit', () => {
+  it('completes a bare number to pixels', () => {
+    const style = parse({ spacing: { base: { paddingTop: '56', marginBottom: '12' } } });
+    expect(style.spacing?.base?.paddingTop).toBe('56px');
+    expect(style.spacing?.base?.marginBottom).toBe('12px');
+  });
+
+  it('repairs what is already stored, without a migration', () => {
+    // Exactly the shape sitting in a live site's `blocks` column.
+    const css = blockStyleToCss('b1', parse({ spacing: { base: { paddingTop: '12' } } }));
+    expect(css).toContain('padding-top:12px');
+    expect(css).not.toContain('padding-top:12;');
+  });
+
+  it('leaves zero alone, which is legal CSS on its own', () => {
+    expect(parse({ spacing: { base: { paddingTop: '0' } } }).spacing?.base?.paddingTop).toBe('0');
+  });
+
+  it('leaves a value that already has a unit exactly as written', () => {
+    const style = parse({
+      spacing: { base: { paddingTop: '1.5rem', paddingBottom: 'clamp(20px, 3vw, 40px)' } },
+    });
+    expect(style.spacing?.base?.paddingTop).toBe('1.5rem');
+    expect(style.spacing?.base?.paddingBottom).toBe('clamp(20px, 3vw, 40px)');
+  });
+
+  it('still refuses something that is not a length at all', () => {
+    expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: '56 px' } } }).success).toBe(false);
+    expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: 'wide' } } }).success).toBe(false);
+  });
+
+  /* Last line of defence. Even if something unitless reached the generator,
+     it must never become a declaration the browser will throw away. */
+  it('never emits a unitless length, whatever it is handed', () => {
+    const smuggled = { spacing: { base: { paddingTop: '56' } } } as never;
+    expect(blockStyleToCss('b1', smuggled)).not.toContain('padding-top:56}');
+  });
+});

@@ -60,12 +60,38 @@ export function isLength(value: string): boolean {
   return LENGTH_PATTERN.test(value.trim());
 }
 
+/**
+ * A bare number means pixels.
+ *
+ * Typing `56` in a padding field is what everybody does, and it used to be
+ * accepted, stored, and emitted as `padding-top: 56` — which is not valid CSS,
+ * so the browser dropped the declaration and the padding simply never
+ * appeared. Nothing said why.
+ *
+ * So a unitless number is completed to `px` here, at the schema, which means
+ * values already saved as `56` start working on the next render rather than
+ * needing to be typed again. Zero keeps its unit optional, because `0` is
+ * legal CSS on its own.
+ */
+export function normaliseLength(value: string): string {
+  const trimmed = value.trim();
+  if (!/^-?\d*\.?\d+$/.test(trimmed)) return trimmed;
+  return Number(trimmed) === 0 ? '0' : `${trimmed}px`;
+}
+
+/** A length that has a unit, or is zero. What may actually reach a stylesheet. */
+export function isUsableLength(value: string): boolean {
+  const trimmed = value.trim();
+  if (!isLength(trimmed)) return false;
+  return Number(trimmed) === 0 || !/^-?\d*\.?\d+$/.test(trimmed);
+}
+
 export function isLineHeight(value: string): boolean {
   return LINE_HEIGHT_PATTERN.test(value.trim());
 }
 
 const color = z.string().trim().refine(isColor, 'Not a valid colour');
-const length = z.string().trim().refine(isLength, 'Not a valid CSS length');
+const length = z.string().trim().transform(normaliseLength).refine(isLength, 'Not a valid CSS length');
 const lineHeight = z.string().trim().refine(isLineHeight, 'Not a valid line height');
 
 /* ── Font families ────────────────────────────────────────────────────────────

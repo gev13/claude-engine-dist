@@ -42,6 +42,9 @@ const GATE: Record<string, keyof typeof PERMISSIONS> = {
   '/admin/navigation': 'navigation:write',
   '/admin/popups': 'popups:write',
   '/admin/cookies': 'popups:write',
+  // Not `popups:*` like the chrome above it: this row loads on every page of
+  // the site, which is the reach Appearance and the theme have.
+  '/admin/code': 'settings:write',
   '/admin/users': 'users:read',
   // Same reasoning as the chrome screens: nothing to read without writing.
   '/admin/redirects': 'redirects:write',

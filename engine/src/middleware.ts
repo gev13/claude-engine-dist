@@ -47,6 +47,28 @@ async function hasValidAccess(token: string | undefined): Promise<boolean> {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   What a browser is allowed to reuse
+   ───────────────────────────────────────────────────────────────────────────
+   Next's own default for a revalidating page is `s-maxage=<n>,
+   stale-while-revalidate=31536000` — a year of serving a stale copy at any
+   cache that honours it, and nothing at all addressed to the browser. So an
+   editor changed a page, the server rebuilt it correctly, and their own
+   browser went on showing yesterday's copy with no way to say otherwise.
+
+   This says the two things separately, because they are two different
+   audiences:
+
+     • `max-age=0, must-revalidate` — the *browser* may keep the copy but must
+       ask before reusing it. A 304 costs one round trip and nothing else, and
+       it means "save" and "refresh" mean what everybody assumes they mean.
+     • `s-maxage`/`stale-while-revalidate` — a CDN in front of the site may
+       serve for five minutes, and may serve a stale copy for one more minute
+       while it fetches. A minute, not a year: the point of a short window is
+       that a purge is the exception, not the mechanism.
+   ═══════════════════════════════════════════════════════════════════════════ */
+const PAGE_CACHE = 'public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=60';
+
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
 
@@ -97,8 +119,14 @@ export async function middleware(request: NextRequest) {
     if (!prefixed) {
       const url = request.nextUrl.clone();
       url.pathname = rest === '/' ? `/${config.defaultLocale}` : `/${config.defaultLocale}${rest}`;
-      return NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+      const rewritten = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
+      rewritten.headers.set('cache-control', PAGE_CACHE);
+      return rewritten;
     }
+
+    const prefixedResponse = NextResponse.next({ request: { headers: requestHeaders } });
+    prefixedResponse.headers.set('cache-control', PAGE_CACHE);
+    return prefixedResponse;
   }
 
   return NextResponse.next({ request: { headers: requestHeaders } });

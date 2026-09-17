@@ -7,7 +7,7 @@ import {
   type Theme,
   type TypeRole,
   isColor,
-  isLength,
+  isUsableLength as isLength,
   isLineHeight,
 } from './theme';
 

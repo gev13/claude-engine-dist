@@ -48,6 +48,7 @@ async function loadPost(id: string): Promise<Loaded | null> {
       coverMediaId: row.coverMediaId,
       primaryCategoryId: row.primaryCategoryId,
       categoryIds: linked.map((link) => link.categoryId),
+      customCss: row.customCss ?? '',
       publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
     },
     options,

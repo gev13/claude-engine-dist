@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { and, asc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { toPath, toSlug, uniqueSlug } from '@/lib/slug';
@@ -44,6 +45,8 @@ const createSchema = z.object({
   status: statusEnum.optional(),
   blocks: z.array(blockInput).max(200).optional(),
   seo: seoSchema.optional(),
+  /** CSS for this one page. Sanitised by the schema on the way in. */
+  customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
   parentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(-10_000).max(10_000).optional(),
   template: z.enum(['default', 'service', 'blog', 'contact', 'legal', 'library']).optional(),
@@ -198,6 +201,7 @@ export async function POST(request: Request) {
         status,
         blocks: validated.blocks,
         seo: (data.seo ?? {}) as SeoFields,
+        customCss: data.customCss ?? '',
         parentId: data.parentId ?? null,
         sortOrder: data.sortOrder ?? 0,
         template: data.template ?? 'default',

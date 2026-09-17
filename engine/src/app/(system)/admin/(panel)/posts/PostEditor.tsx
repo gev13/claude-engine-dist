@@ -8,6 +8,7 @@ import { MediaPicker } from '@/components/admin/MediaPicker';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { SeoPanel } from '@/components/admin/SeoPanel';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
+import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
 import { PreviewButton } from '@/components/admin/PreviewButton';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Textarea } from '@/components/admin/ui';
 import { TranslationsPanel } from '@/components/admin/TranslationsPanel';
@@ -60,6 +61,7 @@ export type PostEditorRecord = {
   coverMediaId: string | null;
   primaryCategoryId: string | null;
   categoryIds: string[];
+  customCss: string;
   /** ISO string, or null when the post has never been published. */
   publishedAt: string | null;
 };
@@ -76,6 +78,7 @@ type FormValue = {
   coverMediaId: string | null;
   primaryCategoryId: string;
   categoryIds: string[];
+  customCss: string;
   /** Value of the datetime-local input, in the browser's own timezone. */
   publishedAt: string;
 };
@@ -109,6 +112,7 @@ const blankValue: FormValue = {
   coverMediaId: null,
   primaryCategoryId: '',
   categoryIds: [],
+  customCss: '',
   publishedAt: '',
 };
 
@@ -126,6 +130,7 @@ function toValue(record?: PostEditorRecord): FormValue {
     coverMediaId: record.coverMediaId,
     primaryCategoryId: record.primaryCategoryId ?? '',
     categoryIds: record.categoryIds ?? [],
+    customCss: record.customCss ?? '',
     publishedAt: toLocalInput(record.publishedAt),
   };
 }
@@ -142,6 +147,7 @@ type PostApiRow = {
   seo: SeoFields;
   coverMediaId: string | null;
   primaryCategoryId: string | null;
+  customCss: string;
   publishedAt: string | null;
 };
 
@@ -227,6 +233,7 @@ export function PostEditor({
       coverMediaId: value.coverMediaId,
       primaryCategoryId: value.primaryCategoryId || null,
       categoryIds,
+      customCss: value.customCss,
       // Left undefined when there is nothing to say, so publishing stamps
       // "now" server-side rather than being blanked by an empty field.
       publishedAt: publishedIso ?? (saved.publishedAt ? null : undefined),
@@ -620,6 +627,8 @@ export function PostEditor({
               </p>
             )}
           </Panel>
+
+          <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="post" />
 
           {/* Only an existing post has history; a new one has nothing to show. */}
           {postId && (

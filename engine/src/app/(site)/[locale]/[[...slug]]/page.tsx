@@ -1,6 +1,7 @@
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BlockRenderer } from '@/components/blocks/Renderer';
+import { safeCss } from '@/lib/customCode';
 import { findRedirect, recordNotFound } from '@/server/content/redirects';
 import { JsonLd } from '@/components/site/JsonLd';
 import { buildMetadata } from '@/lib/seo/metadata';
@@ -151,6 +152,18 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
   return (
     <>
       <BlockRenderer blocks={page.blocks} showNames={page.template === 'library'} trail={trail} />
+      {/* This page's own CSS: after the theme, after the site-wide rules and
+          after the blocks' own, so the narrowest scope wins without anybody
+          reaching for !important.
+
+          Last rather than first for a second reason — a <style> is an element,
+          so emitting it up here would make it main's first child and the
+          over-hero header would stop lying over the hero. That is the same
+          trap BlockRenderer documents, and it is invisible until somebody
+          switches to an overlay header months later. */}
+      {page.customCss && (
+        <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(page.customCss) }} />
+      )}
       <JsonLd data={graph(nodes)} />
     </>
   );

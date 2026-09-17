@@ -1,4 +1,4 @@
-import { BREAKPOINTS, FONT_STACKS, isColor, isLength } from './theme';
+import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { type BlockStyle, type ColumnWidth, GRADIENT_ANGLES, type SpacingBox, type TypeOverride } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════

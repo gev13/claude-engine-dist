@@ -9,14 +9,24 @@ const isProd = process.env.NODE_ENV === 'production';
  * 'unsafe-inline' for scripts in dev; in production it is nonce-free but
  * restricted to 'self'.
  */
+/* Google Analytics, and only Google Analytics.
+   
+   Listed unconditionally because the CSP is static while the analytics id is
+   a setting somebody changes in the admin. That is not as loose as it looks:
+   a host being *permitted* loads nothing — the only thing that ever points at
+   these is `/analytics.js`, which the engine writes and which returns a
+   comment when no id is set. Nothing else in the site references them. */
+const GA_SCRIPT = 'https://www.googletagmanager.com';
+const GA_BEACON = 'https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com';
+
 const csp = [
   "default-src 'self'",
-  `script-src 'self' 'unsafe-inline'${isProd ? '' : " 'unsafe-eval'"}`,
+  `script-src 'self' 'unsafe-inline' ${GA_SCRIPT}${isProd ? '' : " 'unsafe-eval'"}`,
   "style-src 'self' 'unsafe-inline'",
   "font-src 'self' data:",
-  "img-src 'self' data: blob:",
+  `img-src 'self' data: blob: ${GA_BEACON}`,
   "media-src 'self' blob:",
-  "connect-src 'self'",
+  `connect-src 'self' ${GA_BEACON}`,
   // Video players and maps, loaded only when a visitor asks (src/lib/embeds.ts).
   "frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://www.openstreetmap.org https://www.google.com",
   "frame-ancestors 'none'",
@@ -55,6 +65,13 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     optimizePackageImports: ['date-fns'],
+    /* The router keeps a rendered page in memory and reuses it on the next
+       navigation — thirty seconds by default for a dynamic segment and five
+       minutes for a static one. That is invisible and indistinguishable from
+       a browser cache to the person who just saved a page and clicked back to
+       it, so the site fetches instead. The browser's own HTTP cache still
+       answers with a 304 where nothing changed. */
+    staleTimes: { dynamic: 0, static: 0 },
   },
   async headers() {
     return [

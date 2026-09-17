@@ -159,6 +159,15 @@ export function BlockDesignPanel({
             />
           </Field>
 
+          <Field label="CSS class" hint="to aim your own CSS at; separate several with spaces">
+            <Input
+              value={current.className ?? ''}
+              placeholder="none"
+              spellCheck={false}
+              onChange={(e) => set(['className'])(e.target.value.trim() || undefined)}
+            />
+          </Field>
+
           <Field label="Label" hint="shown in this list only, to find a section quickly">
             <Input
               value={current.label ?? ''}

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { desc, eq, sql } from 'drizzle-orm';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { UpdateNotice } from '@/components/admin/UpdateNotice';
+import { PurgeCacheButton } from '@/components/admin/PurgeCacheButton';
 import { AdminLinkButton, Alert, Badge, Panel, Table, Td, Th } from '@/components/admin/ui';
 import { formatDate } from '@/lib/utils';
 import { can } from '@/server/auth/rbac';
@@ -230,6 +231,8 @@ export default async function DashboardPage() {
             <AdminLinkButton href="/" variant="ghost">
               View site
             </AdminLinkButton>
+            {/* Only for whoever may publish: it changes what visitors are served. */}
+            {can(user, 'pages:publish') && <PurgeCacheButton />}
           </>
         }
       />

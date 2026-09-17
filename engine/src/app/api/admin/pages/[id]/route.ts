@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { and, eq, ne } from 'drizzle-orm';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { toPath, toSlug } from '@/lib/slug';
@@ -56,6 +57,8 @@ const updateSchema = z.object({
   publishedAt: z.string().datetime().nullable().optional(),
   blocks: z.array(blockInput).max(200).optional(),
   seo: seoSchema.optional(),
+  /** CSS for this one page. Sanitised by the schema on the way in. */
+  customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
   parentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(-10_000).max(10_000).optional(),
   template: z.enum(['default', 'service', 'blog', 'contact', 'legal', 'library']).optional(),
@@ -196,6 +199,7 @@ export async function PATCH(request: Request, context: Context) {
         status,
         blocks,
         seo: data.seo !== undefined ? (data.seo as SeoFields) : row.seo,
+        customCss: data.customCss !== undefined ? data.customCss : row.customCss,
         parentId,
         sortOrder: data.sortOrder ?? row.sortOrder,
         template: data.template ?? row.template,

@@ -1,6 +1,14 @@
 {
-  "latest": "2.0.1",
+  "latest": "2.1.0",
   "releases": [
+    {
+      "version": "2.1.0",
+      "date": "2026-09-17",
+      "summary": "Write your own CSS \u2014 for the whole site, or for one page \u2014 and switch on Google Analytics with a measurement id. Saving a page now shows the change straight away: three caches were holding the old one, and there is a Clear cache button for when one still does.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.0.1",
       "date": "2026-09-16",

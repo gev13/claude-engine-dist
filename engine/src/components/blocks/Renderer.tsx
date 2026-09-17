@@ -154,6 +154,9 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
 /** Width, entrance, hover, sticky, snap and shape classes a styled block or row carries (P3-C). */
 function shellClass(style: BlockStyle) {
   return cn(
+    /* The editor's own classes first, so they read as the reason this block
+       looks different when somebody inspects it. */
+    style.className,
     style.width && WIDTH_CLASS[style.width],
     revealClass(style),
     style.hover && `he-hover he-hover--${style.hover}`,

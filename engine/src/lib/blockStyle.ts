@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FONT_STACKS, isColor, isLength } from './theme';
+import { FONT_STACKS, isColor, isLength, normaliseLength } from './theme';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-section style
@@ -15,7 +15,7 @@ import { FONT_STACKS, isColor, isLength } from './theme';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const color = z.string().trim().refine(isColor, 'Not a valid colour');
-const length = z.string().trim().refine(isLength, 'Not a valid CSS length');
+const length = z.string().trim().transform(normaliseLength).refine(isLength, 'Not a valid CSS length');
 
 /** Widths a section can occupy. Named, rather than WPBakery's stretch modes. */
 export const SECTION_WIDTHS = ['narrow', 'standard', 'wide', 'full'] as const;
@@ -237,6 +237,22 @@ export const blockStyleSchema = z.object({
 
   /** Kept out of the render entirely, without being deleted. */
   disabled: z.boolean().optional(),
+
+  /**
+   * Classes of your own, for the custom CSS to aim at.
+   *
+   * The vocabulary above is closed on purpose, and this is the deliberate
+   * door out of it: a name here plus a rule in the page's or the site's
+   * custom CSS. Space-separated, letters, digits, dashes and underscores —
+   * enough to be a class name, not enough to close the attribute or start
+   * another one.
+   */
+  className: z
+    .string()
+    .trim()
+    .max(120)
+    .regex(/^[A-Za-z_-][A-Za-z0-9_ -]*$/, 'Letters, digits, dashes and underscores; separate several with spaces')
+    .optional(),
 
   /** Anchor target. Not a styling hook — the vocabulary above is closed. */
   anchorId: z

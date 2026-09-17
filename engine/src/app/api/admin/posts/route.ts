@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { and, desc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { readingMinutes } from '@/lib/utils';
 import { toSlug, uniqueSlug } from '@/lib/slug';
@@ -27,6 +28,8 @@ const createSchema = z.object({
   kind: z.enum(['article', 'research']).optional(),
   status: statusEnum.optional(),
   seo: seoSchema.optional(),
+  /** CSS for this one page. Sanitised by the schema on the way in. */
+  customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
   coverMediaId: z.string().uuid().nullable().optional(),
   primaryCategoryId: z.string().uuid().nullable().optional(),
   categoryIds: z.array(z.string().uuid()).max(20).optional(),
@@ -149,6 +152,7 @@ export async function POST(request: Request) {
         kind: input.kind ?? 'article',
         status,
         seo: (input.seo ?? {}) as SeoFields,
+        customCss: input.customCss ?? '',
         coverMediaId: input.coverMediaId ?? null,
         primaryCategoryId: input.primaryCategoryId ?? null,
         readingMinutes: readingMinutes(body),

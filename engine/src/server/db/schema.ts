@@ -283,6 +283,8 @@ export const pages = pgTable(
     /** Ordered block tree rendered by the public page. */
     blocks: jsonb('blocks').$type<Block[]>().notNull().default(sql`'[]'::jsonb`),
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
+    /** Custom CSS for this page alone, written into a <style> after the theme. */
+    customCss: text('custom_css').notNull().default(''),
     /** Nesting for the sitemap tree. */
     parentId: uuid('parent_id'),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -360,6 +362,8 @@ export const posts = pgTable(
     kind: postKind('kind').notNull().default('article'),
     status: contentStatus('status').notNull().default('draft'),
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
+    /** Custom CSS for this page alone, written into a <style> after the theme. */
+    customCss: text('custom_css').notNull().default(''),
     coverMediaId: uuid('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
     primaryCategoryId: uuid('primary_category_id').references(() => categories.id, { onDelete: 'set null' }),
     readingMinutes: integer('reading_minutes').notNull().default(0),

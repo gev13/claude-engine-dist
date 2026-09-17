@@ -9,6 +9,49 @@ told about before taking it.
 
 ---
 
+## 2.1.0 — 2026-09-17
+
+**Your own CSS, and an analytics tag.** Two things people have always had to
+ask a developer for are now in the admin.
+
+*Custom code* (Design → Custom code, administrators) holds CSS that loads on
+every page of the site, after the theme — so it overrides Appearance rather
+than fighting it. Beside it is a field for a **Google Analytics 4 measurement
+id**. Not a box for a script: you give the engine the id and the engine writes
+the tag, served from your own domain. There is deliberately nowhere to paste
+JavaScript, because a field that accepts it turns every account that can sign
+in into a way to run code in every visitor's browser. Everything else still
+needs a change to the code, which is a review.
+
+*Per page and per post*: every block's Design tab now has a **CSS class**
+field, and every page and post editor has a **Custom CSS** panel. Name a
+section, then write rules for it — and those rules load on that page alone.
+Custom CSS travels with a revision, so restoring an old version of a page
+restores its styling with it.
+
+**Saving a page and not seeing the change.** This was three separate caches
+and each is now answered.
+
+Your browser was never told anything about how long it could reuse a page, so
+it decided for itself; it is now told to check every time, which costs one
+quick request and makes "save" and "refresh" mean what everybody assumes they
+mean. A CDN or proxy in front of the site was being offered a *year* of
+serving a stale copy — now five minutes, with one more minute while it
+fetches a fresh one. And the site's own navigation kept a copy of each page in
+memory for up to five minutes, which looked exactly like a browser cache to
+the person staring at it; that is off.
+
+For the times something still looks wrong, there is a **Clear cache** button
+on the dashboard. It throws away every rendered page on the server. It says so
+in those words, because no server can reach into somebody's browser — that
+part is still a refresh.
+
+**Database change.** Pages and posts gain a column for their own CSS. The
+update takes a backup and applies it for you; on the Updates screen this
+release is marked as needing a migration.
+
+---
+
 ## 2.0.1 — 2026-09-16
 
 **Fixes updating.** If 2.0.0 left your site broken, this is the release that

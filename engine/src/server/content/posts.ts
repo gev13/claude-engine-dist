@@ -19,6 +19,8 @@ export type PostListItem = {
 
 export type PostDetail = PostListItem & {
   body: string;
+  /** This post's own CSS, sanitised again where it is written into the page. */
+  customCss: string;
   /** Translations of one another share this (package 8). */
   translationGroupId: string;
   seo: Record<string, unknown>;
@@ -123,6 +125,7 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
         title: posts.title,
         excerpt: posts.excerpt,
         body: posts.body,
+        customCss: posts.customCss,
         kind: posts.kind,
         seo: posts.seo,
         publishedAt: posts.publishedAt,
@@ -158,6 +161,7 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
       title: row.title,
       excerpt: row.excerpt,
       body: row.body,
+      customCss: row.customCss ?? '',
       kind: row.kind,
       seo: (row.seo ?? {}) as Record<string, unknown>,
       publishedAt: row.publishedAt,

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { eq, sql } from 'drizzle-orm';
 import { readingMinutes } from '@/lib/utils';
 import { toSlug } from '@/lib/slug';
@@ -30,6 +31,8 @@ const updateSchema = z.object({
   kind: z.enum(['article', 'research']).optional(),
   status: statusEnum.optional(),
   seo: seoSchema.optional(),
+  /** CSS for this one page. Sanitised by the schema on the way in. */
+  customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
   coverMediaId: z.string().uuid().nullable().optional(),
   primaryCategoryId: z.string().uuid().nullable().optional(),
   categoryIds: z.array(z.string().uuid()).max(20).optional(),
@@ -129,6 +132,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(input.kind !== undefined ? { kind: input.kind } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.seo !== undefined ? { seo: input.seo as SeoFields } : {}),
+        ...(input.customCss !== undefined ? { customCss: input.customCss } : {}),
         ...(input.coverMediaId !== undefined ? { coverMediaId: input.coverMediaId } : {}),
         ...(input.primaryCategoryId !== undefined ? { primaryCategoryId: input.primaryCategoryId } : {}),
         publishedAt,

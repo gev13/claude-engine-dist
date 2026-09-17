@@ -1,7 +1,7 @@
 'use client';
 
 import { Field, Input, Select } from '@/components/admin/ui';
-import { isColor, isLength, isLineHeight } from '@/lib/theme';
+import { isColor, isLength, isLineHeight, normaliseLength } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 
 /* Small controls shared by every tab of the Appearance screen.
@@ -115,6 +115,15 @@ export function LengthField({
         placeholder={inherited || placeholder || 'inherit'}
         spellCheck={false}
         onChange={(e) => onChange(e.target.value.trim() || undefined)}
+        /* `56` becomes `56px` as you leave the field. The schema does this
+           anyway, but doing it here as well means the value on screen is the
+           value that ships — a field that silently rewrote what you typed
+           would be worse than one that never accepted it. */
+        onBlur={(e) => {
+          if (kind === 'lineHeight') return;
+          const filled = normaliseLength(e.target.value.trim());
+          if (filled && filled !== e.target.value.trim()) onChange(filled);
+        }}
       />
       {inherited && placeholder && current === '' && (
         <p className="m-0 mt-1 text-[11px] text-smoke">{placeholder}</p>

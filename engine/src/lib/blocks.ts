@@ -55,7 +55,7 @@ export const CAROUSEL_ARROWS = ['corner', 'side', 'edge', 'none'] as const;
 const slide = z.object({
   eyebrow: text(80),
   title: text(160),
-  body: text(600),
+  body: text(4000),
   imageUrl: mediaUrl.optional(),
   videoUrl: mediaUrl.optional(),
   alt: text(200),
@@ -123,7 +123,7 @@ const videoSource = z
   .max(300)
   .refine((v) => parseVideoUrl(v) !== null, 'Use a YouTube or Vimeo link, or a video uploaded to the media library');
 const mediaRatio = z.enum(['16/9', '4/3', '1/1', '3/4', '21/9']);
-const showcaseHead = { tone, eyebrow: text(80), title: text(200), titleAs: textTagSchema.optional(), intro: text(600) };
+const showcaseHead = { tone, eyebrow: text(80), title: text(200), titleAs: textTagSchema.optional(), intro: text(4000) };
 
 /* ── Package 3 widgets (P3-A1 – P3-A11) ────────────────────────────────────── */
 
@@ -189,7 +189,7 @@ export const blockSchemas = {
     eyebrow: z.string().optional(),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     imageUrl: mediaUrl.optional(),
     alt: text(200),
     iconPosition: z.enum(['top', 'left']).default('top'),
@@ -345,7 +345,7 @@ export const blockSchemas = {
         z.object({
           title: z.string().trim().min(1).max(80),
           label: text(40),
-          body: text(400),
+          body: text(4000),
           imageUrl: mediaUrl.optional(),
           alt: text(200),
           link: libraryLink.optional(),
@@ -369,7 +369,7 @@ export const blockSchemas = {
           title: z.string().trim().min(1).max(100),
           category: text(40),
           year: text(12),
-          summary: text(300),
+          summary: text(4000),
           imageUrl: mediaUrl.optional(),
           hoverImageUrl: mediaUrl.optional(),
           alt: text(200),
@@ -406,7 +406,7 @@ export const blockSchemas = {
     eyebrow: z.string().optional(),
     title: z.string().optional(),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     /** P3-B3 — the marker before each entry; `custom` uses `iconUrl`. */
     icon: z.enum(['check', 'arrow', 'dot', 'star', 'plus', 'number', 'custom', 'none']).default('check'),
     iconUrl: mediaUrl.optional(),
@@ -498,7 +498,7 @@ export const blockSchemas = {
     intro: z.string().optional(),
     /** `centered` (V16) centres the heading over a narrower form. */
     layout: z.enum(['stacked', 'split', 'centered']).default('stacked'),
-    body: text(1200),
+    body: text(4000),
     imageUrl: mediaUrl.optional(),
     alt: text(200),
   }),
@@ -617,7 +617,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     /** A quiet link beside the heading ("Compare all models ›"). */
     link: libraryLink.optional(),
     slides: z.array(slide).min(1).max(24),
@@ -648,7 +648,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     /** P3-B7 adds `photos`, a strip of pictures with captions. */
     kind: z.enum(['logos', 'quotes', 'chips', 'text', 'photos']).default('logos'),
     items: z
@@ -656,7 +656,7 @@ export const blockSchemas = {
         z.object({
           label: text(80),
           imageUrl: mediaUrl.optional(),
-          quote: text(400),
+          quote: text(4000),
           name: text(80),
           role: text(80),
           rating: z.number().min(0).max(5).multipleOf(0.5).optional(),
@@ -683,7 +683,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: z.string().max(200),
     titleAs: textTagSchema.optional(),
-    body: text(1200),
+    body: text(4000),
     links: libraryLinks,
     imageUrl: mediaUrl.optional(),
     videoUrl: mediaUrl.optional(),
@@ -702,7 +702,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: z.string().max(200),
     titleAs: textTagSchema.optional(),
-    body: text(800),
+    body: text(4000),
     link: libraryLink.optional(),
   }),
 
@@ -723,7 +723,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: z.string().max(200).default(''),
     titleAs: textTagSchema.optional(),
-    body: text(600),
+    body: text(4000),
     links: libraryLinks,
   }),
 
@@ -733,7 +733,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     /** Where the tab bar sits relative to the panel. */
     barPosition: z.enum(['above', 'below']).default('below'),
     /** V13 — pill (the original), underlined or plain-text tabs, across the top or down the side. */
@@ -746,7 +746,7 @@ export const blockSchemas = {
           label: z.string().trim().min(1).max(40),
           iconUrl: mediaUrl.optional(),
           title: text(160),
-          body: text(1200),
+          body: text(4000),
           imageUrl: mediaUrl.optional(),
           alt: text(200),
           link: libraryLink.optional(),
@@ -762,7 +762,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     align: z.enum(['left', 'center']).default('center'),
     columns: z.union([z.literal(3), z.literal(4), z.literal(5), z.literal(6)]).default(6),
     /** Draw the wall inside a rounded card. */
@@ -782,7 +782,7 @@ export const blockSchemas = {
   quote: z.object({
     tone,
     eyebrow: text(80),
-    quote: z.string().trim().min(1).max(800),
+    quote: z.string().trim().min(1).max(4000),
     name: text(80),
     role: text(120),
     avatarUrl: mediaUrl.optional(),
@@ -803,7 +803,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     options: z
       .array(
         z.object({
@@ -823,7 +823,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    body: text(1200),
+    body: text(4000),
     link: libraryLink.optional(),
     largeUrl: mediaUrl.optional(),
     largeAlt: text(200),
@@ -839,7 +839,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: z.string().max(160),
     titleAs: textTagSchema.optional(),
-    body: text(600),
+    body: text(4000),
     appStoreHref: safeHref.optional(),
     playStoreHref: safeHref.optional(),
     screens: z.array(z.object({ imageUrl: mediaUrl, alt: text(200) })).max(3).default([]),
@@ -851,7 +851,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     chrome: z.enum(WINDOW_CHROMES).default('browser'),
     /** Shown in the browser's address bar or the app's title bar. */
     address: text(120),
@@ -886,13 +886,13 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     numbered: z.boolean().default(true),
     items: z
       .array(
         z.object({
           title: z.string().trim().min(1).max(120),
-          body: text(600),
+          body: text(4000),
           imageUrl: mediaUrl.optional(),
           alt: text(200),
         }),
@@ -907,7 +907,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    body: text(400),
+    body: text(4000),
     /** Scrubbed by the scroll position; muted, never autoplayed. */
     videoUrl: mediaUrl.optional(),
     /** The video's poster, or — without a video — a picture that slowly zooms. */
@@ -930,7 +930,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: z.string().max(160),
     titleAs: textTagSchema.optional(),
-    body: text(400),
+    body: text(4000),
     buttonLabel: z.string().trim().min(1).max(40).default('Subscribe'),
     placeholder: text(80),
     /** Shown beside a checkbox the visitor must tick; empty means no checkbox. */
@@ -967,7 +967,7 @@ export const blockSchemas = {
     typingSpeed: z.enum(['slow', 'normal', 'fast']).default('normal'),
     /** P3-B1 — typed letter by letter, or each word slid, faded, flipped or blurred in. */
     rotateEffect: z.enum(['typing', 'slide', 'fade', 'flip', 'blur']).default('typing'),
-    subtitle: text(400),
+    subtitle: text(4000),
     divider: z.enum(['none', 'line', 'accent']).default('none'),
   }),
 
@@ -1015,7 +1015,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     kind: z.enum(['bars', 'rings']).default('bars'),
     thickness: z.enum(['thin', 'regular', 'bold']).default('regular'),
     /** Rings: the label under the ring or beside it. */
@@ -1034,7 +1034,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     target: dateTime,
     style: z.enum(['plain', 'boxed', 'inline']).default('boxed'),
     dividers: z.boolean().default(false),
@@ -1062,7 +1062,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     layout: z.enum(['cards', 'contained']).default('cards'),
     billing: z.enum(['single', 'switch']).default('single'),
     monthlyLabel: text(24),
@@ -1082,7 +1082,7 @@ export const blockSchemas = {
           yearlyPeriod: text(24),
           badge: text(24),
           featured: z.boolean().default(false),
-          description: text(200),
+          description: text(4000),
           features: z
             .array(z.object({ text: z.string().trim().min(1).max(80), included: z.boolean().default(true) }))
             .max(16)
@@ -1101,7 +1101,7 @@ export const blockSchemas = {
     eyebrow: text(80),
     title: text(160),
     titleAs: textTagSchema.optional(),
-    intro: text(400),
+    intro: text(4000),
     variant: z.enum(TEAM_VARIANTS).default('cards'),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
     hover: z.enum(['none', 'scale', 'greyscale']).default('none'),
@@ -1128,7 +1128,7 @@ export const blockSchemas = {
         z.object({
           eyebrow: text(80),
           title: z.string().max(160),
-          body: text(400),
+          body: text(4000),
           imageUrl: mediaUrl.optional(),
           videoUrl: mediaUrl.optional(),
           alt: text(200),
@@ -1179,7 +1179,7 @@ export const blockSchemas = {
           x: percent,
           y: percent,
           title: z.string().trim().min(1).max(80),
-          body: text(400),
+          body: text(4000),
           imageUrl: mediaUrl.optional(),
           link: libraryLink.optional(),
         }),
@@ -1231,7 +1231,7 @@ export const blockSchemas = {
                 name: z.string().trim().min(1).max(80),
                 /** Shown as written ("€8", "from £12", "Market price"). */
                 price: text(24),
-                description: text(300),
+                description: text(4000),
                 imageUrl: mediaUrl.optional(),
                 tags: z.array(z.string().trim().min(1).max(24)).max(4).default([]),
                 badge: text(24),
@@ -1369,7 +1369,7 @@ export const blockSchemas = {
     tone,
     title: text(120),
     titleAs: textTagSchema.optional(),
-    intro: text(300),
+    intro: text(4000),
     placeholder: text(60),
     buttonLabel: text(30),
     style: z.enum(SEARCH_STYLES).default('bar'),

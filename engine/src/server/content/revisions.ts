@@ -29,12 +29,12 @@ export const REVISION_LIMIT = 30;
  */
 const PAGE_FIELDS = [
   'slug', 'path', 'title', 'navLabel', 'summary', 'excerpt', 'status', 'blocks',
-  'seo', 'parentId', 'sortOrder', 'template', 'priorityTier',
+  'seo', 'parentId', 'sortOrder', 'template', 'priorityTier', 'customCss',
 ] as const;
 
 const POST_FIELDS = [
   'slug', 'title', 'excerpt', 'body', 'blocks', 'kind', 'status', 'seo',
-  'coverMediaId', 'primaryCategoryId', 'readingMinutes',
+  'coverMediaId', 'primaryCategoryId', 'readingMinutes', 'customCss',
 ] as const;
 
 export function snapshotFields(entityType: RevisionEntity): readonly string[] {

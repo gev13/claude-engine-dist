@@ -33,6 +33,7 @@ async function loadPage(id: string): Promise<PageEditorRecord | null> {
     sortOrder: row.sortOrder,
     blocks: row.blocks ?? [],
     seo: row.seo ?? {},
+    customCss: row.customCss ?? '',
     publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
     isSystem: row.isSystem,
   };

@@ -13,6 +13,7 @@ import { findRedirect, recordNotFound } from '@/server/content/redirects';
 import { site } from '@/lib/site';
 import { cn, formatDate, isoDate } from '@/lib/utils';
 import { resolveBlog } from '@/lib/blog';
+import { safeCss } from '@/lib/customCode';
 import { ReadingProgress } from '@/components/site/ReadingProgress';
 import { getTheme } from '@/server/content/theme';
 import { allPublishedPostSlugs, getPost, getPostTranslations, listPosts } from '@/server/content/posts';
@@ -223,6 +224,10 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
           crumbs,
         ])}
       />
+      {/* This post's own CSS, last so the narrowest scope wins — and last
+          rather than first because a <style> is an element, and main's first
+          child is what the over-hero header looks for. */}
+      {post.customCss && <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(post.customCss) }} />}
     </>
   );
 }

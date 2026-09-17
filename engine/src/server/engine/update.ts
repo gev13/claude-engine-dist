@@ -94,13 +94,32 @@ function appDir(): string {
  * whatever whoever installed it chose. A server running several sites under
  * pm2 must not have the wrong one reloaded.
  */
+export type Pm2Entry = { name?: string; pm2_env?: { pm_cwd?: string } };
+
+/**
+ * Which of pm2's processes is this directory, given its `jlist` output.
+ *
+ * Pure and exported, because it is the decision that took a site down: this
+ * step used to assume the name was "engine". The rest of the step is shelling
+ * out, which a test cannot see — this is the part worth pinning.
+ *
+ * A server running several sites under one pm2 is the case that matters. The
+ * match is on the working directory and never on the name, so the wrong site
+ * cannot be reloaded; and an entry with no usable name is skipped rather than
+ * reloaded by index, because an index is not stable across restarts.
+ */
+export function pickPm2Process(list: Pm2Entry[], cwd: string): string | null {
+  if (!Array.isArray(list)) return null;
+  const match = list.find(
+    (entry) => entry?.pm2_env?.pm_cwd === cwd && typeof entry.name === 'string' && entry.name !== '',
+  );
+  return match?.name ?? null;
+}
+
 async function pm2ProcessName(): Promise<string | null> {
   try {
     const { stdout } = await run('pm2', ['jlist'], { cwd: appDir(), timeout: 30_000, maxBuffer: 4 * 1024 * 1024 });
-    const list = JSON.parse(stdout) as { name?: string; pm2_env?: { pm_cwd?: string } }[];
-    const here = appDir();
-    const match = list.find((p) => p.pm2_env?.pm_cwd === here && typeof p.name === 'string');
-    return match?.name ?? null;
+    return pickPm2Process(JSON.parse(stdout) as Pm2Entry[], appDir());
   } catch {
     // pm2 absent, or its output not what we expect. Either way: do not guess.
     return null;

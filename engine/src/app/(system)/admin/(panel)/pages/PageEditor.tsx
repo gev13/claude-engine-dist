@@ -6,6 +6,7 @@ import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { SeoPanel } from '@/components/admin/SeoPanel';
 import { PageTemplatePicker, type PickedTemplate } from '@/components/admin/TemplatePickers';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
+import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
 import { PreviewButton } from '@/components/admin/PreviewButton';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Textarea } from '@/components/admin/ui';
@@ -46,6 +47,7 @@ export type PageEditorRecord = {
   sortOrder: number;
   blocks: AnyBlock[];
   seo: SeoFields;
+  customCss: string;
   /** ISO, or null when the page has never been published. */
   publishedAt: string | null;
   isSystem: boolean;
@@ -64,6 +66,7 @@ type FormValue = {
   sortOrder: number;
   blocks: AnyBlock[];
   seo: SeoFields;
+  customCss: string;
   publishedAt: string;
 };
 
@@ -80,6 +83,7 @@ const blankValue: FormValue = {
   sortOrder: 0,
   blocks: [],
   seo: {},
+  customCss: '',
   publishedAt: '',
 };
 
@@ -113,6 +117,7 @@ function toValue(record?: PageEditorRecord): FormValue {
     sortOrder: record.sortOrder,
     blocks: record.blocks ?? [],
     seo: record.seo ?? {},
+    customCss: record.customCss ?? '',
     publishedAt: record.publishedAt ?? '',
   };
 }
@@ -206,6 +211,7 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
       sortOrder: Number.isFinite(value.sortOrder) ? value.sortOrder : 0,
       blocks: value.blocks,
       seo: value.seo,
+      customCss: value.customCss,
       // Null clears the date; a future one keeps the page off the site until then.
       publishedAt: value.publishedAt || null,
     };
@@ -523,6 +529,8 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
               </p>
             )}
           </Panel>
+
+          <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="page" />
 
           {/* Only an existing page has history; a new one has nothing to show. */}
           {pageId && (

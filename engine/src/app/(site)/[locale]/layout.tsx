@@ -18,6 +18,8 @@ import { getServiceCatalogue } from '@/server/content/services';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { getPopups } from '@/server/content/popups';
 import { getCookieNotice } from '@/server/content/cookies';
+import { getSiteCode } from '@/server/content/code';
+import { hasAnalytics, safeCss } from '@/lib/customCode';
 import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
 import { Popups } from '@/components/site/Popups';
@@ -95,7 +97,7 @@ export default async function SiteLayout({
 
   /* Menus, the site's own details and popups all follow the language, each
      falling back to the shared value when nobody has translated it. */
-  const [theme, navigation, catalogue, settings, popups, messages, cookies] = await Promise.all([
+  const [theme, navigation, catalogue, settings, popups, messages, cookies, code] = await Promise.all([
     getTheme(),
     getNavigation(locale),
     getServiceCatalogue(),
@@ -103,6 +105,7 @@ export default async function SiteLayout({
     getPopups(locale),
     getMessages(locale),
     getCookieNotice(locale),
+    getSiteCode(),
   ]);
   const css = themeToCss(theme);
   const chrome = resolveChrome(theme.chrome);
@@ -146,6 +149,10 @@ export default async function SiteLayout({
             from stored input.
           */}
           {css && <style id="he-theme" dangerouslySetInnerHTML={{ __html: css }} />}
+          {/* After the theme, so a site's own rules win without !important —
+              and sanitised on the way in and again here, because this is the
+              one field an editor writes that reaches a style element. */}
+          {code.css && <style id="he-custom" dangerouslySetInnerHTML={{ __html: safeCss(code.css) }} />}
 
           <a
             href="#main"
@@ -199,6 +206,9 @@ export default async function SiteLayout({
           {/* Last, and above the popups: it is the one thing a visitor is being
               asked to answer before carrying on. */}
           <CookieNotice notice={cookies} />
+          {/* The id lives in the route, not here: what runs is code this
+              repository wrote, and the only thing an editor chose is an id. */}
+          {hasAnalytics(code) && <script defer src="/analytics.js" />}
           <JsonLd data={graph([organization(settings), website(settings), siteNavigation(navLinks)])} />
         </div>
         </MessagesProvider>
