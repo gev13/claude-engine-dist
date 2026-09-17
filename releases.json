@@ -1,6 +1,14 @@
 {
-  "latest": "2.6.1",
+  "latest": "2.6.2",
   "releases": [
+    {
+      "version": "2.6.2",
+      "date": "2026-09-17",
+      "summary": "Fixes the test suite failing in the public repository. The licence test added in 2.6.1 read files that repository does not carry, so it was red over a licence that was correct. A guard now stops a test shipping that cannot pass where it lands.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.6.1",
       "date": "2026-09-17",

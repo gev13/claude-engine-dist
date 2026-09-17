@@ -14,15 +14,34 @@ import { describe, expect, it } from 'vitest';
    everything beneath it, and the bundled typefaces are not ours to relicense.
    The SIL Open Font License requires its notice to travel with the files, so
    the licence has to say what it does *not* cover.
+
+   ── This file runs in two repositories ──────────────────────────────────────
+   And the first version of it did not. It read `dist-files/LICENSE` and the
+   publish script, both of which the distribution deliberately strips — so the
+   test shipped and its fixtures did not, and the distribution's CI went red on
+   a licence that was perfectly correct.
+
+   So it looks for the licence where each repository keeps it: the source copy
+   here, the published copy at the root there. The assertions about *how* it
+   gets published only run where the publishing happens.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 const here = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 const read = (path: string) => readFileSync(here(path), 'utf8');
 
-const licence = read('../dist-files/LICENSE');
-const publish = read('../scripts/publish-dist.mjs');
+/** The source copy (development) or the published one (distribution). */
+const LICENCE_PATH = ['../dist-files/LICENSE', '../../LICENSE'].find((path) => existsSync(here(path)));
+const licence = LICENCE_PATH ? read(LICENCE_PATH) : '';
+
+/** Only the development repository has the script that publishes. */
+const PUBLISH_PATH = '../scripts/publish-dist.mjs';
+const publish = existsSync(here(PUBLISH_PATH)) ? read(PUBLISH_PATH) : null;
 
 describe('the licence itself', () => {
+  it('exists in whichever repository this is', () => {
+    expect(LICENCE_PATH, 'no LICENSE found in either place').toBeDefined();
+  });
+
   it('is MIT, with a holder and a year', () => {
     expect(licence).toContain('MIT License');
     expect(licence).toMatch(/Copyright \(c\) \d{4} \S/);
@@ -41,12 +60,12 @@ describe('the licence itself', () => {
 describe('it reaches the distribution', () => {
   /* The distribution is generated. A LICENSE added to that repository by hand
      is a LICENSE the next release overwrites. */
-  it('is copied to the root by the publish script', () => {
+  it.runIf(publish)('is copied to the root by the publish script', () => {
     expect(publish).toContain("['engine/dist-files/LICENSE', 'LICENSE']");
   });
 
-  it('is not excluded on the way', () => {
-    const exclude = publish.slice(publish.indexOf('const EXCLUDE'), publish.indexOf('const USER_DOCS'));
+  it.runIf(publish)('is not excluded on the way', () => {
+    const exclude = publish!.slice(publish!.indexOf('const EXCLUDE'), publish!.indexOf('const USER_DOCS'));
     expect(exclude).not.toContain('LICENSE');
   });
 });

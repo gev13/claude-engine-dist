@@ -9,6 +9,26 @@ told about before taking it.
 
 ---
 
+## 2.6.2 — 2026-09-17
+
+**Fixes the test suite failing in this repository.** 2.6.1 added a licence and
+a test for it, and that test read two files this repository deliberately does
+not carry — so it passed where it was written and failed here, over a licence
+that was entirely correct.
+
+The test now looks for the licence where each repository actually keeps it, and
+the checks about *how* it gets published only run where the publishing happens.
+
+A guard was added so this cannot ship again: a test may only read a file the
+distribution strips if it also copes with that file being absent. It is checked
+against the real exclusion list rather than a copy of it — and the suite is now
+run against a stripped tree before release, which is the only check that speaks
+for this repository rather than the one it was written in.
+
+No database changes.
+
+---
+
 ## 2.6.1 — 2026-09-17
 
 **The engine now has a licence: MIT.** It is published openly and had no
