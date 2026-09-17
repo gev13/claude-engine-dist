@@ -1,6 +1,14 @@
 {
-  "latest": "2.5.0",
+  "latest": "2.6.0",
   "releases": [
+    {
+      "version": "2.6.0",
+      "date": "2026-09-17",
+      "summary": "Typography size, weight, colour and letter spacing now show the block\u2019s real values \u2014 and stay silent where a section\u2019s headings genuinely differ, rather than naming one of them. Measured against your saved theme rather than the shipped defaults.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.5.0",
       "date": "2026-09-17",

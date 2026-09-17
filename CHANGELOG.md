@@ -9,6 +9,29 @@ told about before taking it.
 
 ---
 
+## 2.6.0 — 2026-09-17
+
+**The Typography fields show their real values too.** Size, weight, colour and
+letter spacing under Headings and Body text now say what the block already
+uses, instead of "inherit".
+
+**With one deliberate silence.** These fields govern *every* heading in a
+section at once, and a section often holds headings at three different sizes.
+There is no single size to report then, so nothing is reported — naming the
+first one would print a figure you could not reconcile with the page. Each
+property is judged on its own, so a colour that is the same throughout still
+shows even where the sizes differ.
+
+**And it measures against your theme, not ours.** The small page these values
+are read from sits in the admin, which carries the engine's shipped colours.
+A site whose palette was changed in Appearance would have been measured against
+colours nobody is looking at. It now loads your saved theme first, so the
+colour you are shown is the colour on your pages.
+
+No database changes.
+
+---
+
 ## 2.5.0 — 2026-09-17
 
 **Colours and borders now show their real values too.** 2.4.1 fixed the

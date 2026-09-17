@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { toHex } from '@/components/admin/useBandStyle';
+import { agreed, toHex } from '@/components/admin/useBandStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Turning a computed colour into one the panel can show
@@ -96,5 +96,62 @@ describe('fields that do inherit show the measurement', () => {
 
   it('radius takes the measured corner', () => {
     expect(fieldFor('Radius')).toContain('band.box.radius');
+  });
+});
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Typography: one value, or none at all
+   ───────────────────────────────────────────────────────────────────────────
+   The Typography fields govern every heading in a block at once — and a band
+   routinely holds headings at three different sizes. There is then no single
+   size for the field to report, and naming the first one would print a figure
+   an editor cannot reconcile with what is on the page.
+
+   So disagreement reports nothing. Each property is asked separately, because
+   colour usually agrees even where size does not, and a colour is the thing
+   most often wanted.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('agreed', () => {
+  const read = (v: string | undefined) => v;
+
+  it('reports the value when everything agrees', () => {
+    expect(agreed(['#ffffff', '#ffffff', '#ffffff'], read)).toBe('#ffffff');
+  });
+
+  it('reports nothing when they disagree', () => {
+    // Three headings at three sizes: no single size governs them.
+    expect(agreed(['48px', '32px', '24px'], read)).toBeUndefined();
+  });
+
+  it('reports the value from a single element', () => {
+    expect(agreed(['700'], read)).toBe('700');
+  });
+
+  it('reports nothing for an empty band', () => {
+    expect(agreed([], read)).toBeUndefined();
+  });
+
+  /* A property that could not be read on some elements must not make the
+     others look unanimous by disappearing — but neither should it block a
+     genuine agreement among the ones that could be read. */
+  it('ignores values it could not read', () => {
+    expect(agreed(['#ffffff', undefined, '#ffffff'], read)).toBe('#ffffff');
+    expect(agreed([undefined, undefined], read)).toBeUndefined();
+  });
+});
+
+describe('the typography fields show what was measured', () => {
+  it.each(['Size', 'Weight', 'Colour', 'Letter spacing'])('%s takes the measured value', (label) => {
+    // Both roles share one block of JSX, so the reference is by role.
+    expect(panel).toContain(`inherited={band.type[role]?.`);
+    expect(panel.includes(`label="${label}"`), label).toBe(true);
+  });
+
+  it('asks per role, not once for the whole block', () => {
+    expect(panel).toContain("band.type[role]?.color");
+    expect(panel).toContain("band.type[role]?.size");
+    expect(panel).toContain("band.type[role]?.weight");
+    expect(panel).toContain("band.type[role]?.letterSpacing");
   });
 });

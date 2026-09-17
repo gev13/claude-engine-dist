@@ -49,3 +49,27 @@ describe('the probe page', () => {
     for (const type of SYNCHRONOUS) expect(sampleBlock(type), type).not.toBeNull();
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The band's first child is the block, and nothing else
+   ───────────────────────────────────────────────────────────────────────────
+   The panel measures `#he-band`'s first element child. The probe also writes
+   the site's theme into a <style>, and a <style> is an element — put inside
+   the band it would become the thing measured, and every figure in the panel
+   would be a style element's computed padding. Which is zero.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('what the panel will measure', () => {
+  it('is the block, not the theme style element', async () => {
+    const html = await render('hero');
+    const band = html.slice(html.indexOf('id="he-band"'));
+    const firstTag = band.slice(band.indexOf('>') + 1).match(/<([a-z]+)/)?.[1];
+    expect(firstTag).not.toBe('style');
+  });
+
+  it('writes the theme outside the band, where it still applies', async () => {
+    const html = await render('hero');
+    if (!html.includes('id="he-theme"')) return; // no theme saved in this environment
+    expect(html.indexOf('id="he-theme"')).toBeLessThan(html.indexOf('id="he-band"'));
+  });
+});

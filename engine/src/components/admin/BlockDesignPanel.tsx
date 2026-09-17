@@ -389,17 +389,29 @@ export function BlockDesignPanel({
                 groups={FONT_OPTIONS}
                 onChange={set(['typography', role, 'family'])}
               />
-              <LengthField label="Size" value={get(['typography', role, 'size'])} onChange={set(['typography', role, 'size'])} />
+              <LengthField
+                label="Size"
+                value={get(['typography', role, 'size'])}
+                inherited={band.type[role]?.size}
+                onChange={set(['typography', role, 'size'])}
+              />
               <ChoiceField
                 label="Weight"
                 value={get(['typography', role, 'weight']) as never}
+                inherited={band.type[role]?.weight}
                 options={WEIGHT_OPTIONS}
                 onChange={set(['typography', role, 'weight'])}
               />
-              <ColorField label="Colour" value={get(['typography', role, 'color'])} onChange={set(['typography', role, 'color'])} />
+              <ColorField
+                label="Colour"
+                value={get(['typography', role, 'color'])}
+                inherited={band.type[role]?.color}
+                onChange={set(['typography', role, 'color'])}
+              />
               <LengthField
                 label="Letter spacing"
                 value={get(['typography', role, 'letterSpacing'])}
+                inherited={band.type[role]?.letterSpacing}
                 onChange={set(['typography', role, 'letterSpacing'])}
               />
               <ChoiceField

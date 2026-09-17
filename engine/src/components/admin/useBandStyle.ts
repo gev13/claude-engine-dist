@@ -46,9 +46,60 @@ export type BandBox = {
   radius?: string;
 };
 
-export type BandStyle = { spacing: Partial<Record<BandTab, Sides>>; box: BandBox };
+/** What the Typography section's two roles already look like. */
+export type BandType = {
+  color?: string;
+  size?: string;
+  weight?: string;
+  letterSpacing?: string;
+};
 
-const EMPTY: BandStyle = { spacing: {}, box: {} };
+export type BandStyle = {
+  spacing: Partial<Record<BandTab, Sides>>;
+  box: BandBox;
+  type: { heading?: BandType; body?: BandType };
+};
+
+const EMPTY: BandStyle = { spacing: {}, box: {}, type: {} };
+
+/* The two roles aim at exactly these elements — the same selectors
+   `blockStyleToCss` writes the rules for, so what is measured is what the
+   field would override. */
+const ROLE_SELECTOR = {
+  heading: 'h1,h2,h3,h4,h5,h6',
+  body: 'p,li,td,span',
+} as const;
+
+/**
+ * One value, only when every element of that role agrees about it.
+ *
+ * A band often holds headings at three sizes, and a field that governs all of
+ * them has no single size to report. Naming the first one would be a figure
+ * an editor could not reconcile with what is on the page — so disagreement
+ * reports nothing, which is the truth. Colour usually agrees even when size
+ * does not, which is why each property is asked separately.
+ */
+export function agreed<T>(items: T[], read: (item: T) => string | undefined): string | undefined {
+  const values = new Set(items.map(read).filter((v): v is string => Boolean(v)));
+  return values.size === 1 ? [...values][0] : undefined;
+}
+
+function measureRole(win: Window, band: Element, role: keyof typeof ROLE_SELECTOR): BandType | undefined {
+  const found = [...band.querySelectorAll(ROLE_SELECTOR[role])];
+  /* The band itself counts for body text: plenty of blocks set a colour on
+     the section and let it inherit down, with no <p> of their own. */
+  const elements = role === 'body' && found.length === 0 ? [band] : found;
+  if (elements.length === 0) return undefined;
+
+  const styles = elements.map((el) => win.getComputedStyle(el));
+  const type: BandType = {
+    color: agreed(styles, (cs) => toHex(cs.color)),
+    size: agreed(styles, (cs) => usable(cs.fontSize)),
+    weight: agreed(styles, (cs) => cs.fontWeight),
+    letterSpacing: agreed(styles, (cs) => (cs.letterSpacing === 'normal' ? undefined : cs.letterSpacing)),
+  };
+  return Object.values(type).some(Boolean) ? type : undefined;
+}
 
 /**
  * A computed colour as a hex the panel's swatch can show, or nothing.
@@ -93,7 +144,7 @@ async function measure(type: string): Promise<BandStyle> {
   frame.style.cssText = 'position:fixed;left:-10000px;top:0;height:900px;border:0;visibility:hidden';
   frame.src = `/admin/band/${encodeURIComponent(type)}`;
 
-  const result: BandStyle = { spacing: {}, box: {} };
+  const result: BandStyle = { spacing: {}, box: {}, type: {} };
 
   try {
     await new Promise<void>((resolve, reject) => {
@@ -139,6 +190,14 @@ async function measure(type: string): Promise<BandStyle> {
             : undefined,
           radius: usable(style.borderTopLeftRadius),
         };
+
+        const win = frame.contentWindow;
+        if (win) {
+          result.type = {
+            heading: measureRole(win, band, 'heading'),
+            body: measureRole(win, band, 'body'),
+          };
+        }
       }
     }
 

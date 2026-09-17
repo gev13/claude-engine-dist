@@ -2,8 +2,11 @@ import { notFound } from 'next/navigation';
 import { BlockRenderer } from '@/components/blocks/Renderer';
 import { sampleBlock } from '@/content/demo/samples';
 import { blockSchemas, parseBlocks } from '@/lib/blocks';
+import { themeToCss } from '@/lib/theme-css';
+import { getTheme } from '@/server/content/theme';
 
-export const dynamic = 'force-static';
+/* Reads the site's saved theme, so it cannot be prerendered once and reused. */
+export const dynamic = 'force-dynamic';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One block, rendered so its own spacing can be measured
@@ -44,9 +47,26 @@ export default async function BandProbe({ params }: { params: Promise<{ type: st
   const parsed = parseBlocks([sample]);
   if (parsed.length === 0) notFound();
 
+  /* The site's own theme, not the shipped defaults.
+     
+     This page renders under the *admin* layout, which loads `globals.css` and
+     therefore the `--he-*` properties at their shipped values. A site whose
+     palette was changed in Appearance would then be measured against colours
+     nobody is looking at — and a wrong colour in the panel is worse than no
+     colour, because an editor cannot tell it is wrong. So the same style
+     element the public layout writes is written here. */
+  const css = themeToCss(await getTheme());
+
+  /* The style element sits *outside* the band: the panel measures
+     `#he-band`'s first child, and a <style> is an element like any other —
+     inside, it would be the thing measured. A style element applies to the
+     whole document wherever it sits, so nothing is lost by moving it. */
   return (
-    <div id="he-band" data-block-type={type}>
-      <BlockRenderer blocks={[sample]} />
-    </div>
+    <>
+      {css && <style id="he-theme" dangerouslySetInnerHTML={{ __html: css }} />}
+      <div id="he-band" data-block-type={type}>
+        <BlockRenderer blocks={[sample]} />
+      </div>
+    </>
   );
 }
