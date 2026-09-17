@@ -59,12 +59,76 @@ export type RunState = z.output<typeof runStateSchema>;
 
 export const IDLE: RunState = runStateSchema.parse({});
 
+/**
+ * How long a run may go without writing a line before it is presumed dead.
+ *
+ * Longer than the longest single step, because a step writes nothing while it
+ * runs: the build alone is allowed twenty minutes. This is the backstop for a
+ * run whose process went away without reaching the reload — a reboot during
+ * `npm ci`, an out-of-memory kill during the build — where there is no
+ * version to compare against and the only evidence is silence.
+ */
+const PRESUMED_DEAD_MS = 45 * 60_000;
+
+/**
+ * Read a run back as what it actually was, not as what it managed to write.
+ *
+ * The last step restarts the process executing it. `pm2 reload` kills this
+ * code mid-`await`, so the two writes that would have marked the run finished
+ * never happen, and the row stays `running` at `reload` for ever: the screen
+ * spins on a site that updated perfectly, and `preflight` then refuses every
+ * later update because one is "already running". There is no way out of that
+ * from the panel. Every pm2 deployment meets it on its first success.
+ *
+ * It is settled with evidence rather than optimism. The process answering now
+ * is the one pm2 started, so its own `ENGINE_VERSION` says what the reload
+ * did: equal to the target means the checkout and the restart both happened,
+ * which is exactly what "done" claims. A reload that genuinely fails does not
+ * come through here at all — the process survives, `run()` rejects, and the
+ * catch block records a real failure with the reason.
+ *
+ * Reconciled on read, never written back. A restart must not be able to
+ * rewrite history, and the next `save` from a live run would overwrite this
+ * anyway.
+ */
+export function reconcile(state: RunState, updatedAt: Date | null): RunState {
+  if (state.status !== 'running') return state;
+
+  if (state.step === 'reload' && state.target && ENGINE_VERSION === state.target) {
+    return {
+      ...state,
+      status: 'done',
+      step: undefined,
+      finishedAt: updatedAt ? updatedAt.toISOString() : new Date().toISOString(),
+      log: [
+        ...state.log,
+        {
+          step: 'reload',
+          ok: true,
+          detail: `Reloaded — this site is running ${ENGINE_VERSION}. The restart ended the run before it could record itself.`,
+        },
+      ],
+    };
+  }
+
+  const silentFor = updatedAt ? Date.now() - updatedAt.getTime() : 0;
+  if (silentFor > PRESUMED_DEAD_MS) {
+    return {
+      ...state,
+      status: 'failed',
+      error: `Nothing has been heard from this update since ${state.step ?? 'it started'}. The process it was running in has gone. Check the site, then clear this record.`,
+    };
+  }
+
+  return state;
+}
+
 export async function getRunState(): Promise<RunState> {
   try {
     const [row] = await db.select().from(settings).where(eq(settings.key, UPDATE_RUN_KEY)).limit(1);
     if (!row) return IDLE;
     const parsed = runStateSchema.safeParse(row.value);
-    return parsed.success ? parsed.data : IDLE;
+    return parsed.success ? reconcile(parsed.data, row.updatedAt ?? null) : IDLE;
   } catch {
     return IDLE;
   }

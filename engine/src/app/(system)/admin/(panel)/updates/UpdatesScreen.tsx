@@ -176,6 +176,21 @@ function UpdatesScreenInner({ canWrite }: { canWrite: boolean }) {
                       The site restarts at the end, so this page may drop its connection. That is the update finishing,
                       not failing.
                     </p>
+                    {/* Offered here too, not only on a finished run. A state
+                        with no way out is a trap whatever put you in it, and
+                        an update that has genuinely stopped leaves a record
+                        that would otherwise refuse every later one. */}
+                    {canWrite && (
+                      <div className="mt-3">
+                        <AdminButton
+                          variant="ghost"
+                          disabled={busy === 'clear'}
+                          onClick={() => void act({ action: 'clearRun' }, 'clear', 'Cleared.')}
+                        >
+                          Clear this record
+                        </AdminButton>
+                      </div>
+                    )}
                   </div>
                 )}
 

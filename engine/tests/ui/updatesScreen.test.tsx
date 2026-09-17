@@ -133,6 +133,16 @@ describe('the updates screen', () => {
     expect(text).toContain('That is the update finishing, not failing');
     // Nothing to press while it runs.
     expect(labels(container)).not.toContain('Update to 0.2.0');
+    /* Except the way out. A real site sat on `reload` for ever — the reload
+       kills the process that would have written "done" — and with no button
+       here the panel could never update it again. */
+    expect(labels(container)).toContain('Clear this record');
+  });
+
+  it('offers no way out to somebody who may not change anything', () => {
+    waiting({ run: { status: 'running', target: '0.2.0', step: 'reload', log: [] } });
+    const { container } = render(<UpdatesScreen canWrite={false} />);
+    expect(labels(container)).not.toContain('Clear this record');
   });
 
   it('names the step, the reason and the backup when a run fails', () => {

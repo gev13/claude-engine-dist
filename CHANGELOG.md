@@ -9,6 +9,33 @@ told about before taking it.
 
 ---
 
+## 2.1.1 — 2026-09-17
+
+**An update could not record its own success.** If your site updated and the
+panel then sat on `reload…` for ever, this is the release that explains it —
+and the one you should take next, because that record also blocked every
+later update.
+
+The final step reloads the site, which restarts the very process running the
+update. It was killed a moment before it could write "finished". The row stayed
+"an update is running", the screen spun on a site that had updated perfectly,
+and the next update was refused because one was apparently already in progress
+— with no button offered to clear it. Every deployment using pm2 met this on
+its first successful update.
+
+The panel now settles such a run from evidence rather than leaving it open: the
+process answering you is the one the reload started, so the version it is
+running is proof of what the reload did. A run that stopped without ever
+reaching the reload — a reboot during install, a build killed for memory — is
+presumed dead after long enough that a slow build is never mistaken for one.
+
+**"Clear this record" is now offered on a run in progress too.** A state with
+no way out is a trap whatever put you in it.
+
+No database changes.
+
+---
+
 ## 2.1.0 — 2026-09-17
 
 **Your own CSS, and an analytics tag.** Two things people have always had to
