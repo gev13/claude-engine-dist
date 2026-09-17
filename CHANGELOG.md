@@ -9,6 +9,25 @@ told about before taking it.
 
 ---
 
+## 2.6.1 — 2026-09-17
+
+**The engine now has a licence: MIT.** It is published openly and had no
+licence file, which means the legal default applied — all rights reserved. You
+could read it and nothing else. That was an oversight, not a position.
+
+Use it, change it, build on it, sell what you build; keep the copyright notice
+with it.
+
+The bundled typefaces are the one exception, because they were never ours to
+relicense. They come from the Google Fonts catalogue under the SIL Open Font
+License, Apache 2.0 or the Ubuntu Font Licence, and the OFL asks that its
+notice travels with the files. It does, and the licence says so rather than
+implying MIT covers everything under it.
+
+No database changes.
+
+---
+
 ## 2.6.0 — 2026-09-17
 
 **The Typography fields show their real values too.** Size, weight, colour and

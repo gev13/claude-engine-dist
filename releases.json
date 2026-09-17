@@ -1,6 +1,14 @@
 {
-  "latest": "2.6.0",
+  "latest": "2.6.1",
   "releases": [
+    {
+      "version": "2.6.1",
+      "date": "2026-09-17",
+      "summary": "The engine is now MIT licensed. It was published with no licence at all, which legally meant all rights reserved. The bundled typefaces keep their own licences, which the notice states rather than glossing over.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.6.0",
       "date": "2026-09-17",

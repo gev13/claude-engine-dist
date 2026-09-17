@@ -148,5 +148,11 @@ and never as a public issue.
 
 ## Licence
 
-See `LICENSE`, if one is present in this repository. Without it, no licence is
-granted beyond what you have been told directly.
+MIT — see `LICENSE`. Use it, change it, build on it, sell what you build; keep
+the copyright notice with it.
+
+The typefaces in `engine/public/fonts/` are the exception, because they are not
+ours to relicense: they come from the Google Fonts catalogue under the SIL Open
+Font License, Apache 2.0 or the Ubuntu Font Licence. The OFL asks that its
+notice travels with the files, and it does —
+`engine/public/fonts/google/LICENSES.md`. Keep that file if you keep the fonts.
