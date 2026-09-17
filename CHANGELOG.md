@@ -9,6 +9,28 @@ told about before taking it.
 
 ---
 
+## 2.7.0 — 2026-09-17
+
+**Line breaks you type now appear on the page.** Press Enter twice in a Body,
+Intro or Description field and you get the paragraphs you asked for. Until now
+HTML quietly collapsed them and the text ran together on the site, with nothing
+in the editor to suggest anything had been lost.
+
+This was fixed once before, for the text block. It was a fix to that one block
+rather than to the engine, so every other section still had it — which is why
+it came back. It is now a single rule that covers every block, including the
+ones added in future releases.
+
+Runs of spaces still collapse, so this does not turn your writing into
+preformatted text; only the breaks you actually typed survive. The rich-text
+editor is deliberately left alone: its paragraphs are already real paragraphs,
+and treating the line breaks inside its markup as yours would add breaks you
+never asked for.
+
+No database changes.
+
+---
+
 ## 2.6.2 — 2026-09-17
 
 **Fixes the test suite failing in this repository.** 2.6.1 added a licence and

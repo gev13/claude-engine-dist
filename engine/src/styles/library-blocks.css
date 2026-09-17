@@ -15,6 +15,26 @@
 @keyframes he-cue { 0% { opacity: 0; transform: translateY(0); } 30% { opacity: 1; } 100% { opacity: 0; transform: translateY(12px); } }
 
 @layer components {
+  /* ── An editor's line breaks are content ────────────────────────────────
+     Somebody types blank lines into a Body or Intro field expecting
+     paragraphs, and HTML collapses every one of them: the text arrives on the
+     page as a single run-on block with nothing saying why. It was fixed once,
+     on the text block alone, after being reported from real use — and every
+     other block with a plain-text field still had it.
+
+     One rule rather than a class on each of them, because the next block
+     added would have the bug again. Runs of spaces are still collapsed, so
+     this does not turn prose into preformatted text; only the newlines
+     somebody actually typed survive.
+
+     `.prose-edge` is excluded deliberately. That is the rich-text editor's
+     own HTML, where newlines are formatting in the markup rather than
+     anything an author typed — honouring them there would add breaks nobody
+     asked for. */
+  .he-site :is(p, li, dd, blockquote, figcaption):not(.prose-edge, .prose-edge *) {
+    white-space: pre-line;
+  }
+
   /* The shell's side padding, as a value other rules can compute with. */
   :root { --he-shell-pad: 20px; }
   @media (width >= 48rem) { :root { --he-shell-pad: 32px; } }

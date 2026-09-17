@@ -1,6 +1,14 @@
 {
-  "latest": "2.6.2",
+  "latest": "2.7.0",
   "releases": [
+    {
+      "version": "2.7.0",
+      "date": "2026-09-17",
+      "summary": "Line breaks you type in Body, Intro and Description fields now appear on the page. They were being collapsed, so text ran together with nothing in the editor to say so. Fixed for every block rather than one at a time.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.6.2",
       "date": "2026-09-17",
