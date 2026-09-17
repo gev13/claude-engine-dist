@@ -56,6 +56,25 @@ const schema = z.object({
     .default('false')
     .transform((v) => v === 'true'),
 
+  /**
+   * The git remote a release is fetched from.
+   *
+   * `origin` for a site cloned straight from the distribution. A site living
+   * in its own repository — a fork with deployment settings of its own — sets
+   * this to the remote pointing at the engine, and then takes releases without
+   * anybody having to push a tag into the fork first.
+   *
+   * A remote *name*, not a URL, and held to the characters a name may have:
+   * it reaches a command line, and the URL behind it is something an operator
+   * set with `git remote add` rather than anything the panel can choose. The
+   * same reasoning as `ENGINE_RELEASE_FEED` — an address an administrator
+   * could type is an address this server would then fetch and run.
+   */
+  ENGINE_RELEASE_REMOTE: z
+    .string()
+    .regex(/^[A-Za-z0-9][A-Za-z0-9._-]*$/, 'A git remote name')
+    .default('origin'),
+
   /** Where backup archives are written. Inside storage/, which git ignores. */
   BACKUP_DIR: z.string().default('./storage/backups'),
 

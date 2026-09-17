@@ -9,6 +9,34 @@ told about before taking it.
 
 ---
 
+## 2.3.0 — 2026-09-17
+
+**Updating is safer, and says what is wrong when it will not run.**
+
+If your site lives in its own repository rather than being a plain copy of the
+engine, the update used to fail with `pathspec 'v2.2.0' did not match any
+file(s) known to git` — a message about git, not about your site. It now tells
+you what to do: a release has to be merged into your repository and tagged
+there, or `ENGINE_RELEASE_REMOTE` set to the remote your engine lives on.
+
+**Two new refusals, both before anything is touched.** An update now reads the
+version out of the release it fetched and checks it really is the one it
+claims, so a tag pointing at the wrong code is caught rather than installed.
+And it counts the commits your site has that the release does not: if checking
+it out would throw away your own work — your ports, your container names, the
+process your server runs — it stops and tells you, instead of replacing them
+and reporting success. Both happen before the working tree moves, so "nothing
+has been changed" means it.
+
+**Release tags no longer collide.** Fetching a release used to pull in every
+tag from the remote, which on a site keeping its own tags meant two different
+things could be called `v2.2.0` and the wrong one could win without a word.
+Only the one release is fetched now, and nothing is written into your own tags.
+
+No database changes.
+
+---
+
 ## 2.2.0 — 2026-09-17
 
 **The Design tab now tells you what the spacing already is.** Opening a

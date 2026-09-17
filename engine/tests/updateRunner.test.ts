@@ -1,4 +1,5 @@
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 import { STEPS } from '../src/server/engine/update';
 
@@ -39,9 +40,29 @@ describe('how commands are run', () => {
   it('builds the checkout tag from a validated version and nothing else', () => {
     expect(source).toContain('isVersion(target)');
     expect(source).toContain('const tag = `v${target}`');
-    // The tag is the only interpolation that reaches a command argument.
-    const argInterpolations = source.match(/await (?:git|run)\([^)]*\$\{(?!target\})/g) ?? [];
+
+    /* Only `target` and the `tag` built from it may be interpolated into a
+       command argument. `tag` was allowed here when releases gained a
+       configurable remote and the fetch had to name `refs/tags/${tag}` — the
+       widening is deliberate and stays this narrow, because the whole point
+       of the rule is that nothing else ever reaches a command. */
+    const argInterpolations = source.match(/await (?:git|run)\([^)]*\$\{(?!target\}|tag\})/g) ?? [];
     expect(argInterpolations).toEqual([]);
+
+    // And `tag` is only ever the validated version with a v in front.
+    expect(source.match(/const tag = /g) ?? []).toHaveLength(source.match(/const tag = `v\$\{target\}`/g)?.length ?? 0);
+  });
+
+  /* The remote reaches a command as an argv element rather than an
+     interpolation, so the rule above cannot see it. It is a name an operator
+     set with `git remote add`, held to the characters a name may have — the
+     URL behind it was never the panel's to choose. */
+  it('takes the release remote from the environment, held to a name', () => {
+    expect(source).toContain('env.ENGINE_RELEASE_REMOTE');
+    const envSource = readFileSync(fileURLToPath(new URL('../src/lib/env.ts', import.meta.url)), 'utf8');
+    const declaration = envSource.slice(envSource.indexOf('ENGINE_RELEASE_REMOTE'), envSource.indexOf('BACKUP_DIR'));
+    expect(declaration).toContain('.regex(');
+    expect(declaration).toContain("default('origin')");
   });
 
   it('refuses to run at all unless the deployment turned it on', () => {

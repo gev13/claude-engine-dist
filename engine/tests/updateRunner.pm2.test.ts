@@ -174,3 +174,80 @@ describe('reconciling is a read, not a write', () => {
     expect(JSON.stringify(state)).toBe(before);
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Where a release comes from, and proving it is the one it claims
+   ───────────────────────────────────────────────────────────────────────────
+   The updater assumed `origin` carried the release tags. That is true for a
+   site cloned from the distribution and false for one living in its own
+   repository, where it failed with `pathspec 'v2.1.0' did not match any
+   file(s) known to git` — a message about git rather than about the site.
+
+   Worse was the workaround. Fetching the engine's tags writes them into the
+   site's own tag namespace, so `v2.1.0` could mean the engine's commit *or*
+   the site's merge of it — different trees, and checking out the wrong one
+   silently drops the site's own deployment settings while reporting success.
+
+   These pin both halves: fetch one ref rather than every tag, and read the
+   version out of the commit before checking it out.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('fetching a release', () => {
+  it('never writes the remote’s tags into this checkout', () => {
+    const fetchStep = source.slice(source.indexOf("case 'fetch'"), source.indexOf("case 'checkout'"));
+    expect(fetchStep).not.toContain("'--tags'");
+    // One ref, by its full path, so nothing is guessed at.
+    expect(fetchStep).toContain('refs/tags/');
+  });
+
+  it('takes the remote from configuration rather than assuming origin', () => {
+    const fetchStep = source.slice(source.indexOf("case 'fetch'"), source.indexOf("case 'checkout'"));
+    expect(fetchStep).toContain('ENGINE_RELEASE_REMOTE');
+  });
+
+  /* The old message named a pathspec. The new one names the thing to fix. */
+  it('explains a missing tag in terms of the site, not of git', () => {
+    const fetchStep = source.slice(source.indexOf("case 'fetch'"), source.indexOf("case 'checkout'"));
+    expect(fetchStep).toMatch(/merged and tagged there first/);
+  });
+});
+
+describe('proving the tag before checking it out', () => {
+  const checkoutStep = source.slice(source.indexOf("case 'checkout'"), source.indexOf("case 'install'"));
+
+  it('reads the version out of the commit itself', () => {
+    expect(checkoutStep).toContain('FETCH_HEAD:engine/package.json');
+  });
+
+  it('refuses when the tree is not the version the tag claims', () => {
+    expect(checkoutStep).toMatch(/points at a tree whose version is/);
+    // Said explicitly, because the operator's next question is "what broke?"
+    expect(checkoutStep).toContain('Nothing has been changed');
+  });
+
+  /* The comparison has to happen before the working tree moves, or the
+     "nothing has been changed" promise is a lie. */
+  it('checks the version before it checks anything out', () => {
+    // Against the git command, not the `case` label that opens the block.
+    expect(checkoutStep.indexOf('engine/package.json')).toBeLessThan(checkoutStep.indexOf("git(['checkout'"));
+  });
+
+  it('checks out the fetched commit, not a local tag of the same name', () => {
+    expect(checkoutStep).toContain("'FETCH_HEAD'");
+  });
+
+  /* The failure that took a site's deployment settings: a release checked out
+     over commits only that site had. Whoever owns the site decides how a
+     release combines with their own work — that is a merge, and a merge
+     belongs where somebody can resolve a conflict, not on a production server
+     part-way through an update. */
+  it('refuses to check out a release that would discard the site’s own commits', () => {
+    expect(checkoutStep).toContain('FETCH_HEAD..HEAD');
+    expect(checkoutStep).toMatch(/would discard them/);
+    expect(checkoutStep).toContain('Nothing has been changed');
+  });
+
+  it('counts those commits before moving the working tree', () => {
+    expect(checkoutStep.indexOf('FETCH_HEAD..HEAD')).toBeLessThan(checkoutStep.indexOf("git(['checkout'"));
+  });
+});

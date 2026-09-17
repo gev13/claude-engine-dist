@@ -236,9 +236,18 @@ export async function preflight(target: string): Promise<Ready | Refusal> {
 
   let remote = '';
   try {
-    remote = await git(['remote', 'get-url', 'origin']);
+    /* The remote releases come from, which is `origin` unless this site
+       lives in a repository of its own. Checked here rather than at the fetch
+       so a misconfiguration is refused before a backup is taken. */
+    remote = await git(['remote', 'get-url', env.ENGINE_RELEASE_REMOTE]);
   } catch {
-    return { ok: false, reason: 'This checkout has no origin to fetch from.' };
+    return {
+      ok: false,
+      reason:
+        env.ENGINE_RELEASE_REMOTE === 'origin'
+          ? 'This checkout has no origin to fetch from.'
+          : `This checkout has no remote called "${env.ENGINE_RELEASE_REMOTE}" — ENGINE_RELEASE_REMOTE names one that does not exist here.`,
+    };
   }
 
   return { ok: true, target, remote };
@@ -249,15 +258,75 @@ type StepResult = { detail: string };
 /** Each step, in order. Nothing here interpolates anything from a request. */
 async function runStep(step: Step, target: string): Promise<StepResult> {
   switch (step) {
-    case 'fetch':
-      await git(['fetch', '--tags', '--prune', 'origin']);
-      return { detail: 'Fetched tags from origin.' };
+    case 'fetch': {
+      const remote = env.ENGINE_RELEASE_REMOTE;
+      const tag = `v${target}`;
+
+      /* Fetched into FETCH_HEAD, **never** with `--tags`.
+         
+         `--tags` writes the remote's tags into this checkout's own tag
+         namespace, and on a site that keeps its own tags that is a collision
+         waiting to happen: the engine's `v2.1.0` and the site's `v2.1.0` are
+         different commits with different trees, and whichever lands last wins
+         silently. Asking for one ref and reading FETCH_HEAD creates no local
+         tag at all, so the two namespaces cannot touch. */
+      try {
+        await git(['fetch', '--prune', remote, `refs/tags/${tag}`]);
+      } catch {
+        throw new Error(
+          `${tag} is not on the "${remote}" remote. A site that keeps its own repository has to have the release merged and tagged there first; a site cloned from the engine should have ENGINE_RELEASE_REMOTE pointing at it.`,
+        );
+      }
+
+      return { detail: `Fetched ${tag} from ${remote}.` };
+    }
 
     case 'checkout': {
-      // The tag is built from a validated semver, never from free text.
       const tag = `v${target}`;
-      await git(['checkout', '--quiet', tag]);
-      return { detail: `Checked out ${tag}.` };
+
+      /* Proved to be that release before anything is checked out.
+         
+         A tag is a label somebody moved by hand, and the one thing this step
+         must not do is check out a tree that is not the release it claims.
+         The failure is silent and expensive: a tag pointing at the engine's
+         own commit rather than at a site's merge of it takes the site's
+         deployment settings with it, and the update reports success. So the
+         version is read out of the commit itself and compared. */
+      const packageJson = await git(['show', 'FETCH_HEAD:engine/package.json']);
+      let found: string | undefined;
+      try {
+        found = (JSON.parse(packageJson) as { version?: string }).version;
+      } catch {
+        throw new Error(`${tag} does not look like an engine release — its engine/package.json could not be read.`);
+      }
+
+      if (found !== target) {
+        throw new Error(
+          `${tag} points at a tree whose version is ${found ?? 'unknown'}, not ${target}. Nothing has been changed. Check what that tag points at before updating.`,
+        );
+      }
+
+      /* Would this checkout throw away work that is only here?
+         
+         A site living in its own repository usually has commits of its own —
+         its container names, its ports, the pm2 process its server runs — and
+         checking out a release that does not contain them replaces them all
+         while reporting success. That is precisely how a site's deployment
+         settings vanish, and it is silent, so it is refused instead.
+         
+         Whoever owns the site decides how a release combines with their own
+         commits. That decision is a merge, and a merge belongs on a machine
+         where somebody can resolve a conflict — not on a production server
+         part-way through an update. So this names the problem and stops. */
+      const orphaned = await git(['rev-list', '--count', 'FETCH_HEAD..HEAD']);
+      if (orphaned !== '0') {
+        throw new Error(
+          `This site has ${orphaned} commit(s) of its own that ${tag} does not contain — checking it out would discard them. Merge ${tag} into this site's repository, tag the merge, and update again. Nothing has been changed.`,
+        );
+      }
+
+      await git(['checkout', '--quiet', 'FETCH_HEAD']);
+      return { detail: `Checked out ${tag}, verified as ${target}.` };
     }
 
     case 'install':

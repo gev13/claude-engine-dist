@@ -1,6 +1,14 @@
 {
-  "latest": "2.2.0",
+  "latest": "2.3.0",
   "releases": [
+    {
+      "version": "2.3.0",
+      "date": "2026-09-17",
+      "summary": "Updating is safer. An update now proves the release is the version it claims, and refuses to check one out over commits your own site has \u2014 your ports, your process name \u2014 instead of replacing them and reporting success. Release tags can no longer collide with your own.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.2.0",
       "date": "2026-09-17",
