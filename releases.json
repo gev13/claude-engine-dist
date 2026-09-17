@@ -1,6 +1,14 @@
 {
-  "latest": "2.4.0",
+  "latest": "2.4.1",
   "releases": [
+    {
+      "version": "2.4.1",
+      "date": "2026-09-17",
+      "summary": "Fixes the block spacing added in 2.2.0, which never appeared: the browser was refusing to load the page the panel measures, and a refusal looks exactly like a feature that does not work. The Design tab now shows each block\u2019s real padding and margin.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.4.0",
       "date": "2026-09-17",

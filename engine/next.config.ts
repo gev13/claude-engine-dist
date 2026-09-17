@@ -51,7 +51,28 @@ const csp = [
    fails if `frame-ancestors 'none'` stops applying to any other path. */
 export const BAND_PROBE_PATH = '/admin/band';
 
+/* The probe, which may be framed by this origin. */
 const probeCsp = csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'");
+
+/* The admin, which is the thing doing the framing.
+   ───────────────────────────────────────────────────────────────────────────
+   `frame-ancestors` says who may frame *me*; `frame-src` says what *I* may
+   frame. Relaxing only the first left the Design panel unable to load a page
+   from its own origin, so the spacing it measures silently came back empty —
+   a policy failure that looks exactly like a feature that does not work.
+   Public pages keep the narrow list: only the admin frames anything of ours. */
+const adminCsp = csp.replace('frame-src ', "frame-src 'self' ");
+
+const withCsp = (value: string, frameOptions?: string) =>
+  securityHeaders.map((header) =>
+    header.key === 'Content-Security-Policy'
+      ? { key: header.key, value }
+      : header.key === 'X-Frame-Options' && frameOptions
+        ? { key: header.key, value: frameOptions }
+        : header,
+  );
+
+const NOINDEX = { key: 'X-Robots-Tag', value: 'noindex, nofollow' };
 
 const securityHeaders = [
   { key: 'Content-Security-Policy', value: csp },
@@ -92,24 +113,18 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     return [
-      /* Everything but the probe. A negative lookahead rather than a second
-         rule layered on top, because two rules matching one path send two
-         `Content-Security-Policy` headers and a browser then enforces the
-         *intersection* — which would leave the probe unframable and the
-         reason invisible. */
-      { source: '/((?!admin/band$|admin/band/).*)', headers: securityHeaders },
-      {
-        source: '/admin/band/:path*',
-        headers: securityHeaders.map((header) =>
-          header.key === 'Content-Security-Policy'
-            ? { key: header.key, value: probeCsp }
-            : header.key === 'X-Frame-Options'
-              ? { key: header.key, value: 'SAMEORIGIN' }
-              : header,
-        ),
-      },
-      { source: '/admin/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
-      { source: '/api/:path*', headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }] },
+      /* Three policies, on sources that cannot both match one path.
+         
+         Overlap is the trap here, not omission: two rules matching a path
+         send two `Content-Security-Policy` headers, and a browser then
+         enforces the *intersection* of them — so a relaxation written as a
+         second rule layered on top does nothing at all, silently.
+         `tests/securityHeaders.test.ts` asserts exactly one matches. */
+      { source: '/admin/band/:path*', headers: [...withCsp(probeCsp, 'SAMEORIGIN'), NOINDEX] },
+      { source: '/admin/((?!band$|band/).*)', headers: [...withCsp(adminCsp), NOINDEX] },
+      { source: '/admin', headers: [...withCsp(adminCsp), NOINDEX] },
+      { source: '/((?!admin$|admin/).*)', headers: securityHeaders },
+      { source: '/api/:path*', headers: [NOINDEX] },
     ];
   },
 };

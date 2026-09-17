@@ -9,6 +9,28 @@ told about before taking it.
 
 ---
 
+## 2.4.1 — 2026-09-17
+
+**The block spacing added in 2.2.0 never actually appeared.** The Design tab
+went on saying "the block's own" instead of the real number, on every field.
+
+The measuring works by loading a small page and reading what the browser
+computes. The engine refuses to be put in a frame by anyone, and 2.2.0 relaxed
+that for the one page being measured — but not the other half of the rule,
+which governs whether the admin is allowed to load it. So the browser refused,
+and a refusal looks exactly like a feature that does not work: nothing broke,
+nothing was logged, the fields simply stayed empty.
+
+Both halves are now set, and only where they are needed: the admin may load
+that one page from its own address, and nothing else on the site may be framed
+by anybody. Every field on the base tab now shows the block's real padding and
+margin, and a different figure on each screen-size tab where the block changes
+with the width.
+
+No database changes.
+
+---
+
 ## 2.4.0 — 2026-09-17
 
 **One command to take a release into a site that has changes of its own.**
