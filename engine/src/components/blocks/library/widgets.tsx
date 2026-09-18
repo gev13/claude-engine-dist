@@ -6,6 +6,8 @@ import type { blockSchemas } from '@/lib/blocks';
 import type { TextTag } from '@/lib/blockStyle';
 import { areaPath, formatChartValue, linePath, linePoints, niceScale, percentOf, pieSlices } from '@/lib/chart';
 import type { Crumb } from '@/lib/seo/jsonld';
+import { MESSAGES, type MessageKey, type Messages } from '@/lib/messages';
+import { getMessages } from '@/server/content/messages';
 import { cn } from '@/lib/utils';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { BlockHead } from '../parts';
@@ -424,7 +426,17 @@ export function ReviewsBlock(p: P<'reviews'>) {
  * what search engines are told cannot drift apart. The block adds no
  * structured data of its own for the same reason.
  */
-export function BreadcrumbsBlock(p: P<'breadcrumbs'> & { trail?: Crumb[] }) {
+/* Async because it reads the engine's own words, which live in the database.
+   The registry already accepts a component that returns a promise.
+
+   `getMessages()` is called without a locale: a block is not told which one
+   the page is in. On a site whose default language is the one being read —
+   every single-language site — that is exact; elsewhere the label falls back
+   to the default language rather than the reader's. Still better than the
+   English that was compiled in, and the plumbing to do better is a locale
+   threaded through `BlockRenderer`, which is its own change. */
+export async function BreadcrumbsBlock(p: P<'breadcrumbs'> & { trail?: Crumb[] }) {
+  const t = messageReader(await getMessages());
   const trail = p.trail ?? [];
   const current = p.current || trail[trail.length - 1]?.name;
   const steps: Crumb[] =
@@ -437,7 +449,7 @@ export function BreadcrumbsBlock(p: P<'breadcrumbs'> & { trail?: Crumb[] }) {
   return (
     <div className={cn('he-crumbs-sec', toneClass(p.tone), `is-${p.align}`)}>
       <div className="shell">
-        <nav aria-label="Breadcrumb" className={cn('he-crumbs', `is-${p.style}`, `is-${p.separator}`)}>
+        <nav aria-label={t('block.breadcrumb')} className={cn('he-crumbs', `is-${p.style}`, `is-${p.separator}`)}>
           <ol>
             {all.map((c, i) => {
               const last = i === all.length - 1;
@@ -538,7 +550,8 @@ export function TextPathBlock(p: P<'textPath'>) {
 /* ── P3-A11: search ───────────────────────────────────────────────────────── */
 
 /** A plain GET form to the blog — it works before any script has loaded. */
-export function SearchBlock(p: P<'search'>) {
+export async function SearchBlock(p: P<'search'>) {
+  const t = messageReader(await getMessages());
   const minimal = p.style === 'minimal';
   return (
     <section className={cn('he-lsec he-srch-sec', toneClass(p.tone), `is-${p.align}`)}>
@@ -553,7 +566,7 @@ export function SearchBlock(p: P<'search'>) {
             maxLength={120}
             className="he-srch__input"
             placeholder={p.placeholder || 'Search articles'}
-            aria-label="Search the blog"
+            aria-label={t('block.searchTheBlog')}
             autoComplete="off"
             enterKeyHint="search"
           />
@@ -576,4 +589,9 @@ export function SearchBlock(p: P<'search'>) {
       </div>
     </section>
   );
+}
+
+/** The server-side twin of `useMessages`, for blocks that render on the server. */
+function messageReader(messages: Messages) {
+  return (key: MessageKey) => messages[key] ?? MESSAGES[key] ?? key;
 }

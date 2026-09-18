@@ -295,6 +295,43 @@ const localeFontSchema = z.object({
   mono: fontKey.optional(),
 });
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   Meaning colours, which are not the brand
+   ───────────────────────────────────────────────────────────────────────────
+   Open, closed, warning, a star, a line on a chart. These were written into
+   the stylesheets as literals, which was the right instinct and the wrong
+   mechanism: a "success" green that follows a brand accent stops meaning
+   success, so they must not simply become the palette — but a site whose own
+   colours fight them had no recourse at all.
+
+   So they are their own group, with the drawn-in values as defaults. A site
+   that changes nothing gets exactly what it has today; a site that needs its
+   amber to be a different amber can say so, without any of this being wired
+   to the accent.
+   ═══════════════════════════════════════════════════════════════════════════ */
+export const STATUS_DEFAULTS = {
+  success: '#3fb37f',
+  warning: '#e0a030',
+  danger: '#e05a4f',
+  rating: '#f2b01e',
+} as const;
+
+/* The first follows the brand accent, the rest are fixed — read from
+   `library-widgets.css`, where they are declared. */
+export const CHART_DEFAULTS = ['#d94f2b', '#4a93d9', '#e0a030', '#3fb37f', '#9b6ad8', '#d85a9b'] as const;
+
+const statusPalette = z.object({
+  /** Open now, a success notice. */
+  success: color.optional(),
+  warning: color.optional(),
+  /** Closed, a danger notice. */
+  danger: color.optional(),
+  /** The filled half of a star rating. */
+  rating: color.optional(),
+});
+
+export type StatusPalette = z.infer<typeof statusPalette>;
+
 export const themeSchema = z.object({
   colors: palette.optional(),
 
@@ -309,6 +346,30 @@ export const themeSchema = z.object({
 
   /** The blog's list and post layouts — see src/lib/blog.ts. */
   blog: blogSchema.optional(),
+
+  /**
+   * The text sizes inside blocks.
+   *
+   * Separate from the `body` type role, which governs prose generally: these
+   * are the sizes the block components were drawn with, and they are
+   * deliberately not pointed at the body role, because doing so would move
+   * every intro paragraph on every existing site by a pixel.
+   */
+  blockText: z
+    .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
+    .optional(),
+
+  /** Meaning colours — open, closed, warning, stars. Not the brand palette. */
+  status: statusPalette.optional(),
+
+  /**
+   * The six series colours a chart cycles through.
+   *
+   * An array rather than six fields: their *order* is what a reader follows
+   * between the chart and its legend, and six named fields would let somebody
+   * set the fourth without ever seeing the first three.
+   */
+  chart: z.array(color).max(6).optional(),
 
   linkUnderline: z.boolean().optional(),
 

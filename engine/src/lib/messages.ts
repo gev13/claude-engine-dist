@@ -82,6 +82,37 @@ export const MESSAGES = {
   'notFound.title': 'That page does not exist',
   'notFound.body': 'It may have moved, or the address may be wrong.',
   'notFound.home': 'Back to the home page',
+
+  /* ── Inside the blocks ────────────────────────────────────────────────
+     Controls a visitor operates rather than content an editor writes: the
+     arrows on a slider, the close button on a lightbox, the label a screen
+     reader hears for a nav. These were written into the components in
+     English, so an Armenian or Russian page kept saying "Next slide" — the
+     one thing on the hardcoded list that a *visitor* could see was wrong. */
+  'block.previousSlide': 'Previous slide',
+  'block.nextSlide': 'Next slide',
+  'block.slides': 'Slides',
+  'block.slidesScroll': 'Slides — scroll sideways',
+  'block.previousPicture': 'Previous picture',
+  'block.nextPicture': 'Next picture',
+  'block.pictureViewer': 'Picture viewer',
+  'block.closeVideo': 'Close video',
+  'block.close': 'Close',
+  'block.playlist': 'Playlist',
+  'block.previousPage': 'Previous page',
+  'block.nextPage': 'Next page',
+  'block.pages': 'Pages',
+  'block.sections': 'Sections',
+  'block.groups': 'Groups',
+  'block.views': 'Views',
+  'block.colour': 'Colour',
+  'block.previousColour': 'Previous colour',
+  'block.nextColour': 'Next colour',
+  'block.billingPeriod': 'Billing period',
+  'block.breadcrumb': 'Breadcrumb',
+  'block.dismiss': 'Dismiss this message',
+  'block.filterProjects': 'Filter projects',
+  'block.searchTheBlog': 'Search the blog',
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

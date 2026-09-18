@@ -42,7 +42,7 @@ export function HeroBlock(p: P<'hero'>) {
             {p.title}
           </BlockTitle>
           {p.lede && <Lede className="mb-5 max-w-[34ch] text-bone">{p.lede}</Lede>}
-          {p.body && <p className="mb-8 max-w-[58ch] text-[17px] text-ash">{p.body}</p>}
+          {p.body && <p className="mb-8 max-w-[58ch] text-[length:var(--he-block-lead,17px)] text-ash">{p.body}</p>}
           {p.links.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {p.links.map((l, i) => (
@@ -117,7 +117,7 @@ export function ProseBlock(p: P<'prose'>) {
                  text silently runs together — reported from real use. Runs of
                  spaces are still collapsed, so it does not turn prose into
                  preformatted text. */
-              <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[17px] text-ash first:mt-5">
+              <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-5">
                 {text}
               </p>
             ))}
@@ -128,7 +128,7 @@ export function ProseBlock(p: P<'prose'>) {
               <Prose html={p.html} />
             ) : (
               p.paragraphs.map((text, i) => (
-                <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[17px] text-ash first:mt-0">
+                <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-0">
                   {text}
                 </p>
               ))
@@ -154,7 +154,7 @@ export function SplitPointsBlock(p: P<'splitPoints'>) {
               <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.2] tracking-[-0.02em] text-bone">
                 {pt.title}
               </h3>
-              <p className="mt-2.5 max-w-[54ch] text-[16px] text-ash">{pt.body}</p>
+              <p className="mt-2.5 max-w-[54ch] text-[length:var(--he-block-text,16px)] text-ash">{pt.body}</p>
             </div>
           ))}
         </div>
@@ -223,7 +223,7 @@ export function NumberedListBlock(p: P<'numberedList'>) {
             <h3 className="mt-3 font-display text-[19px] font-extrabold leading-[1.2] tracking-[-0.02em] text-bone">
               {item.title}
             </h3>
-            <p className="mt-2.5 text-[15px] text-ash">{item.body}</p>
+            <p className="mt-2.5 text-[length:var(--he-block-small,15px)] text-ash">{item.body}</p>
           </li>
         ))}
       </ol>
@@ -272,7 +272,7 @@ export function CheckListsBlock(p: P<'checkLists'>) {
                 return (
                   <li
                     key={i}
-                    className={cn('he-ilist__item', rows && 'flex gap-3.5 border-t-2 border-hairline py-3.5 text-[16px] text-ash last:border-b-2')}
+                    className={cn('he-ilist__item', rows && 'flex gap-3.5 border-t-2 border-hairline py-3.5 text-[length:var(--he-block-text,16px)] text-ash last:border-b-2')}
                   >
                     <ListMarker icon={p.icon} iconUrl={p.iconUrl} n={i + 1} />
                     <span className="he-ilist__text">
@@ -393,7 +393,7 @@ export function CtaBlock(p: P<'cta'>) {
         <BlockTitle as={p.titleAs} className="max-w-[22ch] text-ink">
           {p.title}
         </BlockTitle>
-        {p.body && <p className="mt-5 max-w-[58ch] text-[17px] text-ink/85">{p.body}</p>}
+        {p.body && <p className="mt-5 max-w-[58ch] text-[length:var(--he-block-lead,17px)] text-ink/85">{p.body}</p>}
         {p.links.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-3">
             {p.links.map((l, i) => (
@@ -472,7 +472,7 @@ export function TableBlock(p: P<'table'>) {
         </BlockTitle>
       )}
       <div className="overflow-x-auto">
-        <table className="w-full min-w-[520px] border-collapse text-[15px]">
+        <table className="w-full min-w-[520px] border-collapse text-[length:var(--he-block-small,15px)]">
           <thead>
             <tr>
               {p.head.map((h) => (
@@ -515,7 +515,7 @@ export function InfoPanelBlock(p: P<'infoPanel'>) {
         {p.items.map((item) => (
           <div key={item.label} className="bg-ink px-6 py-6">
             <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{item.label}</dt>
-            <dd className="m-0 mt-2 text-[16px] text-bone">{item.value}</dd>
+            <dd className="m-0 mt-2 text-[length:var(--he-block-text,16px)] text-bone">{item.value}</dd>
           </div>
         ))}
       </dl>

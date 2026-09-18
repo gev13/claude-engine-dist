@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import { usePathname } from 'next/navigation';
 import { Children, type CSSProperties, useEffect, useId, useRef, useState } from 'react';
 import type { z } from 'zod';
@@ -65,6 +67,7 @@ export function ChartGrow({ animate, children }: { animate: boolean; children: R
 /* ── P3-A2: hotspots ──────────────────────────────────────────────────────── */
 
 export function HotspotsBlock(p: P<'hotspots'>) {
+  const t = useMessages();
   const [open, setOpen] = useState<number | null>(null);
   const root = useRef<HTMLElement>(null);
   const spots = useRef<(HTMLButtonElement | null)[]>([]);
@@ -102,7 +105,7 @@ export function HotspotsBlock(p: P<'hotspots'>) {
         className={cn('he-hs__card', `is-${where}`, point.x > 58 && 'is-flip-x')}
         style={{ '--x': `${point.x}%`, '--y': `${point.y}%` } as CSSProperties}
       >
-        <button type="button" className="he-hs__close" aria-label="Close" onClick={() => setOpen(null)}>
+        <button type="button" className="he-hs__close" aria-label={t('block.close')} onClick={() => setOpen(null)}>
           <Icon.Close size={14} />
         </button>
         {point.imageUrl && (
@@ -256,13 +259,14 @@ export function FlipBoxBlock(p: P<'flipBox'>) {
 /* ── P3-A4: price list tabs ───────────────────────────────────────────────── */
 
 export function PriceTabs({ labels, children }: { labels: string[]; children: React.ReactNode }) {
+  const t = useMessages();
   const [active, setActive] = useState(0);
   const id = useId();
   const panels = Children.toArray(children);
 
   return (
     <>
-      <div className="he-prl__tabs" role="tablist" aria-label="Groups" onKeyDown={arrowKeys(labels.length, active, setActive)}>
+      <div className="he-prl__tabs" role="tablist" aria-label={t('block.groups')} onKeyDown={arrowKeys(labels.length, active, setActive)}>
         {labels.map((label, i) => (
           <button
             key={label + i}

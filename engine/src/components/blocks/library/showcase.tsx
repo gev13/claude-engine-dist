@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import { type CSSProperties, useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';
@@ -175,6 +177,7 @@ function Player({ source, title, poster }: { source: VideoSource; title: string;
 }
 
 export function VideoBlock(p: P<'video'>) {
+  const t = useMessages();
   // P3-B8 — the first video, then the playlist. Each loads only when a visitor picks it.
   const items = useMemo(
     () => [{ source: p.source, videoTitle: p.videoTitle, posterUrl: p.posterUrl, duration: undefined as string | undefined }, ...p.playlist],
@@ -205,7 +208,7 @@ export function VideoBlock(p: P<'video'>) {
   };
 
   const list = items.length > 1 && (
-    <ol className="he-vlist" aria-label="Playlist">
+    <ol className="he-vlist" aria-label={t('block.playlist')}>
       {items.map((it, i) => (
         <li key={it.source + i}>
           <button type="button" className={cn('he-vlist__item', i === current && 'is-active')} aria-current={i === current ? 'true' : undefined} onClick={() => pick(i)}>
@@ -284,7 +287,7 @@ export function VideoBlock(p: P<'video'>) {
           <div className="he-vdialog__frame" style={ratioStyle(p.ratio)}>
             {playing && <Player key={current} source={source} title={item.videoTitle} poster={item.posterUrl} />}
           </div>
-          <button type="button" className="he-dialog-close" onClick={() => dialogRef.current?.close()} aria-label="Close video">
+          <button type="button" className="he-dialog-close" onClick={() => dialogRef.current?.close()} aria-label={t('block.closeVideo')}>
             <Icon.Close size={20} />
           </button>
         </dialog>
@@ -296,6 +299,7 @@ export function VideoBlock(p: P<'video'>) {
 /* ── EL11: gallery ────────────────────────────────────────────────────────── */
 
 export function GalleryBlock(p: P<'gallery'>) {
+  const t = useMessages();
   const [open, setOpen] = useState<number | null>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const count = p.images.length;
@@ -358,7 +362,7 @@ export function GalleryBlock(p: P<'gallery'>) {
         <dialog
           ref={dialogRef}
           className="he-lightbox"
-          aria-label="Picture viewer"
+          aria-label={t('block.pictureViewer')}
           onClose={() => setOpen(null)}
           onClick={closeOnBackdrop}
           onKeyDown={(e) => {
@@ -380,15 +384,15 @@ export function GalleryBlock(p: P<'gallery'>) {
           )}
           {count > 1 && (
             <>
-              <button type="button" className="he-lightbox__nav is-prev" onClick={() => go(-1)} aria-label="Previous picture">
+              <button type="button" className="he-lightbox__nav is-prev" onClick={() => go(-1)} aria-label={t('block.previousPicture')}>
                 <Icon.ArrowRight size={20} />
               </button>
-              <button type="button" className="he-lightbox__nav is-next" onClick={() => go(1)} aria-label="Next picture">
+              <button type="button" className="he-lightbox__nav is-next" onClick={() => go(1)} aria-label={t('block.nextPicture')}>
                 <Icon.ArrowRight size={20} />
               </button>
             </>
           )}
-          <button type="button" className="he-dialog-close" onClick={() => dialogRef.current?.close()} aria-label="Close">
+          <button type="button" className="he-dialog-close" onClick={() => dialogRef.current?.close()} aria-label={t('block.close')}>
             <Icon.Close size={20} />
           </button>
         </dialog>
@@ -481,6 +485,7 @@ function ProjectsCarousel(p: P<'projects'>) {
 }
 
 function ProjectsGrid(p: P<'projects'>) {
+  const t = useMessages();
   const categories = useMemo(
     () => Array.from(new Set(p.items.map((item) => item.category).filter((c): c is string => Boolean(c)))),
     [p.items],
@@ -518,7 +523,7 @@ function ProjectsGrid(p: P<'projects'>) {
       <div className="shell">
         <Head eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} />
         {p.filter && categories.length > 1 && (
-          <div className="he-proj__filter" role="group" aria-label="Filter projects">
+          <div className="he-proj__filter" role="group" aria-label={t('block.filterProjects')}>
             {[null, ...categories].map((c) => (
               <button
                 key={c ?? '*'}

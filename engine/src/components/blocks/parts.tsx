@@ -57,7 +57,7 @@ export function BlockHead({
           {title}
         </BlockTitle>
       )}
-      {intro && <p className="mt-4 max-w-[62ch] text-[17px] text-ash">{intro}</p>}
+      {intro && <p className="mt-4 max-w-[62ch] text-[length:var(--he-block-lead,17px)] text-ash">{intro}</p>}
     </div>
   );
 }

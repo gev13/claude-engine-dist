@@ -83,6 +83,30 @@ function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' = 'colors'): Dec
   return out;
 }
 
+/* Meaning colours and the chart series. Emitted only where a site set one —
+   the drawn-in defaults live in `globals.css` like every other `--he-*`, so an
+   untouched site's CSS is byte for byte what it was. */
+function statusDecls(theme: Theme): Decl[] {
+  const out: Decl[] = [];
+  const status = theme.status ?? {};
+  const blockText = theme.blockText ?? {};
+  push(out, '--he-block-lead', blockText.lead, isLength);
+  push(out, '--he-block-text', blockText.text, isLength);
+  push(out, '--he-block-small', blockText.small, isLength);
+
+  push(out, '--he-status-success', status.success, isColor);
+  push(out, '--he-status-warning', status.warning, isColor);
+  push(out, '--he-status-danger', status.danger, isColor);
+  push(out, '--he-status-rating', status.rating, isColor);
+
+  (theme.chart ?? []).forEach((value, i) => {
+    // The properties are one-based, matching what the stylesheet reads.
+    push(out, `--he-chart-${i + 1}`, value, isColor);
+  });
+
+  return out;
+}
+
 function layoutDecls(theme: Theme): Decl[] {
   const out: Decl[] = [];
   const layout = theme.layout ?? {};
@@ -240,6 +264,7 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   parts.push(
     block(safeSelector, [
       ...colorDecls(theme),
+      ...statusDecls(theme),
       ...layoutDecls(theme),
       ...typographyDecls(theme),
       ...buttonDecls(theme),

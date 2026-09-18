@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import { useId, useState } from 'react';
 import type { z } from 'zod';
 import type { blockSchemas } from '@/lib/blocks';
@@ -18,6 +20,7 @@ const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
  * inside <pre>, never as HTML.
  */
 export function WindowFrame(p: P) {
+  const t = useMessages();
   const base = useId();
   const [active, setActive] = useState(0);
   const tab = p.tabs[active] ?? p.tabs[0]!;
@@ -37,7 +40,7 @@ export function WindowFrame(p: P) {
             {p.address && <span className={p.chrome === 'browser' ? 'he-win__address' : 'he-win__title'}>{p.address}</span>}
           </div>
           {tabbed && (
-            <div role="tablist" aria-label="Views" className="he-win__tabs" onKeyDown={arrowKeys(p.tabs.length, active, setActive)}>
+            <div role="tablist" aria-label={t('block.views')} className="he-win__tabs" onKeyDown={arrowKeys(p.tabs.length, active, setActive)}>
               {p.tabs.map((t, i) => (
                 <button
                   key={t.label + i}

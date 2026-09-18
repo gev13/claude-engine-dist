@@ -9,6 +9,39 @@ told about before taking it.
 
 ---
 
+## 2.10.0 — 2026-09-18
+
+**Nothing on your site changes in this release.** Every default below is the
+value that was already compiled in. What changes is that you can now alter
+them.
+
+**Status colours are yours.** The green of an “open now”, the amber of a
+warning, the red of a closed sign, the gold of a star — and the six colours a
+chart cycles through. Appearance → Colours. They are kept apart from your
+palette on purpose: a success green that follows your brand accent stops
+meaning success, so they are not tied to it. Change them only if they clash.
+
+**Text sizes inside blocks are yours.** Intro paragraphs, card text and small
+print were fixed at 17, 16 and 15 pixels, written into the components in a way
+that silently overrode Appearance. They are now three fields under Typography.
+They are deliberately not merged into the body role — doing so would have moved
+every intro paragraph on every site by a pixel without anybody asking.
+
+**The words inside blocks can be translated.** Slider arrows, the close button
+on a picture viewer, page and breadcrumb labels — around two dozen phrases a
+screen reader announces were written in English inside the components, so they
+stayed English on an Armenian or Russian page. They are now in Site
+translations with everything else.
+
+One honest limit: a block is not told which language its page is in, so the
+breadcrumb and search labels fall back to your site's default language rather
+than the reader's. Labels that build a sentence from your content — “Compare
+this and that” — are still English and need a larger change.
+
+No database changes.
+
+---
+
 ## 2.9.0 — 2026-09-18
 
 **Space between cards.** A card grid now has a *Space between cards* field

@@ -325,8 +325,8 @@
   .he-hours__status { display: flex; align-items: center; gap: 10px; min-height: 1.6em; margin: 0 0 16px; font-size: 15px; font-weight: 600; color: var(--color-bone); }
   .he-hours__status::before { content: ''; flex-shrink: 0; width: 10px; height: 10px; border-radius: 50%; background: var(--color-smoke); }
   .he-hours__status.is-pending::before { visibility: hidden; }
-  .he-hours__status.is-open::before { background: #3fb37f; box-shadow: 0 0 0 4px color-mix(in srgb, #3fb37f 25%, transparent); }
-  .he-hours__status.is-closed::before { background: #e05a4f; }
+  .he-hours__status.is-open::before { background: var(--he-status-success); box-shadow: 0 0 0 4px color-mix(in srgb, var(--he-status-success) 25%, transparent); }
+  .he-hours__status.is-closed::before { background: var(--he-status-danger); }
   .he-hours.is-card .he-hours__status { margin: -28px -28px 18px; padding: 18px 28px; border-bottom: 1px solid var(--color-hairline); border-radius: 20px 20px 0 0; font-size: 17px; }
   .he-hours__list { display: grid; margin: 0; }
   .he-hours__row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--color-hairline); font-size: 15px; }
@@ -471,7 +471,7 @@
   .he-stars svg { flex-shrink: 0; width: 1.125em; height: 1em; }
   .he-stars__track svg { fill: color-mix(in srgb, var(--color-bone) 20%, transparent); }
   .he-stars__fill { position: absolute; inset: 0 auto 0 0; overflow: hidden; }
-  .he-stars__fill svg { fill: #f2b01e; }
+  .he-stars__fill svg { fill: var(--he-status-rating); }
 
   /* ── P3-A7: reviews ──────────────────────────────────────────────────── */
 

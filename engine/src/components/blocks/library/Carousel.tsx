@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import Link from 'next/link';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { z } from 'zod';
@@ -112,12 +114,13 @@ function Indicator({
   /** P4-A2 — thumbnails and chapter lists name their slides, so they need them. */
   slides?: readonly CarouselSlide[];
 }) {
+  const t = useMessages();
   if (kind === 'none' || count < 2) return null;
 
   // A filmstrip of the slides; a slide without a picture shows its number.
   if (kind === 'thumbs' && slides && slides.length > 0) {
     return (
-      <div className="he-ind he-ind--thumbs" role="tablist" aria-label="Slides">
+      <div className="he-ind he-ind--thumbs" role="tablist" aria-label={t('block.slides')}>
         {slides.map((s, i) => (
           <button
             key={i}
@@ -143,7 +146,7 @@ function Indicator({
   // The slide titles as the navigation, the way a chaptered slider reads.
   if (kind === 'chapters' && slides && slides.length > 0) {
     return (
-      <div className="he-ind he-ind--chapters" role="tablist" aria-label="Slides">
+      <div className="he-ind he-ind--chapters" role="tablist" aria-label={t('block.slides')}>
         {slides.map((s, i) => (
           <button
             key={i}
@@ -208,11 +211,11 @@ function Indicator({
   if (kind === 'capsule') {
     return (
       <div className="he-ind he-ind--capsule">
-        <button type="button" className="he-ind__step" aria-label="Previous slide" onClick={onPrev}>
+        <button type="button" className="he-ind__step" aria-label={t('block.previousSlide')} onClick={onPrev}>
           <Icon.Chevron dir="left" size={15} />
         </button>
         {dots}
-        <button type="button" className="he-ind__step" aria-label="Next slide" onClick={onNext}>
+        <button type="button" className="he-ind__step" aria-label={t('block.nextSlide')} onClick={onNext}>
           <Icon.Chevron dir="right" size={15} />
         </button>
       </div>
@@ -243,12 +246,13 @@ function Arrows({
   atEnd: boolean;
   className?: string;
 }) {
+  const t = useMessages();
   return (
     <div className={cn('he-arrows', className)}>
-      <button type="button" className="he-arrow is-prev" aria-label="Previous slide" onClick={onPrev} disabled={atStart}>
+      <button type="button" className="he-arrow is-prev" aria-label={t('block.previousSlide')} onClick={onPrev} disabled={atStart}>
         <Icon.Chevron dir="left" size={20} />
       </button>
-      <button type="button" className="he-arrow is-next" aria-label="Next slide" onClick={onNext} disabled={atEnd}>
+      <button type="button" className="he-arrow is-next" aria-label={t('block.nextSlide')} onClick={onNext} disabled={atEnd}>
         <Icon.Chevron dir="right" size={20} />
       </button>
     </div>
@@ -552,6 +556,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
 }
 
 function TrackCarousel(p: P) {
+  const t = useMessages();
   const rootRef = useRef<HTMLElement>(null);
   const trackRef = useRef<HTMLDivElement>(null);
   const count = p.slides.length;
@@ -642,7 +647,7 @@ function TrackCarousel(p: P) {
 
       <div className={cn('he-car__viewport', p.arrows === 'edge' && 'is-edge')}>
         {(p.arrows === 'side' || p.arrows === 'edge') && count > 1 && arrows}
-        <div ref={trackRef} className="he-car__track" onScroll={onScroll} tabIndex={0} aria-label="Slides — scroll sideways">
+        <div ref={trackRef} className="he-car__track" onScroll={onScroll} tabIndex={0} aria-label={t('block.slidesScroll')}>
           {p.slides.map((s, i) => (
             <div key={i} className="he-car__slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${count}`}>
               <CardSlide s={s} mode={mode} />
@@ -674,6 +679,7 @@ function TrackCarousel(p: P) {
 /* ── HR6: full-screen slider ──────────────────────────────────────────────── */
 
 function HeroSlider(p: P) {
+  const t = useMessages();
   const rootRef = useRef<HTMLElement>(null);
   const count = p.slides.length;
   const { active, go, next, prev } = useIndex(count, p.loop);
@@ -737,7 +743,7 @@ function HeroSlider(p: P) {
       </div>
 
       {p.strip.length > 0 && (
-        <nav className="he-cslide__strip" aria-label="Sections">
+        <nav className="he-cslide__strip" aria-label={t('block.sections')}>
           {p.strip.map((link) => (
             <Link key={link.href + link.label} href={link.href}>
               {link.label}

@@ -13,7 +13,7 @@ type Props = z.output<(typeof blockSchemas)['contactForm']>;
 const businessTypes = ['Operator', 'Sportsbook', 'Game studio', 'Aggregator', 'Platform provider', 'Payments', 'Other'];
 
 const fieldClass =
-  'w-full border-2 border-hairline bg-surface px-4 py-3 text-[16px] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none';
+  'w-full border-2 border-hairline bg-surface px-4 py-3 text-[length:var(--he-block-text,16px)] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none';
 
 const labelClass = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-smoke';
 
@@ -69,7 +69,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
       <Section size="lg">
         <div className="max-w-[52ch] border-l-2 border-flare pl-6">
           <h2 className="display m-0 text-[clamp(24px,3.4vw,32px)]">Thanks — that&apos;s with us.</h2>
-          <p className="mt-4 text-[17px] text-ash">
+          <p className="mt-4 text-[length:var(--he-block-lead,17px)] text-ash">
             We read every enquiry ourselves. Expect a reply from a senior consultant, usually within one working day.
           </p>
         </div>
@@ -158,7 +158,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
         </div>
 
         {state === 'error' && (
-          <p role="alert" className="col-span-full m-0 border-l-2 border-flare pl-4 text-[15px] text-flare-soft">
+          <p role="alert" className="col-span-full m-0 border-l-2 border-flare pl-4 text-[length:var(--he-block-small,15px)] text-flare-soft">
             {error}
           </p>
         )}

@@ -53,7 +53,7 @@ export async function PostListBlock(p: P<'postList'>) {
       <Section tone={p.tone ?? 'base'} size="lg">
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align="center" className="mb-10" />
         {posts.length === 0 ? (
-          <p className="m-0 text-center text-[16px] text-smoke">Nothing published here yet.</p>
+          <p className="m-0 text-center text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
         ) : (
           <>
             <ul className="he-news" style={{ '--cols': p.columns } as React.CSSProperties}>
@@ -105,7 +105,7 @@ export async function PostListBlock(p: P<'postList'>) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {posts.length === 0 ? (
-        <p className="m-0 text-[16px] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
       ) : (
         <CardGrid cols={p.columns}>
           {posts.map((post) => (
@@ -191,7 +191,7 @@ function FeaturedPosts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {!lead ? (
-        <p className="m-0 text-[16px] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
       ) : (
         <div className={cn('he-feat', rest.length === 0 && 'is-single')}>
           <Link href={`${site.blogBase}/${lead.slug}`} className="he-feat__lead">
@@ -305,7 +305,7 @@ function PostLayouts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {posts.length === 0 ? (
-        <p className="m-0 text-[16px] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
       ) : (
         <PostCollection posts={posts} variant={p.variant as PostListVariant} columns={p.columns} pagination={p.pagination} perPage={p.perPage} />
       )}

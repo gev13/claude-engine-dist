@@ -94,6 +94,32 @@
     --he-selection: var(--color-flare);
     --he-radius: 0px;
 
+    /* ── Meaning colours ───────────────────────────────────────────────
+       Open, closed, warning, a star. Not the brand palette, on purpose: a
+       success green that follows the accent stops meaning success. Editable
+       under Appearance → Status colours; these are what a site gets when it
+       changes nothing, and they are the values that were written into the
+       stylesheets before this existed. */
+    /* ── Text inside blocks ────────────────────────────────────────────
+       These were written into the components as `text-[17px]` and friends,
+       which sits in Tailwind's utilities layer and therefore beats the
+       theme's base-layer rule — so every one of them silently opted that
+       paragraph out of Appearance.
+
+       The defaults are the numbers that were compiled in, to the pixel, so a
+       site that changes nothing looks exactly as it did. They are not simply
+       pointed at `--he-body-size` (16px) for that reason: doing so would
+       have restyled every intro paragraph on every existing site by a pixel,
+       discovered after the fact. */
+    --he-block-lead: 17px;
+    --he-block-text: 16px;
+    --he-block-small: 15px;
+
+    --he-status-success: #3fb37f;
+    --he-status-warning: #e0a030;
+    --he-status-danger: #e05a4f;
+    --he-status-rating: #f2b01e;
+
     --he-body-family: var(--font-sans);
     --he-body-size: 16px;
     --he-body-weight: 400;

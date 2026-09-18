@@ -95,9 +95,9 @@
     font-size: 15px;
     line-height: 1.5;
   }
-  .he-notice.is-success { --n: #3fb37f; }
-  .he-notice.is-warning { --n: #e0a030; }
-  .he-notice.is-danger { --n: #e05a4f; }
+  .he-notice.is-success { --n: var(--he-status-success); }
+  .he-notice.is-warning { --n: var(--he-status-warning); }
+  .he-notice.is-danger { --n: var(--he-status-danger); }
   .he-notice.is-w-fit { display: inline-flex; max-width: 100%; }
   .he-notice.is-small { padding: 10px 14px; font-size: 14px; }
   .he-notice.is-large { padding: 22px 26px; font-size: 17px; }

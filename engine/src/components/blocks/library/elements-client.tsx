@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import type { z } from 'zod';
@@ -139,6 +141,7 @@ const NOTICE_ICON: Record<string, React.ReactNode> = {
 const NOTICE_LABEL = { info: 'Note', success: 'Success', warning: 'Warning', danger: 'Important' } as const;
 
 export function NoticeBlock(p: P<'notice'>) {
+  const t = useMessages();
   const [hidden, setHidden] = useState(false);
   if (hidden) return null;
   return (
@@ -164,7 +167,7 @@ export function NoticeBlock(p: P<'notice'>) {
             )}
           </div>
           {p.dismissible && (
-            <button type="button" className="he-notice__close" aria-label="Dismiss this message" onClick={() => setHidden(true)}>
+            <button type="button" className="he-notice__close" aria-label={t('block.dismiss')} onClick={() => setHidden(true)}>
               <Icon.Close size={14} />
             </button>
           )}
@@ -309,6 +312,7 @@ export function CountdownBlock(p: P<'countdown'>) {
 /* ── EL7: pricing ─────────────────────────────────────────────────────────── */
 
 export function PricingBlock(p: P<'pricing'>) {
+  const t = useMessages();
   const [yearly, setYearly] = useState(false);
   const switching = p.billing === 'switch';
   const select = (i: number) => setYearly(i === 1);
@@ -318,7 +322,7 @@ export function PricingBlock(p: P<'pricing'>) {
       <div className="shell">
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align="center" />
         {switching && (
-          <div className="he-price__switch" role="radiogroup" aria-label="Billing period" onKeyDown={arrowKeys(2, yearly ? 1 : 0, select)}>
+          <div className="he-price__switch" role="radiogroup" aria-label={t('block.billingPeriod')} onKeyDown={arrowKeys(2, yearly ? 1 : 0, select)}>
             {[p.monthlyLabel || 'Monthly', p.yearlyLabel || 'Yearly'].map((label, i) => (
               <button
                 key={label}

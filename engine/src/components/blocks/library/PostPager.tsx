@@ -1,5 +1,7 @@
 'use client';
 
+import { useMessages } from '@/components/site/Messages';
+
 import { useEffect, useRef, useState } from 'react';
 
 /**
@@ -24,6 +26,7 @@ export function PostPager({
   className: string;
   style?: React.CSSProperties;
 }) {
+  const t = useMessages();
   const [page, setPage] = useState(0);
   const [shown, setShown] = useState(perPage);
   const listRef = useRef<HTMLUListElement>(null);
@@ -63,8 +66,8 @@ export function PostPager({
         </div>
       )}
       {mode === 'pages' && pages > 1 && (
-        <nav className="he-pager" aria-label="Pages">
-          <button type="button" className="he-pager__btn" onClick={() => goTo(page - 1)} disabled={page === 0} aria-label="Previous page">
+        <nav className="he-pager" aria-label={t('block.pages')}>
+          <button type="button" className="he-pager__btn" onClick={() => goTo(page - 1)} disabled={page === 0} aria-label={t('block.previousPage')}>
             ‹
           </button>
           {Array.from({ length: pages }, (_, i) => (
@@ -79,7 +82,7 @@ export function PostPager({
               {i + 1}
             </button>
           ))}
-          <button type="button" className="he-pager__btn" onClick={() => goTo(page + 1)} disabled={page === pages - 1} aria-label="Next page">
+          <button type="button" className="he-pager__btn" onClick={() => goTo(page + 1)} disabled={page === pages - 1} aria-label={t('block.nextPage')}>
             ›
           </button>
         </nav>

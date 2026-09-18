@@ -11,6 +11,8 @@ import {
   BREAKPOINTS,
   BUTTON_VARIANTS,
   BUTTON_VARIANT_LABELS,
+  CHART_DEFAULTS,
+  STATUS_DEFAULTS,
   TYPE_ROLES,
   TYPE_ROLE_LABELS,
   emptyTheme,
@@ -329,6 +331,50 @@ function AppearanceScreenInner() {
                   Underline links in rich text
                 </label>
               </Panel>
+
+              {/* Kept apart from the palette on purpose: these carry meaning
+                  rather than brand, and wiring them to the accent would make a
+                  "success" green stop meaning success. Empty follows the
+                  shipped value, like every other field here. */}
+              <Panel title="Status colours">
+                <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                  Used where a colour says something rather than decorates: an open or closed sign, a
+                  notice, the filled half of a star. They are deliberately not tied to your accent —
+                  change them only if they clash with your palette.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <ColorField label="Open · success" value={get(['status', 'success'])} inherited={STATUS_DEFAULTS.success} onChange={set(['status', 'success'])} />
+                  <ColorField label="Warning" value={get(['status', 'warning'])} inherited={STATUS_DEFAULTS.warning} onChange={set(['status', 'warning'])} />
+                  <ColorField label="Closed · danger" value={get(['status', 'danger'])} inherited={STATUS_DEFAULTS.danger} onChange={set(['status', 'danger'])} />
+                  <ColorField label="Star rating" value={get(['status', 'rating'])} inherited={STATUS_DEFAULTS.rating} onChange={set(['status', 'rating'])} />
+                </div>
+              </Panel>
+
+              <Panel title="Chart colours">
+                <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                  The six a chart cycles through, in order. The first follows your accent unless you
+                  change it here.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  {CHART_DEFAULTS.map((fallback, i) => (
+                    <ColorField
+                      key={i}
+                      label={`Series ${i + 1}`}
+                      value={(theme.chart ?? [])[i]}
+                      inherited={fallback}
+                      onChange={(next) => {
+                        /* Held as a dense array: a gap would shift every later
+                           series when the theme is read back. */
+                        const series = [...(theme.chart ?? [])];
+                        while (series.length < CHART_DEFAULTS.length) series.push(CHART_DEFAULTS[series.length]!);
+                        series[i] = next ?? CHART_DEFAULTS[i]!;
+                        const untouched = series.every((c, n) => c === CHART_DEFAULTS[n]);
+                        setTheme((c) => ({ ...c, chart: untouched ? undefined : series }));
+                      }}
+                    />
+                  ))}
+                </div>
+              </Panel>
             </>
           )}
 
@@ -379,6 +425,22 @@ function AppearanceScreenInner() {
                       <LengthField label="Letter spacing" value={get(['typography', role, bp.key as BreakpointKey, 'letterSpacing'])} inherited={get(['typography', role, 'base', 'letterSpacing']) ?? defaults[typeVar(role, 'letterSpacing')]} onChange={set(['typography', role, bp.key, 'letterSpacing'])} />
                     </div>
                   ))}
+                </div>
+              </Panel>
+
+              {/* Kept out of the roles above because these are not a role:
+                  they are the sizes the block components were drawn with, and
+                  pointing them at the body role would move every intro
+                  paragraph on every existing site by a pixel. */}
+              <Panel title="Text inside blocks">
+                <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                  Paragraph sizes used by the blocks themselves — intros, card text, small print.
+                  Empty keeps the size each block was drawn with.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <LengthField label="Intro and lead text" inherited={defaults['--he-block-lead']} value={get(['blockText', 'lead'])} onChange={set(['blockText', 'lead'])} />
+                  <LengthField label="Standard" inherited={defaults['--he-block-text']} value={get(['blockText', 'text'])} onChange={set(['blockText', 'text'])} />
+                  <LengthField label="Secondary" inherited={defaults['--he-block-small']} value={get(['blockText', 'small'])} onChange={set(['blockText', 'small'])} />
                 </div>
               </Panel>
 
