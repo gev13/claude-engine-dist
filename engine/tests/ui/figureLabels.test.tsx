@@ -91,3 +91,66 @@ describe('the two diagrams want different words', () => {
     expect(onChange.mock.calls.at(-1)![0].labels).toEqual(mine);
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The same diagram, drawn by two different blocks
+   ───────────────────────────────────────────────────────────────────────────
+   A hero draws this picture from its own `figureLabels`; the figure block
+   draws it from `labels`. Fixing only the figure block left somebody typing
+   into the control that was not driving their diagram, and watching the page
+   not change — which is what was reported, and looked like a save that did
+   not work.
+
+   A converge diagram draws exactly three labels, so a fourth row was a box
+   that did nothing.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('a hero that draws the diagram itself', () => {
+  it('shows the words on the page, not an empty list', () => {
+    const { container } = render(
+      <BlockFields type="hero" props={{ figure: 'converge', figureLabels: [] }} set={() => {}} />,
+    );
+    for (const word of FIGURE_LABELS.converge) {
+      expect(boxes(container), word).toContain(word);
+    }
+  });
+
+  it('keeps labels somebody wrote', () => {
+    const { container } = render(
+      <BlockFields type="hero" props={{ figure: 'converge', figureLabels: ['Hexens', 'BetBoyz', 'GameGuardz'] }} set={() => {}} />,
+    );
+    expect(boxes(container)).toContain('Hexens');
+    expect(boxes(container)).not.toContain('SOURCE A');
+  });
+
+  it('offers nothing when the hero has no diagram at all', () => {
+    const { container } = render(<BlockFields type="hero" props={{ figure: 'none' }} set={() => {}} />);
+    expect(boxes(container)).not.toContain('SOURCE A');
+  });
+});
+
+describe('the number of labels a diagram will draw', () => {
+  const addLine = (root: HTMLElement) =>
+    [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add line');
+
+  it('stops offering a fourth on a converge diagram, which draws three', () => {
+    const { container } = render(
+      <BlockFields type="figure" props={{ kind: 'converge', labels: ['A', 'B', 'C'] }} set={() => {}} />,
+    );
+    expect(addLine(container)).toBeUndefined();
+  });
+
+  it('still offers more on a layer stack, which draws up to five', () => {
+    const { container } = render(
+      <BlockFields type="figure" props={{ kind: 'layers', labels: ['A', 'B', 'C'] }} set={() => {}} />,
+    );
+    expect(addLine(container)).toBeTruthy();
+  });
+
+  it('applies the same cap to the hero’s own diagram', () => {
+    const { container } = render(
+      <BlockFields type="hero" props={{ figure: 'converge', figureLabels: ['A', 'B', 'C'] }} set={() => {}} />,
+    );
+    expect(addLine(container)).toBeUndefined();
+  });
+});

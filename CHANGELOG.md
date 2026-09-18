@@ -9,6 +9,25 @@ told about before taking it.
 
 ---
 
+## 2.11.2 — 2026-09-18
+
+**The other place that diagram comes from.** A hero can draw the converging
+diagram beside its heading, from its *own* labels — a separate setting from
+the figure block that draws the same picture. 2.11.1 fixed the figure block's
+empty label list and left the hero's exactly as it was, so if your diagram
+comes from a hero you were typing into a box that was never driving it, and
+the page quite correctly did not change.
+
+Both now show the words that are on the page, ready to be typed over.
+
+**A fourth label on a converging diagram no longer offers itself.** That
+diagram draws three — two sources and what they meet at — so a fourth box was
+somewhere to type that could never appear. The layer stack still takes five.
+
+No database changes.
+
+---
+
 ## 2.11.1 — 2026-09-18
 
 **The words in a diagram can be edited.** The figure block draws “SOURCE A”,

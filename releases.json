@@ -1,6 +1,14 @@
 {
-  "latest": "2.11.1",
+  "latest": "2.11.2",
   "releases": [
+    {
+      "version": "2.11.2",
+      "date": "2026-09-18",
+      "summary": "A hero draws the converging diagram from its own labels, separately from the figure block. 2.11.1 fixed one and not the other, so editing the wrong one changed nothing. Both now show the words on the page, and a converge diagram stops offering a fourth label it cannot draw.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.11.1",
       "date": "2026-09-18",

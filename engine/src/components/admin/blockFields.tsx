@@ -428,12 +428,15 @@ function StringListRepeater({
   onChange,
   multiline = false,
   hint,
+  max,
 }: {
   label: string;
   items: string[];
   onChange: (n: string[]) => void;
   multiline?: boolean;
   hint?: string;
+  /** Offer no more rows than the thing being edited will actually use. */
+  max?: number;
 }) {
   const update = (i: number, next: string) => onChange(items.map((v, j) => (j === i ? next : v)));
 
@@ -459,9 +462,11 @@ function StringListRepeater({
           </AdminButton>
         </div>
       ))}
-      <AdminButton variant="secondary" type="button" onClick={() => onChange([...items, ''])}>
-        Add line
-      </AdminButton>
+      {(max === undefined || items.length < max) && (
+        <AdminButton variant="secondary" type="button" onClick={() => onChange([...items, ''])}>
+          Add line
+        </AdminButton>
+      )}
     </div>
   );
 }
@@ -1124,13 +1129,24 @@ function ClassicHeroFigure({ props, set }: { props: Props; set: Setter }) {
         </Select>
       </Field>
       {(str(props, 'figure') === 'converge' || str(props, 'figure') === 'layers') && (
+        /* The hero draws this diagram itself, from its own `figureLabels` —
+           a separate thing from the `figure` block, which draws the same
+           picture from `labels`. Both had an empty list while the page showed
+           "SOURCE A", and fixing only one of them left somebody editing the
+           control that was not driving their diagram. */
         <StringListRepeater
           label={
             str(props, 'figure') === 'converge'
               ? 'Figure labels — first source, second source, destination'
               : 'Figure labels — outermost first; the last is highlighted'
           }
-          items={arr<string>(props, 'figureLabels')}
+          hint="These are the words drawn in the diagram. Type over them."
+          max={str(props, 'figure') === 'converge' ? 3 : 5}
+          items={
+            arr<string>(props, 'figureLabels').length > 0
+              ? arr<string>(props, 'figureLabels')
+              : [...FIGURE_LABELS[(str(props, 'figure') || 'converge') as keyof typeof FIGURE_LABELS]]
+          }
           onChange={(figureLabels) => set({ ...props, figureLabels })}
         />
       )}
@@ -4581,6 +4597,7 @@ function TypeFields({
                 : 'Labels — first source, second source, destination'
             }
             hint="These are the words drawn in the diagram. Type over them."
+            max={str(props, 'kind') === 'layers' ? 5 : 3}
             items={
               arr<string>(props, 'labels').length > 0
                 ? arr<string>(props, 'labels')
