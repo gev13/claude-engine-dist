@@ -24,15 +24,15 @@
     cursor: pointer;
   }
   .he-faq__answer { max-width: 70ch; margin: 0; padding: 0 24px 22px; font-size: 16px; color: var(--color-ash); }
-  .he-faq.is-filled .he-faq__item { border-radius: 14px; background: var(--color-surface); transition: background-color 200ms; }
+  .he-faq.is-filled .he-faq__item { border-radius: 14px; background: var(--color-surface); transition: background-color calc(200ms * var(--he-motion, 1)); }
   .is-raised .he-faq.is-filled .he-faq__item { background: var(--color-surface-2); }
   .he-faq.is-filled .he-faq__item.is-open { background: color-mix(in srgb, var(--color-flare) 10%, var(--color-surface)); }
-  .he-faq.is-outlined .he-faq__item { border: 1px solid var(--color-hairline); border-radius: 14px; transition: border-color 200ms; }
+  .he-faq.is-outlined .he-faq__item { border: 1px solid var(--color-hairline); border-radius: 14px; transition: border-color calc(200ms * var(--he-motion, 1)); }
   .he-faq.is-outlined .he-faq__item.is-open { border-color: var(--color-bone); }
   .he-faq.is-contained { gap: 0; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: 18px; background: var(--color-surface); }
   .he-faq.is-contained .he-faq__item + .he-faq__item { border-top: 1px solid var(--color-hairline); }
   .he-faq__btn:focus-visible { outline: 3px solid var(--color-flare); outline-offset: -3px; border-radius: 14px; }
-  .he-faq__marker { display: grid; flex-shrink: 0; place-items: center; margin-top: 2px; color: var(--color-flare); transition: transform 250ms; }
+  .he-faq__marker { display: grid; flex-shrink: 0; place-items: center; margin-top: 2px; color: var(--color-flare); transition: transform calc(250ms * var(--he-motion, 1)); }
   .he-faq__marker.is-chevron.is-open { transform: rotate(180deg); }
   .he-faq__marker.is-arrow.is-open { transform: rotate(90deg); }
 
@@ -44,12 +44,12 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1.2fr) minmax(0, 1fr) auto;
     align-items: center;
-    gap: 28px;
+    gap: var(--he-gap, 28px);
     padding: 28px 32px;
     border: 1px solid var(--color-hairline);
     border-radius: var(--he-card-radius);
     background: var(--color-surface);
-    transition: transform 250ms, box-shadow 250ms, border-color 250ms;
+    transition: transform calc(250ms * var(--he-motion, 1)), box-shadow calc(250ms * var(--he-motion, 1)), border-color calc(250ms * var(--he-motion, 1));
   }
   .is-raised .he-rows__item { background: var(--color-surface-2); }
   .he-rows__item:not(:has(.he-rows__icon)) { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) auto; }
@@ -76,7 +76,7 @@
     justify-content: flex-end;
     isolation: isolate;
   }
-  .he-ocard__bg { position: absolute; inset: 0; z-index: -2; transition: transform 700ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-ocard__bg { position: absolute; inset: 0; z-index: -2; transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-ocard::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgb(0 0 0 / 0.78), rgb(0 0 0 / 0.05) 62%); pointer-events: none; }
   .he-ocard__text { padding: 28px; }
   .he-ocard__eyebrow { margin-bottom: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
@@ -87,7 +87,7 @@
 
   .he-fgrid.is-hover-zoom .he-fgrid__item:hover .he-fill { transform: scale(1.06); }
   /* `translate`, not `transform`, so a lift adds to an offset column's own shift. */
-  .he-fgrid.is-hover-lift .he-fgrid__item { transition: translate 250ms, box-shadow 250ms; }
+  .he-fgrid.is-hover-lift .he-fgrid__item { transition: translate calc(250ms * var(--he-motion, 1)), box-shadow calc(250ms * var(--he-motion, 1)); }
   .he-fgrid.is-hover-lift .he-fgrid__item:hover { translate: 0 -6px; }
   .he-fgrid.has-shadow .he-icard__media,
   .he-fgrid.has-shadow.is-overlay .he-ocard { box-shadow: 0 28px 56px -30px rgb(0 0 0 / 0.75); }
@@ -143,7 +143,7 @@
 
   /* ── V10: counters ───────────────────────────────────────────────────── */
 
-  .he-counters__grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: 40px 32px; margin: 48px 0 0; padding: 0; list-style: none; }
+  .he-counters__grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: var(--he-gap, 40px 32px); margin: 48px 0 0; padding: 0; list-style: none; }
   .he-counter { display: flex; flex-direction: column; align-items: center; gap: 16px; text-align: center; }
   .he-counters__grid.is-icon-left .he-counter { flex-direction: row; align-items: center; justify-content: center; text-align: left; }
   .he-counter__icon { display: grid; flex-shrink: 0; place-items: center; width: 56px; height: 56px; border-radius: 16px; background: var(--color-surface); }
@@ -174,7 +174,7 @@
   @media (width <= 48rem) {
     .he-faq__btn { padding: 16px 18px; gap: 16px; }
     .he-faq__answer { padding: 0 18px 18px; font-size: 15px; }
-    .he-rows__item, .he-rows__item:not(:has(.he-rows__icon)) { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 22px; }
+    .he-rows__item, .he-rows__item:not(:has(.he-rows__icon)) { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 16px); padding: 22px; }
     .he-rows__points { grid-column: auto; grid-row: auto; grid-template-columns: minmax(0, 1fr); }
     .he-rows__btn { justify-self: start; }
     .he-ocard { min-height: 320px; }
@@ -193,7 +193,7 @@
   /* ── Merged blocks ───────────────────────────────────────────────────── */
 
   /* Heading: the old statement block's split layout and lede size. */
-  .he-hd__split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 32px 56px; }
+  .he-hd__split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: var(--he-gap, 32px 56px); }
   /* Where the subtitle sits against the heading. `center` was the only
      behaviour and stays the default, so stored headings do not move. */
   .he-hd__split.is-v-top { align-items: start; }

@@ -1,6 +1,14 @@
 {
-  "latest": "2.10.0",
+  "latest": "2.11.0",
   "releases": [
+    {
+      "version": "2.11.0",
+      "date": "2026-09-18",
+      "summary": "Space between items and animation speed are now settings \u2014 site-wide under Appearance, and per block in its Design tab. Left empty, every block keeps what it was drawn with, so nothing changes until you ask it to.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.10.0",
       "date": "2026-09-18",

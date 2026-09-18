@@ -24,11 +24,11 @@
   .he-post-hero::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgb(0 0 0 / 0.85), rgb(0 0 0 / 0.55) 55%, rgb(0 0 0 / 0.12) 85%); }
   .he-post-hero__text { width: 100%; padding-block: 140px 64px; }
 
-  .he-post-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: 56px; }
+  .he-post-split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; gap: var(--he-gap, 56px); }
   .he-post-split .he-post__cover { margin-top: 0; aspect-ratio: 4 / 5; }
 
   @media (width <= 64rem) {
-    .he-post-split { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .he-post-split { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 36px); }
     .he-post-split .he-post__cover { aspect-ratio: 16 / 10; }
     .he-post-hero { min-height: min(72svh, 640px); }
   }

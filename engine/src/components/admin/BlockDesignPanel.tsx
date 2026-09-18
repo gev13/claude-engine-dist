@@ -218,6 +218,33 @@ export function BlockDesignPanel({
           })}
         </div>
 
+        {/* Not per breakpoint: these are one decision about the block, and
+            four tabs of them would be four ways to be inconsistent. */}
+        {spacingTab === 'base' && (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <LengthField
+              label="Space between items"
+              hint="cards, tiles, list entries — not the spacing inside them"
+              value={current.gap}
+              emptyLabel="each block's own"
+              onChange={set(['gap'])}
+            />
+            <Field label="Animation speed" hint="1 is normal; 0.5 is twice as fast">
+              <Select
+                value={current.motion === undefined ? '' : String(current.motion)}
+                onChange={(e) => set(['motion'])(e.target.value === '' ? undefined : Number(e.target.value))}
+              >
+                <option value="">Normal</option>
+                <option value="0">Off</option>
+                <option value="0.5">Twice as fast</option>
+                <option value="0.75">A little faster</option>
+                <option value="1.5">A little slower</option>
+                <option value="2">Twice as slow</option>
+              </Select>
+            </Field>
+          </div>
+        )}
+
         <div className="grid gap-3 sm:grid-cols-4">
           {BOX_SIDES.map(([key, label]) => (
             <LengthField

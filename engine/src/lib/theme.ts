@@ -359,6 +359,18 @@ export const themeSchema = z.object({
     .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
     .optional(),
 
+  /**
+   * Site-wide spacing between the items a block lays out, and how fast
+   * everything animates.
+   *
+   * Both are the same shape as the per-block controls in the Design tab and
+   * are overridden by them. Unset means each block keeps the value it was
+   * drawn with — which is why this is not a number with a default: a single
+   * gap for every block would flatten spacing that differs on purpose.
+   */
+  motion: z.number().min(0).max(5).optional(),
+  gap: length.optional(),
+
   /** Meaning colours — open, closed, warning, stars. Not the brand palette. */
   status: statusPalette.optional(),
 

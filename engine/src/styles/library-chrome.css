@@ -117,7 +117,7 @@
     font-weight: 700;
     line-height: 1.05;
     letter-spacing: -0.03em;
-    transition: color 150ms;
+    transition: color calc(150ms * var(--he-motion, 1));
   }
   .he-menu.is-fullscreen .he-menu__row:hover { color: var(--color-flare-soft); }
   .he-menu.is-fullscreen .he-menu__sub { padding: 4px 0 18px; }
@@ -130,15 +130,15 @@
     height: 44px;
     border: 1px solid var(--color-hairline);
     border-radius: 999px;
-    transition: transform 250ms, border-color 250ms;
+    transition: transform calc(250ms * var(--he-motion, 1)), border-color calc(250ms * var(--he-motion, 1));
   }
   .he-menu__plus.is-open { border-color: var(--color-flare); transform: rotate(45deg); }
-  .he-menu.is-fullscreen .he-menu__list > li { animation: he-menu-rise 500ms cubic-bezier(0.2, 0.7, 0.2, 1) both; }
-  .he-menu.is-fullscreen .he-menu__list > li:nth-child(2) { animation-delay: 50ms; }
-  .he-menu.is-fullscreen .he-menu__list > li:nth-child(3) { animation-delay: 100ms; }
-  .he-menu.is-fullscreen .he-menu__list > li:nth-child(4) { animation-delay: 150ms; }
-  .he-menu.is-fullscreen .he-menu__list > li:nth-child(5) { animation-delay: 200ms; }
-  .he-menu.is-fullscreen .he-menu__list > li:nth-child(n + 6) { animation-delay: 250ms; }
+  .he-menu.is-fullscreen .he-menu__list > li { animation: he-menu-rise calc(500ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(2) { animation-delay: calc(50ms * var(--he-motion, 1)); }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(3) { animation-delay: calc(100ms * var(--he-motion, 1)); }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(4) { animation-delay: calc(150ms * var(--he-motion, 1)); }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(5) { animation-delay: calc(200ms * var(--he-motion, 1)); }
+  .he-menu.is-fullscreen .he-menu__list > li:nth-child(n + 6) { animation-delay: calc(250ms * var(--he-motion, 1)); }
 
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }

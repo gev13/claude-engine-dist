@@ -478,6 +478,7 @@ function AppearanceScreenInner() {
           )}
 
           {tab === 'Layout' && (
+            <>
             <Panel title="Page structure">
               <div className="grid gap-4 sm:grid-cols-2">
                 <LengthField label="Container width" hint="the standard content column" placeholder="1200px" value={get(['layout', 'containerWidth'])} onChange={set(['layout', 'containerWidth'])} />
@@ -485,6 +486,41 @@ function AppearanceScreenInner() {
                 <LengthField label="Corner radius" hint="cards, panels and media" placeholder="0px" value={get(['layout', 'radius'])} onChange={set(['layout', 'radius'])} />
               </div>
             </Panel>
+
+            {/* Site-wide versions of two controls each block also has in its
+                own Design tab, which override these. */}
+            <Panel title="Spacing and motion">
+              <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                Empty leaves every block with the spacing and timing it was drawn with — those differ
+                between blocks on purpose. Setting one here changes all of them; a single block can
+                still override it in its own Design tab.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <LengthField
+                  label="Space between items"
+                  hint="cards, tiles, list entries — not the spacing inside them"
+                  value={get(['gap'])}
+                  emptyLabel="each block's own"
+                  onChange={set(['gap'])}
+                />
+                <Field label="Animation speed" hint="1 is normal; 0.5 is twice as fast">
+                  <Select
+                    value={theme.motion === undefined ? '' : String(theme.motion)}
+                    onChange={(e) =>
+                      setTheme((c) => ({ ...c, motion: e.target.value === '' ? undefined : Number(e.target.value) }))
+                    }
+                  >
+                    <option value="">Normal</option>
+                    <option value="0">Off — no animation anywhere</option>
+                    <option value="0.5">Twice as fast</option>
+                    <option value="0.75">A little faster</option>
+                    <option value="1.5">A little slower</option>
+                    <option value="2">Twice as slow</option>
+                  </Select>
+                </Field>
+              </div>
+            </Panel>
+            </>
           )}
 
           {tab === 'Brand' && (

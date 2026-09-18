@@ -226,7 +226,26 @@ export function blockStyleToCss(
 
   const background = backgroundDecls(style);
   const border = borderDecls(style);
-  parts.push(block(root, [...boxDecls(style.spacing?.base), ...background, ...border]));
+
+  /* Two inherited properties rather than rules aimed at anything.
+     
+     `--he-gap` is read by every item grid in the stylesheets — each with its
+     own drawn-in value as the fallback, so a block nobody touched is
+     unchanged. Inline spacing (an icon beside a word) deliberately does not
+     read it: that is not what anybody means by "space between items", and a
+     single property that moved both would be unusable.
+     
+     `--he-motion` multiplies every duration, so a block's hover at 150ms and
+     its entrance at 600ms keep their relation to each other. One duration for
+     both would flatten a deliberate difference. */
+  const own: Decl[] = [];
+  const gap = safe(style.gap);
+  if (gap && isLength(gap)) own.push(['--he-gap', gap]);
+  if (typeof style.motion === 'number' && Number.isFinite(style.motion) && style.motion >= 0) {
+    own.push(['--he-motion', String(style.motion)]);
+  }
+
+  parts.push(block(root, [...boxDecls(style.spacing?.base), ...own, ...background, ...border]));
 
   if (ownsBand) {
     parts.push(neutralisePadding(root, style.spacing?.base));

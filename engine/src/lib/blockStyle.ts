@@ -230,6 +230,25 @@ export const blockStyleSchema = z.object({
    * that renders one slide at a time buys animation and pays for it in
    * everything above.
    */
+  /**
+   * The space between the items this block lays out.
+   *
+   * One value reaching every grid in the block, through an inherited custom
+   * property — not the inline spacing inside it: an icon beside a word keeps
+   * the distance it was drawn with, because that is not what anybody means
+   * by "space between items".
+   */
+  gap: length.optional(),
+
+  /**
+   * How fast this block animates, as a multiple of the drawn-in timings.
+   *
+   * A multiplier rather than a duration, because a block has several — a
+   * hover at 150ms, an entrance at 600ms — and one duration for all of them
+   * would flatten a deliberate difference. `1` is what is drawn today.
+   */
+  motion: z.number().min(0).max(5).optional(),
+
   swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
 
   /** Hidden at these widths and below. */

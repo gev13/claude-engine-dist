@@ -9,6 +9,33 @@ told about before taking it.
 
 ---
 
+## 2.11.0 — 2026-09-18
+
+**Space between items, and how fast things move — for the whole site or for
+one block.** Both appear in Appearance → Layout, and again in every block's
+Design tab where they override the site-wide setting.
+
+Left empty, every block keeps the spacing and timing it was drawn with. Those
+differ between blocks on purpose, so there is no single default imposed on
+them — nothing in this release changes how your site looks.
+
+**Space between items** means the cards, tiles and list entries a block lays
+out. It deliberately does not touch the spacing *inside* things: an icon beside
+a word keeps the distance it was drawn with, because widening that to match a
+card grid would look broken. A gap set on a row also stops at that row — the
+blocks inside its columns keep their own.
+
+**Animation speed** is a multiple rather than a duration: normal, twice as
+fast, twice as slow, or off. A block usually has several timings — a quick
+hover and a slower entrance — and one duration for both would flatten a
+difference somebody chose. Setting it to off stops that block animating; the
+reduced-motion setting a visitor's own device asks for still wins over all of
+it.
+
+No database changes.
+
+---
+
 ## 2.10.0 — 2026-09-18
 
 **Nothing on your site changes in this release.** Every default below is the

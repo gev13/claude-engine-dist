@@ -14,18 +14,18 @@
 
   /* `he-reveal-on` is set on <html> by RevealObserver, only when motion is
      allowed; without it nothing here applies and every section is visible. */
-  .he-reveal { transition: opacity 700ms ease-out, transform 800ms cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-reveal { transition: opacity calc(700ms * var(--he-motion, 1)) ease-out, transform calc(800ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-reveal-on .he-reveal:not(.is-in) { opacity: 0; }
   .he-reveal-on .he-reveal--rise:not(.is-in) { transform: translateY(36px); }
 
   /* ── SC3: kinetic statement ──────────────────────────────────────────── */
 
-  .he-kinetic__w { opacity: 0.32; transition: opacity 300ms ease-out; }
+  .he-kinetic__w { opacity: 0.32; transition: opacity calc(300ms * var(--he-motion, 1)) ease-out; }
   .he-kinetic__w.is-lit { opacity: 1; }
 
   /* ── SC1: scroll story ───────────────────────────────────────────────── */
 
-  .he-story__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 72px; margin-top: 48px; }
+  .he-story__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: var(--he-gap, 72px); margin-top: 48px; }
   .he-story__list { margin: 0; padding: 0; list-style: none; }
   .he-story__item {
     display: flex;
@@ -35,7 +35,7 @@
     padding-block: 32px;
     border-top: 1px solid var(--color-hairline);
     opacity: 0.42;
-    transition: opacity 350ms;
+    transition: opacity calc(350ms * var(--he-motion, 1));
   }
   .he-story__item:first-child { border-top: 0; }
   .he-story__item.is-active { opacity: 1; }
@@ -48,7 +48,7 @@
     height: 2px;
     margin-top: 14px;
     background: var(--color-flare);
-    transition: width 450ms cubic-bezier(0.2, 0.7, 0.2, 1);
+    transition: width calc(450ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1);
   }
   .he-story__item.is-active .he-story__title::after { width: 56px; }
   .he-story__body { max-width: 46ch; margin: 14px 0 0; font-size: 16px; color: var(--color-ash); }
@@ -62,7 +62,7 @@
     border-radius: 24px;
     background: var(--color-surface);
   }
-  .he-story__img { position: absolute; inset: 0; opacity: 0; transform: scale(1.03); transition: opacity 500ms, transform 700ms; }
+  .he-story__img { position: absolute; inset: 0; opacity: 0; transform: scale(1.03); transition: opacity calc(500ms * var(--he-motion, 1)), transform calc(700ms * var(--he-motion, 1)); }
   .he-story__img.is-active { opacity: 1; transform: none; }
 
   /* ── SC2: pinned media ───────────────────────────────────────────────── */
@@ -132,8 +132,8 @@
 
   /* ── CF2: newsletter ─────────────────────────────────────────────────── */
 
-  .he-nl__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 64px; align-items: center; }
-  .he-nl__band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 24px 48px; }
+  .he-nl__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--he-gap, 64px); align-items: center; }
+  .he-nl__band { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--he-gap, 24px 48px); }
   .he-nl__head { max-width: 560px; }
   .he-nl__row {
     display: flex;
@@ -162,7 +162,7 @@
 
   /* ── CF3: split contact form ─────────────────────────────────────────── */
 
-  .he-cform { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: 64px; align-items: start; }
+  .he-cform { display: grid; grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr); gap: var(--he-gap, 64px); align-items: start; }
   .he-cform__media { margin-top: 32px; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
   .he-cform__card { padding: 36px; border: 1px solid var(--color-hairline); border-radius: 20px; background: var(--color-surface); }
 
@@ -176,8 +176,8 @@
     .he-story__grid { gap: 36px; }
     .he-story__item { min-height: 54vh; }
     .he-cta-big { padding-block: 88px; }
-    .he-nl__grid { grid-template-columns: minmax(0, 1fr); gap: 28px; }
-    .he-cform { grid-template-columns: minmax(0, 1fr); gap: 36px; }
+    .he-nl__grid { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 28px); }
+    .he-cform { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 36px); }
     .he-cform__media { display: none; }
     .he-pin__frame { width: 92vw; }
   }

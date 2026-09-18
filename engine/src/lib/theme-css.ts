@@ -89,6 +89,11 @@ function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' = 'colors'): Dec
 function statusDecls(theme: Theme): Decl[] {
   const out: Decl[] = [];
   const status = theme.status ?? {};
+  push(out, '--he-gap', theme.gap, isLength);
+  if (typeof theme.motion === 'number' && Number.isFinite(theme.motion) && theme.motion >= 0) {
+    out.push(['--he-motion', String(theme.motion)]);
+  }
+
   const blockText = theme.blockText ?? {};
   push(out, '--he-block-lead', blockText.lead, isLength);
   push(out, '--he-block-text', blockText.text, isLength);

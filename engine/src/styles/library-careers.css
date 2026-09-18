@@ -18,12 +18,12 @@
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    gap: 12px 28px;
+    gap: var(--he-gap, 12px 28px);
     padding: 26px 28px;
     border: 1.5px solid var(--color-hairline);
     border-radius: 16px;
     background: var(--color-surface);
-    transition: border-color 150ms, background-color 150ms;
+    transition: border-color calc(150ms * var(--he-motion, 1)), background-color calc(150ms * var(--he-motion, 1));
   }
 
   .he-job-card:hover { border-color: var(--color-rule); background: var(--color-surface-2); }
@@ -46,7 +46,7 @@
   .he-job-card__meta {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px 18px;
+    gap: var(--he-gap, 8px 18px);
     margin: 14px 0 0;
     font-family: var(--font-mono);
     font-size: 11px;
@@ -79,7 +79,7 @@
   .he-job__meta {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-    gap: 20px 28px;
+    gap: var(--he-gap, 20px 28px);
     margin: 36px 0 0;
     padding: 26px 0;
     border-top: 1.5px solid var(--color-hairline);
@@ -135,7 +135,7 @@
   @media (width <= 48rem) {
     .he-job-card { grid-template-columns: minmax(0, 1fr); padding: 22px 20px; }
     .he-job-card__side { align-items: flex-start; text-align: left; }
-    .he-job__meta { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 18px 20px; }
+    .he-job__meta { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: var(--he-gap, 18px 20px); }
   }
 
   /* ── The card badge ────────────────────────────────────────────────────────
@@ -185,7 +185,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 16px 28px;
+    gap: var(--he-gap, 16px 28px);
     padding: 20px 24px;
     border: 1.5px solid var(--color-hairline);
     background: var(--color-surface);
@@ -217,7 +217,7 @@
   .he-cookie__link { display: inline-block; margin-top: 8px; font-size: 14px; color: var(--color-flare-soft); }
   .he-cookie__link:hover { color: var(--color-flare-hot); }
 
-  .he-cookie__actions { display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+  .he-cookie__actions { display: flex; flex-wrap: wrap; gap: var(--he-gap, 10px); flex-shrink: 0; }
 
   @media (width <= 48rem) {
     .he-cookie { padding: 18px 18px; gap: 14px; }

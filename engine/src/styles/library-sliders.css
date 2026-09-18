@@ -4,7 +4,7 @@
 
 @layer components {
   /* ── P4-A2 · a filmstrip of the slides ──────────────────────────────────── */
-  .he-ind--thumbs { flex-wrap: wrap; gap: 8px; }
+  .he-ind--thumbs { flex-wrap: wrap; gap: var(--he-gap, 8px); }
   .he-ind__thumb {
     width: 68px;
     height: 44px;
@@ -16,7 +16,7 @@
     color: inherit;
     opacity: 0.55;
     cursor: pointer;
-    transition: opacity 160ms, border-color 160ms;
+    transition: opacity calc(160ms * var(--he-motion, 1)), border-color calc(160ms * var(--he-motion, 1));
   }
   .he-ind__thumb img { display: block; width: 100%; height: 100%; object-fit: cover; }
   .he-ind__thumb:hover, .he-ind__thumb:focus-visible { opacity: 0.85; }
@@ -43,7 +43,7 @@
     text-align: left;
     opacity: 0.5;
     cursor: pointer;
-    transition: opacity 160ms;
+    transition: opacity calc(160ms * var(--he-motion, 1));
   }
   .he-ind__chapter:hover, .he-ind__chapter:focus-visible { opacity: 0.85; }
   .he-ind__chapter.is-active { opacity: 1; }
@@ -55,7 +55,7 @@
   .he-mslide__specs {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-    gap: 10px 24px;
+    gap: var(--he-gap, 10px 24px);
     margin: 18px 0 0;
   }
   .he-mslide__spec dt {
@@ -71,7 +71,7 @@
   @media (prefers-reduced-motion: no-preference) {
     .he-cslide.is-kenburns .he-cslide__slide.is-active .he-cslide__media,
     .he-mslide.is-kenburns .he-mslide__slide.is-active .he-mslide__media {
-      animation: he-kenburns 16s ease-out both;
+      animation: he-kenburns calc(16s * var(--he-motion, 1)) ease-out both;
     }
   }
   .he-reduce-motion .he-cslide.is-kenburns .he-cslide__media,
@@ -107,7 +107,7 @@
   .he-split__pane {
     grid-area: 1 / 1;
     visibility: hidden;
-    transition: transform 800ms cubic-bezier(0.7, 0, 0.2, 1), opacity 800ms, visibility 0s 800ms;
+    transition: transform calc(800ms * var(--he-motion, 1)) cubic-bezier(0.7, 0, 0.2, 1), opacity calc(800ms * var(--he-motion, 1)), visibility 0s calc(800ms * var(--he-motion, 1));
   }
   /* The halves travel opposite ways: words up, picture down. */
   .he-split__panel { transform: translateY(46%); opacity: 0; }
@@ -135,7 +135,7 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 18px;
+    gap: var(--he-gap, 18px);
     padding: 18px clamp(24px, 4vw, 64px);
     border-top: 2px solid var(--color-hairline);
   }
@@ -155,13 +155,13 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     cursor: pointer;
-    transition: background-color 150ms, color 150ms;
+    transition: background-color calc(150ms * var(--he-motion, 1)), color calc(150ms * var(--he-motion, 1));
   }
   .he-split__step:hover:not(:disabled) { background: var(--color-bone); color: var(--color-ink); }
   .he-split__step:disabled { opacity: 0.35; cursor: default; }
 
   @media (prefers-reduced-motion: no-preference) {
-    .he-split.is-kenburns .he-split__pane.is-active .he-split__media { animation: he-kenburns 16s ease-out both; }
+    .he-split.is-kenburns .he-split__pane.is-active .he-split__media { animation: he-kenburns calc(16s * var(--he-motion, 1)) ease-out both; }
   }
 
   @media (max-width: 768px) {
@@ -201,11 +201,11 @@
     cursor: pointer;
     transform: translate(-50%, -50%) translateX(var(--x, 0)) rotateY(var(--r, 0deg)) scale(var(--s, 1));
     filter: blur(var(--blur, 0px));
-    transition: transform 620ms cubic-bezier(0.2, 0.7, 0.2, 1), opacity 620ms, filter 620ms;
+    transition: transform calc(620ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1), opacity calc(620ms * var(--he-motion, 1)), filter calc(620ms * var(--he-motion, 1));
   }
   .he-film__frame.is-active { cursor: default; box-shadow: 0 30px 70px rgb(0 0 0 / 0.45); }
   .he-film__media { width: 100%; height: 100%; object-fit: cover; }
-  .he-film__foot { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; margin-top: 40px; }
+  .he-film__foot { display: flex; flex-wrap: wrap; align-items: center; gap: var(--he-gap, 16px); margin-top: 40px; }
   .he-film__caption { margin: 0; font-size: 15px; color: var(--color-ash); }
   .he-film__controls { display: flex; align-items: center; gap: 14px; margin-inline-start: auto; }
 
@@ -226,7 +226,7 @@
     box-shadow: 0 24px 60px rgb(0 0 0 / 0.4);
     /* Each depth answers the scroll and the pointer by its own amount. */
     transform: translate3d(calc(var(--px, 0) * var(--lean, 0px)), calc(var(--sy, 0) * var(--travel, 0px) + var(--py, 0) * var(--lean, 0px)), 0);
-    transition: transform 220ms ease-out;
+    transition: transform calc(220ms * var(--he-motion, 1)) ease-out;
     will-change: transform;
   }
   .he-hero__layer.is-back {
