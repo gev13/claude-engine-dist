@@ -9,6 +9,32 @@ told about before taking it.
 
 ---
 
+## 2.12.0 — 2026-09-18
+
+**A converging diagram can have more than two sources.** Add a fourth or a
+fifth label and you get a fourth or fifth box, with its own curve into the
+destination. The last label is always what everything meets at; everything
+before it is a source.
+
+Until now the diagram was two boxes and two curves drawn at fixed positions, so
+a third name was something you could type and save and never see. It works out
+its own layout now: the sources spread evenly, stay centred on the
+destination, and the drawing grows rather than letting the boxes collide.
+
+Three labels still draws exactly the diagram you have today, to the pixel.
+
+**And you can change how it looks.** Under *How the diagram is drawn*: the
+colour of the lines, the background grid, the source outlines and their text,
+the destination's fill and its text; the two text sizes; how thick the lines
+are; and rounded corners. Empty means the colour it is drawn with now, so a
+diagram you do not touch is unchanged.
+
+Space around the diagram stays where all spacing is — the block's Design tab.
+
+No database changes.
+
+---
+
 ## 2.11.2 — 2026-09-18
 
 **The other place that diagram comes from.** A hero can draw the converging

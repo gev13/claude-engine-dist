@@ -1,6 +1,14 @@
 {
-  "latest": "2.11.2",
+  "latest": "2.12.0",
   "releases": [
+    {
+      "version": "2.12.0",
+      "date": "2026-09-18",
+      "summary": "A converging diagram can have more than two sources \u2014 add a label, get a box and a curve. And its colours, text sizes, line thickness and corner radius can be changed. Three labels still draws exactly what you have today.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.11.2",
       "date": "2026-09-18",

@@ -10,6 +10,7 @@ import {
   textTagSchema,
 } from './blockStyle';
 import { itemStyleSchema } from './itemStyle';
+import { figureStyleSchema } from './figureStyle';
 import { isColor, isLength } from './theme';
 import { SOCIAL_NETWORKS, imageUrl as mediaUrl, isSafeHref } from './navigation';
 import { parseVideoUrl } from './embeds';
@@ -193,7 +194,9 @@ export const blockSchemas = {
     pointerParallax: z.boolean().default(false),
     figure: z.enum(['converge', 'layers', 'none']).default('none'),
     /** Labels for the `layers` figure, outermost first; the last is highlighted. */
-    figureLabels: z.array(z.string()).max(5).default([]),
+    figureLabels: z.array(z.string()).max(6).default([]),
+    /** How the hero's own diagram is drawn — the same vocabulary. */
+    figureStyle: figureStyleSchema.optional(),
     layout: z.enum(['split', 'wide']).default('split'),
   }),
 
@@ -569,7 +572,15 @@ export const blockSchemas = {
    */
   figure: z.object({
     kind: z.enum(['converge', 'layers']).default('converge'),
-    labels: z.array(z.string()).max(5).default([]),
+    /**
+     * The last one is what everything meets at; the rest are sources.
+     *
+     * Six rather than five, so a converging diagram can hold five sources —
+     * the old cap was written when exactly two were drawn.
+     */
+    labels: z.array(z.string()).max(6).default([]),
+    /** How it is drawn — see `lib/figureStyle.ts`. */
+    style: figureStyleSchema.optional(),
   }),
 
   /**

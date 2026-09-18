@@ -1,3 +1,4 @@
+import { figureStyleProperties, type FigureStyle } from '@/lib/figureStyle';
 /**
  * The service-hero figure: a stack of labelled surfaces with the last one —
  * the highest-value target — picked out in the brand red, and a scanning
@@ -7,7 +8,7 @@
  * behind them, driven by each page's own labels so the figure stays editable
  * from the admin panel rather than being ten hand-drawn SVGs in the codebase.
  */
-export function LayersFigure({ labels }: { labels: string[] }) {
+export function LayersFigure({ labels, style }: { labels: string[]; style?: FigureStyle }) {
   const rows = labels.slice(0, 5);
   if (rows.length === 0) return null;
 
@@ -23,10 +24,10 @@ export function LayersFigure({ labels }: { labels: string[] }) {
       width="100%"
       role="img"
       aria-label={`Layers: ${rows.join(', ')}.`}
-      style={{ display: 'block', overflow: 'visible' }}
+      style={{ display: 'block', overflow: 'visible', ...figureStyleProperties(style) }}
     >
       {/* Background rule grid, matching the mockups' graph-paper motif. */}
-      <g stroke="var(--color-hairline)" strokeWidth="1">
+      <g style={{ stroke: 'var(--he-fig-grid, var(--color-hairline))', strokeWidth: 1 }}>
         {rows.map((_, i) => (
           <path key={`h${i}`} d={`M0 ${40 + i * rowHeight}h400`} />
         ))}
@@ -38,28 +39,32 @@ export function LayersFigure({ labels }: { labels: string[] }) {
         const isLast = i === lastIndex;
         return isLast ? (
           <g key={label + i}>
-            <rect x="40" y={y} width="300" height={barHeight + 4} fill="var(--color-flare)" />
+            <rect x="40" y={y} width="300" height={barHeight + 4} style={{ fill: 'var(--he-fig-target-bg, var(--color-flare))', rx: 'var(--he-fig-radius, 0)' } as React.CSSProperties} />
             <text
               x="52"
               y={y + 23}
-              fill="var(--color-ink)"
-              fontFamily="var(--font-mono)"
-              fontSize="9.5"
-              letterSpacing="1.1"
+              style={{
+                fill: 'var(--he-fig-target-text, var(--color-ink))',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--he-fig-target-size, 9.5px)',
+                letterSpacing: '1.1px',
+              }}
             >
               {label}
             </text>
           </g>
         ) : (
           <g key={label + i}>
-            <rect x="40" y={y} width="300" height={barHeight} fill="none" stroke="var(--color-bone)" strokeWidth="2" />
+            <rect x="40" y={y} width="300" height={barHeight} fill="none" style={{ stroke: 'var(--he-fig-source-border, var(--color-bone))', strokeWidth: 'var(--he-fig-border, 2px)', rx: 'var(--he-fig-radius, 0)' } as React.CSSProperties} />
             <text
               x="52"
               y={y + 22}
-              fill="var(--color-bone)"
-              fontFamily="var(--font-mono)"
-              fontSize="9.5"
-              letterSpacing="1.1"
+              style={{
+                fill: 'var(--he-fig-source-text, var(--color-bone))',
+                fontFamily: 'var(--font-mono)',
+                fontSize: 'var(--he-fig-source-size, 9.5px)',
+                letterSpacing: '1.1px',
+              }}
             >
               {label}
             </text>
@@ -67,7 +72,7 @@ export function LayersFigure({ labels }: { labels: string[] }) {
         );
       })}
 
-      <g fill="none" stroke="var(--color-flare)" strokeWidth="2" strokeDasharray="4 5" className="animate-dash">
+      <g fill="none" strokeDasharray="4 5" className="animate-dash" style={{ stroke: 'var(--he-fig-line, var(--color-flare))', strokeWidth: 'var(--he-fig-border, 2px)' }}>
         <path
           d={`M356 ${top + 17} L372 ${top + 17} L372 ${top + lastIndex * rowHeight + 19} L356 ${top + lastIndex * rowHeight + 19}`}
         />

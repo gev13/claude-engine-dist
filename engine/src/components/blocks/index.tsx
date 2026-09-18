@@ -56,9 +56,9 @@ export function HeroBlock(p: P<'hero'>) {
         {hasFigure && (
           <div className="hidden lg:block">
             {p.figure === 'converge' ? (
-              <ConvergeFigure labels={p.figureLabels} />
+              <ConvergeFigure labels={p.figureLabels} style={p.figureStyle} />
             ) : (
-              <LayersFigure labels={p.figureLabels} />
+              <LayersFigure labels={p.figureLabels} style={p.figureStyle} />
             )}
           </div>
         )}
@@ -606,7 +606,11 @@ export function FigureBlock(p: P<'figure'>) {
   if (p.kind === 'layers' && p.labels.length === 0) return null;
   return (
     <Section size="md" rule={false}>
-      {p.kind === 'converge' ? <ConvergeFigure labels={p.labels} /> : <LayersFigure labels={p.labels} />}
+      {p.kind === 'converge' ? (
+        <ConvergeFigure labels={p.labels} style={p.style} />
+      ) : (
+        <LayersFigure labels={p.labels} style={p.style} />
+      )}
     </Section>
   );
 }

@@ -21,6 +21,8 @@ import {
 import { COLUMN_PRESETS, COLUMN_SPANS, TEXT_TAGS, TEXT_TAG_LABELS, type BlockStyle } from '@/lib/blockStyle';
 import { BlockDesignPanel } from '@/components/admin/BlockDesignPanel';
 import { ItemStylePanel } from '@/components/admin/ItemStylePanel';
+import { FigureStylePanel } from '@/components/admin/FigureStylePanel';
+import type { FigureStyle } from '@/lib/figureStyle';
 import { LengthField } from '@/components/admin/styleFields';
 import type { ItemStyle } from '@/lib/itemStyle';
 import { Wireframe } from '@/components/admin/Wireframe';
@@ -1141,13 +1143,19 @@ function ClassicHeroFigure({ props, set }: { props: Props; set: Setter }) {
               : 'Figure labels — outermost first; the last is highlighted'
           }
           hint="These are the words drawn in the diagram. Type over them."
-          max={str(props, 'figure') === 'converge' ? 3 : 5}
+          max={str(props, 'figure') === 'converge' ? 6 : 5}
           items={
             arr<string>(props, 'figureLabels').length > 0
               ? arr<string>(props, 'figureLabels')
               : [...FIGURE_LABELS[(str(props, 'figure') || 'converge') as keyof typeof FIGURE_LABELS]]
           }
           onChange={(figureLabels) => set({ ...props, figureLabels })}
+        />
+      )}
+      {(str(props, 'figure') === 'converge' || str(props, 'figure') === 'layers') && (
+        <FigureStylePanel
+          value={props.figureStyle as FigureStyle | undefined}
+          onChange={(figureStyle) => set({ ...props, figureStyle })}
         />
       )}
       <Field label="Layout">
@@ -4597,13 +4605,17 @@ function TypeFields({
                 : 'Labels — first source, second source, destination'
             }
             hint="These are the words drawn in the diagram. Type over them."
-            max={str(props, 'kind') === 'layers' ? 5 : 3}
+            max={str(props, 'kind') === 'layers' ? 5 : 6}
             items={
               arr<string>(props, 'labels').length > 0
                 ? arr<string>(props, 'labels')
                 : [...FIGURE_LABELS[(str(props, 'kind') || 'converge') as keyof typeof FIGURE_LABELS]]
             }
             onChange={(labels) => set({ ...props, labels })}
+          />
+          <FigureStylePanel
+            value={props.style as FigureStyle | undefined}
+            onChange={(style) => set({ ...props, style })}
           />
         </>
       );

@@ -129,28 +129,41 @@ describe('a hero that draws the diagram itself', () => {
   });
 });
 
+/* This said three, briefly. Capping at three was right when the diagram drew
+   exactly two curves and a fourth label did nothing — and wrong the moment the
+   geometry was worked out instead of typed, because a fourth source is now a
+   fourth source. The cap is the schema's, not the drawing's. */
 describe('the number of labels a diagram will draw', () => {
   const addLine = (root: HTMLElement) =>
     [...root.querySelectorAll('button')].find((b) => b.textContent?.trim() === 'Add line');
 
-  it('stops offering a fourth on a converge diagram, which draws three', () => {
+  it('offers a fourth on a converge diagram, which now draws it', () => {
     const { container } = render(
       <BlockFields type="figure" props={{ kind: 'converge', labels: ['A', 'B', 'C'] }} set={() => {}} />,
-    );
-    expect(addLine(container)).toBeUndefined();
-  });
-
-  it('still offers more on a layer stack, which draws up to five', () => {
-    const { container } = render(
-      <BlockFields type="figure" props={{ kind: 'layers', labels: ['A', 'B', 'C'] }} set={() => {}} />,
     );
     expect(addLine(container)).toBeTruthy();
   });
 
-  it('applies the same cap to the hero’s own diagram', () => {
+  it('stops at six, where the schema does', () => {
+    const six = ['A', 'B', 'C', 'D', 'E', 'F'];
+    const { container } = render(
+      <BlockFields type="figure" props={{ kind: 'converge', labels: six }} set={() => {}} />,
+    );
+    expect(addLine(container)).toBeUndefined();
+  });
+
+  it('stops a layer stack at five, which is what it draws', () => {
+    const five = ['A', 'B', 'C', 'D', 'E'];
+    const { container } = render(
+      <BlockFields type="figure" props={{ kind: 'layers', labels: five }} set={() => {}} />,
+    );
+    expect(addLine(container)).toBeUndefined();
+  });
+
+  it('offers the same on the hero’s own diagram', () => {
     const { container } = render(
       <BlockFields type="hero" props={{ figure: 'converge', figureLabels: ['A', 'B', 'C'] }} set={() => {}} />,
     );
-    expect(addLine(container)).toBeUndefined();
+    expect(addLine(container)).toBeTruthy();
   });
 });
