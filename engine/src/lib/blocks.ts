@@ -6,6 +6,7 @@ import {
   type BlockStyle,
   blockStyleSchema,
   columnWidthSchema,
+  length,
   textTagSchema,
 } from './blockStyle';
 import { itemStyleSchema } from './itemStyle';
@@ -236,6 +237,15 @@ export const blockSchemas = {
     titleAs: textTagSchema.optional(),
     intro: z.string().optional(),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
+    /**
+     * The space between the cards.
+     *
+     * Separate from a card's own margin, which shifts a card inside its cell
+     * and does not change the distance between two of them. Unset means each
+     * layout keeps the gap it was designed with — they are not all the same,
+     * and one number would flatten a deliberate difference.
+     */
+    gap: length.optional(),
     /** V3 — for image cards, pictures with text over them, icon features and rows. */
     hover: z.enum(['none', 'lift', 'zoom']).default('none'),
     shadow: z.boolean().default(false),

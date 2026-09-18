@@ -171,7 +171,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
-      <CardGrid cols={p.columns}>
+      <CardGrid cols={p.columns} gapSize={p.gap}>
         {p.cards.map((c, i) => (
           <Card
             key={c.title}

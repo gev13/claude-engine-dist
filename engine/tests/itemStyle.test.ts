@@ -164,3 +164,30 @@ describe('heading splitAlign', () => {
     expect(blockSchemas.heading.safeParse({ title: 'T', splitAlign: 'middle' }).success).toBe(false);
   });
 });
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The space between cards
+   ───────────────────────────────────────────────────────────────────────────
+   Distinct from a card's own margin, which shifts a card inside its grid cell
+   and leaves the distance between two of them exactly as it was. Unset means
+   each layout keeps the gap it was designed with — those differ on purpose,
+   and one number for all of them would flatten a deliberate choice.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+describe('cardGrid gap', () => {
+  it('is absent unless somebody sets it', () => {
+    expect(blockSchemas.cardGrid.parse({ cards: [] }).gap).toBeUndefined();
+  });
+
+  it('accepts a length, and completes a bare number as pixels', () => {
+    expect(blockSchemas.cardGrid.parse({ cards: [], gap: '32px' }).gap).toBe('32px');
+    expect(blockSchemas.cardGrid.parse({ cards: [], gap: '32' }).gap).toBe('32px');
+  });
+
+  /* It lands in an inline style attribute, so the grammar is the guard. */
+  it('refuses anything that is not a length', () => {
+    for (const bad of ['32px;position:fixed', 'red', 'url(x)']) {
+      expect(blockSchemas.cardGrid.safeParse({ cards: [], gap: bad }).success, bad).toBe(false);
+    }
+  });
+});

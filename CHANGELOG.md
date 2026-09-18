@@ -9,6 +9,22 @@ told about before taking it.
 
 ---
 
+## 2.9.0 — 2026-09-18
+
+**Space between cards.** A card grid now has a *Space between cards* field
+beside its column count. It is a different thing from a card's own margin,
+which shifts that card inside its cell and leaves the distance between two
+cards exactly as it was — the distinction that made margin feel broken when
+used for this.
+
+Left empty, each layout keeps the spacing it was designed with. Those are not
+all the same on purpose, and one number for all of them would flatten a
+deliberate difference. It applies to every card layout.
+
+No database changes.
+
+---
+
 ## 2.8.0 — 2026-09-18
 
 **Cards can now be styled one at a time.** Every card in a grid has its own

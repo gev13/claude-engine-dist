@@ -11,11 +11,14 @@ export function CardGrid({
   children,
   cols = 3,
   gap = 'rule',
+  gapSize,
   className,
 }: {
   children: React.ReactNode;
   cols?: 2 | 3 | 4;
   gap?: 'rule' | 'wide';
+  /** An editor's own spacing, which replaces the named one when it is set. */
+  gapSize?: string;
   className?: string;
 }) {
   const colClass = {
@@ -25,7 +28,13 @@ export function CardGrid({
   }[cols];
 
   return (
-    <div className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', className)}>
+    /* Inline, because the named gaps are Tailwind utilities and a rule would
+       have to out-specify them. Anything set here has already been through the
+       schema's length grammar. */
+    <div
+      className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', className)}
+      style={gapSize ? { gap: gapSize } : undefined}
+    >
       {children}
     </div>
   );

@@ -116,7 +116,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   const head = (p.title || p.eyebrow || p.intro) && (
     <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} />
   );
-  const cols = { '--cols': p.columns } as React.CSSProperties;
+  /* An editor's gap rides along with the column count, so each of these
+     grids gets it without four separate props. Unset leaves the layout's own
+     spacing alone — they differ on purpose. */
+  const cols = { '--cols': p.columns, ...(p.gap ? { gap: p.gap } : {}) } as React.CSSProperties;
 
   /* The mosaic is the tile grid with two tile sizes, not a second component:
      same markup, same fields, same editor — the difference is which cells the
@@ -164,7 +167,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-lsec', toneClass(p.tone))}>
         <div className="shell">
           {head}
-          <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`)}>
+          <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`)} style={cols}>
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-rows__item', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (

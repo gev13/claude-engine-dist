@@ -1,6 +1,14 @@
 {
-  "latest": "2.8.0",
+  "latest": "2.9.0",
   "releases": [
+    {
+      "version": "2.9.0",
+      "date": "2026-09-18",
+      "summary": "A card grid now has a Space between cards field \u2014 a different thing from a card\u2019s own margin, which only shifts that card inside its cell. Left empty, each layout keeps the spacing it was designed with.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.8.0",
       "date": "2026-09-18",

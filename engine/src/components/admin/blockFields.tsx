@@ -20,6 +20,7 @@ import {
 import { COLUMN_PRESETS, COLUMN_SPANS, TEXT_TAGS, TEXT_TAG_LABELS, type BlockStyle } from '@/lib/blockStyle';
 import { BlockDesignPanel } from '@/components/admin/BlockDesignPanel';
 import { ItemStylePanel } from '@/components/admin/ItemStylePanel';
+import { LengthField } from '@/components/admin/styleFields';
 import type { ItemStyle } from '@/lib/itemStyle';
 import { Wireframe } from '@/components/admin/Wireframe';
 import { CARD_GRID_WIREFRAMES, CAROUSEL_WIREFRAMES, HERO_WIREFRAMES, type Shape } from '@/lib/wireframes';
@@ -4082,16 +4083,26 @@ function TypeFields({
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Intro" k="intro" props={props} set={set} rows={2} />
-          <Field label="Columns" hint="tablets show two, phones one">
-            <Select
-              value={String(num(props, 'columns', 3))}
-              onChange={(e) => set({ ...props, columns: Number(e.target.value) })}
-            >
-              <option value="2">Two</option>
-              <option value="3">Three</option>
-              <option value="4">Four</option>
-            </Select>
-          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Columns" hint="tablets show two, phones one">
+              <Select
+                value={String(num(props, 'columns', 3))}
+                onChange={(e) => set({ ...props, columns: Number(e.target.value) })}
+              >
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+                <option value="4">Four</option>
+              </Select>
+            </Field>
+            {/* The distance between cards, which a card's own margin cannot
+                change — that shifts a card inside its cell instead. */}
+            <LengthField
+              label="Space between cards"
+              value={str(props, 'gap') || undefined}
+              emptyLabel="this layout's own"
+              onChange={(gap: string | undefined) => set({ ...props, gap })}
+            />
+          </div>
           {variant === 'icons' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect
