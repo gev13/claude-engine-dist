@@ -16,6 +16,7 @@ import {
   blockLabels,
   blockSchemas,
   blockTypes,
+  FIGURE_LABELS,
 } from '@/lib/blocks';
 import { COLUMN_PRESETS, COLUMN_SPANS, TEXT_TAGS, TEXT_TAG_LABELS, type BlockStyle } from '@/lib/blockStyle';
 import { BlockDesignPanel } from '@/components/admin/BlockDesignPanel';
@@ -81,7 +82,7 @@ export function blankProps(type: BlockType): Record<string, unknown> {
     case 'table':
       return { head: ['Column'], rows: [['']] };
     case 'figure':
-      return { kind: 'converge', labels: [] };
+      return { kind: 'converge', labels: [...FIGURE_LABELS.converge] };
     case 'spacer':
       return { height: '48px', line: 'none' };
     case 'carousel':
@@ -4548,18 +4549,43 @@ function TypeFields({
       return (
         <>
           <Field label="Diagram">
-            <Select value={str(props, 'kind') || 'converge'} onChange={(e) => set({ ...props, kind: e.target.value })}>
+            <Select
+              value={str(props, 'kind') || 'converge'}
+              onChange={(e) => {
+                /* The two diagrams want different words. Switching keeps
+                   labels somebody wrote, and swaps them when they are still
+                   the other diagram's defaults — otherwise a layer stack
+                   arrives labelled "SOURCE A". */
+                const next = e.target.value as keyof typeof FIGURE_LABELS;
+                const current = arr<string>(props, 'labels');
+                const wasDefault =
+                  current.length === 0 ||
+                  Object.values(FIGURE_LABELS).some(
+                    (set) => set.length === current.length && set.every((w, i) => w === current[i]),
+                  );
+                set({ ...props, kind: next, labels: wasDefault ? [...FIGURE_LABELS[next]] : current });
+              }}
+            >
               <option value="converge">Converging — two sources meeting</option>
               <option value="layers">Layer stack — last one highlighted</option>
             </Select>
           </Field>
+          {/* An empty list showed nothing while the page said "SOURCE A",
+              so there was no box corresponding to the words on screen and the
+              diagram looked uneditable. The defaults are shown instead, and
+              nothing is stored until one is actually typed over. */}
           <StringListRepeater
             label={
               str(props, 'kind') === 'layers'
                 ? 'Labels — outermost first; the last is highlighted'
                 : 'Labels — first source, second source, destination'
             }
-            items={arr<string>(props, 'labels')}
+            hint="These are the words drawn in the diagram. Type over them."
+            items={
+              arr<string>(props, 'labels').length > 0
+                ? arr<string>(props, 'labels')
+                : [...FIGURE_LABELS[(str(props, 'kind') || 'converge') as keyof typeof FIGURE_LABELS]]
+            }
             onChange={(labels) => set({ ...props, labels })}
           />
         </>

@@ -9,6 +9,26 @@ told about before taking it.
 
 ---
 
+## 2.11.1 — 2026-09-18
+
+**The words in a diagram can be edited.** The figure block draws “SOURCE A”,
+“SOURCE B” and “OUTCOME”, and its label list in the admin started empty — so
+there was no box anywhere containing the words on the page, and the diagram
+looked like something you were not allowed to change. You were; nothing said
+where.
+
+The list now holds those words, ready to be typed over. Nothing is stored
+until you change one, so a page you do not touch stays exactly as it is.
+
+Switching between the two diagrams brings the right words with it — a layer
+stack no longer arrives labelled “SOURCE A” — while anything you wrote
+yourself is kept. And a new figure block starts with its labels filled in
+rather than blank.
+
+No database changes.
+
+---
+
 ## 2.11.0 — 2026-09-18
 
 **Space between items, and how fast things move — for the whole site or for

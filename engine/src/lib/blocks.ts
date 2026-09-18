@@ -145,6 +145,22 @@ const percent = z.number().min(0).max(100);
 const clockTime = z.string().trim().regex(TIME_PATTERN, 'Use 24-hour time, like 09:00');
 const unique = <T,>(list: T[]) => new Set(list).size === list.length;
 
+/**
+ * What a diagram says when nobody has told it otherwise.
+ *
+ * Lived inside `ConvergeFigure` as three string literals, which made them
+ * invisible: the editor's label list started empty, so the page said
+ * "SOURCE A" and the admin offered nothing that corresponded to it. The data
+ * existed, the control existed, and they did not meet — the exact failure
+ * this repository already warns about for `figureLabels`.
+ *
+ * Shared now, so the boxes in the editor hold the words on the page.
+ */
+export const FIGURE_LABELS = {
+  converge: ['SOURCE A', 'SOURCE B', 'OUTCOME'],
+  layers: ['FOUNDATION', 'PLATFORM', 'PRODUCT'],
+} as const;
+
 export const blockSchemas = {
   /** Page opener: eyebrow, h1, lede, body, buttons, optional SVG figure. */
   hero: z.object({

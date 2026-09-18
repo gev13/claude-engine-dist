@@ -1,3 +1,4 @@
+import { FIGURE_LABELS } from '@/lib/blocks';
 /**
  * The hero diagram from Home.html: two sources converging on one outcome.
  *
@@ -11,7 +12,8 @@
  * obvious one.
  */
 export function ConvergeFigure({ labels = [] }: { labels?: string[] }) {
-  const [source = 'SOURCE A', second = 'SOURCE B', target = 'OUTCOME'] = labels;
+  const [fallbackSource, fallbackSecond, fallbackTarget] = FIGURE_LABELS.converge;
+  const [source = fallbackSource, second = fallbackSecond, target = fallbackTarget] = labels;
 
   return (
     <svg
