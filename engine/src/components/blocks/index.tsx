@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { Accordion } from '@/components/ui/Accordion';
 import { ArrowRight, Button } from '@/components/ui/Button';
 import { Card, CardGrid, StatCard } from '@/components/ui/Card';
+import { itemClass } from '@/lib/itemStyle';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Lede } from '@/components/ui/Heading';
 import { Prose } from '@/components/ui/Prose';
@@ -163,7 +164,7 @@ export function SplitPointsBlock(p: P<'splitPoints'>) {
 }
 
 /* ── cardGrid ─────────────────────────────────────────────────────────────── */
-export function CardGridBlock(p: P<'cardGrid'>) {
+export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
   // Image tiles (CT4), icon features and image cards (CT5); `cards` is below.
   if (p.variant !== 'cards') return <CardGridVariant {...p} />;
 
@@ -171,8 +172,15 @@ export function CardGridBlock(p: P<'cardGrid'>) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       <CardGrid cols={p.columns}>
-        {p.cards.map((c) => (
-          <Card key={c.title} eyebrow={c.eyebrow} title={c.title} href={c.href} badge={c.badge}>
+        {p.cards.map((c, i) => (
+          <Card
+            key={c.title}
+            eyebrow={c.eyebrow}
+            title={c.title}
+            href={c.href}
+            badge={c.badge}
+            className={itemClass(p.blockId, i, c.style)}
+          >
             {c.body}
           </Card>
         ))}

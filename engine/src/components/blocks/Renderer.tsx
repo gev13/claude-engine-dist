@@ -2,7 +2,8 @@ import { Fragment } from 'react';
 import type { AnyBlock, ParsedBlock, ParsedRowProps } from '@/lib/blocks';
 import { BlockNameTag } from './BlockNameTag';
 import { parseBlocks } from '@/lib/blocks';
-import { blockStyleToCss, rowToCss } from '@/lib/blockStyle-css';
+import { blockStyleToCss, isSafeBlockId, rowToCss } from '@/lib/blockStyle-css';
+import { itemStyleToCss, type ItemStyle } from '@/lib/itemStyle';
 import { cn } from '@/lib/utils';
 import {
   CardGridBlock,
@@ -222,10 +223,23 @@ function renderBlock(block: ParsedBlock, trail?: Crumb[]): React.ReactNode {
       <Component
         {...(block.props as object)}
         {...(block.type === 'breadcrumbs' ? { trail } : {})}
-        {...(block.type === 'form' ? { blockId: block.id } : {})}
+        {...(block.type === 'form' || block.type === 'cardGrid' ? { blockId: block.id } : {})}
       />
     </BlockShell>
   );
+}
+
+/**
+ * The rules for cards an editor styled individually.
+ *
+ * Scoped by the block's own id rather than by the wrapper `.he-b-<id>`,
+ * because that wrapper only exists when the *block* has a style — and a card
+ * can be styled inside a block nobody has touched.
+ */
+function cardCss(block: ParsedBlock): string {
+  if (block.type !== 'cardGrid' || !isSafeBlockId(block.id)) return '';
+  const cards = (block.props as { cards?: { style?: ItemStyle }[] }).cards ?? [];
+  return cards.map((card, i) => itemStyleToCss(`.he-i-${block.id}-${i}`, card.style)).join('');
 }
 
 /** Every rule the tree needs, gathered in one pass so rows contribute theirs. */
@@ -235,6 +249,7 @@ function collectCss(blocks: ParsedBlock[]): string {
   for (const block of blocks) {
     // A row keeps its grid one level in, so `swipeOn` has to aim differently.
     parts.push(blockStyleToCss(block.id, block.style, 'he-b', block.type === 'row'));
+    parts.push(cardCss(block));
 
     if (block.type === 'row') {
       const props = block.props as ParsedRowProps;

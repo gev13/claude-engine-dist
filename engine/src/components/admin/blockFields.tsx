@@ -19,6 +19,8 @@ import {
 } from '@/lib/blocks';
 import { COLUMN_PRESETS, COLUMN_SPANS, TEXT_TAGS, TEXT_TAG_LABELS, type BlockStyle } from '@/lib/blockStyle';
 import { BlockDesignPanel } from '@/components/admin/BlockDesignPanel';
+import { ItemStylePanel } from '@/components/admin/ItemStylePanel';
+import type { ItemStyle } from '@/lib/itemStyle';
 import { Wireframe } from '@/components/admin/Wireframe';
 import { CARD_GRID_WIREFRAMES, CAROUSEL_WIREFRAMES, HERO_WIREFRAMES, type Shape } from '@/lib/wireframes';
 import { CARD_GRID_LABELS, CAROUSEL_LABELS, HERO_LABELS } from '@/lib/blockNames';
@@ -779,7 +781,7 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type GridCard = { eyebrow?: string; title: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[] };
+type GridCard = { eyebrow?: string; title: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -2182,6 +2184,17 @@ function TypeFields({
               set={set}
             />
             <PropSelect label="Layout" k="layout" fallback="stacked" options={[['stacked', 'Subtitle below'], ['split', 'Subtitle beside the heading']]} props={props} set={set} />
+            {/* Only means anything beside the heading; stacked has nothing to line up. */}
+            {props.layout === 'split' && (
+              <PropSelect
+                label="Line them up"
+                k="splitAlign"
+                fallback="center"
+                options={[['top', 'At the top'], ['center', 'Centred'], ['bottom', 'At the bottom']]}
+                props={props}
+                set={set}
+              />
+            )}
             <PropSelect label="Divider" k="divider" fallback="none" options={[['none', 'None'], ['line', 'Thin line'], ['accent', 'Short accent bar']]} props={props} set={set} />
             <PropSelect label="Letters" k="textStyle" fallback="solid" options={[['solid', 'Solid'], ['outline', 'Outlined'], ['gradient', 'Gradient']]} props={props} set={set} />
           </div>
@@ -4145,6 +4158,7 @@ function TypeFields({
                 {variant === 'rows' && (
                   <StringListRepeater label="Checklist (up to 8)" items={item.points ?? []} onChange={(points) => update({ points: points.slice(0, 8) })} />
                 )}
+                <ItemStylePanel value={item.style} onChange={(style) => update({ style })} />
                 {variant !== 'cards' && (
                   <>
                     <MediaInput label={variant === 'icons' || variant === 'rows' ? 'Icon' : 'Image'} value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />

@@ -88,7 +88,7 @@ export function HeadingBlock(p: P<'heading'>) {
         {p.badge && <span className="he-hd__badge">{p.badge}</span>}
         {p.eyebrow && <Eyebrow className={p.align === 'center' ? 'justify-center' : undefined}>{p.eyebrow}</Eyebrow>}
         {p.layout === 'split' ? (
-          <div className="he-hd__split">
+          <div className={cn('he-hd__split', `is-v-${p.splitAlign}`)}>
             <div>
               {title}
               {divider}

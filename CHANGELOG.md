@@ -9,6 +9,31 @@ told about before taking it.
 
 ---
 
+## 2.8.0 — 2026-09-18
+
+**Cards can now be styled one at a time.** Every card in a grid has its own
+look: background, text colour, padding and margin, a border, a corner radius
+and its alignment — plus a CSS class of its own if you want to go further.
+Picking one tile out of six to stand out used to mean writing CSS by hand.
+
+It is folded away under each card and marked **set** when you have used it, so
+a list of eight cards is still a list of eight cards. A card you have not
+touched is completely unchanged — it gains no class and adds nothing to the
+page. The text colour reaches the card's heading as well, so a dark tile does
+not end up with a dark title on it.
+
+It works on every card layout, not only the plain one.
+
+**A heading with its subtitle beside it can be lined up.** That layout always
+centred the two halves against each other. There is now a *Line them up*
+choice — at the top, centred, or at the bottom — and it appears only for that
+layout, since stacked headings have nothing to line up. Centred stays the
+default, so every heading you already have looks exactly as it did.
+
+No database changes.
+
+---
+
 ## 2.7.1 — 2026-09-17
 
 **`npm run release:merge` now finishes the job after a conflict.** When a

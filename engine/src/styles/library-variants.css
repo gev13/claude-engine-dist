@@ -194,6 +194,10 @@
 
   /* Heading: the old statement block's split layout and lede size. */
   .he-hd__split { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: center; gap: 32px 56px; }
+  /* Where the subtitle sits against the heading. `center` was the only
+     behaviour and stays the default, so stored headings do not move. */
+  .he-hd__split.is-v-top { align-items: start; }
+  .he-hd__split.is-v-bottom { align-items: end; }
   .he-hd__split .he-hd__sub { margin: 0; font-size: 17px; color: var(--color-ash); }
   .he-hd.is-lede .he-hd__title { max-width: none; }
   .he-hd.is-center .he-hd__split { text-align: left; }

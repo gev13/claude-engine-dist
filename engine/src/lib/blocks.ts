@@ -8,6 +8,7 @@ import {
   columnWidthSchema,
   textTagSchema,
 } from './blockStyle';
+import { itemStyleSchema } from './itemStyle';
 import { isColor, isLength } from './theme';
 import { SOCIAL_NETWORKS, imageUrl as mediaUrl, isSafeHref } from './navigation';
 import { parseVideoUrl } from './embeds';
@@ -245,6 +246,8 @@ export const blockSchemas = {
     iconPosition: z.enum(['top', 'left', 'floating']).default('top'),
     cards: z.array(
       z.object({
+        /** This card's own colour, spacing and edge — see `lib/itemStyle.ts`. */
+        style: itemStyleSchema.optional(),
         eyebrow: z.string().optional(),
         title: z.string(),
         body: z.string().optional(),
@@ -948,6 +951,14 @@ export const blockSchemas = {
     size: z.enum(['medium', 'large', 'display', 'lede']).default('large'),
     /** `split` puts the subtitle beside the heading, as the old statement block did. */
     layout: z.enum(['stacked', 'split']).default('stacked'),
+    /**
+     * Where the two halves of a `split` sit against each other.
+     *
+     * `center` is what it has always done, so it stays the default and every
+     * stored heading renders exactly as before. Ignored by `stacked`, where
+     * there is nothing to line up.
+     */
+    splitAlign: z.enum(['top', 'center', 'bottom']).default('center'),
     /** SC3 — the words light up as the heading scrolls through the screen. */
     animation: z.enum(['none', 'kinetic']).default('none'),
     badge: text(40),

@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
+import { itemClass } from '@/lib/itemStyle';
 import { BlockHead, BlockTitle } from '../parts';
 import { CountUp } from './CountUp';
 import { MediaFill } from './media';
@@ -111,7 +112,7 @@ export function MediaBand(p: P<'mediaBand'>) {
 
 /* ── CT4 / CT5: card grid variants ────────────────────────────────────────── */
 
-export function CardGridVariant(p: P<'cardGrid'>) {
+export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   const head = (p.title || p.eyebrow || p.intro) && (
     <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} />
   );
@@ -143,11 +144,11 @@ export function CardGridVariant(p: P<'cardGrid'>) {
               </>
             );
             return c.href ? (
-              <Link key={c.title + i} href={c.href} className="he-tile">
+              <Link key={c.title + i} href={c.href} className={cn('he-tile', itemClass(p.blockId, i, c.style))}>
                 {inner}
               </Link>
             ) : (
-              <div key={c.title + i} className="he-tile">
+              <div key={c.title + i} className={cn('he-tile', itemClass(p.blockId, i, c.style))}>
                 {inner}
               </div>
             );
@@ -165,7 +166,7 @@ export function CardGridVariant(p: P<'cardGrid'>) {
           {head}
           <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`)}>
             {p.cards.map((c, i) => (
-              <li key={c.title + i} className="he-rows__item">
+              <li key={c.title + i} className={cn('he-rows__item', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
                   <div className="he-rows__icon">
                     <MediaFill imageUrl={c.imageUrl} alt="" className="he-feat__img" />
@@ -226,7 +227,7 @@ export function CardGridVariant(p: P<'cardGrid'>) {
             // V3 — the text sits on the picture, over a shade.
             if (overlay) {
               return (
-                <li key={c.title + i} className="he-fgrid__item he-ocard">
+                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', itemClass(p.blockId, i, c.style))}>
                   <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-fill he-ocard__bg" />
                   {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
@@ -243,7 +244,7 @@ export function CardGridVariant(p: P<'cardGrid'>) {
               );
             }
             return (
-              <li key={c.title + i} className="he-fgrid__item">
+              <li key={c.title + i} className={cn('he-fgrid__item', itemClass(p.blockId, i, c.style))}>
                 {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className={icons ? 'he-feat__icon' : 'he-icard__media'}>
                   <MediaFill imageUrl={c.imageUrl} alt={icons ? '' : c.alt} className={icons ? 'he-feat__img' : 'he-fill'} />

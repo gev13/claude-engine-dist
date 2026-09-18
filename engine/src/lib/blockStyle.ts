@@ -14,8 +14,8 @@ import { FONT_STACKS, isColor, isLength, normaliseLength } from './theme';
    a grammar or an allowlist, and `blockStyleToCss` re-checks before emitting.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const color = z.string().trim().refine(isColor, 'Not a valid colour');
-const length = z.string().trim().transform(normaliseLength).refine(isLength, 'Not a valid CSS length');
+export const color = z.string().trim().refine(isColor, 'Not a valid colour');
+export const length = z.string().trim().transform(normaliseLength).refine(isLength, 'Not a valid CSS length');
 
 /** Widths a section can occupy. Named, rather than WPBakery's stretch modes. */
 export const SECTION_WIDTHS = ['narrow', 'standard', 'wide', 'full'] as const;
@@ -32,7 +32,7 @@ export const SECTION_WIDTH_LABELS: Record<SectionWidth, string> = {
 export const STYLE_BREAKPOINTS = ['laptop', 'tablet', 'mobile'] as const;
 export type StyleBreakpoint = (typeof STYLE_BREAKPOINTS)[number];
 
-const box = z.object({
+export const box = z.object({
   marginTop: length.optional(),
   marginRight: length.optional(),
   marginBottom: length.optional(),
