@@ -1,6 +1,27 @@
 import 'server-only';
 import { revalidatePath } from 'next/cache';
 import { pingSearchEngines } from './ping';
+import { localeConfig } from '@/lib/locales';
+
+/**
+ * A public path and the route paths the cache knows it by.
+ *
+ * The middleware rewrites every public address onto the `[locale]` segment,
+ * so what Next caches for `/about` is `/en/about`, and a translation at
+ * `/hy/about` is cached as itself. Revalidating only the public spelling left
+ * the default language's cached copy in place until its timer ran out; this
+ * names every spelling the one address can have.
+ */
+function spellings(path: string): string[] {
+  const { locales, defaultLocale } = localeConfig();
+  const bare = path.replace(/\/+$/, '') || '/';
+  if (bare.includes('.') || bare.startsWith('/api')) return [bare];
+  const out = new Set([bare, bare === '/' ? `/${defaultLocale}` : `/${defaultLocale}${bare}`]);
+  const first = bare.split('/')[1] ?? '';
+  // Already a translation's own address: that is what its cache entry is called.
+  if (!locales.includes(first)) for (const locale of locales) out.add(bare === '/' ? `/${locale}` : `/${locale}${bare}`);
+  return [...out];
+}
 
 /**
  * Paths whose output depends on *any* piece of content: the homepage pulls in
@@ -22,7 +43,7 @@ export function revalidateContent(paths: string[]): void {
   const unique = new Set<string>();
   for (const path of [...paths, ...ALWAYS]) {
     const trimmed = path?.trim();
-    if (trimmed) unique.add(trimmed);
+    if (trimmed) for (const spelling of spellings(trimmed)) unique.add(spelling);
   }
 
   for (const path of unique) {

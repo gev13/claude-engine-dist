@@ -6,6 +6,8 @@ import { badRequest, conflict, created, handle, ok, readJson } from '@/server/ap
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
+import { getPermalinks } from '@/server/routing/config';
+import { blogIndexPath, categoryPath } from '@/lib/permalinks';
 import { revalidateContent } from '@/server/content/revalidate';
 import { db } from '@/server/db';
 import { categories, postCategories, type SeoFields } from '@/server/db/schema';
@@ -86,7 +88,8 @@ export async function POST(request: Request) {
       ip: clientIp(request.headers),
     });
 
-    revalidateContent([`/blog/category/${row.slug}`, '/blog']);
+    const permalinks = await getPermalinks();
+    revalidateContent([categoryPath(permalinks, row.slug), blogIndexPath(permalinks)]);
 
     return created(row);
   });

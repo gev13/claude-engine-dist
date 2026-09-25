@@ -95,6 +95,10 @@ const nextConfig: NextConfig = {
   outputFileTracingRoot: __dirname,
   reactStrictMode: true,
   poweredByHeader: false,
+  /* The trailing slash is a setting (Settings → Permalinks), so the middleware
+     puts every address in the site's form. Next's own redirect is decided at
+     build time and would fight it — stripping the slash a site asked for. */
+  skipTrailingSlashRedirect: true,
   compress: true,
   serverExternalPackages: ['argon2', 'postgres', 'sharp'],
   images: {

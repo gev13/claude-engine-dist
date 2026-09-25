@@ -1,8 +1,10 @@
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import { permanentRedirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { BlockRenderer } from '@/components/blocks/Renderer';
+import { ArchiveView, BlogIndexView, PagingLinks } from '@/components/site/blog/BlogViews';
+import { PostArticle } from '@/components/site/blog/PostArticle';
 import { safeCss } from '@/lib/customCode';
-import { findRedirect, recordNotFound } from '@/server/content/redirects';
+import { handleMiss } from '@/server/content/miss';
 import { JsonLd } from '@/components/site/JsonLd';
 import { buildMetadata } from '@/lib/seo/metadata';
 import {
@@ -13,18 +15,27 @@ import {
   serviceNode,
   webPage,
 } from '@/lib/seo/jsonld';
-import { servicePath } from '@/lib/site';
+import { servicePath, site } from '@/lib/site';
+import { messageReader } from '@/lib/messages';
+import { blogIndexPath, pagedPath, postPath, researchPath, categoryPath, withSlash } from '@/lib/permalinks';
 import { getServiceBySlug, getServices } from '@/server/content/services';
-import { allPublishedPagePaths, getPageByPath, getTranslations } from '@/server/content/pages';
+import { allPublishedPagePaths, getTranslations } from '@/server/content/pages';
+import { allPublishedPostSlugs, getPostTranslations } from '@/server/content/posts';
+import { getCategoryTranslations, listCategories } from '@/server/content/categories';
+import { resolvePath, type Paging } from '@/server/content/resolve';
+import { getMessages } from '@/server/content/messages';
+import { getPermalinks } from '@/server/routing/config';
 import { localeConfig } from '@/lib/locales';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { pageTrail } from '@/server/content/trail';
 import { isoDate } from '@/lib/utils';
+import type { SeoFields } from '@/server/db/schema';
 
 /**
- * One catch-all route renders every CMS page: home, about, services index, the
- * ten service pages, contact, and the legal pages. Blog routes are handled by
- * their own segment, which takes precedence over this one.
+ * One catch-all route renders every public address the CMS owns: pages, the
+ * blog index, categories, research, posts, and `/page/N` of any of them.
+ * Where the blog lives is a setting (Settings → Permalinks, 2.13), so the
+ * decision of what a path *is* belongs to `resolvePath`, not to folder names.
  *
  * ISR: revalidated on a timer and on demand from the admin panel
  * (revalidatePath on publish), so an edit is live within seconds without a
@@ -41,11 +52,14 @@ function pathFromParams(slug?: string[]) {
   return `/${slug.join('/')}`;
 }
 
+const toParams = (path: string) => ({ slug: path === '/' ? [] : path.replace(/^\//, '').split('/') });
+
 /**
  * Only this segment's own params: the locale is enumerated by the layout, and
  * Next calls this once per locale with that locale in `params`. So each
  * language prerenders exactly the paths it actually has — a page written only
- * in English is not built as an empty Armenian one.
+ * in English is not built as an empty Armenian one. Posts and categories are
+ * listed at their permalinks.
  */
 export async function generateStaticParams({
   params,
@@ -54,75 +68,158 @@ export async function generateStaticParams({
 }): Promise<{ slug?: string[] }[]> {
   const config = localeConfig();
   const locale = config.locales.includes(params.locale) ? params.locale : config.defaultLocale;
-  const paths = await allPublishedPagePaths(locale);
-  return paths
-    .filter((p) => !p.path.startsWith('/blog'))
-    .map((p) => ({ slug: p.path === '/' ? [] : p.path.replace(/^\//, '').split('/') }));
+  const [pages, posts, categories, permalinks] = await Promise.all([
+    allPublishedPagePaths(locale),
+    allPublishedPostSlugs(locale),
+    listCategories(locale),
+    getPermalinks(),
+  ]);
+  const paths = new Set<string>([
+    ...pages.map((p) => p.path),
+    blogIndexPath(permalinks),
+    researchPath(permalinks),
+    ...categories.map((c) => categoryPath(permalinks, c.slug)),
+    ...posts.map((p) => postPath(permalinks, p)),
+  ]);
+  return [...paths].map(toParams);
+}
+
+async function localeOf(raw: string) {
+  const config = localeConfig();
+  return config.locales.includes(raw) ? raw : config.defaultLocale;
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
   const { locale: raw, slug } = await params;
-  const config = localeConfig();
-  const locale = config.locales.includes(raw) ? raw : config.defaultLocale;
+  const locale = await localeOf(raw);
   const path = pathFromParams(slug);
-  const page = await getPageByPath(path, locale);
-  if (!page) return { title: 'Page not found' };
-  const [settings, translations] = await Promise.all([
-    getSiteSettings(),
-    getTranslations(page.translationGroupId),
-  ]);
+  const resolved = await resolvePath(path, locale);
+  if (!resolved || resolved.kind === 'redirect') return { title: 'Page not found' };
 
-  return buildMetadata({
-    seo: page.seo,
-    title: page.title,
-    description: page.excerpt || settings.description,
-    path,
-    locale,
-    translations,
-    siteName: settings.name,
-    // Library pages are a reference for whoever builds the site, not content
-    // for search engines, whatever the page's own robots field says.
-    noindex: page.template === 'library',
-  });
-}
+  const [settings, permalinks, messages] = await Promise.all([getSiteSettings(), getPermalinks(), getMessages(locale)]);
+  const t = messageReader(messages);
+  /** "— Page 2" on every page but the first, so ten archive pages are not ten identical titles. */
+  const paged = (title: string, paging?: Paging) =>
+    paging && paging.number > 1 ? `${title} — ${t('archive.page', { n: paging.number })}` : title;
+  const own = (paging: Paging | undefined, base: string) => (paging ? pagedPath(paging.base, paging.number, permalinks) : base);
 
-/**
- * What to do when a path has no content: follow a managed redirect if one
- * exists, otherwise log the miss and render the 404.
- */
-async function handleMiss(path: string): Promise<never> {
-  const target = await findRedirect(path);
-  if (target) {
-    /* Next emits 307 for `redirect` and 308 for `permanentRedirect` — the
-       method-preserving equivalents of 302 and 301. Search engines treat 308
-       exactly as they treat 301, so the stored 301/302 is the editor's intent
-       and these are the codes that carry it. */
-    if (target.status === 301) permanentRedirect(target.to);
-    redirect(target.to);
+  switch (resolved.kind) {
+    case 'post': {
+      const { post } = resolved;
+      const translations = await getPostTranslations(post.translationGroupId);
+      return buildMetadata({
+        seo: post.seo as SeoFields,
+        title: post.title,
+        description: post.excerpt,
+        path: postPath(permalinks, post),
+        locale,
+        translations: translations.map((tr) => ({ locale: tr.locale, path: postPath(permalinks, tr) })),
+        type: 'article',
+        publishedTime: isoDate(post.publishedAt),
+        modifiedTime: isoDate(post.updatedAt),
+        authors: post.authorName ? [post.authorName] : undefined,
+        imageUrl: post.coverUrl,
+        siteName: settings.name,
+      });
+    }
+    case 'category': {
+      const { category, paging } = resolved;
+      const translations = await getCategoryTranslations(category.translationGroupId);
+      return buildMetadata({
+        seo: paging.number > 1 ? undefined : (category.seo as SeoFields),
+        title: paged(`${category.name} — ${site.blogLabel}`, paging),
+        description: category.description || t('blog.categoryIntro', { site: settings.name, category: category.name }),
+        path: own(paging, categoryPath(permalinks, category.slug)),
+        locale,
+        translations: translations.map((tr) => ({ locale: tr.locale, path: categoryPath(permalinks, tr.slug) })),
+        siteName: settings.name,
+      });
+    }
+    case 'research':
+      return buildMetadata({
+        title: paged(t('blog.research'), resolved.paging),
+        description: t('blog.researchIntro'),
+        path: own(resolved.paging, researchPath(permalinks)),
+        siteName: settings.name,
+      });
+    case 'blogIndex': {
+      const { page, paging } = resolved;
+      return buildMetadata({
+        seo: paging.number > 1 ? undefined : page?.seo,
+        title: paged(page?.title ?? site.blogLabel, paging),
+        description: page?.excerpt || t('blog.indexIntro', { site: settings.name }),
+        path: own(paging, blogIndexPath(permalinks)),
+        siteName: settings.name,
+      });
+    }
+    case 'page': {
+      const { page, paging } = resolved;
+      const translations = await getTranslations(page.translationGroupId);
+      return buildMetadata({
+        seo: paging && paging.number > 1 ? { ...page.seo, canonicalUrl: undefined, title: undefined } : page.seo,
+        title: paged(page.seo.title?.trim() || page.title, paging),
+        description: page.excerpt || settings.description,
+        path: own(paging, path),
+        locale,
+        translations,
+        siteName: settings.name,
+        // Library pages are a reference for whoever builds the site, not content
+        // for search engines, whatever the page's own robots field says.
+        noindex: page.template === 'library',
+      });
+    }
   }
-
-  /* No referrer: reading headers() here would opt this route out of static
-     rendering entirely, and losing ISR on every page is a far worse trade than
-     losing one field on a 404 log entry. */
-  await recordNotFound(path);
-  notFound();
 }
+
 
 export default async function CmsPage({ params }: { params: Promise<Params> }) {
   const { locale: raw, slug } = await params;
-  const config = localeConfig();
-  const locale = config.locales.includes(raw) ? raw : config.defaultLocale;
+  const locale = await localeOf(raw);
   const path = pathFromParams(slug);
-  const page = await getPageByPath(path, locale);
-  if (!page) return handleMiss(path);
+  const resolved = await resolvePath(path, locale);
+  if (!resolved) return handleMiss(path);
 
+  const permalinks = await getPermalinks();
+
+  switch (resolved.kind) {
+    case 'redirect':
+      return permanentRedirect(withSlash(resolved.to));
+    case 'post':
+      return <PostArticle post={resolved.post} permalinks={permalinks} locale={locale} />;
+    case 'blogIndex':
+      return (
+        <BlogIndexView
+          page={resolved.page}
+          paging={resolved.paging}
+          list={resolved.list}
+          locale={locale}
+          permalinks={permalinks}
+        />
+      );
+    case 'research':
+      return <ArchiveView kind="research" paging={resolved.paging} locale={locale} permalinks={permalinks} />;
+    case 'category':
+      return (
+        <ArchiveView
+          kind="category"
+          category={resolved.category}
+          paging={resolved.paging}
+          locale={locale}
+          permalinks={permalinks}
+        />
+      );
+    case 'page':
+      break;
+  }
+
+  const { page, paging, list } = resolved;
   const trail = await pageTrail(path, page.title);
   const crumbs = breadcrumbs(trail);
   const modified = isoDate(page.updatedAt);
 
   const nodes = [
     webPage({
-      path,
+      path: paging ? pagedPath(paging.base, paging.number, permalinks) : path,
       name: page.seo.title ?? page.title,
       description: page.seo.description ?? page.excerpt,
       modified,
@@ -151,7 +248,12 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
 
   return (
     <>
-      <BlockRenderer blocks={page.blocks} showNames={page.template === 'library'} trail={trail} />
+      <BlockRenderer
+        blocks={page.blocks}
+        showNames={page.template === 'library'}
+        trail={trail}
+        paging={list && paging ? { blockId: list.blockId, ...paging } : undefined}
+      />
       {/* This page's own CSS: after the theme, after the site-wide rules and
           after the blocks' own, so the narrowest scope wins without anybody
           reaching for !important.
@@ -164,6 +266,7 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
       {page.customCss && (
         <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(page.customCss) }} />
       )}
+      {paging && <PagingLinks paging={paging} permalinks={permalinks} />}
       <JsonLd data={graph(nodes)} />
     </>
   );

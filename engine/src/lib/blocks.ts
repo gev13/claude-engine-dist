@@ -518,8 +518,17 @@ export const blockSchemas = {
      * V6 — the V6 layouts can show a few at a time. This happens in the browser,
      * never through the URL: a search parameter would make every visit dynamic.
      */
-    pagination: z.enum(['none', 'more', 'pages']).default('none'),
+    /**
+     * `server` (2.13) pages through real addresses — `/news/page/2` — so every
+     * page is in the HTML and a search engine can reach every post. `limit`
+     * is then the number per page. One per page; see lib/listing.ts.
+     */
+    pagination: z.enum(['none', 'more', 'pages', 'server']).default('none'),
     perPage: z.number().int().min(1).max(24).default(6),
+    /** With `server`: numbered links, previous/next, or a "Load more" button over real links. */
+    pager: z.enum(['numbers', 'prevNext', 'loadMore']).default('numbers'),
+    /** With `server`: "Showing 1–12 of 110 results" above the list. */
+    resultCount: z.boolean().default(false),
   }),
 
   /** The contact form; `split` (CF3) puts text and a picture beside a form card. */

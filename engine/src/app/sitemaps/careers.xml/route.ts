@@ -1,3 +1,4 @@
+import { getPermalinks } from '@/server/routing/config';
 import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { CAREERS_PATH } from '@/lib/careers';
 import { allPublishedJobsByGroup } from '@/server/content/jobs';
@@ -14,6 +15,8 @@ export const revalidate = 3600;
  * vacancy that no longer exists wastes somebody's afternoon.
  */
 export async function GET() {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   const jobs = (await allPublishedJobsByGroup()).filter((job) => job.isOpen);
 
   return new Response(

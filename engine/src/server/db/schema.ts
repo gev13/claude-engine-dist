@@ -359,6 +359,9 @@ export const posts = pgTable(
     body: text('body').notNull().default(''),
     /** Optional block tree, for posts built with the page builder instead. */
     blocks: jsonb('blocks').$type<Block[]>().notNull().default(sql`'[]'::jsonb`),
+    /** What the public post shows: `body` (every post before 2.13), `blocks`,
+     *  `bodyThenBlocks` or `blocksThenBody` — see lib/postLayout.ts. */
+    layout: varchar('layout', { length: 20 }).notNull().default('body'),
     kind: postKind('kind').notNull().default('article'),
     status: contentStatus('status').notNull().default('draft'),
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
@@ -541,8 +544,15 @@ export const redirects = pgTable(
   'redirects',
   {
     id: uuid('id').primaryKey().defaultRandom(),
-    /** Always stored with a leading slash and no trailing slash. */
+    /** Always stored with a leading slash and no trailing slash — or, for a
+     *  `regex` rule, the pattern itself. */
     fromPath: varchar('from_path', { length: 400 }).notNull(),
+    /** `exact` (every rule before 2.13), `prefix` or `regex` — see lib/redirectRules.ts. */
+    matchType: varchar('match_type', { length: 10 }).notNull().default('exact'),
+    /** A query the request must carry, `s=*`; empty ignores the query. */
+    matchQuery: varchar('match_query', { length: 300 }).notNull().default(''),
+    /** Prefix rules: append what followed the prefix to the target. */
+    keepRest: boolean('keep_rest').notNull().default(false),
     toPath: varchar('to_path', { length: 500 }).notNull(),
     /** 301 permanent or 302 temporary. Nothing else is worth offering. */
     status: integer('status').notNull().default(301),
@@ -554,7 +564,11 @@ export const redirects = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex('redirect_from_idx').on(t.fromPath)],
+  (t) => [
+    /* One rule per path, shape and query: `/old` exactly and `/old/*` are two
+       different rules, and so are `/` and `/?s=*`. */
+    uniqueIndex('redirect_from_idx').on(t.fromPath, t.matchType, t.matchQuery),
+  ],
 );
 
 export type Redirect = typeof redirects.$inferSelect;

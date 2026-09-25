@@ -2,7 +2,7 @@
 
 import { useMessages } from '@/components/site/Messages';
 
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';

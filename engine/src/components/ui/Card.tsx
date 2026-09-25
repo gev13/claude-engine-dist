@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { cn } from '@/lib/utils';
 import { ArrowRight } from './Button';
 
@@ -13,6 +13,7 @@ export function CardGrid({
   gap = 'rule',
   gapSize,
   className,
+  id,
 }: {
   children: React.ReactNode;
   cols?: 2 | 3 | 4;
@@ -20,6 +21,7 @@ export function CardGrid({
   /** An editor's own spacing, which replaces the named one when it is set. */
   gapSize?: string;
   className?: string;
+  id?: string;
 }) {
   const colClass = {
     2: 'sm:grid-cols-2',
@@ -32,6 +34,7 @@ export function CardGrid({
        have to out-specify them. Anything set here has already been through the
        schema's length grammar. */
     <div
+      id={id}
       className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', className)}
       style={gapSize ? { gap: gapSize } : undefined}
     >

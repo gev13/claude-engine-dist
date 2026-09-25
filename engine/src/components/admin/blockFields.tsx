@@ -4458,28 +4458,8 @@ function TypeFields({
               </Select>
             </Field>
           </div>
-          {!['cards', 'news', 'carousel', 'featured'].includes(str(props, 'variant') || 'cards') && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <PropSelect
-                label="Show"
-                k="pagination"
-                fallback="none"
-                options={[['none', 'All at once'], ['more', 'A few, then a “Show more” button'], ['pages', 'A page at a time, with page numbers']]}
-                props={props}
-                set={set}
-              />
-              {(str(props, 'pagination') || 'none') !== 'none' && (
-                <Field label="Per page" hint="“How many” above is the total">
-                  <Input
-                    type="number"
-                    min={1}
-                    max={24}
-                    value={num(props, 'perPage', 6)}
-                    onChange={(e) => set({ ...props, perPage: Math.min(24, Math.max(1, Math.round(Number(e.target.value) || 1))) })}
-                  />
-                </Field>
-              )}
-            </div>
+          {!['carousel', 'featured'].includes(str(props, 'variant') || 'cards') && (
+            <PostListPaging props={props} set={set} />
           )}
         </>
       );
@@ -4688,4 +4668,67 @@ function TypeFields({
     default:
       return <p className="m-0 text-[13px] text-smoke">This block has no editable settings.</p>;
   }
+}
+
+/**
+ * How a post list shows more than fits. The client-side options keep every
+ * post in one page's HTML and show a few at a time; "real pages" (2.13) gives
+ * each page its own address — `/news/page/2` — rendered on the server, which
+ * is what a blog with a hundred posts needs for search engines to reach them.
+ */
+function PostListPaging({ props, set }: { props: Props; set: Setter }) {
+  const variant = str(props, 'variant') || 'cards';
+  const pagination = str(props, 'pagination') || 'none';
+  // The client-side pager only knows the list layouts; cards and news go straight to real pages.
+  const clientPaging = !['cards', 'news'].includes(variant);
+  const options: [string, string][] = [
+    ['none', 'All at once'],
+    ...(clientPaging
+      ? ([
+          ['more', 'A few, then a “Show more” button'],
+          ['pages', 'A page at a time, with page numbers'],
+        ] as [string, string][])
+      : []),
+    ['server', 'Real pages — /page/2, on the server'],
+  ];
+  return (
+    <>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+        <PropSelect label="Show" k="pagination" fallback="none" options={options} props={props} set={set} />
+        {(pagination === 'more' || pagination === 'pages') && (
+          <Field label="Per page" hint="“How many” above is the total">
+            <Input
+              type="number"
+              min={1}
+              max={24}
+              value={num(props, 'perPage', 6)}
+              onChange={(e) => set({ ...props, perPage: Math.min(24, Math.max(1, Math.round(Number(e.target.value) || 1))) })}
+            />
+          </Field>
+        )}
+        {pagination === 'server' && (
+          <PropSelect
+            label="Links to the other pages"
+            k="pager"
+            fallback="numbers"
+            options={[
+              ['numbers', 'Numbered pages'],
+              ['prevNext', 'Previous and next'],
+              ['loadMore', '“Load more” button'],
+            ]}
+            props={props}
+            set={set}
+          />
+        )}
+      </div>
+      {pagination === 'server' && (
+        <>
+          <PropCheck label="Say how many there are — “Showing 1–12 of 110 results”" k="resultCount" props={props} set={set} />
+          <p className="m-0 text-[12px] leading-relaxed text-smoke">
+            “How many” is the number per page. One list per page can do this — on a second, the first one wins.
+          </p>
+        </>
+      )}
+    </>
+  );
 }

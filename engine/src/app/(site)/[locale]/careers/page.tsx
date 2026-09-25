@@ -1,5 +1,6 @@
+import { getPermalinks } from '@/server/routing/config';
 import type { Metadata } from 'next';
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { BlockRenderer } from '@/components/blocks/Renderer';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -24,6 +25,8 @@ function fallbackDescription(siteName: string) {
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   const { locale } = await params;
   const [page, settings] = await Promise.all([getPageByPath(CAREERS_PATH, locale), getSiteSettings()]);
   const config = localeConfig();
@@ -92,6 +95,8 @@ function JobRow({ job, locale }: { job: JobCard; locale: string }) {
 }
 
 export default async function CareersIndex({ params }: { params: Promise<Params> }) {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   const { locale } = await params;
   const [page, jobs, settings] = await Promise.all([
     getPageByPath(CAREERS_PATH, locale),

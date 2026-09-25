@@ -1,4 +1,6 @@
 import 'server-only';
+import { getPermalinks } from '@/server/routing/config';
+import { postPathById } from './posts';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { contentRevisions, pages, posts, users } from '@/server/db/schema';
@@ -33,7 +35,7 @@ const PAGE_FIELDS = [
 ] as const;
 
 const POST_FIELDS = [
-  'slug', 'title', 'excerpt', 'body', 'blocks', 'kind', 'status', 'seo',
+  'slug', 'title', 'excerpt', 'body', 'blocks', 'layout', 'kind', 'status', 'seo',
   'coverMediaId', 'primaryCategoryId', 'readingMinutes', 'customCss',
 ] as const;
 
@@ -286,7 +288,7 @@ export async function restoreRevision(
     entityType: 'post',
     entityId: revision.entityId,
     revisionNumber: revision.revisionNumber,
-    path: updated ? `/blog/${updated.slug}` : null,
+    path: updated ? await postPathById(await getPermalinks(), updated.id) : null,
   };
 }
 

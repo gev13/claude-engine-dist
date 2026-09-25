@@ -1,5 +1,6 @@
 'use client';
 
+import { DEFAULT_PERMALINKS } from '@/lib/permalinks';
 import { useState } from 'react';
 import useSWR from 'swr';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -70,7 +71,7 @@ function toForm(row: CategoryRow): FormValue {
   };
 }
 
-export function CategoriesManager() {
+export function CategoriesManager({ categoryBase = DEFAULT_PERMALINKS.categoryBase }: { categoryBase?: string }) {
   const { toast } = useToast();
   const { data, error, isLoading, mutate } = useSWR<ListResponse>('/api/admin/categories', fetcher);
 
@@ -155,7 +156,7 @@ export function CategoriesManager() {
   }
 
   const parentOptions = items.filter((row) => row.id !== selectedId);
-  const previewPath = `/blog/category/${form.slug || toSlug(form.name, 'category')}`;
+  const previewPath = `${categoryBase}/${form.slug || toSlug(form.name, 'category')}`;
 
   return (
     <>
@@ -268,7 +269,7 @@ export function CategoriesManager() {
                 />
               </Field>
 
-              <Field label="Slug" htmlFor="category-slug" hint="/blog/category/…">
+              <Field label="Slug" htmlFor="category-slug" hint={`${categoryBase}/…`}>
                 <Input
                   id="category-slug"
                   value={form.slug}

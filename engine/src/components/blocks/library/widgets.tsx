@@ -1,4 +1,7 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
+import { messageReader } from '@/lib/messages';
+import { getPermalinks } from '@/server/routing/config';
+import { blogIndexPath, withSlash } from '@/lib/permalinks';
 import { Fragment } from 'react';
 import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';
@@ -6,7 +9,6 @@ import type { blockSchemas } from '@/lib/blocks';
 import type { TextTag } from '@/lib/blockStyle';
 import { areaPath, formatChartValue, linePath, linePoints, niceScale, percentOf, pieSlices } from '@/lib/chart';
 import type { Crumb } from '@/lib/seo/jsonld';
-import { MESSAGES, type MessageKey, type Messages } from '@/lib/messages';
 import { getMessages } from '@/server/content/messages';
 import { cn } from '@/lib/utils';
 import { getSiteSettings } from '@/server/content/siteSettings';
@@ -551,13 +553,15 @@ export function TextPathBlock(p: P<'textPath'>) {
 
 /** A plain GET form to the blog — it works before any script has loaded. */
 export async function SearchBlock(p: P<'search'>) {
-  const t = messageReader(await getMessages());
+  const [messages, permalinks] = await Promise.all([getMessages(), getPermalinks()]);
+  const t = messageReader(messages);
+  const action = withSlash(blogIndexPath(permalinks));
   const minimal = p.style === 'minimal';
   return (
     <section className={cn('he-lsec he-srch-sec', toneClass(p.tone), `is-${p.align}`)}>
       <div className="shell">
         {(p.title || p.intro) && <BlockHead title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.align} className="mb-7" />}
-        <form role="search" action="/blog" method="get" className={cn('he-srch', `is-${p.style}`, `is-${p.size}`)}>
+        <form role="search" action={action} method="get" className={cn('he-srch', `is-${p.style}`, `is-${p.size}`)}>
           <Icon.Search size={20} className="he-srch__icon" />
           <input
             type="search"
@@ -580,7 +584,7 @@ export async function SearchBlock(p: P<'search'>) {
             <ul>
               {p.suggestions.map((s) => (
                 <li key={s}>
-                  <Link href={`/blog?q=${encodeURIComponent(s)}`}>{s}</Link>
+                  <Link href={`${action}?q=${encodeURIComponent(s)}`}>{s}</Link>
                 </li>
               ))}
             </ul>
@@ -591,7 +595,4 @@ export async function SearchBlock(p: P<'search'>) {
   );
 }
 
-/** The server-side twin of `useMessages`, for blocks that render on the server. */
-function messageReader(messages: Messages) {
-  return (key: MessageKey) => messages[key] ?? MESSAGES[key] ?? key;
-}
+

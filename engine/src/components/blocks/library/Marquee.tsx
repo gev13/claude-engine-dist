@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { useRef, useState } from 'react';
 import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';

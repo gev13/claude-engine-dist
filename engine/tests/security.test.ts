@@ -62,8 +62,26 @@ describe('rich text sanitisation', () => {
   });
 
   it('keeps legitimate editor output intact', () => {
-    const html = '<h2>Heading</h2><p><strong>Bold</strong> and <em>italic</em>.</p><ul><li>One</li></ul>';
+    const html = '<h2 id="intro">Heading</h2><p><strong>Bold</strong> and <em>italic</em>.</p><ul><li>One</li></ul>';
     expect(sanitizeRichText(html)).toBe(html);
+  });
+
+  /* 2.13 — a table of contents links to these, so they are stored with the
+     HTML and survive the next save, rather than invented in the browser. */
+  it('gives each h2 and h3 a stable id, unique within the article', () => {
+    const out = sanitizeRichText('<h2>Why it matters</h2><p>x</p><h3>Why it matters</h3><h2 id="kept">Kept</h2>');
+    expect(out).toBe('<h2 id="why-it-matters">Why it matters</h2><p>x</p><h3 id="why-it-matters-2">Why it matters</h3><h2 id="kept">Kept</h2>');
+  });
+
+  it('allows an inline video from the site and a YouTube or Vimeo player, nothing else', () => {
+    const video = sanitizeRichText('<video src="/media/a.mp4" poster="javascript:x" autoplay muted loop playsinline onplay="x()"></video>');
+    expect(video).toContain('src="/media/a.mp4"');
+    expect(video).not.toContain('poster');
+    expect(video).not.toContain('onplay');
+    expect(sanitizeRichText('<video src="https://evil.example/a.mp4"></video>')).not.toContain('evil');
+    expect(sanitizeRichText('<iframe src="https://www.youtube-nocookie.com/embed/abcdefghijk"></iframe>')).toContain('youtube-nocookie');
+    expect(sanitizeRichText('<iframe src="https://evil.example/x"></iframe>')).not.toContain('evil');
+    expect(sanitizeRichText('<img src="/a.webp" srcset="/a-480.webp 480w" sizes="100vw" alt="">')).toContain('srcset=');
   });
 
   it('hardens external links', () => {

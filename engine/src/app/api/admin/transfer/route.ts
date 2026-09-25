@@ -7,6 +7,8 @@ import { badRequest, handle, notFound, ok, readJson } from '@/server/api/respond
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
+import { revalidateEverything } from '@/server/content/revalidate';
+import { invalidateRouting } from '@/server/routing/config';
 import {
   MAX_IMPORT_BYTES,
   contentArchivePath,
@@ -148,6 +150,11 @@ export async function POST(request: Request) {
       });
 
       if (!outcome.ok) return badRequest(outcome.error);
+      /* Every page, post and setting may have changed underneath the cache,
+         and the permalinks and redirect rules with them. */
+      invalidateRouting();
+      revalidateEverything();
+
       return ok({ applied: outcome.applied, backupTaken: outcome.backupTaken });
     }
 

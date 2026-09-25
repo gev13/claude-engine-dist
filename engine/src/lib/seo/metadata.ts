@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, localePath, ogLocale, type Locale, type LocaleConfig } from '@/lib/locales';
 import { site } from '@/lib/site';
+import { withSlash } from '@/lib/permalinks';
 import type { SeoFields } from '@/server/db/schema';
 
 const DEFAULT_OG = '/og-default.png';
@@ -47,7 +48,7 @@ export function buildMetadata(opts: {
      translation at the English one would tell Google the translation is a
      duplicate and should not be indexed — the single most damaging mistake
      available in a multilingual setup. */
-  const ownPath = localePath(locale, opts.path, config);
+  const ownPath = withSlash(localePath(locale, opts.path, config));
   const canonical = seo.canonicalUrl?.trim() || `${SITE_URL}${ownPath === '/' ? '' : ownPath}`;
 
   /* hreflang has to be reciprocal *and* self-referential, or search engines
@@ -55,7 +56,7 @@ export function buildMetadata(opts: {
      points at the default locale when it exists. */
   const languages: Record<string, string> = {};
   for (const translation of opts.translations ?? []) {
-    const url = localePath(translation.locale, translation.path, config);
+    const url = withSlash(localePath(translation.locale, translation.path, config));
     languages[translation.locale] = `${SITE_URL}${url === '/' ? '' : url}`;
     if (translation.locale === config.defaultLocale) {
       languages['x-default'] = `${SITE_URL}${url === '/' ? '' : url}`;

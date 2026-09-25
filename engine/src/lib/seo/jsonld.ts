@@ -1,6 +1,10 @@
 import { SITE_URL } from '@/lib/env';
 import { servicePath } from '@/lib/site';
 import type { AnyBlock } from '@/lib/blocks';
+import { absoluteWithSlash } from '@/lib/permalinks';
+
+/** An absolute URL for a site path, in the site's trailing-slash form. */
+const abs = (path: string) => absoluteWithSlash(SITE_URL, path || '/');
 
 /* Every graph node this site emits. Rendered by <JsonLd> as a single
    @graph script per page, which is what search engines prefer. */
@@ -41,7 +45,7 @@ export function organization(s: SiteIdentity): Node {
   };
 }
 
-export function website(s: Pick<SiteIdentity, 'name' | 'description'>): Node {
+export function website(s: Pick<SiteIdentity, 'name' | 'description'> & { searchPath?: string }): Node {
   return {
     '@type': 'WebSite',
     '@id': SITE_ID,
@@ -52,7 +56,7 @@ export function website(s: Pick<SiteIdentity, 'name' | 'description'>): Node {
     inLanguage: 'en',
     potentialAction: {
       '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${SITE_URL}/blog?q={search_term_string}` },
+      target: { '@type': 'EntryPoint', urlTemplate: `${abs(s.searchPath ?? '/blog')}?q={search_term_string}` },
       'query-input': 'required name=search_term_string',
     },
   };
@@ -66,7 +70,7 @@ export function webPage(opts: {
   breadcrumbId?: string;
   speakableSelectors?: string[];
 }): Node {
-  const url = `${SITE_URL}${opts.path === '/' ? '/' : opts.path}`;
+  const url = abs(opts.path);
   return {
     '@type': 'WebPage',
     '@id': `${url}#webpage`,
@@ -88,7 +92,7 @@ export function webPage(opts: {
 export type Crumb = { name: string; path: string };
 
 export function breadcrumbs(trail: Crumb[]): Node {
-  const url = `${SITE_URL}${trail[trail.length - 1]?.path ?? '/'}`;
+  const url = abs(trail[trail.length - 1]?.path ?? '/');
   return {
     '@type': 'BreadcrumbList',
     '@id': `${url}#breadcrumb`,
@@ -96,7 +100,7 @@ export function breadcrumbs(trail: Crumb[]): Node {
       '@type': 'ListItem',
       position: i + 1,
       name: item.name,
-      item: `${SITE_URL}${item.path === '/' ? '/' : item.path}`,
+      item: abs(item.path),
     })),
   };
 }
@@ -105,8 +109,8 @@ export function breadcrumbs(trail: Crumb[]): Node {
  *  "Products (for services)" requirement. Only facts the page itself carries
  *  go in — audience, category and pricing differ per site and are added
  *  through the page's own JSON-LD additions when a site has them. */
-export function serviceNode(opts: { slug: string; name: string; description: string }): Node {
-  const url = `${SITE_URL}${servicePath(opts.slug)}`;
+export function serviceNode(opts: { slug: string; name: string; description: string; path?: string }): Node {
+  const url = abs(opts.path ?? servicePath(opts.slug));
   return {
     '@type': 'Service',
     '@id': `${url}#service`,
@@ -122,14 +126,14 @@ export function serviceNode(opts: { slug: string; name: string; description: str
 export function itemList(opts: { path: string; name: string; items: { name: string; path: string }[] }): Node {
   return {
     '@type': 'ItemList',
-    '@id': `${SITE_URL}${opts.path}#list`,
+    '@id': `${abs(opts.path)}#list`,
     name: opts.name,
     numberOfItems: opts.items.length,
     itemListElement: opts.items.map((it, i) => ({
       '@type': 'ListItem',
       position: i + 1,
       name: it.name,
-      url: `${SITE_URL}${it.path}`,
+      url: abs(it.path),
     })),
   };
 }
@@ -137,10 +141,10 @@ export function itemList(opts: { path: string; name: string; items: { name: stri
 export function blogNode(opts: { path: string; name: string; description: string }): Node {
   return {
     '@type': 'Blog',
-    '@id': `${SITE_URL}${opts.path}#blog`,
+    '@id': `${abs(opts.path)}#blog`,
     name: opts.name,
     description: opts.description,
-    url: `${SITE_URL}${opts.path}`,
+    url: abs(opts.path),
     publisher: { '@id': ORG_ID },
     inLanguage: 'en',
   };
@@ -156,8 +160,10 @@ export function articleNode(opts: {
   section?: string | null;
   imageUrl?: string | null;
   wordCount?: number;
+  /** The blog index this article belongs to — a setting since 2.13. */
+  blogPath?: string;
 }): Node {
-  const url = `${SITE_URL}${opts.path}`;
+  const url = abs(opts.path);
   return {
     '@type': 'Article',
     '@id': `${url}#article`,
@@ -165,7 +171,7 @@ export function articleNode(opts: {
     description: opts.description,
     url,
     mainEntityOfPage: { '@id': `${url}#webpage` },
-    isPartOf: { '@id': `${SITE_URL}/blog#blog` },
+    isPartOf: { '@id': `${abs(opts.blogPath ?? '/blog')}#blog` },
     publisher: { '@id': ORG_ID },
     author: opts.author
       ? { '@type': 'Person', name: opts.author }
@@ -225,7 +231,7 @@ export function jobPostingNode(opts: {
   department?: string;
   organisationName: string;
 }): Node {
-  const url = `${SITE_URL}${opts.path}`;
+  const url = abs(opts.path);
   const type = employmentType(opts.contractType);
 
   return {
@@ -254,16 +260,35 @@ export function jobPostingNode(opts: {
   };
 }
 
-/** Pulled automatically out of any `faq` block on the page. */
+/** The first `faq` block in a tree — at the top level or inside a row's columns. */
+function findFaq(blocks: AnyBlock[] | null | undefined): AnyBlock | undefined {
+  for (const block of blocks ?? []) {
+    if (!block || (block as { style?: { disabled?: boolean } }).style?.disabled) continue;
+    if (block.type === 'faq') return block;
+    if (block.type === 'row') {
+      for (const column of ((block.props ?? {}) as { columns?: { blocks?: AnyBlock[] }[] }).columns ?? []) {
+        const found = findFaq(column.blocks);
+        if (found) return found;
+      }
+    }
+  }
+  return undefined;
+}
+
+/**
+ * Pulled automatically out of the first `faq` block on the page — including
+ * one inside a row, and one in a post's own blocks (2.13), where it sits
+ * beside the Article node in the same graph.
+ */
 export function faqFromBlocks(blocks: AnyBlock[] | null | undefined, path: string): Node | null {
-  const faq = (blocks ?? []).find((b) => b.type === 'faq');
+  const faq = findFaq(blocks);
   if (!faq) return null;
   const items = (faq.props?.items ?? []) as { question: string; answer: string }[];
   if (!Array.isArray(items) || items.length === 0) return null;
 
   return {
     '@type': 'FAQPage',
-    '@id': `${SITE_URL}${path}#faq`,
+    '@id': `${abs(path)}#faq`,
     mainEntity: items.map((i) => ({
       '@type': 'Question',
       name: i.question,
@@ -295,7 +320,7 @@ export function siteNavigation(links: readonly { name: string; path: string }[] 
     '@type': 'SiteNavigationElement',
     '@id': `${SITE_URL}/#navigation`,
     name: nav.map((n) => n.name),
-    url: nav.map((n) => `${SITE_URL}${n.path}`),
+    url: nav.map((n) => abs(n.path)),
   };
 }
 

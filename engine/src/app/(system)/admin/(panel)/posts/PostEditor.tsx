@@ -1,5 +1,6 @@
 'use client';
 
+import { POST_LAYOUTS, POST_LAYOUT_LABELS, POST_OPENER_BLOCKS, postTakesOpeners, type PostLayout } from '@/lib/blog';
 import nextDynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
@@ -64,6 +65,10 @@ export type PostEditorRecord = {
   customCss: string;
   /** ISO string, or null when the post has never been published. */
   publishedAt: string | null;
+  /** What the public post shows (2.13). */
+  layout?: PostLayout;
+  /** Where it lives under this site's permalinks; null before the first save. */
+  publicPath?: string | null;
 };
 
 type FormValue = {
@@ -72,6 +77,7 @@ type FormValue = {
   excerpt: string;
   body: string;
   blocks: AnyBlock[];
+  layout: PostLayout;
   kind: 'article' | 'research';
   status: ContentStatus;
   seo: SeoFields;
@@ -100,12 +106,16 @@ function fromLocalInput(local: string): string | null {
   return Number.isNaN(date.getTime()) ? null : date.toISOString();
 }
 
+/** Stable, so the builder's memoised block list is not rebuilt on every keystroke. */
+const NO_EXCLUSIONS: readonly string[] = [];
+
 const blankValue: FormValue = {
   title: '',
   slug: '',
   excerpt: '',
   body: '',
   blocks: [],
+  layout: 'body',
   kind: 'article',
   status: 'draft',
   seo: {},
@@ -124,6 +134,7 @@ function toValue(record?: PostEditorRecord): FormValue {
     excerpt: record.excerpt,
     body: record.body,
     blocks: record.blocks ?? [],
+    layout: record.layout ?? 'body',
     kind: record.kind,
     status: record.status,
     seo: record.seo ?? {},
@@ -137,6 +148,8 @@ function toValue(record?: PostEditorRecord): FormValue {
 
 type PostApiRow = {
   id: string;
+  layout?: PostLayout;
+  publicPath?: string | null;
   title: string;
   slug: string;
   excerpt: string;
@@ -166,6 +179,7 @@ export function PostEditor({
   const [value, setValue] = useState<FormValue>(() => toValue(record));
   const [saved, setSaved] = useState<FormValue>(() => toValue(record));
   const [postId, setPostId] = useState<string | undefined>(record?.id);
+  const [publicPath, setPublicPath] = useState<string | null>(record?.publicPath ?? null);
   const [cover, setCover] = useState<CoverInfo | null>(initialCover ?? null);
   const [tab, setTab] = useState<'rich' | 'blocks'>(() =>
     record && record.blocks.length > 0 && !record.body ? 'blocks' : 'rich',
@@ -204,6 +218,7 @@ export function PostEditor({
     setValue(next);
     setSaved(next);
     setPostId(row.id);
+    setPublicPath(row.publicPath ?? null);
     setSlugLocked(true);
   }
 
@@ -227,6 +242,7 @@ export function PostEditor({
       excerpt: value.excerpt,
       body: value.body,
       blocks: value.blocks,
+      layout: value.layout,
       kind: value.kind,
       status,
       seo: value.seo,
@@ -284,13 +300,14 @@ export function PostEditor({
     setPickerFor(null);
   }
 
-  const publicPath = `/blog/${saved.slug || value.slug || ''}`;
+  // The server knows the permalinks and the category; before the first save there is no address yet.
+  const viewPath = publicPath ?? '';
 
   return (
     <>
       <PageHeader
         title={postId ? value.title || 'Untitled post' : 'New post'}
-        description={postId ? publicPath : 'Write it, file it under a category, then publish.'}
+        description={postId ? viewPath : 'Write it, file it under a category, then publish.'}
         actions={
           <>
             <AdminLinkButton href="/admin/posts" variant="ghost">
@@ -333,7 +350,11 @@ export function PostEditor({
                 />
               </Field>
 
-              <Field label="Slug" htmlFor="post-slug" hint="published at /blog/…">
+              <Field
+                label="Slug"
+                htmlFor="post-slug"
+                hint={viewPath ? `published at ${viewPath}` : 'the last part of the address — see Settings → Permalinks'}
+              >
                 <Input
                   id="post-slug"
                   value={value.slug}
@@ -355,6 +376,36 @@ export function PostEditor({
                 />
               </Field>
             </div>
+          </Panel>
+
+          <Panel title="What the post shows">
+            <Field
+              label="Layout"
+              htmlFor="post-layout"
+              hint={POST_LAYOUT_LABELS[value.layout].hint}
+            >
+              <Select
+                id="post-layout"
+                value={value.layout}
+                onChange={(e) => set('layout', e.target.value as PostLayout)}
+              >
+                {POST_LAYOUTS.map((option) => (
+                  <option key={option} value={option}>
+                    {POST_LAYOUT_LABELS[option].label}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            {value.layout === 'body' && value.blocks.length > 0 && (
+              <p className="m-0 mt-3 text-[13px] text-flare-soft">
+                This post has blocks that are not shown — pick a layout with blocks to show them.
+              </p>
+            )}
+            {value.layout === 'blocks' && value.body.trim() !== '' && (
+              <p className="m-0 mt-3 text-[13px] text-flare-soft">
+                The rich text is kept but not shown with this layout.
+              </p>
+            )}
           </Panel>
 
           <Panel
@@ -397,7 +448,11 @@ export function PostEditor({
                 )}
               </>
             ) : (
-              <BlockBuilder value={value.blocks} onChange={(next) => set('blocks', next)} />
+              <BlockBuilder
+                value={value.blocks}
+                onChange={(next) => set('blocks', next)}
+                exclude={postTakesOpeners(value.layout) ? NO_EXCLUSIONS : POST_OPENER_BLOCKS}
+              />
             )}
           </Panel>
         </div>
@@ -484,7 +539,7 @@ export function PostEditor({
 
               <div className="flex items-center justify-between gap-3 border-t-2 border-hairline pt-4">
                 {postId && saved.status === 'published' ? (
-                  <ViewLink href={publicPath} label="View post" />
+                  <ViewLink href={viewPath} label="View post" />
                 ) : (
                   <span
                     className="font-mono text-[10px] uppercase tracking-[0.12em] text-smoke/60"
@@ -617,7 +672,7 @@ export function PostEditor({
                 onChange={(next) => set('seo', next)}
                 fallbackTitle={value.title || 'Untitled post'}
                 fallbackDescription={value.excerpt}
-                path={publicPath}
+                path={viewPath}
               />
             ) : (
               <p className="m-0 text-[13px] leading-relaxed text-ash">

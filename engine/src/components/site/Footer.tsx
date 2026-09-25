@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { SiteMark } from '@/components/ui/Logo';
 import type { FooterVariant } from '@/lib/chrome';
 import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLink, linkAttrs } from '@/lib/navigation';

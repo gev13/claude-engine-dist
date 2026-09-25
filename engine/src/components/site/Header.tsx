@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { SiteMark, Wordmark } from '@/components/ui/Logo';
@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { Icon, SocialIcon } from './icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './SiteExtras';
+import { useMessages } from './Messages';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Header
@@ -46,6 +47,8 @@ export type HeaderProps = {
   locales?: string[];
   locale?: string;
   defaultLocale?: string;
+  /** The blog index, where the search icon goes — a setting since 2.13. */
+  searchHref?: string;
 };
 
 export type HeaderContact = { email?: string; address?: string; social: { network: SocialNetwork; href: string }[] };
@@ -72,6 +75,15 @@ function splitChildren(children: NavChild[] = []): { groups: Group[]; cards: Nav
   return { groups, cards };
 }
 
+/** A path as the menus spell it: no default-language prefix, no trailing slash. */
+function currentPath(pathname: string, defaultLocale?: string): string {
+  let path = pathname.replace(/\/+$/, '') || '/';
+  if (defaultLocale && (path === `/${defaultLocale}` || path.startsWith(`/${defaultLocale}/`))) {
+    path = path.slice(defaultLocale.length + 1) || '/';
+  }
+  return path;
+}
+
 const hasChildren = (item: NavItem) => (item.children?.length ?? 0) > 0;
 
 function Brand({ siteName, brand, onClick }: { siteName: string; brand?: Theme['brand']; onClick?: () => void }) {
@@ -94,6 +106,7 @@ export function Header(props: HeaderProps) {
   const { chrome, nav, cta, secondaryCta, siteName, brand } = props;
   const h = chrome.header;
   const pathname = usePathname();
+  const t = useMessages();
 
   const [openId, setOpenId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -175,7 +188,15 @@ export function Header(props: HeaderProps) {
   }, [menuOpen, fullscreenOpen, chrome.mobileMenu.variant]);
 
   const solid = !h.overlay || !overMedia || scrolled || menuOpen || openId !== null;
-  const isActive = (href: string) => pathname === href || (href !== '/' && pathname.startsWith(`${href}/`));
+  /* The server renders under the rewritten `/en/about`, the browser sees
+     `/about` (and `/about/` on a slashed site), so both are brought to the
+     one spelling the menus use before comparing — otherwise the server marks
+     nothing active and hydration keeps it that way. */
+  const current = currentPath(pathname, props.defaultLocale);
+  const isActive = (href: string) => {
+    const target = href.replace(/\/+$/, '') || '/';
+    return current === target || (target !== '/' && current.startsWith(`${target}/`));
+  };
   const openItem = nav.find((item) => item.id === openId && hasChildren(item));
 
   const close = () => setOpenId(null);
@@ -235,7 +256,7 @@ export function Header(props: HeaderProps) {
   const half = Math.ceil(nav.length / 2);
 
   const search = h.search && (
-    <Link href="/blog" className="he-hdr__icon he-keep" aria-label="Search">
+    <Link href={props.searchHref ?? '/blog'} className="he-hdr__icon he-keep" aria-label={t('chrome.search')}>
       <Icon.Search size={19} />
     </Link>
   );
@@ -352,9 +373,9 @@ export function Header(props: HeaderProps) {
               <div className="he-hdr__pill">
                 {nav_}
                 {h.search && (
-                  <Link href="/blog" className="he-hdr__pill-search">
+                  <Link href={props.searchHref ?? '/blog'} className="he-hdr__pill-search">
                     <Icon.Search size={16} />
-                    Search
+                    {t('chrome.search')}
                   </Link>
                 )}
               </div>

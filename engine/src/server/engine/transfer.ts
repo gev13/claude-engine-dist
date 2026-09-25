@@ -89,7 +89,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
  * tell the destination it had already been installed, and `engine.update*` is
  * one site's record of what it last checked.
  */
-export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups'] as const;
+export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks'] as const;
 const PORTABLE_SETTING_PREFIX = 'site.';
 
 export const NEVER_EXPORTED_SETTING_KEYS = [

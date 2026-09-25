@@ -1,4 +1,6 @@
 import type { Metadata } from 'next';
+import { getPermalinks } from '@/server/routing/config';
+import { postPathById } from '@/server/content/posts';
 import Link from 'next/link';
 import { desc, eq, sql } from 'drizzle-orm';
 import { PageHeader } from '@/components/admin/PageHeader';
@@ -122,6 +124,12 @@ async function loadSnapshot(includeAudit: boolean): Promise<Snapshot> {
         : Promise.resolve([]),
     ]);
 
+  // A post's address depends on the site's permalinks and on its category.
+  const permalinks = await getPermalinks();
+  const postPaths = new Map(
+    await Promise.all(recentPosts.map(async (row) => [row.id, (await postPathById(permalinks, row.id)) ?? ''] as const)),
+  );
+
   const recent: RecentItem[] = [
     ...recentPages.map((row) => ({
       id: row.id,
@@ -136,7 +144,7 @@ async function loadSnapshot(includeAudit: boolean): Promise<Snapshot> {
       id: row.id,
       title: row.title,
       href: `/admin/posts/${row.id}`,
-      path: `/blog/${row.slug}`,
+      path: postPaths.get(row.id) ?? '',
       kind: 'Post' as const,
       status: row.status,
       updatedAt: row.updatedAt,

@@ -1,19 +1,26 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { localeConfig, splitLocale } from '@/lib/locales';
+import { withSlash } from '@/lib/permalinks';
+import { pickRule } from '@/lib/redirectRules';
+import { routingConfig } from '@/server/routing/config';
+import { countHit } from '@/server/routing/hits';
 
 /**
- * Edge middleware. Three jobs only:
+ * Middleware. Five jobs:
  *   1. keep unauthenticated traffic out of /admin before any admin code runs;
  *   2. stamp a request id used by the audit log;
- *   3. put every public request on a locale (package 8).
+ *   3. put every public request on a locale (package 8);
+ *   4. put every public address in the site's trailing-slash form (2.13);
+ *   5. apply the redirect rules that match a query, `/?s=*` (2.13).
  *
  * It is a gate, not the authorisation control — every admin route and API
  * handler re-checks the session and the permission server-side.
  *
- * The locale work is deliberately the only routing this file does, and it
- * needs no database: `lib/locales.ts` imports nothing, because the Edge
- * runtime cannot reach Postgres.
+ * **It runs on Node, not the Edge runtime, since 2.13.** The trailing-slash
+ * mode and the query rules are settings, and the Edge runtime cannot reach
+ * Postgres; `routingConfig()` reads them once per fifteen seconds and never
+ * throws. The locale list still comes from the environment, as before.
  */
 
 const ACCESS_COOKIE = 'he_at';
@@ -95,7 +102,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  /* ── Locale ──────────────────────────────────────────────────────────────
+  /* ── Locale, slash, query rules ──────────────────────────────────────────
      The route tree lives under `[locale]`, so an unprefixed path is rewritten
      rather than redirected: the address bar keeps saying `/about` while the
      router sees `/en/about`. A *prefixed* default locale is the opposite —
@@ -103,36 +110,60 @@ export async function middleware(request: NextRequest) {
      away permanently. */
   if (!isReserved(pathname)) {
     /* Read per request: `ENGINE_LOCALES` can change when somebody adds a
-       language in Settings, and the Edge runtime genuinely does see the new
-       value after a restart — measured rather than assumed. */
+       language in Settings, and the runtime genuinely does see the new value
+       after a restart — measured rather than assumed. */
     const config = localeConfig();
     const { locale, rest, prefixed } = splitLocale(pathname, config);
+    const routing = await routingConfig();
+    const mode = routing.permalinks.trailingSlash;
 
-    if (prefixed && locale === config.defaultLocale) {
-      const url = request.nextUrl.clone();
-      url.pathname = rest;
-      return NextResponse.redirect(url, 308);
+    /* One public spelling per address. `next.config.ts` turns Next's own
+       slash redirect off (`skipTrailingSlashRedirect`), because it is decided
+       at build time and this is a setting; so it is done here, in one hop
+       with the locale redirect. `never` is what Next used to do (a 308 to the
+       bare path), `always` is a 301 to the slashed one. */
+    const publicPath = prefixed && locale !== config.defaultLocale ? `/${locale}${rest === '/' ? '' : rest}` : rest;
+    const canonical = mode === 'always' ? withSlash(publicPath, 'always') : publicPath;
+    const wrongLocale = prefixed && locale === config.defaultLocale;
+    if (wrongLocale || (pathname !== canonical && pathname !== '/')) {
+      /* Built from scratch, not `nextUrl.clone()`: a NextURL remembers the
+         trailing slash it was parsed with and writes it back, which turned
+         `/blog/` → `/blog` into a redirect to itself. */
+      return NextResponse.redirect(new URL(`${canonical}${search}`, request.url), wrongLocale || mode === 'never' ? 308 : 301);
     }
 
-    /* The route tree lives under [locale], so even a single-language site is
-       rewritten — it simply never sees a prefix in the address bar. */
-    if (!prefixed) {
-      const url = request.nextUrl.clone();
-      url.pathname = rest === '/' ? `/${config.defaultLocale}` : `/${config.defaultLocale}${rest}`;
-      const rewritten = NextResponse.rewrite(url, { request: { headers: requestHeaders } });
-      rewritten.headers.set('cache-control', PAGE_CACHE);
-      return rewritten;
+    /* Redirect rules that match a query run before any route, because the
+       path they sit on — `/` for `/?s=term` — is usually live content that
+       would otherwise answer. Path-only rules wait for a 404 instead. */
+    if (search && routing.queryRules.length > 0) {
+      const found = pickRule(routing.queryRules, rest, request.nextUrl.searchParams);
+      if (found) {
+        countHit(found.rule.id);
+        const target = /^https?:/i.test(found.to) ? found.to : new URL(withSlash(found.to, mode), request.url);
+        return NextResponse.redirect(target, found.rule.status);
+      }
     }
 
-    const prefixedResponse = NextResponse.next({ request: { headers: requestHeaders } });
-    prefixedResponse.headers.set('cache-control', PAGE_CACHE);
-    return prefixedResponse;
+    /* A search of the blog is the one dynamic view of it. Everything else
+       under the blog index is resolved by the catch-all route and cached; a
+       query goes to a route of its own, so reading it does not make every
+       article dynamic. */
+    const target =
+      rest === routing.permalinks.blogIndex && request.nextUrl.searchParams.has('q') ? '/_search' : rest;
+
+    const internal = target === '/' ? `/${locale}` : `/${locale}${target}`;
+    const rewritten = NextResponse.rewrite(new URL(`${internal}${search}`, request.url), {
+      request: { headers: requestHeaders },
+    });
+    rewritten.headers.set('cache-control', PAGE_CACHE);
+    return rewritten;
   }
 
   return NextResponse.next({ request: { headers: requestHeaders } });
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: [
     '/admin/:path*',
     '/api/admin/:path*',

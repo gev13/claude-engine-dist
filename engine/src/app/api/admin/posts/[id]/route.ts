@@ -12,6 +12,10 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { ownsOrAdmin } from '@/server/auth/rbac';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { revalidateContent } from '@/server/content/revalidate';
+import { postPathById } from '@/server/content/posts';
+import { getPermalinks } from '@/server/routing/config';
+import { POST_LAYOUTS } from '@/lib/blog';
+import { blogIndexPath } from '@/lib/permalinks';
 import { captureRevision, deleteRevisionsFor } from '@/server/content/revisions';
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { db } from '@/server/db';
@@ -28,6 +32,8 @@ const updateSchema = z.object({
   excerpt: z.string().max(2000).optional(),
   body: z.string().max(500_000).optional(),
   blocks: z.array(blockInput).max(200).optional(),
+  /** What the public post shows — the article, the blocks, or both (2.13). */
+  layout: z.enum(POST_LAYOUTS).optional(),
   kind: z.enum(['article', 'research']).optional(),
   status: statusEnum.optional(),
   seo: seoSchema.optional(),
@@ -75,7 +81,9 @@ export async function GET(request: Request, ctx: Ctx) {
       .from(postCategories)
       .where(eq(postCategories.postId, row.id));
 
-    return ok({ ...row, categoryIds: linked.map((l) => l.categoryId) });
+    // Where the post lives under this site's permalinks, for the editor's View link.
+    const publicPath = await postPathById(await getPermalinks(), row.id);
+    return ok({ ...row, categoryIds: linked.map((l) => l.categoryId), publicPath });
   });
 }
 
@@ -109,6 +117,9 @@ export async function PATCH(request: Request, ctx: Ctx) {
 
     const body = input.body !== undefined ? sanitizeRichText(input.body) : undefined;
     const nextStatus = input.status ?? row.status;
+    const permalinks = await getPermalinks();
+    // The address before the save: a new slug or category moves the post, and the old one must stop serving.
+    const oldPath = await postPathById(permalinks, row.id);
 
     // Publishing for the first time stamps the date; unpublishing keeps it, so
     // re-publishing does not silently reorder the blog.
@@ -129,6 +140,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(input.excerpt !== undefined ? { excerpt: input.excerpt } : {}),
         ...(body !== undefined ? { body, readingMinutes: readingMinutes(body) } : {}),
         ...(input.blocks !== undefined ? { blocks: validated.blocks } : {}),
+        ...(input.layout !== undefined ? { layout: input.layout } : {}),
         ...(input.kind !== undefined ? { kind: input.kind } : {}),
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.seo !== undefined ? { seo: input.seo as SeoFields } : {}),
@@ -174,9 +186,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
       });
     }
 
-    revalidateContent([`/blog/${row.slug}`, `/blog/${updated?.slug ?? row.slug}`, '/blog']);
+    const newPath = await postPathById(permalinks, row.id);
+    revalidateContent([oldPath, newPath, blogIndexPath(permalinks)].filter((p): p is string => Boolean(p)));
 
-    return ok(updated);
+    return ok({ ...updated, publicPath: newPath });
   });
 }
 
@@ -189,6 +202,8 @@ export async function DELETE(request: Request, ctx: Ctx) {
     const row = await load(id);
     if (!row) return notFound('That post no longer exists.');
     if (!ownsOrAdmin(guard.user, row.authorId)) return forbidden('You can only delete your own posts.');
+    const permalinks = await getPermalinks();
+    const path = await postPathById(permalinks, row.id);
 
     /* First DELETE trashes; ?permanent=true erases. See the page route for why
        `status` moves to `archived` at the same time. */
@@ -216,7 +231,7 @@ export async function DELETE(request: Request, ctx: Ctx) {
       ip: clientIp(request.headers),
     });
 
-    revalidateContent([`/blog/${row.slug}`, '/blog']);
+    revalidateContent([path, blogIndexPath(permalinks)].filter((p): p is string => Boolean(p)));
 
     return noContent();
   });

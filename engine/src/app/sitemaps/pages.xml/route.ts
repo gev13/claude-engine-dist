@@ -1,3 +1,4 @@
+import { getPermalinks } from '@/server/routing/config';
 import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { CAREERS_PATH } from '@/lib/careers';
 import { allPublishedPagesByGroup } from '@/server/content/pages';
@@ -13,6 +14,8 @@ export const revalidate = 3600;
  * the relationship cannot drift between files.
  */
 export async function GET() {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   /* Services have their own sitemap; library pages are noindex reference
      pages; and `/careers` belongs to the careers sitemap, which lists it
      whether or not an editor has written a landing page for it — listing it

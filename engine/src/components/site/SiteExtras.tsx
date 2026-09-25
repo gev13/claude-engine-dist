@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { useEffect, useId, useState } from 'react';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { type NavChild, linkAttrs } from '@/lib/navigation';

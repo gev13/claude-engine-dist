@@ -135,6 +135,10 @@ export const PERMISSIONS = {
   // the roles that own the site rather than with content editing.
   'redirects:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
   'redirects:write': ['admin', 'manager'],
+  /* A regular expression runs against every missed path. The pattern is
+     checked for the shapes that hang a server, but it is still code-shaped
+     input, so writing one is an administrator's call (2.13). */
+  'redirects:regex': ['admin'],
   'audit:read': ['admin'],
 
   'profile:write': ['admin', 'manager', 'editor', 'author', 'reviewer'],

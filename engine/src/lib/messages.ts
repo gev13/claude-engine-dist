@@ -38,6 +38,32 @@ export const MESSAGES = {
   'blog.noResults': 'Nothing matched that.',
   'blog.previous': 'Previous',
   'blog.next': 'Next',
+  'blog.all': 'All',
+  'blog.searchArticles': 'Search articles…',
+  'blog.clear': 'Clear',
+  'blog.browse': 'Browse',
+  'blog.categories': 'Categories',
+  'blog.viewAll': 'View all',
+  'blog.read': 'Read',
+  'blog.nothingYet': 'Nothing published yet.',
+  'blog.nothingHere': 'Nothing published here yet.',
+  'blog.nothingFiled': 'Nothing filed here yet.',
+  'blog.noResearch': 'No research published yet.',
+  'blog.researchIntro': 'Original research, written up in full.',
+  'blog.indexIntro': 'Articles and updates from {site}.',
+  'blog.categoryIntro': 'Writing from {site} filed under {category}.',
+  'blog.nothingMatches': 'Nothing matches “{query}”',
+  'blog.resultsFor': '{count} results for “{query}”',
+  'blog.oneResultFor': '1 result for “{query}”',
+
+  /* ── Archive pages (2.13) ───────────────────────────────────────────── */
+  'archive.page': 'Page {n}',
+  'archive.pagination': 'Pages',
+  'archive.previousPage': 'Previous page',
+  'archive.nextPage': 'Next page',
+  'archive.loadMore': 'Load more',
+  'archive.loading': 'Loading…',
+  'archive.resultCount': 'Showing {from}–{to} of {total} results',
 
   /* ── Forms ───────────────────────────────────────────────────────────── */
   'form.submit': 'Send',
@@ -142,7 +168,29 @@ export function mergeMessages(overrides: unknown): Messages {
   return merged;
 }
 
+/**
+ * Fill `{name}` placeholders. A value that is missing leaves the placeholder
+ * as it stands, so a translation that dropped one reads oddly rather than
+ * printing "undefined".
+ */
+export function formatMessage(text: string, values: Record<string, string | number>): string {
+  return text.replace(/\{([a-z]+)\}/gi, (whole, name: string) =>
+    Object.prototype.hasOwnProperty.call(values, name) ? String(values[name]) : whole,
+  );
+}
+
 /** Look one up, falling back to English and then to the key itself. */
 export function message(messages: Messages | undefined, key: MessageKey): string {
   return messages?.[key] ?? MESSAGES[key] ?? key;
+}
+
+/**
+ * A server component's `t`: `messageReader(await getMessages())`, then
+ * `t('archive.page', { n: 2 })`. Client components use `useMessages()`.
+ */
+export function messageReader(messages: Messages | undefined) {
+  return (key: MessageKey, values?: Record<string, string | number>): string => {
+    const text = message(messages, key);
+    return values ? formatMessage(text, values) : text;
+  };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import {
   CONSENT_KEY,
   COOKIE_SETTINGS_HASH,

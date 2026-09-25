@@ -1,6 +1,6 @@
+import { getPermalinks } from '@/server/routing/config';
 import type { Metadata } from 'next';
-import Link from 'next/link';
-import { notFound, permanentRedirect, redirect } from 'next/navigation';
+import Link from '@/components/ui/SiteLink';
 import { ApplicationForm } from '@/components/site/ApplicationForm';
 import { JsonLd } from '@/components/site/JsonLd';
 import { Eyebrow } from '@/components/ui/Eyebrow';
@@ -13,7 +13,7 @@ import { CAREERS_PATH, JOB_META } from '@/lib/careers';
 import { formatRelative, hasPassed } from '@/lib/relativeDate';
 import { formatDate, isoDate } from '@/lib/utils';
 import type { Locale } from '@/lib/locales';
-import { findRedirect, recordNotFound } from '@/server/content/redirects';
+import { handleMiss } from '@/server/content/miss';
 import { allPublishedJobSlugs, getJob, getJobTranslations, listJobs } from '@/server/content/jobs';
 import { getPageByPath } from '@/server/content/pages';
 import { getSiteSettings } from '@/server/content/siteSettings';
@@ -29,6 +29,8 @@ export async function generateStaticParams({ params }: { params: { locale: strin
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   const { locale, slug } = await params;
   const job = await getJob(slug, locale as Locale);
   if (!job) return { title: 'Not found' };
@@ -57,18 +59,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   });
 }
 
-/** Follow a managed redirect if one exists; otherwise log the miss and 404. */
-async function handleMiss(path: string): Promise<never> {
-  const target = await findRedirect(path);
-  if (target) {
-    if (target.status === 301) permanentRedirect(target.to);
-    redirect(target.to);
-  }
-  await recordNotFound(path);
-  notFound();
-}
 
 export default async function JobPage({ params }: { params: Promise<Params> }) {
+  // The trailing-slash form every URL below is written in is a setting; load it first.
+  await getPermalinks();
   const { locale, slug } = await params;
   const job = await getJob(slug, locale as Locale);
   if (!job) return handleMiss(`${CAREERS_PATH}/${slug}`);

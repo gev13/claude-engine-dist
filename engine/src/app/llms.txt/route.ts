@@ -4,13 +4,15 @@ import { servicePath, site } from '@/lib/site';
 import { listJobs } from '@/server/content/jobs';
 import { allPublishedPagePaths } from '@/server/content/pages';
 import { getServiceCatalogue } from '@/server/content/services';
-import { listPosts } from '@/server/content/posts';
+import { listPosts, postUrl } from '@/server/content/posts';
+import { getPermalinks } from '@/server/routing/config';
+import { blogIndexPath, withSlash } from '@/lib/permalinks';
 import { getSiteSettings } from '@/server/content/siteSettings';
 
 export const revalidate = 3600;
 
 const link = (title: string, path: string, note?: string | null) =>
-  `- [${title}](${SITE_URL}${path})${note ? `: ${note}` : ''}`;
+  `- [${title}](${SITE_URL}${withSlash(path)})${note ? `: ${note}` : ''}`;
 
 /**
  * llms.txt — a curated map of the site for answer engines, in the format at
@@ -22,12 +24,13 @@ const link = (title: string, path: string, note?: string | null) =>
  * it is left out rather than listed empty or filled with links that 404.
  */
 export async function GET() {
-  const [settings, pages, catalogue, posts, openRoles] = await Promise.all([
+  const [settings, pages, catalogue, posts, openRoles, permalinks] = await Promise.all([
     getSiteSettings(),
     allPublishedPagePaths(),
     getServiceCatalogue(),
     listPosts({ limit: 15 }),
     listJobs({ limit: 25, openOnly: true }),
+    getPermalinks(),
   ]);
 
   const lines: string[] = [`# ${settings.name}`, '', `> ${settings.description}`];
@@ -51,8 +54,8 @@ export async function GET() {
       '',
       `## ${site.blogLabel}`,
       '',
-      link(site.blogLabel, site.blogBase),
-      ...posts.map((p) => link(p.title, `${site.blogBase}/${p.slug}`, p.excerpt)),
+      link(site.blogLabel, blogIndexPath(permalinks)),
+      ...posts.map((p) => link(p.title, postUrl(permalinks, p), p.excerpt)),
     );
   }
 

@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';

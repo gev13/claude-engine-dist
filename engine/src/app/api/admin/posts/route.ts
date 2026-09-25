@@ -11,6 +11,10 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { revalidateContent } from '@/server/content/revalidate';
+import { postPathById } from '@/server/content/posts';
+import { getPermalinks } from '@/server/routing/config';
+import { POST_LAYOUTS } from '@/lib/blog';
+import { blogIndexPath } from '@/lib/permalinks';
 import { captureRevision } from '@/server/content/revisions';
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { db } from '@/server/db';
@@ -25,6 +29,8 @@ const createSchema = z.object({
   excerpt: z.string().max(2000).optional(),
   body: z.string().max(500_000).optional(),
   blocks: z.array(blockInput).max(200).optional(),
+  /** What the public post shows — the article, the blocks, or both (2.13). */
+  layout: z.enum(POST_LAYOUTS).optional(),
   kind: z.enum(['article', 'research']).optional(),
   status: statusEnum.optional(),
   seo: seoSchema.optional(),
@@ -149,6 +155,7 @@ export async function POST(request: Request) {
         excerpt: input.excerpt ?? '',
         body,
         blocks: validated.blocks,
+        layout: input.layout ?? 'body',
         kind: input.kind ?? 'article',
         status,
         seo: (input.seo ?? {}) as SeoFields,
@@ -191,8 +198,10 @@ export async function POST(request: Request) {
       actorEmail: guard.user.email,
     });
 
-    if (row.status === 'published') revalidateContent([`/blog/${row.slug}`, '/blog']);
+    const permalinks = await getPermalinks();
+    const publicPath = await postPathById(permalinks, row.id);
+    if (row.status === 'published' && publicPath) revalidateContent([publicPath, blogIndexPath(permalinks)]);
 
-    return created(row);
+    return created({ ...row, publicPath });
   });
 }

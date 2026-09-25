@@ -50,6 +50,7 @@ import {
 import { BreadcrumbsBlock, BusinessHoursBlock, ChartBlock, PriceListBlock, ReviewsBlock, SearchBlock, TextPathBlock } from './library/widgets';
 import { FlipBoxBlock, HotspotsBlock, ShareBlock, TocBlock } from './library/widgets-client';
 import type { Crumb } from '@/lib/seo/jsonld';
+import type { Paging } from '@/server/content/resolve';
 import type { BlockStyle } from '@/lib/blockStyle';
 import { ShapeDividers } from './library/effects';
 import { TiltObserver } from './library/TiltObserver';
@@ -187,7 +188,14 @@ const isLive = (block: ParsedBlock) => block.style?.disabled !== true;
  * The wrapper is always rendered, unlike other blocks, because a row needs the
  * grid class regardless of whether anybody has styled it.
  */
-function RowBlock({ block, trail }: { block: ParsedBlock; trail?: Crumb[] }) {
+/**
+ * What the page hands down to the blocks that need it: the breadcrumb trail
+ * (the breadcrumbs block) and, for the one post list that pages on the
+ * server, which page this is.
+ */
+export type RenderContext = { trail?: Crumb[]; paging?: Paging & { blockId: string } };
+
+function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
   const props = block.props as ParsedRowProps;
   const style = block.style;
 
@@ -201,7 +209,7 @@ function RowBlock({ block, trail }: { block: ParsedBlock; trail?: Crumb[] }) {
         <div className={`he-r-${block.id}`}>
           {props.columns.map((column) => (
             <div key={column.id} className={cn(`he-c-${column.id}`, 'he-nested')}>
-              {column.blocks.filter(isLive).map((child) => renderBlock(child, trail))}
+              {column.blocks.filter(isLive).map((child) => renderBlock(child, ctx))}
             </div>
           ))}
         </div>
@@ -212,8 +220,8 @@ function RowBlock({ block, trail }: { block: ParsedBlock; trail?: Crumb[] }) {
 }
 
 /** `trail` is the page's own breadcrumb trail; only the breadcrumbs block reads it. */
-function renderBlock(block: ParsedBlock, trail?: Crumb[]): React.ReactNode {
-  if (block.type === 'row') return <RowBlock key={block.id} block={block} trail={trail} />;
+function renderBlock(block: ParsedBlock, ctx: RenderContext): React.ReactNode {
+  if (block.type === 'row') return <RowBlock key={block.id} block={block} ctx={ctx} />;
 
   const Component = registry[block.type];
   if (!Component) return null;
@@ -222,8 +230,9 @@ function renderBlock(block: ParsedBlock, trail?: Crumb[]): React.ReactNode {
     <BlockShell key={block.id} block={block}>
       <Component
         {...(block.props as object)}
-        {...(block.type === 'breadcrumbs' ? { trail } : {})}
-        {...(block.type === 'form' || block.type === 'cardGrid' ? { blockId: block.id } : {})}
+        {...(block.type === 'breadcrumbs' ? { trail: ctx.trail } : {})}
+        {...(block.type === 'form' || block.type === 'cardGrid' || block.type === 'postList' ? { blockId: block.id } : {})}
+        {...(block.type === 'postList' && ctx.paging?.blockId === block.id ? { paging: ctx.paging } : {})}
       />
     </BlockShell>
   );
@@ -275,13 +284,17 @@ export function BlockRenderer({
   blocks,
   showNames = false,
   trail,
+  paging,
 }: {
   blocks: AnyBlock[] | null | undefined;
   /** Print each block's name above it — the `library` page template. */
   showNames?: boolean;
   /** The page's breadcrumb trail, the same one its structured data uses. */
   trail?: Crumb[];
+  /** Which page of its server-paged post list this address is (2.13). */
+  paging?: Paging & { blockId: string };
 }) {
+  const ctx: RenderContext = { trail, paging };
   const parsed = parseBlocks(blocks).filter(isLive);
   // P3-C5 — a block that asks the page to snap to it turns gentle snapping on for the page.
   const css = collectCss(parsed) + (anyStyle(parsed, (s) => s.snap) ? 'html{scroll-snap-type:y proximity}' : '');
@@ -295,10 +308,10 @@ export function BlockRenderer({
         ? parsed.map((block) => (
             <Fragment key={block.id}>
               <BlockNameTag block={block} />
-              {renderBlock(block, trail)}
+              {renderBlock(block, ctx)}
             </Fragment>
           ))
-        : parsed.map((block) => renderBlock(block, trail))}
+        : parsed.map((block) => renderBlock(block, ctx))}
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
       {anyStyle(parsed, (s) => s.reveal) && <RevealObserver />}
       {anyStyle(parsed, (s) => s.hover === 'tilt') && <TiltObserver />}

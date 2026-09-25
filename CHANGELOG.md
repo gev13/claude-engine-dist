@@ -9,6 +9,82 @@ told about before taking it.
 
 ---
 
+## 2.13.0 — 2026-09-25
+
+**The blog's addresses are a setting.** Settings → Permalinks decides where a
+post lives — under the blog (`/blog/<slug>`, what every site has today), under
+its category (`/<category>/<slug>`) or at the top level (`/<slug>`) — where
+category archives live (`/blog/category` by default, `/category` if you
+prefer), where the blog index is, and the word in `/page/2`. A site moving
+from WordPress keeps every address it had.
+
+Every link the engine writes follows it: cards, lists, the search box,
+breadcrumbs, the sitemap, `llms.txt`, canonicals and structured data. A post
+reached through the wrong category is sent to its own address. Changing the
+permalinks on a live site offers to write a 301 from every old address to its
+new one, in the same save; the screen shows how many addresses move before
+you commit.
+
+**Trailing slashes.** *Never* (today) or *Always*: every address the site
+writes ends in `/`, and the other spelling answers with a 301. It is a
+setting, not a rebuild.
+
+**Archives page on the server.** The blog, each category and research have
+real pages — `/blog/page/2/` — rendered on the server, so every post is
+reachable without a script and by a search engine. Each page has its own
+canonical and a `rel="prev"`/`rel="next"` pair; `/page/1` redirects to the
+archive itself, and a page past the last is a 404. Appearance → Blog → Archive
+pages sets how many per page, whether the links are numbers, previous/next or
+a "Load more" button (a real link underneath, so it works without a script),
+and an optional "Showing 1–12 of 110 results". Left alone, the blog still
+shows 24 and a category 48 — past that they now page instead of stopping.
+
+A Post list block can do the same on any page ("Real pages" under *Show*), so
+a `/news` page built from blocks gets `/news/page/2` too.
+
+**Posts can show their blocks.** A post's Blocks tab was saved and never shown
+on the live post — only in the preview. Now each post chooses: the article
+only (as before), its blocks only, the article then its blocks, or the blocks
+then the article. The preview uses the same component as the live post, so
+what you check is what goes live. An FAQ block in a post adds FAQPage to its
+structured data beside the Article, and a form block inside a post accepts
+submissions. The post builder leaves out heroes unless the blocks come first.
+
+A post's article can now carry an inline video from the media library and a
+YouTube or Vimeo player, and every h2 and h3 gets a stable id when it is
+saved, so a table of contents can link to it.
+
+**Redirects: prefixes, patterns, queries, and CSV.** A rule can match a path
+exactly (as before), a path and everything under it (`/portfolio-tag/*`,
+optionally keeping the rest of the path), a regular expression (administrators
+only; patterns that could hang the server are refused), or a query
+(`/?s=*` → `/blog?q=$1`). Import a CSV — the engine's own `from,to,status,note`
+or Yoast's export — see exactly what it will create, update, skip or refuse,
+then import it in one go; export the lot the same way. Chains are saved as one
+hop (A→B, B→C becomes A→C) and a loop is refused with the loop named.
+
+A redirect still never hides a live page. Rules now also apply to missing
+category and post addresses, which they used to skip.
+
+**Also fixed.**
+
+- The current page is marked in the header menu on every page. It was only
+  ever marked on the blog, because the server and the browser disagreed about
+  the address.
+- An import (Export & import) now clears the page cache when it finishes.
+- A saved change to a page now clears the cached copy under its language
+  prefix too.
+- A search of the blog is `noindex`, as search result pages should be.
+
+**Under the hood.** The middleware runs on Node instead of the Edge runtime,
+so it can read settings; if you run the engine behind something that only
+supports Edge middleware, say so before updating.
+
+Includes a database migration: two columns on redirects, one on posts. Take
+the backup the Updates screen offers.
+
+---
+
 ## 2.12.0 — 2026-09-18
 
 **A converging diagram can have more than two sources.** Add a fourth or a

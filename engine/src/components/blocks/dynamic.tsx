@@ -1,11 +1,17 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Card, CardGrid } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import { cn } from '@/lib/utils';
 import { blockSchemas } from '@/lib/blocks';
-import { servicePath, site } from '@/lib/site';
+import { servicePath } from '@/lib/site';
+import { messageReader } from '@/lib/messages';
+import { blogIndexPath, pagedPath, postPath, type Permalinks } from '@/lib/permalinks';
+import { getMessages } from '@/server/content/messages';
+import { getPermalinks } from '@/server/routing/config';
+import { Pagination, resultRange } from '@/components/site/Pagination';
+import type { Paging } from '@/server/content/resolve';
 import { getServiceCatalogue } from '@/server/content/services';
 import { formatDate } from '@/lib/utils';
 import { listPosts } from '@/server/content/posts';
@@ -39,13 +45,56 @@ export async function ServicesIndexBlock(p: P<'servicesIndex'>) {
   );
 }
 
-/** Post list — queries published posts, filtered by kind and/or category. */
-export async function PostListBlock(p: P<'postList'>) {
+type T = ReturnType<typeof messageReader>;
+
+/** What a list needs besides its posts: where they live, and the words around them. */
+type ListContext = { permalinks: Permalinks; t: T };
+
+/**
+ * Post list — queries published posts, filtered by kind and/or category.
+ *
+ * `paging` is handed down by the renderer to the one list on a page that
+ * pages on the server (`pagination: 'server'`): it says which page this is,
+ * so the list reads that slice and prints real links to the others.
+ */
+export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockId?: string }) {
+  const [permalinks, messages] = await Promise.all([getPermalinks(), getMessages()]);
+  const t = messageReader(messages);
+  const ctx: ListContext = { permalinks, t };
+  const server = p.pagination === 'server';
+  const paging = server ? p.paging : undefined;
   const posts = await listPosts({
     kind: p.kind === 'all' ? undefined : p.kind,
     categorySlug: p.categorySlug,
     limit: p.limit,
+    offset: paging ? (paging.number - 1) * p.limit : 0,
   });
+  const listId = paging ? `he-list-${p.blockId ?? 'posts'}` : undefined;
+  const pager = paging && (
+    <>
+      <Pagination
+        current={paging.number}
+        total={paging.total}
+        href={(n) => pagedPath(paging.base, n, permalinks)}
+        style={p.pager}
+        labels={{
+          nav: t('archive.pagination'),
+          previous: t('archive.previousPage'),
+          next: t('archive.nextPage'),
+          page: (n) => t('archive.page', { n }),
+          loadMore: t('archive.loadMore'),
+          loading: t('archive.loading'),
+        }}
+        listId={listId}
+      />
+    </>
+  );
+  const count = paging && p.resultCount && (
+    <p className="he-result-count label-mono mb-8">{t('archive.resultCount', resultRange(paging.number, p.limit, paging.count))}</p>
+  );
+  // Past this point `server` behaves like `none`: every post of this page is in the HTML.
+  const view = { ...p, pagination: server ? ('none' as const) : p.pagination };
+  const indexHref = blogIndexPath(permalinks);
 
   if (p.variant === 'news') {
     // CT13 — cover image with a type chip, title, date and excerpt.
@@ -53,21 +102,20 @@ export async function PostListBlock(p: P<'postList'>) {
       <Section tone={p.tone ?? 'base'} size="lg">
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align="center" className="mb-10" />
         {posts.length === 0 ? (
-          <p className="m-0 text-center text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
+          <p className="m-0 text-center text-[length:var(--he-block-text,16px)] text-smoke">{t('blog.nothingHere')}</p>
         ) : (
           <>
-            <ul className="he-news" style={{ '--cols': p.columns } as React.CSSProperties}>
+            {count}
+            <ul className="he-news" id={listId} style={{ '--cols': p.columns } as React.CSSProperties}>
               {posts.map((post) => (
                 <li key={post.id}>
-                  <Link href={`${site.blogBase}/${post.slug}`} className="he-news__card">
+                  <Link href={postPath(permalinks, post)} className="he-news__card">
                     <div className={cn('he-news__media', !post.coverUrl && 'he-media-empty')}>
                       {post.coverUrl && (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img src={post.coverUrl} alt="" className="he-fill" loading="lazy" />
                       )}
-                      <span className="he-news__chip">
-                        {post.kind === 'research' ? 'Research' : post.categoryName ?? 'Article'}
-                      </span>
+                      <span className="he-news__chip">{chipFor(post, t)}</span>
                     </div>
                     <div className="he-news__body">
                       <h3 className="he-news__title">{post.title}</h3>
@@ -82,71 +130,85 @@ export async function PostListBlock(p: P<'postList'>) {
                 </li>
               ))}
             </ul>
-            <div className="he-news__all">
-              <Button href={site.blogBase} variant="outline">
-                View all
-              </Button>
-            </div>
+            {pager ?? (
+              <div className="he-news__all">
+                <Button href={indexHref} variant="outline">
+                  {t('blog.viewAll')}
+                </Button>
+              </div>
+            )}
           </>
         )}
       </Section>
     );
   }
 
-  if (p.variant === 'featured') return <FeaturedPosts p={p} posts={posts} />;
+  if (p.variant === 'featured') return <FeaturedPosts p={view} posts={posts} ctx={ctx} />;
   if (p.variant === 'carousel') {
-    const carousel = postCarousel(p, posts);
+    const carousel = postCarousel(view, posts, ctx);
     // With nothing published, or a post the slider cannot show, the list layout says so plainly.
-    return carousel ? <Carousel {...carousel} /> : <PostLayouts p={{ ...p, variant: 'list' }} posts={posts} />;
+    return carousel ? (
+      <Carousel {...carousel} />
+    ) : (
+      <PostLayouts p={{ ...view, variant: 'list' }} posts={posts} ctx={ctx} listId={listId} pager={pager} count={count} />
+    );
   }
-  if (p.variant !== 'cards') return <PostLayouts p={p} posts={posts} />;
+  if (p.variant !== 'cards') return <PostLayouts p={view} posts={posts} ctx={ctx} listId={listId} pager={pager} count={count} />;
 
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {posts.length === 0 ? (
-        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">{t('blog.nothingHere')}</p>
       ) : (
-        <CardGrid cols={p.columns}>
-          {posts.map((post) => (
-            <Card
-              key={post.id}
-              eyebrow={
-                <>
-                  {post.kind === 'research' ? 'Research' : post.categoryName ?? 'Article'}
-                  {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
-                </>
-              }
-              title={post.title}
-              href={`${site.blogBase}/${post.slug}`}
-            >
-              {post.excerpt}
-            </Card>
-          ))}
-        </CardGrid>
+        <>
+          {count}
+          <CardGrid cols={p.columns} id={listId}>
+            {posts.map((post) => (
+              <Card
+                key={post.id}
+                eyebrow={
+                  <>
+                    {chipFor(post, t)}
+                    {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
+                  </>
+                }
+                title={post.title}
+                href={postPath(permalinks, post)}
+              >
+                {post.excerpt}
+              </Card>
+            ))}
+          </CardGrid>
+        </>
       )}
-      {posts.length > 0 && (
-        <Link
-          href={site.blogBase}
-          className="mt-9 inline-flex font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft hover:text-flare-hot"
-        >
-          All writing →
-        </Link>
-      )}
+      {pager ?? (posts.length > 0 && <AllWriting href={indexHref} t={t} />)}
     </Section>
+  );
+}
+
+/** The link under a list to the whole blog. */
+function AllWriting({ href, t }: { href: string; t: T }) {
+  return (
+    <Link
+      href={href}
+      className="mt-9 inline-flex font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft hover:text-flare-hot"
+    >
+      {t('blog.allWriting')} →
+    </Link>
   );
 }
 
 type PostRow = Awaited<ReturnType<typeof listPosts>>[number];
 
-const chipFor = (post: PostRow) => (post.kind === 'research' ? 'Research' : post.categoryName ?? 'Article');
+const chipFor = (post: PostRow, t: T) => (post.kind === 'research' ? t('blog.research') : post.categoryName ?? t('blog.article'));
 
 /**
  * P3-B6 — the posts as the carousel's cards, so they share its arrows, dots,
  * swiping and pause rules. Built through the carousel's own schema; null when
  * there is nothing to show.
  */
-function postCarousel(p: P<'postList'>, posts: PostRow[]) {
+function postCarousel(p: P<'postList'>, posts: PostRow[], { permalinks, t }: ListContext) {
   if (posts.length === 0) return null;
   const result = blockSchemas.carousel.safeParse({
     tone: p.tone,
@@ -155,15 +217,15 @@ function postCarousel(p: P<'postList'>, posts: PostRow[]) {
     title: p.title?.slice(0, 160),
     titleAs: p.titleAs,
     intro: p.intro?.slice(0, 400),
-    link: { label: 'All writing', href: site.blogBase },
+    link: { label: t('blog.allWriting'), href: blogIndexPath(permalinks) },
     slides: posts.slice(0, 24).map((post) => ({
-      eyebrow: [chipFor(post), post.publishedAt ? formatDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
+      eyebrow: [chipFor(post, t), post.publishedAt ? formatDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
       title: post.title.slice(0, 160),
       body: post.excerpt ? post.excerpt.slice(0, 600) : undefined,
       imageUrl: post.coverUrl ?? undefined,
       alt: '',
-      href: `${site.blogBase}/${post.slug}`,
-      buttonLabel: 'Read',
+      href: postPath(permalinks, post),
+      buttonLabel: t('blog.read'),
     })),
     perView: { base: p.columns, tablet: 2, mobile: 1.15 },
   });
@@ -171,7 +233,7 @@ function postCarousel(p: P<'postList'>, posts: PostRow[]) {
 }
 
 /** P3-B6 — one large post, the rest as a list beside it (a magazine front page). */
-function FeaturedPosts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
+function FeaturedPosts({ p, posts, ctx: { permalinks, t } }: { p: P<'postList'>; posts: PostRow[]; ctx: ListContext }) {
   const [lead, ...rest] = posts;
   const date = (post: PostRow) =>
     post.publishedAt && (
@@ -191,12 +253,12 @@ function FeaturedPosts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {!lead ? (
-        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">{t('blog.nothingHere')}</p>
       ) : (
         <div className={cn('he-feat', rest.length === 0 && 'is-single')}>
-          <Link href={`${site.blogBase}/${lead.slug}`} className="he-feat__lead">
+          <Link href={postPath(permalinks, lead)} className="he-feat__lead">
             <div className="he-feat__media">{cover(lead)}</div>
-            <span className="he-plst__chip">{chipFor(lead)}</span>
+            <span className="he-plst__chip">{chipFor(lead, t)}</span>
             <h3 className="he-feat__title">{lead.title}</h3>
             {date(lead)}
             {lead.excerpt && <p className="he-feat__excerpt">{lead.excerpt}</p>}
@@ -205,10 +267,10 @@ function FeaturedPosts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
             <ul className="he-feat__list">
               {rest.map((post) => (
                 <li key={post.id}>
-                  <Link href={`${site.blogBase}/${post.slug}`} className="he-feat__item">
+                  <Link href={postPath(permalinks, post)} className="he-feat__item">
                     <div className="he-feat__thumb">{cover(post)}</div>
                     <div>
-                      <span className="he-plst__chip">{chipFor(post)}</span>
+                      <span className="he-plst__chip">{chipFor(post, t)}</span>
                       <h3 className="he-feat__itemtitle">{post.title}</h3>
                       {date(post)}
                     </div>
@@ -219,14 +281,7 @@ function FeaturedPosts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
           )}
         </div>
       )}
-      {lead && (
-        <Link
-          href={site.blogBase}
-          className="mt-9 inline-flex font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft hover:text-flare-hot"
-        >
-          All writing →
-        </Link>
-      )}
+      {lead && <AllWriting href={blogIndexPath(permalinks)} t={t} />}
     </Section>
   );
 }
@@ -240,12 +295,20 @@ export function PostCollection({
   columns = 3,
   pagination = 'none',
   perPage = 6,
+  permalinks,
+  labels = { research: 'Research', article: 'Article' },
+  listId,
 }: {
   posts: PostRow[];
   variant: PostListVariant;
   columns?: 2 | 3;
   pagination?: 'none' | 'more' | 'pages';
   perPage?: number;
+  permalinks: Permalinks;
+  /** The chip on a post with no category, in the reader's language. */
+  labels?: { research: string; article: string };
+  /** The id "Load more" finds this list by in the next page's HTML. */
+  listId?: string;
 }) {
   const minimal = variant === 'minimal';
   const withExcerpt = variant === 'list' || variant === 'wide' || variant === 'overlay';
@@ -258,7 +321,7 @@ export function PostCollection({
     );
     return (
       <li key={post.id} className="he-plst__item">
-        <Link href={`${site.blogBase}/${post.slug}`} className="he-plst__link">
+        <Link href={postPath(permalinks, post)} className="he-plst__link">
           {!minimal && (
             <div className="he-plst__media">
               {post.coverUrl ? (
@@ -271,7 +334,7 @@ export function PostCollection({
           )}
           {minimal && date}
           <div className="he-plst__text">
-            <span className="he-plst__chip">{post.kind === 'research' ? 'Research' : post.categoryName ?? 'Article'}</span>
+            <span className="he-plst__chip">{post.kind === 'research' ? labels.research : post.categoryName ?? labels.article}</span>
             <h3 className="he-plst__title">{post.title}</h3>
             {!minimal && date}
             {withExcerpt && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
@@ -291,7 +354,7 @@ export function PostCollection({
 
   if (pagination === 'none') {
     return (
-      <ul className={listClass} style={style}>
+      <ul className={listClass} style={style} id={listId}>
         {items}
       </ul>
     );
@@ -300,23 +363,42 @@ export function PostCollection({
 }
 
 /** V6 — list, minimal, text over the cover, compact and wide layouts, optionally a few at a time. */
-function PostLayouts({ p, posts }: { p: P<'postList'>; posts: PostRow[] }) {
+function PostLayouts({
+  p,
+  posts,
+  ctx: { permalinks, t },
+  listId,
+  pager,
+  count,
+}: {
+  p: P<'postList'>;
+  posts: PostRow[];
+  ctx: ListContext;
+  listId?: string;
+  pager?: React.ReactNode;
+  count?: React.ReactNode;
+}) {
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {posts.length === 0 ? (
-        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">Nothing published here yet.</p>
+        <p className="m-0 text-[length:var(--he-block-text,16px)] text-smoke">{t('blog.nothingHere')}</p>
       ) : (
-        <PostCollection posts={posts} variant={p.variant as PostListVariant} columns={p.columns} pagination={p.pagination} perPage={p.perPage} />
+        <>
+          {count}
+          <PostCollection
+            posts={posts}
+            variant={p.variant as PostListVariant}
+            columns={p.columns}
+            pagination={p.pagination === 'server' ? 'none' : p.pagination}
+            perPage={p.perPage}
+            permalinks={permalinks}
+            labels={{ research: t('blog.research'), article: t('blog.article') }}
+            listId={listId}
+          />
+        </>
       )}
-      {posts.length > 0 && (
-        <Link
-          href={site.blogBase}
-          className="mt-9 inline-flex font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft hover:text-flare-hot"
-        >
-          All writing →
-        </Link>
-      )}
+      {pager ?? (posts.length > 0 && <AllWriting href={blogIndexPath(permalinks)} t={t} />)}
     </Section>
   );
 }

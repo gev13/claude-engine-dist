@@ -53,6 +53,8 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
     items: [
       { label: 'Users', href: '/admin/users', roles: ['admin'] },
       { label: 'Redirects', href: '/admin/redirects', roles: ['admin', 'manager'] },
+      // `settings:*` — it moves every address the blog has.
+      { label: 'Permalinks', href: '/admin/permalinks', roles: ['admin'] },
       { label: 'Email', href: '/admin/email', roles: ['admin'] },
       { label: 'Security', href: '/admin/security', roles: ['admin'] },
       { label: 'Updates', href: '/admin/updates', roles: ['admin'] },

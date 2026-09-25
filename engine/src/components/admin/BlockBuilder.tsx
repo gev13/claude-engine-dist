@@ -29,6 +29,7 @@ import { Wireframe } from './Wireframe';
 import { ReadySections } from './TemplatePickers';
 import { cn } from '@/lib/utils';
 import { BLOCK_WIREFRAMES } from '@/lib/wireframes';
+import { countHeadingOnes, withoutHeadingOne } from '@/lib/headings';
 
 /** Grouping for the "add block" menu — flat lists of 18 are hard to scan. */
 const GROUPS: { label: string; types: BlockType[] }[] = [
@@ -245,46 +246,17 @@ function SortableBlock({
  *
  * Heroes default to h1; everything else defaults to h2 or lower.
  */
-/** The same block, set to render its title as an h2 wherever it would have been the page's h1. */
-function withoutHeadingOne(block: AnyBlock): AnyBlock {
-  const props = (block.props ?? {}) as Record<string, unknown>;
-  if (block.type === 'row') {
-    const columns = (props.columns ?? []) as { blocks?: AnyBlock[] }[];
-    return { ...block, props: { ...props, columns: columns.map((column) => ({ ...column, blocks: (column.blocks ?? []).map(withoutHeadingOne) })) } };
-  }
-  const as = typeof props.titleAs === 'string' ? props.titleAs : block.type === 'hero' ? 'h1' : '';
-  return as === 'h1' ? { ...block, props: { ...props, titleAs: 'h2' } } : block;
-}
-
-function countHeadingOnes(blocks: AnyBlock[]): number {
-  let total = 0;
-
-  for (const block of blocks) {
-    const props = (block.props ?? {}) as Record<string, unknown>;
-
-    if (block.type === 'row') {
-      const columns = (props.columns ?? []) as { blocks?: AnyBlock[] }[];
-      for (const column of columns) total += countHeadingOnes(column.blocks ?? []);
-      continue;
-    }
-
-    // A full-screen slider and stacked panels put `titleAs` on their first
-    // slide or panel rather than on a section heading.
-    if (block.type === 'stackedPanels' || (block.type === 'carousel' && props.mode === 'hero')) {
-      const first = ((props.panels ?? props.slides ?? []) as { title?: string }[])[0];
-      if (first?.title && props.titleAs === 'h1') total += 1;
-      continue;
-    }
-
-    if (!props.title) continue;
-    const as = typeof props.titleAs === 'string' ? props.titleAs : block.type === 'hero' ? 'h1' : '';
-    if (as === 'h1') total += 1;
-  }
-
-  return total;
-}
-
-export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; onChange: (next: AnyBlock[]) => void }) {
+export function BlockBuilder({
+  value: stored,
+  onChange,
+  exclude = [],
+}: {
+  value: AnyBlock[];
+  onChange: (next: AnyBlock[]) => void;
+  /** Block types this tree may not add — a post's builder leaves out heroes (2.13). */
+  exclude?: readonly string[];
+}) {
+  const offered = (type: BlockType) => !exclude.includes(type);
   // Blocks of a retired type open as the block they became, so they can be edited; saving stores the new type.
   const value = useMemo(() => migrateBlocks(stored), [stored]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -304,10 +276,10 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
   const matchingBlocks = useMemo(() => {
     const query = blockQuery.trim().toLowerCase();
     if (!query) return null;
-    return blockTypes.filter(
+    return blockTypes.filter((type) => !exclude.includes(type)).filter(
       (type) => blockLabels[type].toLowerCase().includes(query) || type.toLowerCase().includes(query),
     );
-  }, [blockQuery]);
+  }, [blockQuery, exclude]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
@@ -489,7 +461,7 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
                     {group.label}
                   </h3>
                   <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6">
-                    {group.types.map((type) => (
+                    {group.types.filter(offered).map((type) => (
                       <button
                         key={type}
                         type="button"
@@ -507,10 +479,10 @@ export function BlockBuilder({ value: stored, onChange }: { value: AnyBlock[]; o
               ))}
             </div>
             {/* Anything defined in blocks.ts but not grouped above still needs a way in. */}
-            {blockTypes.filter((t) => !GROUPS.some((g) => g.types.includes(t))).length > 0 && (
+            {blockTypes.filter((t) => offered(t) && !GROUPS.some((g) => g.types.includes(t))).length > 0 && (
               <div className="mt-4 flex flex-wrap gap-1 border-t-2 border-hairline pt-4">
                 {blockTypes
-                  .filter((t) => !GROUPS.some((g) => g.types.includes(t)))
+                  .filter((t) => offered(t) && !GROUPS.some((g) => g.types.includes(t)))
                   .map((type) => (
                     <button
                       key={type}

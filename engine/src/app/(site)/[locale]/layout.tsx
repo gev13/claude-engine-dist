@@ -24,6 +24,8 @@ import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
 import { Popups } from '@/components/site/Popups';
 import { CookieNotice } from '@/components/site/CookieNotice';
+import { getPermalinks } from '@/server/routing/config';
+import { blogIndexPath } from '@/lib/permalinks';
 import '@/styles/globals.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -97,7 +99,7 @@ export default async function SiteLayout({
 
   /* Menus, the site's own details and popups all follow the language, each
      falling back to the shared value when nobody has translated it. */
-  const [theme, navigation, catalogue, settings, popups, messages, cookies, code] = await Promise.all([
+  const [theme, navigation, catalogue, settings, popups, messages, cookies, code, permalinks] = await Promise.all([
     getTheme(),
     getNavigation(locale),
     getServiceCatalogue(),
@@ -106,6 +108,7 @@ export default async function SiteLayout({
     getMessages(locale),
     getCookieNotice(locale),
     getSiteCode(),
+    getPermalinks(),
   ]);
   const css = themeToCss(theme);
   const chrome = resolveChrome(theme.chrome);
@@ -123,7 +126,14 @@ export default async function SiteLayout({
     // wrong motion or colour setting.
     // `dir` matters the moment somebody configures Arabic, Hebrew, Persian or
     // Urdu — and is far harder to retrofit than to set from the start.
-    <html lang={locale} dir={localeDir(locale)} suppressHydrationWarning>
+    /* `data-slash` tells client components the site's trailing-slash form, so
+       a link rendered in the browser matches the one the server wrote. */
+    <html
+      lang={locale}
+      dir={localeDir(locale)}
+      data-slash={permalinks.trailingSlash === 'always' ? 'always' : undefined}
+      suppressHydrationWarning
+    >
       <head>
         {/* The two faces above the fold. Preloading them removes the swap
             flash on first paint without delaying anything else. */}
@@ -174,6 +184,7 @@ export default async function SiteLayout({
             nav={navigation.header}
             cta={navigation.headerCta}
             secondaryCta={navigation.headerSecondaryCta}
+            searchHref={blogIndexPath(permalinks)}
             primaryServices={catalogue.primary}
             secondaryServices={catalogue.secondary}
             contact={{
@@ -209,7 +220,7 @@ export default async function SiteLayout({
           {/* The id lives in the route, not here: what runs is code this
               repository wrote, and the only thing an editor chose is an id. */}
           {hasAnalytics(code) && <script defer src="/analytics.js" />}
-          <JsonLd data={graph([organization(settings), website(settings), siteNavigation(navLinks)])} />
+          <JsonLd data={graph([organization(settings), website({ ...settings, searchPath: blogIndexPath(permalinks) }), siteNavigation(navLinks)])} />
         </div>
         </MessagesProvider>
       </body>

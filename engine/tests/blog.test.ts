@@ -4,7 +4,17 @@ import { parseTheme, themeSchema } from '../src/lib/theme';
 
 describe('blog layouts (BL1, BL2)', () => {
   it('keeps the card grid and the standard post when nothing is saved', () => {
-    expect(resolveBlog(undefined)).toEqual({ index: 'grid', pagination: 'none', perPage: 9, post: 'standard', progress: false });
+    expect(resolveBlog(undefined)).toEqual({
+      index: 'grid',
+      pagination: 'none',
+      perPage: 9,
+      post: 'standard',
+      progress: false,
+      // 2.13 — unset keeps the archive sizes the blog had before server paging.
+      archivePerPage: undefined,
+      archivePager: 'numbers',
+      resultCount: false,
+    });
   });
 
   it('is part of the theme, checked at the boundary', () => {

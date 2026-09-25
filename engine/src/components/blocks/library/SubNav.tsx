@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 import { usePathname } from 'next/navigation';
 import { useEffect, useId, useState } from 'react';
 import type { z } from 'zod';

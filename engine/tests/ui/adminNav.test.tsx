@@ -42,6 +42,7 @@ const GATE: Record<string, keyof typeof PERMISSIONS> = {
   '/admin/navigation': 'navigation:write',
   '/admin/popups': 'popups:write',
   '/admin/cookies': 'popups:write',
+  '/admin/permalinks': 'settings:write',
   // Not `popups:*` like the chrome above it: this row loads on every page of
   // the site, which is the reach Appearance and the theme have.
   '/admin/code': 'settings:write',

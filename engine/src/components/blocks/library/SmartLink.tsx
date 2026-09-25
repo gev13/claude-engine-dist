@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import Link from '@/components/ui/SiteLink';
 
 /** Opens off-site links in a new tab, safely; site links stay client-side routed. */
 export function SmartLink({ href, className, children, label }: { href: string; className?: string; children: React.ReactNode; label?: string }) {

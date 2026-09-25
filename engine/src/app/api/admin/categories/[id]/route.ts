@@ -6,7 +6,7 @@ import { conflict, handle, noContent, notFound, ok, readJson } from '@/server/ap
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
-import { revalidateContent } from '@/server/content/revalidate';
+import { revalidateEverything } from '@/server/content/revalidate';
 import { db } from '@/server/db';
 import { categories, postCategories, posts, type SeoFields } from '@/server/db/schema';
 
@@ -86,7 +86,10 @@ export async function PATCH(request: Request, ctx: Ctx) {
       ip: clientIp(request.headers),
     });
 
-    revalidateContent([`/blog/category/${row.slug}`, `/blog/category/${updated?.slug ?? row.slug}`, '/blog']);
+    /* A category's name is on every card filed under it, and under the
+       category permalink its slug is in every one of its posts' addresses —
+       there is no short list of paths that covers that. */
+    revalidateEverything();
 
     return ok(updated);
   });
@@ -131,7 +134,8 @@ export async function DELETE(request: Request, ctx: Ctx) {
       ip: clientIp(request.headers),
     });
 
-    revalidateContent([`/blog/category/${row.slug}`, '/blog', ...detached.map((p) => `/blog/${p.slug}`)]);
+    // Its posts may have moved (the category permalink) and its chip is on the blog index.
+    revalidateEverything();
 
     return noContent();
   });

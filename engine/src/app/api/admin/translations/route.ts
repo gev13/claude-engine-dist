@@ -10,6 +10,9 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { can, ownsOrAdmin } from '@/server/auth/rbac';
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { captureRevision } from '@/server/content/revisions';
+import { getPermalinks } from '@/server/routing/config';
+import { postPathById } from '@/server/content/posts';
+import { DEFAULT_PERMALINKS, categoryPath, postPath } from '@/lib/permalinks';
 import { revalidateContent } from '@/server/content/revalidate';
 import { db } from '@/server/db';
 import { categories, pages, posts } from '@/server/db/schema';
@@ -86,13 +89,22 @@ function normalise(kind: Kind, row: Record<string, unknown>): Row {
     // A category is live as soon as it exists; there is no draft to be in.
     status: (row.status as string) ?? 'published',
     authorId: (row.authorId as string | null) ?? null,
+    // Posts are corrected by `withAddress`, which knows their category; this is the shape without one.
     publicPath:
       kind === 'page'
         ? (row.path as string)
         : kind === 'post'
-          ? `/blog/${row.slug as string}`
-          : `/blog/category/${row.slug as string}`,
+          ? postPath(DEFAULT_PERMALINKS, { slug: row.slug as string })
+          : categoryPath(DEFAULT_PERMALINKS, row.slug as string),
   };
+}
+
+/** A row's real address under this site's permalinks — a post's depends on its category. */
+async function withAddress(kind: Kind, row: Row): Promise<Row> {
+  if (kind === 'page') return row;
+  const permalinks = await getPermalinks();
+  if (kind === 'category') return { ...row, publicPath: categoryPath(permalinks, row.slug) };
+  return { ...row, publicPath: (await postPathById(permalinks, row.id)) ?? row.publicPath };
 }
 
 async function loadOne(kind: Kind, id: string): Promise<Row | null> {
@@ -102,10 +114,10 @@ async function loadOne(kind: Kind, id: string): Promise<Row | null> {
   }
   if (kind === 'category') {
     const [row] = await db.select().from(categories).where(eq(categories.id, id)).limit(1);
-    return row ? normalise('category', row) : null;
+    return row ? withAddress('category', normalise('category', row)) : null;
   }
   const [row] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
-  return row ? normalise('post', row) : null;
+  return row ? withAddress('post', normalise('post', row)) : null;
 }
 
 async function loadSiblings(kind: Kind, groupId: string, exceptId: string): Promise<Row[]> {
@@ -121,13 +133,13 @@ async function loadSiblings(kind: Kind, groupId: string, exceptId: string): Prom
       .select()
       .from(categories)
       .where(and(eq(categories.translationGroupId, groupId), ne(categories.id, exceptId)));
-    return rows.map((row) => normalise('category', row));
+    return Promise.all(rows.map((row) => withAddress('category', normalise('category', row))));
   }
   const rows = await db
     .select()
     .from(posts)
     .where(and(eq(posts.translationGroupId, groupId), ne(posts.id, exceptId)));
-  return rows.map((row) => normalise('post', row));
+  return Promise.all(rows.map((row) => withAddress('post', normalise('post', row))));
 }
 
 export async function GET(request: Request) {
@@ -394,7 +406,7 @@ export async function PUT(request: Request) {
         })
         .where(eq(pages.id, input.id));
     } else if (input.kind === 'category') {
-      newPath = `/blog/category/${input.slug}`;
+      newPath = categoryPath(await getPermalinks(), input.slug);
       await db
         .update(categories)
         .set({
@@ -406,7 +418,7 @@ export async function PUT(request: Request) {
         })
         .where(eq(categories.id, input.id));
     } else {
-      newPath = `/blog/${input.slug}`;
+      newPath = postPath(await getPermalinks(), { slug: input.slug });
       await db
         .update(posts)
         .set({
@@ -447,6 +459,8 @@ export async function PUT(request: Request) {
       ip: clientIp(request.headers),
     });
 
+    // A post's address also depends on its category, which only the stored row knows.
+    if (input.kind === 'post') newPath = (await postPathById(await getPermalinks(), input.id)) ?? newPath;
     revalidateContent([newPath, target.publicPath]);
 
     return ok({

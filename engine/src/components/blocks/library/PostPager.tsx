@@ -61,7 +61,7 @@ export function PostPager({
       {mode === 'more' && shown < items.length && (
         <div className="he-pager">
           <button type="button" className="he-cbtn is-outline is-medium" onClick={showMore}>
-            Show more<span className="sr-only"> posts</span>
+            {t('archive.loadMore')}
           </button>
         </div>
       )}
@@ -75,7 +75,7 @@ export function PostPager({
               key={i}
               type="button"
               className="he-pager__btn"
-              aria-label={`Page ${i + 1}`}
+              aria-label={t('archive.page').replace('{n}', String(i + 1))}
               aria-current={i === page ? 'page' : undefined}
               onClick={() => goTo(i)}
             >

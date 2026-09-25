@@ -1,5 +1,6 @@
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, localePath, type Locale, type LocaleConfig } from '@/lib/locales';
+import { withSlash } from '@/lib/permalinks';
 
 export type SitemapEntry = {
   /** The path *without* a locale prefix; `locale` decides the address. */
@@ -18,7 +19,7 @@ export type SitemapEntry = {
 };
 
 const absolute = (locale: Locale, path: string, config: LocaleConfig) => {
-  const withLocale = localePath(locale, path, config);
+  const withLocale = withSlash(localePath(locale, path, config));
   return `${SITE_URL}${withLocale === '/' ? '/' : withLocale}`;
 };
 

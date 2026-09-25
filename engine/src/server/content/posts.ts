@@ -1,8 +1,26 @@
 import 'server-only';
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
 import { localeConfig, type Locale } from '@/lib/locales';
 import { db } from '@/server/db';
 import { categories, media, postCategories, posts, users } from '@/server/db/schema';
+import type { AnyBlock } from '@/lib/blocks';
+import { resolvePostLayout, type PostLayout } from '@/lib/blog';
+import { postPath, type Permalinks } from '@/lib/permalinks';
+
+/**
+ * The category a post is filed under in its address: the primary one, or —
+ * when nobody picked one — the first of its categories, in the order the
+ * categories screen lists them. One expression, so a card and the route that
+ * answers it agree.
+ */
+const firstCategory = (column: 'slug' | 'name') =>
+  sql<string | null>`coalesce(${column === 'slug' ? categories.slug : categories.name}, (
+    select c.${sql.raw(column)} from ${postCategories} pc
+    join ${categories} c on c.id = pc.category_id
+    where pc.post_id = ${posts.id}
+    order by c.sort_order, c.name
+    limit 1
+  ))`;
 
 export type PostListItem = {
   id: string;
@@ -19,6 +37,10 @@ export type PostListItem = {
 
 export type PostDetail = PostListItem & {
   body: string;
+  /** The post's own blocks, shown according to `layout` (T3, 2.13). */
+  blocks: AnyBlock[];
+  layout: PostLayout;
+  status: string;
   /** This post's own CSS, sanitised again where it is written into the page. */
   customCss: string;
   /** Translations of one another share this (package 8). */
@@ -39,6 +61,8 @@ const isPublic = and(
 export async function listPosts(opts: {
   kind?: 'article' | 'research';
   categorySlug?: string;
+  /** Leave this post out — "more from this category" on the post itself. */
+  excludeId?: string;
   limit?: number;
   offset?: number;
   query?: string;
@@ -51,6 +75,7 @@ export async function listPosts(opts: {
   try {
     const conditions = [isPublic, eq(posts.locale, locale)];
     if (kind) conditions.push(eq(posts.kind, kind));
+    if (opts.excludeId) conditions.push(sql`${posts.id} <> ${opts.excludeId}`);
     if (query) {
       const like = `%${query}%`;
       conditions.push(or(ilike(posts.title, like), ilike(posts.excerpt, like))!);
@@ -73,8 +98,8 @@ export async function listPosts(opts: {
         kind: posts.kind,
         publishedAt: posts.publishedAt,
         readingMinutes: posts.readingMinutes,
-        categorySlug: categories.slug,
-        categoryName: categories.name,
+        categorySlug: firstCategory('slug'),
+        categoryName: firstCategory('name'),
         coverUrl: media.url,
       })
       .from(posts)
@@ -116,6 +141,18 @@ export async function countPosts(
 
 export async function getPost(slug: string, requested?: Locale): Promise<PostDetail | null> {
   const locale = requested ?? localeConfig().defaultLocale;
+  return loadPost(and(eq(posts.slug, slug), eq(posts.locale, locale), isPublic));
+}
+
+/**
+ * One post by id whatever its status — for the preview, which shows a draft
+ * exactly as it will look published. Never used by a public route.
+ */
+export async function getPostForPreview(id: string): Promise<PostDetail | null> {
+  return loadPost(eq(posts.id, id));
+}
+
+async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
   try {
     const [row] = await db
       .select({
@@ -125,14 +162,17 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
         title: posts.title,
         excerpt: posts.excerpt,
         body: posts.body,
+        blocks: posts.blocks,
+        layout: posts.layout,
+        status: posts.status,
         customCss: posts.customCss,
         kind: posts.kind,
         seo: posts.seo,
         publishedAt: posts.publishedAt,
         updatedAt: posts.updatedAt,
         readingMinutes: posts.readingMinutes,
-        categorySlug: categories.slug,
-        categoryName: categories.name,
+        categorySlug: firstCategory('slug'),
+        categoryName: firstCategory('name'),
         authorFirst: users.firstName,
         authorLast: users.lastName,
         coverUrl: media.url,
@@ -141,7 +181,7 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
       .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
       .leftJoin(users, eq(users.id, posts.authorId))
       .leftJoin(media, eq(media.id, posts.coverMediaId))
-      .where(and(eq(posts.slug, slug), eq(posts.locale, locale), isPublic))
+      .where(where)
       .limit(1);
 
     if (!row) return null;
@@ -150,7 +190,8 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
       .select({ slug: categories.slug, name: categories.name })
       .from(postCategories)
       .innerJoin(categories, eq(categories.id, postCategories.categoryId))
-      .where(eq(postCategories.postId, row.id));
+      .where(eq(postCategories.postId, row.id))
+      .orderBy(categories.sortOrder, categories.name);
 
     const authorName = [row.authorFirst, row.authorLast].filter(Boolean).join(' ').trim() || null;
 
@@ -161,6 +202,9 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
       title: row.title,
       excerpt: row.excerpt,
       body: row.body,
+      blocks: (row.blocks ?? []) as AnyBlock[],
+      layout: resolvePostLayout(row.layout),
+      status: row.status,
       customCss: row.customCss ?? '',
       kind: row.kind,
       seo: (row.seo ?? {}) as Record<string, unknown>,
@@ -178,12 +222,41 @@ export async function getPost(slug: string, requested?: Locale): Promise<PostDet
   }
 }
 
-export async function allPublishedPostSlugs(requested?: Locale): Promise<{ slug: string; updatedAt: Date }[]> {
+/* ── Addresses ────────────────────────────────────────────────────────────── */
+
+/** Where a post lives, under this site's permalinks. */
+export function postUrl(p: Permalinks, post: { slug: string; categorySlug: string | null }): string {
+  return postPath(p, { slug: post.slug, categorySlug: post.categorySlug });
+}
+
+/**
+ * The public path of a post row as it is stored — what the admin's View link,
+ * the revalidation after a save and the bulk redirects need, none of which
+ * have the joined list item to hand.
+ */
+export async function postPathById(p: Permalinks, id: string): Promise<string | null> {
+  try {
+    const [row] = await db
+      .select({ slug: posts.slug, categorySlug: firstCategory('slug') })
+      .from(posts)
+      .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
+      .where(eq(posts.id, id))
+      .limit(1);
+    return row ? postPath(p, row) : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function allPublishedPostSlugs(
+  requested?: Locale,
+): Promise<{ slug: string; categorySlug: string | null; updatedAt: Date }[]> {
   const locale = requested ?? localeConfig().defaultLocale;
   try {
     return await db
-      .select({ slug: posts.slug, updatedAt: posts.updatedAt })
+      .select({ slug: posts.slug, categorySlug: firstCategory('slug'), updatedAt: posts.updatedAt })
       .from(posts)
+      .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
       .where(and(isPublic, eq(posts.locale, locale)))
       .orderBy(desc(posts.publishedAt));
   } catch {
@@ -196,29 +269,38 @@ export async function allPublishedPostSlugs(requested?: Locale): Promise<{ slug:
  * for the sitemap, which lists a URL once with its alternates beside it.
  */
 export async function allPublishedPostsByGroup(): Promise<
-  { slug: string; locale: Locale; updatedAt: Date; alternates: { locale: Locale; slug: string }[] }[]
+  {
+    slug: string;
+    categorySlug: string | null;
+    locale: Locale;
+    updatedAt: Date;
+    alternates: { locale: Locale; slug: string; categorySlug: string | null }[];
+  }[]
 > {
   try {
     const rows = await db
       .select({
         slug: posts.slug,
+        categorySlug: firstCategory('slug'),
         locale: posts.locale,
         updatedAt: posts.updatedAt,
         groupId: posts.translationGroupId,
       })
       .from(posts)
+      .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
       .where(isPublic)
       .orderBy(desc(posts.publishedAt));
 
-    const byGroup = new Map<string, { locale: Locale; slug: string }[]>();
+    const byGroup = new Map<string, { locale: Locale; slug: string; categorySlug: string | null }[]>();
     for (const row of rows) {
       const list = byGroup.get(row.groupId) ?? [];
-      list.push({ locale: row.locale as Locale, slug: row.slug });
+      list.push({ locale: row.locale as Locale, slug: row.slug, categorySlug: row.categorySlug });
       byGroup.set(row.groupId, list);
     }
 
     return rows.map((row) => ({
       slug: row.slug,
+      categorySlug: row.categorySlug,
       locale: row.locale as Locale,
       updatedAt: row.updatedAt,
       alternates: byGroup.get(row.groupId) ?? [],
@@ -232,13 +314,16 @@ export async function allPublishedPostsByGroup(): Promise<
  * Where else this post exists, as `{ locale, slug }` — what `hreflang` is
  * built from, and what the language switcher offers.
  */
-export async function getPostTranslations(translationGroupId: string): Promise<{ locale: Locale; slug: string }[]> {
+export async function getPostTranslations(
+  translationGroupId: string,
+): Promise<{ locale: Locale; slug: string; categorySlug: string | null }[]> {
   try {
     const rows = await db
-      .select({ locale: posts.locale, slug: posts.slug })
+      .select({ locale: posts.locale, slug: posts.slug, categorySlug: firstCategory('slug') })
       .from(posts)
+      .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
       .where(and(eq(posts.translationGroupId, translationGroupId), isPublic));
-    return rows.map((row) => ({ locale: row.locale as Locale, slug: row.slug }));
+    return rows.map((row) => ({ locale: row.locale as Locale, slug: row.slug, categorySlug: row.categorySlug }));
   } catch {
     return [];
   }

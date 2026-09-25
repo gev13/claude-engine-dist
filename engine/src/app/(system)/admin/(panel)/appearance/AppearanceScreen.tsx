@@ -39,7 +39,7 @@ import {
   type MobileMenuVariant,
 } from '@/lib/chrome';
 import { isSafeHref } from '@/lib/navigation';
-import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout } from '@/lib/blog';
+import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
 import {
   BLOG_INDEX_WIREFRAMES,
@@ -785,6 +785,53 @@ function AppearanceScreenInner() {
                   <p className="m-0 text-[12px] text-smoke">
                     A Blog page built in Pages keeps its own blocks. This sets the list on the blog when there is no such
                     page, and on every category and research page.
+                  </p>
+                </div>
+              </Panel>
+              <Panel title="Archive pages">
+                <div className="space-y-5">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <Field
+                      label="Posts per archive page"
+                      hint="each page is its own address — /blog/page/2 — rendered on the server"
+                    >
+                      <Input
+                        type="number"
+                        min={1}
+                        max={MAX_ARCHIVE_PER_PAGE}
+                        placeholder={`${LEGACY_INDEX_PER_PAGE} on the blog, ${LEGACY_ARCHIVE_PER_PAGE} elsewhere`}
+                        value={theme.blog?.archivePerPage ?? ''}
+                        onChange={(e) =>
+                          set(['blog', 'archivePerPage'])(
+                            e.target.value === ''
+                              ? undefined
+                              : Math.min(MAX_ARCHIVE_PER_PAGE, Math.max(1, Math.round(Number(e.target.value) || 1))),
+                          )
+                        }
+                      />
+                    </Field>
+                    <ChoiceField
+                      label="Links to the other pages"
+                      value={theme.blog?.archivePager}
+                      options={ARCHIVE_PAGERS.map((value) => ({
+                        value,
+                        label: `${ARCHIVE_PAGER_LABELS[value]}${value === 'numbers' ? ' (default)' : ''}`,
+                      }))}
+                      onChange={set(['blog', 'archivePager'])}
+                    />
+                  </div>
+                  <label className="flex items-center gap-2 text-[13px] text-ash">
+                    <input
+                      type="checkbox"
+                      className="h-4 w-4 accent-flare"
+                      checked={theme.blog?.resultCount === true}
+                      onChange={(e) => set(['blog', 'resultCount'])(e.target.checked ? true : undefined)}
+                    />
+                    Say how many there are — “Showing 1–12 of 110 results”
+                  </label>
+                  <p className="m-0 text-[12px] text-smoke">
+                    “Load more” is a link to the next page with a script on top, so it works without one. Where the blog
+                    lives, and what the page word is, are under Permalinks.
                   </p>
                 </div>
               </Panel>

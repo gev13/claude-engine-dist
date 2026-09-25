@@ -4,6 +4,9 @@ import { asc, eq } from 'drizzle-orm';
 import { ToastProvider } from '@/components/admin/useToast';
 import { db } from '@/server/db';
 import { categories, media, postCategories, posts } from '@/server/db/schema';
+import { resolvePostLayout } from '@/lib/blog';
+import { postPathById } from '@/server/content/posts';
+import { getPermalinks } from '@/server/routing/config';
 import { PostEditor, type CategoryOption, type CoverInfo, type PostEditorRecord } from '../PostEditor';
 
 export const metadata: Metadata = { title: 'Edit post' };
@@ -50,6 +53,8 @@ async function loadPost(id: string): Promise<Loaded | null> {
       categoryIds: linked.map((link) => link.categoryId),
       customCss: row.customCss ?? '',
       publishedAt: row.publishedAt ? row.publishedAt.toISOString() : null,
+      layout: resolvePostLayout(row.layout),
+      publicPath: await postPathById(await getPermalinks(), row.id),
     },
     options,
     cover: coverRow[0] ?? null,

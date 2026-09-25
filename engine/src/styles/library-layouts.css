@@ -71,6 +71,12 @@
   .he-pager__btn:hover:not(:disabled) { border-color: var(--color-bone); color: var(--color-bone); }
   .he-pager__btn[aria-current='page'] { border-color: var(--color-bone); background: var(--color-bone); color: var(--color-ink); }
   .he-pager__btn:disabled { opacity: 0.35; cursor: default; }
+  /* 2.13 — the server's pages are links, not buttons, and the ends of the
+     range are plain spans; the same look either way. */
+  a.he-pager__btn, span.he-pager__btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+  .he-pager__btn[data-disabled] { opacity: 0.35; cursor: default; }
+  .he-pager__gap { min-width: 20px; text-align: center; color: var(--color-smoke); font-family: var(--font-mono); }
+  .he-pager .he-cbtn[aria-busy='true'] { opacity: 0.6; pointer-events: none; }
 
   /* ── V8: testimonials, one at a time ─────────────────────────────────── */
 

@@ -90,6 +90,31 @@ function sitemapPaths(xml) {
     .filter(Boolean);
 }
 
+/**
+ * A sitemap's entries with the two hints the blog sitemap uses to tell its
+ * URLs apart. Since 2.13 the blog's addresses are a setting (Permalinks), so
+ * the suite reads what kind of URL each one is rather than matching `/blog/`.
+ */
+function sitemapEntries(xml) {
+  return [...xml.matchAll(/<url>([\s\S]*?)<\/url>/g)]
+    .map((m) => {
+      const loc = /<loc>([^<]+)<\/loc>/.exec(m[1])?.[1];
+      try {
+        return {
+          path: new URL(loc.trim()).pathname,
+          changefreq: /<changefreq>([^<]+)</.exec(m[1])?.[1] ?? '',
+          priority: /<priority>([^<]+)</.exec(m[1])?.[1] ?? '',
+        };
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+}
+
+/** A path without its trailing slash, for comparing shapes. */
+const bare = (path) => path.replace(/\/+$/, '') || '/';
+
 /** The checks every public HTML page must pass. Returns the HTML. */
 async function checkPage(path) {
   const { res, body: html } = await text(path);
@@ -146,19 +171,30 @@ async function main() {
   const pagePaths = [...new Set(['/', ...listedPages, ...listedServices])];
   for (const path of pagePaths) await checkPage(path);
 
-  // Routes that exist whether or not anybody has made a page for them.
-  for (const path of ['/blog', '/blog/research']) await checkPage(path);
+  /* The site's trailing-slash form, read off its own sitemap: every address
+     a slashed site writes ends in "/", and the other spelling redirects. */
+  const slashed = listedPages.some((p) => p !== '/' && p.endsWith('/'));
+  const own = (path) => (slashed && path !== '/' && !path.endsWith('/') ? `${path}/` : path);
 
-  const notFound = await get(`/smoke-missing-${Date.now()}`);
+  /* The blog index and research come first in the blog sitemap, then the
+     categories (weekly, 0.6) and the posts (monthly). */
+  const blogMap = await text('/sitemaps/blog.xml');
+  const blogEntries = sitemapEntries(blogMap.body);
+  const [indexEntry, researchEntry] = blogEntries;
+  const blogIndex = indexEntry?.path ?? own('/blog');
+
+  // Routes that exist whether or not anybody has made a page for them.
+  for (const path of [blogIndex, researchEntry?.path ?? own('/blog/research')]) await checkPage(path);
+
+  const notFound = await get(own(`/smoke-missing-${Date.now()}`));
   check('unknown path -> 404', notFound.status === 404, `got ${notFound.status}`);
 
   /* Blog */
   section('Blog');
 
-  const blogMap = await text('/sitemaps/blog.xml');
-  const blogPaths = sitemapPaths(blogMap.body);
-  const postPath = blogPaths.find((p) => /^\/blog\/[^/]+$/.test(p) && p !== '/blog/research');
-  const categoryPath = blogPaths.find((p) => p.startsWith('/blog/category/'));
+  const rest = blogEntries.slice(2);
+  const postPath = rest.find((e) => e.changefreq === 'monthly')?.path;
+  const categoryPath = rest.find((e) => e.changefreq === 'weekly' && e.priority === '0.6')?.path;
 
   if (postPath) {
     const html = await checkPage(postPath);
@@ -173,9 +209,10 @@ async function main() {
     skip('category page renders', 'no categories yet');
   }
 
-  const search = await text('/blog?q=smoke');
+  const search = await text(`${blogIndex}?q=smoke`);
   check('blog search view renders', search.res.status === 200, `got ${search.res.status}`);
-  check('  search view canonicalises to /blog', /rel="canonical" href="[^"]*\/blog"/.test(search.body));
+  const canonical = /rel="canonical" href="([^"]*)"/.exec(search.body)?.[1] ?? '';
+  check(`  search view canonicalises to ${blogIndex}`, canonical.endsWith(blogIndex), `got ${canonical}`);
 
   /* Careers */
   section('Careers');
@@ -184,9 +221,9 @@ async function main() {
   const careerPaths = sitemapPaths(careersMap.body);
 
   // The listing exists whether or not anybody has written a page for it.
-  await checkPage('/careers');
+  await checkPage(own('/careers'));
 
-  const jobPath = careerPaths.find((p) => /^\/careers\/[^/]+$/.test(p));
+  const jobPath = careerPaths.find((p) => /^\/careers\/[^/]+$/.test(bare(p)));
   if (jobPath) {
     const html = await checkPage(jobPath);
     check('  open role emits JobPosting structured data', html.includes('"@type":"JobPosting"'));
@@ -204,7 +241,7 @@ async function main() {
      gone. The sitemap is the check — a closed role must not be in it. */
   check(
     '  careers sitemap lists only the listing and open roles',
-    careerPaths.every((p) => p === '/careers' || /^\/careers\/[^/]+$/.test(p)),
+    careerPaths.every((p) => bare(p) === '/careers' || /^\/careers\/[^/]+$/.test(bare(p))),
     `listed: ${careerPaths.join(', ') || 'nothing'}`,
   );
 
@@ -317,6 +354,7 @@ async function main() {
     '/api/admin/applications',
     '/api/admin/cookies',
     '/api/admin/code',
+    '/api/admin/permalinks',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

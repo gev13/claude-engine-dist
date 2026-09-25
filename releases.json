@@ -1,6 +1,14 @@
 {
-  "latest": "2.12.0",
+  "latest": "2.13.0",
   "releases": [
+    {
+      "version": "2.13.0",
+      "date": "2026-09-25",
+      "summary": "The blog's addresses are a setting \u2014 under the blog, under a category or at the top level, with a trailing-slash option and 301s from the old addresses. Archives page on the server (/blog/page/2/). Posts can show their blocks. Redirects gain prefixes, patterns, query rules and CSV import and export.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.12.0",
       "date": "2026-09-18",
