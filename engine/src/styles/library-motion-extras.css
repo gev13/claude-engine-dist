@@ -1,0 +1,147 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   2.19 — site-wide motion and chrome extras
+   ──────────────────────────────────────────────────────────────────────────
+   The custom cursor (T27), page transitions and the preloader (T28), the
+   reveal footer (T29) and the side rails (T30). Every rule here is keyed to
+   a class or attribute that is present only when the feature is switched
+   on, so an untouched site is not styled by any of it. Unlayered, like the
+   other chrome rules that must win over the base bar and footer.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* ── T27: the custom cursor ─────────────────────────────────────────────── */
+
+html.he-has-cursor.he-cursor-in,
+html.he-has-cursor.he-cursor-in *:not(input):not(textarea):not(select):not([contenteditable='true']):not(iframe) { cursor: none; }
+.he-cursor { position: fixed; inset: 0; z-index: 2147483000; pointer-events: none; }
+.he-cursor__dot,
+.he-cursor__ring {
+  position: fixed;
+  top: 0;
+  left: 0;
+  border-radius: 999px;
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+}
+.he-cursor__dot { width: 8px; height: 8px; margin: -4px 0 0 -4px; background: var(--color-flare); transition: width 0.2s, height 0.2s, margin 0.2s, opacity 0.2s; }
+.he-cursor__ring { width: 32px; height: 32px; margin: -16px 0 0 -16px; border: 1px solid var(--color-flare); opacity: 0; transition: width 0.25s, height 0.25s, margin 0.25s, opacity 0.25s; }
+html.he-cursor-in .he-cursor__dot { opacity: 1; }
+html.he-cursor-in .he-cursor__ring { opacity: 0.5; }
+html.he-cursor-link .he-cursor__dot { width: 20px; height: 20px; margin: -10px 0 0 -10px; opacity: 0.5; }
+html.he-cursor-link .he-cursor.is-ring .he-cursor__ring { width: 52px; height: 52px; margin: -26px 0 0 -26px; }
+html.he-cursor-text .he-cursor__dot, html.he-cursor-text .he-cursor__ring { opacity: 0; }
+html.he-cursor-down .he-cursor__dot { transform-origin: center; scale: 0.8; }
+.he-cursor.is-blend .he-cursor__dot { width: 28px; height: 28px; margin: -14px 0 0 -14px; background: #fff; mix-blend-mode: difference; }
+html.he-cursor-link .he-cursor.is-blend .he-cursor__dot { width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: 1; }
+.he-cursor__label { position: absolute; top: 50%; left: 50%; translate: -50% -50%; padding: 6px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-bone); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+.he-cursor__dot:has(.he-cursor__label) { width: 0; height: 0; margin: 0; background: transparent; opacity: 1; }
+
+/* ── T28: page transitions ───────────────────────────────────────────────── */
+
+.he-site[data-transition] #main.he-page-leave { animation: var(--he-leave) both; pointer-events: none; }
+.he-site[data-transition] #main.he-page-enter { animation: var(--he-enter) both; }
+.he-site[data-transition='fadeUp'] { --he-leave: he-pt-fade-out calc(250ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); --he-enter: he-pt-fade-up calc(350ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }
+.he-site[data-transition='fade'] { --he-leave: he-pt-fade-out calc(200ms * var(--he-motion, 1)) ease; --he-enter: he-fade calc(300ms * var(--he-motion, 1)) ease; }
+.he-site[data-transition='slide'] { --he-leave: he-pt-slide-out calc(260ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); --he-enter: he-pt-slide-in calc(360ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }
+.he-site[data-transition='curtain'] { --he-leave: none; --he-enter: he-fade calc(250ms * var(--he-motion, 1)) ease; }
+@keyframes he-pt-fade-out { to { opacity: 0; } }
+@keyframes he-pt-fade-up { from { opacity: 0; transform: translateY(-1.5rem); } to { opacity: 1; transform: none; } }
+@keyframes he-pt-slide-out { to { opacity: 0; transform: translateX(-3rem); } }
+@keyframes he-pt-slide-in { from { opacity: 0; transform: translateX(3rem); } to { opacity: 1; transform: none; } }
+
+/* A panel of the accent colour wipes across, then away. */
+.he-curtain { position: fixed; inset: 0; z-index: 2147482000; background: var(--color-flare); transform: scaleX(0); transform-origin: left; pointer-events: none; }
+html.he-curtain-leave .he-curtain { animation: he-curtain-in calc(420ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1) both; }
+html.he-curtain-enter .he-curtain { animation: he-curtain-out calc(480ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1) both; }
+@keyframes he-curtain-in { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); transform-origin: left; } }
+@keyframes he-curtain-out { from { transform: scaleX(1); transform-origin: right; } to { transform: scaleX(0); transform-origin: right; } }
+
+/* The preloader: gone on load, and after 1.5s by CSS alone whatever happens. */
+.he-preloader { position: fixed; inset: 0; z-index: 2147482500; display: grid; place-items: center; background: var(--color-ink); animation: he-pre-out 0.4s ease 1.5s forwards; }
+.he-preloader.is-done { animation: he-pre-out 0.35s ease forwards; }
+html.he-pre-skip .he-preloader { display: none; }
+.he-preloader__mark { font-family: var(--font-display); font-size: clamp(22px, 3vw, 34px); font-weight: 700; color: var(--color-bone); animation: he-pre-pulse 1.2s ease-in-out infinite alternate; }
+.he-preloader__mark img { display: block; max-width: min(180px, 50vw); height: auto; }
+@keyframes he-pre-out { to { opacity: 0; visibility: hidden; } }
+@keyframes he-pre-pulse { from { opacity: 0.55; } to { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .he-site[data-transition] #main.he-page-leave, .he-site[data-transition] #main.he-page-enter { animation: none; }
+  .he-curtain, .he-preloader { display: none; }
+}
+.he-reduce-motion .he-site[data-transition] #main { animation: none !important; }
+
+/* ── T29: the reveal footer ─────────────────────────────────────────────── */
+
+.he-ftr-wrap .he-ftr { background: var(--he-footer-bg, var(--color-ink)); }
+.he-site.has-reveal main { position: relative; z-index: 1; background: var(--color-ink); }
+.he-site.has-reveal .he-ftr-wrap { position: sticky; bottom: 0; z-index: 0; }
+
+/* ── T30: the side rails ─────────────────────────────────────────────────── */
+
+.he-rail { display: none; }
+@media (width >= 1181px) {
+  .he-rail { position: fixed; top: 50%; z-index: 35; display: flex; flex-direction: column; align-items: center; gap: 18px; color: var(--color-bone); translate: 0 -50%; opacity: 0; pointer-events: none; transition: opacity calc(0.3s * var(--he-motion, 1)); }
+  .he-rail.is-shown { opacity: 1; pointer-events: auto; }
+  .he-rail.is-left { left: 22px; }
+  .he-rail.is-right { right: 22px; }
+  .he-rail.is-contrast { color: #fff; mix-blend-mode: difference; }
+}
+.he-rail__text { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; writing-mode: vertical-rl; rotate: 180deg; }
+.he-rail__top { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
+.he-rail__bar { position: relative; display: block; width: 2px; height: 60px; overflow: hidden; background: color-mix(in srgb, currentColor 25%, transparent); }
+.he-rail__bar > span { position: absolute; inset: 0; background: currentColor; transform-origin: top; }
+.he-rail__social { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.he-rail__social a { display: grid; place-items: center; min-width: 24px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: inherit; writing-mode: vertical-rl; rotate: 180deg; }
+.he-rail__social a:has(svg) { writing-mode: horizontal-tb; rotate: none; }
+.he-rail__social a:hover { color: var(--color-flare-soft); }
+
+/* ── T33: cards that answer the pointer ────────────────────────────────────
+   `.he-ch` is only on a card whose list chose an effect. Lift, grow and
+   shadow are CSS; tilt reads the angles `CardTilt` writes, and the glare is
+   a highlight at the pointer. Hover-capable pointers only, and nothing moves
+   under reduced motion — the OS setting or the site's own switch. */
+
+.he-ch {
+  transition:
+    transform calc(320ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1),
+    box-shadow calc(320ms * var(--he-motion, 1));
+}
+.he-ch.has-zoom .he-fill { transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
+.he-ch--tilt {
+  transform: perspective(var(--he-ch-persp, 1100px)) rotateX(var(--he-ch-x, 0deg)) rotateY(var(--he-ch-y, 0deg));
+  will-change: transform;
+}
+.he-ch--tilt.is-tilting { transition-duration: calc(90ms * var(--he-motion, 1)); }
+.he-ch--tilt.has-glare { position: relative; }
+.he-ch--tilt.has-glare::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(circle at var(--he-ch-gx, 50%) var(--he-ch-gy, 50%), rgb(255 255 255 / 0.2), transparent 60%);
+  opacity: 0;
+  transition: opacity calc(250ms * var(--he-motion, 1));
+}
+.he-ch--tilt.has-glare.is-tilting::after { opacity: 1; }
+
+@media (hover: hover) {
+  .he-ch--lift:hover { transform: translateY(-6px); }
+  .he-ch--grow:hover { transform: scale(1.02); }
+  .he-ch--lift:hover,
+  .he-ch--grow:hover { box-shadow: 0 24px 48px -30px rgb(0 0 0 / 0.55); }
+  .he-ch--shadow:hover,
+  .he-ch--tilt.is-tilting { box-shadow: 0 34px 70px -34px rgb(0 0 0 / 0.7); }
+  .he-ch.has-zoom:is(:hover, :focus-within) .he-fill { transform: scale(1.07); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .he-ch,
+  .he-ch:hover,
+  .he-ch .he-fill { transform: none !important; }
+  .he-ch--tilt.has-glare::after { display: none; }
+}
+.he-reduce-motion :is(.he-ch, .he-ch:hover, .he-ch .he-fill) { transform: none !important; }
+.he-reduce-motion .he-ch--tilt.has-glare::after { display: none; }

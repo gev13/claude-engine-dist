@@ -8,6 +8,7 @@ import { SeoPanel } from '@/components/admin/SeoPanel';
 import { PageTemplatePicker, type PickedTemplate } from '@/components/admin/TemplatePickers';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
 import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
+import { PageAppearanceFields, type PageAppearanceValue } from '@/components/admin/PageAppearanceFields';
 import { PreviewButton } from '@/components/admin/PreviewButton';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Textarea } from '@/components/admin/ui';
@@ -49,6 +50,7 @@ export type PageEditorRecord = {
   blocks: AnyBlock[];
   seo: SeoFields;
   customCss: string;
+  appearance?: PageAppearanceValue;
   /** ISO, or null when the page has never been published. */
   publishedAt: string | null;
   isSystem: boolean;
@@ -68,6 +70,7 @@ type FormValue = {
   blocks: AnyBlock[];
   seo: SeoFields;
   customCss: string;
+  appearance?: PageAppearanceValue;
   publishedAt: string;
 };
 
@@ -85,6 +88,7 @@ const blankValue: FormValue = {
   blocks: [],
   seo: {},
   customCss: '',
+  appearance: {},
   publishedAt: '',
 };
 
@@ -119,6 +123,7 @@ function toValue(record?: PageEditorRecord): FormValue {
     blocks: record.blocks ?? [],
     seo: record.seo ?? {},
     customCss: record.customCss ?? '',
+    appearance: record.appearance ?? {},
     publishedAt: record.publishedAt ?? '',
   };
 }
@@ -213,6 +218,7 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
       blocks: value.blocks,
       seo: value.seo,
       customCss: value.customCss,
+      appearance: value.appearance ?? {},
       // Null clears the date; a future one keeps the page off the site until then.
       publishedAt: value.publishedAt || null,
     };
@@ -532,6 +538,7 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
             )}
           </Panel>
 
+          <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="page" />
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="page" />
 
           {/* Only an existing page has history; a new one has nothing to show. */}

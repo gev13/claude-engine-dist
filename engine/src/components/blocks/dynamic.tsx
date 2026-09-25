@@ -19,6 +19,8 @@ import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
 import type { PostCardOptions } from '@/lib/blog';
+import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
+import { CardTilt } from '@/components/site/CardTilt';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
 
@@ -109,7 +111,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
             {count}
             <ul className="he-news" id={listId} style={{ '--cols': p.columns } as React.CSSProperties}>
               {posts.map((post) => (
-                <li key={post.id}>
+                <li key={post.id} {...cardHoverProps(p.card?.hover)}>
                   <Link href={postPath(permalinks, post)} className="he-news__card">
                     <div className={cn('he-news__media', !post.coverUrl && 'he-media-empty')}>
                       {post.coverUrl && (
@@ -130,6 +132,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                 </li>
               ))}
             </ul>
+            {wantsTilt(p.card?.hover) && <CardTilt />}
             {pager ?? (
               <div className="he-news__all">
                 <Button href={indexHref} variant="outline">
@@ -175,11 +178,13 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                 }
                 title={post.title}
                 href={postPath(permalinks, post)}
+                hover={p.card?.hover}
               >
                 {post.excerpt}
               </Card>
             ))}
           </CardGrid>
+          {wantsTilt(p.card?.hover) && <CardTilt />}
         </>
       )}
       {pager ?? (posts.length > 0 && <AllWriting href={indexHref} t={t} />)}
@@ -313,6 +318,7 @@ export function PostCollection({
   card?: PostCardOptions;
 }) {
   const minimal = variant === 'minimal';
+  const moves = cardHoverProps(card.hover);
   const withExcerpt = variant === 'list' || variant === 'wide' || variant === 'overlay';
 
   const items = posts.map((post) => {
@@ -322,7 +328,7 @@ export function PostCollection({
       </time>
     );
     return (
-      <li key={post.id} className="he-plst__item">
+      <li key={post.id} className={cn('he-plst__item', moves.className)} style={moves.style}>
         <Link href={postPath(permalinks, post)} className="he-plst__link">
           {!minimal && (
             <div className="he-plst__media">
@@ -355,14 +361,23 @@ export function PostCollection({
   const listClass = cn('he-plst', `is-${variant}`, card.ratio && 'has-ratio');
   const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}) } as React.CSSProperties;
 
+  const tilt = wantsTilt(card.hover) && <CardTilt />;
   if (pagination === 'none') {
     return (
-      <ul className={listClass} style={style} id={listId}>
-        {items}
-      </ul>
+      <>
+        <ul className={listClass} style={style} id={listId}>
+          {items}
+        </ul>
+        {tilt}
+      </>
     );
   }
-  return <PostPager items={items} perPage={perPage} mode={pagination} className={listClass} style={style} />;
+  return (
+    <>
+      <PostPager items={items} perPage={perPage} mode={pagination} className={listClass} style={style} />
+      {tilt}
+    </>
+  );
 }
 
 /** V6 — list, minimal, text over the cover, compact and wide layouts, optionally a few at a time. */

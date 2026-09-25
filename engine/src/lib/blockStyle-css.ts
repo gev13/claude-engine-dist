@@ -1,5 +1,5 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
-import { type BlockStyle, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
+import { type BlockStyle, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section style → CSS
@@ -292,7 +292,8 @@ export function blockStyleToCss(
 
   for (const { key, maxWidth } of BREAKPOINTS) {
     const decls = boxDecls(style.spacing?.[key]);
-    const hidden = style.hideOn?.includes(key);
+    // `hideAt` (2.19) has its own exact ranges below; the old `hideOn` keeps the rule it always had.
+    const hidden = !style.hideAt && style.hideOn?.includes(key);
     const inner: string[] = [];
     if (decls.length) inner.push(block(root, decls));
     if (ownsBand) inner.push(neutralisePadding(root, style.spacing?.[key]));
@@ -303,6 +304,13 @@ export function blockStyleToCss(
        rules carry their own selectors, and folding two selector sets into one
        block would mean emitting the wider one's declarations for both. */
     if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth));
+  }
+
+  /* 2.19 (T32) — hidden on exactly the tiers chosen, each its own range, so
+     "phones only" is expressible: hidden on large desktop, desktop and tablet. */
+  for (const tier of style.hideAt ?? []) {
+    const range = TIER_RANGE[tier];
+    if (range) parts.push(`@media ${range}{${root}{display:none}}`);
   }
 
   /* A fixed background is the parallax effect, and it has two well-known
@@ -326,7 +334,7 @@ export type RowCssInput = {
   align?: 'start' | 'center' | 'end' | 'stretch';
   reverseOnMobile?: boolean;
   minHeight?: string;
-  columns: { id: string; width: ColumnWidth; style?: BlockStyle }[];
+  columns: { id: string; width: ColumnWidth; order?: ColumnOrder; style?: BlockStyle }[];
 };
 
 /**
@@ -355,6 +363,14 @@ function spanAt(width: ColumnWidth, breakpoint: 'base' | 'laptop' | 'tablet' | '
   return width.mobile ?? width.tablet ?? width.laptop ?? width.base;
 }
 
+/** Each tier as its own width range — the four never overlap (2.19). */
+const TIER_RANGE: Record<'base' | 'laptop' | 'tablet' | 'mobile', string> = {
+  base: '(min-width:1441px)',
+  laptop: '(min-width:1025px) and (max-width:1440px)',
+  tablet: '(min-width:769px) and (max-width:1024px)',
+  mobile: '(max-width:768px)',
+};
+
 export function rowToCss(row: RowCssInput): string {
   if (!isSafeBlockId(row.id)) return '';
 
@@ -372,7 +388,10 @@ export function rowToCss(row: RowCssInput): string {
   const tracksAt = (breakpoint: 'base' | 'laptop' | 'tablet' | 'mobile') =>
     trackList(
       columns
-        .filter((c) => breakpoint === 'base' || !c.style?.hideOn?.includes(breakpoint))
+        .filter((c) =>
+          // `hideAt` removes a column's track on exactly its tiers; `hideOn` keeps the rule it always had.
+          c.style?.hideAt ? !c.style.hideAt.includes(breakpoint) : breakpoint === 'base' || !c.style?.hideOn?.includes(breakpoint),
+        )
         .map((c) => spanAt(c.width, breakpoint)),
     );
 
@@ -405,6 +424,36 @@ export function rowToCss(row: RowCssInput): string {
     parts.push(
       `@media (max-width:768px){${root}{display:flex;flex-direction:column-reverse;align-items:stretch}}`,
     );
+  }
+
+  // A column's place at a smaller tier. `order` defaults to 0 for every
+  // item, so placing one column means ordering all of them: each tier that
+  // names a place restates the whole row as slots — chosen places first
+  // (a clash goes to the one written earlier, the other to the next free
+  // slot), then everything else fills the gaps in the order written. A place
+  // set for Desktop carries down to tablet and phone until one of those says
+  // otherwise, the same inheritance a width has.
+  const placeAt = (c: (typeof columns)[number], key: 'laptop' | 'tablet' | 'mobile') => {
+    const order = c.order;
+    const n = key === 'laptop' ? order?.laptop : key === 'tablet' ? (order?.tablet ?? order?.laptop) : (order?.mobile ?? order?.tablet ?? order?.laptop);
+    return typeof n === 'number' && Number.isInteger(n) && n >= 1 && n <= 6 ? n : undefined;
+  };
+  for (const { key, maxWidth } of BREAKPOINTS) {
+    if (!columns.some((c) => c.order?.[key] !== undefined)) continue;
+    const slots: (number | undefined)[] = new Array(columns.length).fill(undefined);
+    const free = (from: number) => {
+      for (let i = 0; i < slots.length; i++) if (slots[(from + i) % slots.length] === undefined) return (from + i) % slots.length;
+      return -1;
+    };
+    columns.forEach((c, index) => {
+      const place = placeAt(c, key);
+      if (place !== undefined) slots[free(Math.min(place, columns.length) - 1)] = index;
+    });
+    columns.forEach((c, index) => {
+      if (placeAt(c, key) === undefined) slots[free(0)] = index;
+    });
+    const rules = columns.map((c, index) => `${root}>.he-c-${c.id}{order:${slots.indexOf(index) + 1}}`).join('');
+    parts.push(`@media (max-width:${maxWidth}px){${rules}}`);
   }
 
   for (const column of columns) {

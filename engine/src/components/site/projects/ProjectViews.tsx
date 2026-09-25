@@ -23,6 +23,7 @@ import { listProjectCards, type ProjectDetail, type ProjectTermRef } from '@/ser
 import type { Paging } from '@/server/content/resolve';
 import { pageTrail } from '@/server/content/trail';
 import { SiteImg } from '@/components/ui/SiteImg';
+import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A project's page, and a project category's or tag's archive (2.14)
@@ -209,6 +210,7 @@ export async function ProjectArticle({
         <style id="he-project-bg" dangerouslySetInnerHTML={{ __html: `body,.he-site{background-color:${background}}` }} />
       )}
       {project.customCss && <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(project.customCss) }} />}
+      {project.options.scheme === 'alt' && <PageAppearanceStyle appearance={{ scheme: 'alt' }} />}
     </>
   );
 }

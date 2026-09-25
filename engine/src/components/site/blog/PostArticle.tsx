@@ -22,6 +22,7 @@ import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from 
 import { getTheme } from '@/server/content/theme';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { SiteImg } from '@/components/ui/SiteImg';
+import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One post, as the public sees it — and as its preview shows it
@@ -276,6 +277,7 @@ export async function PostArticle({
           rather than first because a <style> is an element, and main's first
           child is what the over-hero header looks for. */}
       {post.customCss && <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(post.customCss) }} />}
+      <PageAppearanceStyle appearance={post.appearance} />
     </>
   );
 }

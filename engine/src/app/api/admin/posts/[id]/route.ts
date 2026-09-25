@@ -20,6 +20,7 @@ import { captureRevision, deleteRevisionsFor } from '@/server/content/revisions'
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { db } from '@/server/db';
 import { postCategories, posts, type Block, type SeoFields } from '@/server/db/schema';
+import { pageAppearanceSchema } from '@/lib/pageAppearance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -39,6 +40,7 @@ const updateSchema = z.object({
   seo: seoSchema.optional(),
   /** CSS for this one page. Sanitised by the schema on the way in. */
   customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
+  appearance: pageAppearanceSchema.optional(),
   coverMediaId: z.string().uuid().nullable().optional(),
   primaryCategoryId: z.string().uuid().nullable().optional(),
   categoryIds: z.array(z.string().uuid()).max(20).optional(),
@@ -145,6 +147,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(input.status !== undefined ? { status: input.status } : {}),
         ...(input.seo !== undefined ? { seo: input.seo as SeoFields } : {}),
         ...(input.customCss !== undefined ? { customCss: input.customCss } : {}),
+        ...(input.appearance !== undefined ? { appearance: input.appearance } : {}),
         ...(input.coverMediaId !== undefined ? { coverMediaId: input.coverMediaId } : {}),
         ...(input.primaryCategoryId !== undefined ? { primaryCategoryId: input.primaryCategoryId } : {}),
         publishedAt,

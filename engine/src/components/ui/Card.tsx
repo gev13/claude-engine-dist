@@ -1,4 +1,5 @@
 import Link from '@/components/ui/SiteLink';
+import { type CardHover, cardHoverProps } from '@/lib/cardHover';
 import { cn } from '@/lib/utils';
 import { ArrowRight } from './Button';
 
@@ -52,6 +53,7 @@ export function Card({
   badge,
   className,
   interactive = true,
+  hover,
 }: {
   href?: string;
   eyebrow?: React.ReactNode;
@@ -62,15 +64,20 @@ export function Card({
   badge?: string;
   className?: string;
   interactive?: boolean;
+  /** How the whole card answers the pointer (2.19); unset changes nothing. */
+  hover?: CardHover;
 }) {
+  const moves = cardHoverProps(hover);
   const body = (
     <div
       className={cn(
         'group flex h-full flex-col bg-surface px-6 py-7 transition-colors duration-150',
         interactive && href && 'hover:bg-surface-2',
         badge && 'relative',
+        !href && moves.className,
         className,
       )}
+      style={href ? undefined : moves.style}
     >
       {/* Before the eyebrow in the DOM as well as on the screen: "Coming soon"
           changes how the rest of the card should be read, so it has to be
@@ -96,7 +103,7 @@ export function Card({
   );
 
   return href ? (
-    <Link href={href} className="block h-full">
+    <Link href={href} className={cn('block h-full', moves.className)} style={moves.style}>
       {body}
     </Link>
   ) : (

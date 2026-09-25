@@ -13,6 +13,7 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateContent, revalidateEverything } from '@/server/content/revalidate';
 import { db } from '@/server/db';
 import { pages, type Block, type SeoFields } from '@/server/db/schema';
+import { pageAppearanceSchema } from '@/lib/pageAppearance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,6 +48,7 @@ const createSchema = z.object({
   seo: seoSchema.optional(),
   /** CSS for this one page. Sanitised by the schema on the way in. */
   customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
+  appearance: pageAppearanceSchema.optional(),
   parentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(-10_000).max(10_000).optional(),
   template: z.enum(['default', 'service', 'blog', 'contact', 'legal', 'library']).optional(),
@@ -202,6 +204,7 @@ export async function POST(request: Request) {
         blocks: validated.blocks,
         seo: (data.seo ?? {}) as SeoFields,
         customCss: data.customCss ?? '',
+        appearance: data.appearance ?? {},
         parentId: data.parentId ?? null,
         sortOrder: data.sortOrder ?? 0,
         template: data.template ?? 'default',

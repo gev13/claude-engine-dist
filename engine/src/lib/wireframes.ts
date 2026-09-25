@@ -399,6 +399,8 @@ export const HEADER_WIREFRAMES: Record<HeaderVariant, Wire> = {
   boxed: { shapes: [['img', 0, 0, 160, 100], ['panel', 8, 4, 144, 12, 4], ['ink', 13, 8.5, 14, 3.2], ['txt', 58, 10, 9], ['txt', 71, 10, 9], ['txt', 84, 10, 9], ['fbtn', 124, 7.5, 22]] },
   sidebar: { shapes: [['img', 38, 0, 122, 100], ['panel', 0, 0, 38, 100], ['ink', 5, 6, 16, 3.2], ['txt', 5, 20, 22], ['txt', 5, 27, 18], ['txt', 5, 34, 24], ['txt', 5, 41, 16], ['txt', 5, 48, 20], ['fbtn', 5, 88, 28]] },
   rail: { shapes: [['img', 12, 0, 148, 100], ['panel', 0, 0, 12, 100], ['ink', 3, 4, 6, 4], ['burger', 3, 46], ['circ', 6, 88, 1.5], ['circ', 6, 94, 1.5]] },
+  // 2.19 — a round menu button, the logo, links and an outline button.
+  menuButtonInline: { shapes: [['img', 0, 12, 160, 88], ['panel', 0, 0, 160, 12], ['circ', 9, 6, 3.4], ['ink', 16, 4.5, 16, 3.2], ['txt', 72, 6, 9], ['txt', 85, 6, 9], ['txt', 98, 6, 9], ['txt', 111, 6, 9], ['btn', 133, 3.5, 21]] },
 };
 
 export const MEGA_WIREFRAMES: Record<MegaVariant, Wire> = {

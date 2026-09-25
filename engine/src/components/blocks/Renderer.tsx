@@ -171,6 +171,8 @@ function shellClass(style: BlockStyle) {
     (style.shapeTop || style.shapeBottom) && 'he-has-shape',
     style.sticky && 'he-sticky',
     style.snap && 'he-snap',
+    // 2.19 (T31) — the site's alternate palette on this section: a light band on a dark site.
+    style.scheme === 'alt' && 'he-scheme-alt',
   );
 }
 

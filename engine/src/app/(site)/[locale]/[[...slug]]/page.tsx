@@ -46,6 +46,7 @@ import { getSiteSettings } from '@/server/content/siteSettings';
 import { pageTrail } from '@/server/content/trail';
 import { isoDate } from '@/lib/utils';
 import type { SeoFields } from '@/server/db/schema';
+import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 
 /**
  * One catch-all route renders every public address the CMS owns: pages, the
@@ -346,6 +347,7 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
       {page.customCss && (
         <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(page.customCss) }} />
       )}
+      <PageAppearanceStyle appearance={page.appearance} />
       {paging && <PagingLinks paging={paging} permalinks={permalinks} />}
       <JsonLd data={graph([...nodes, ...customNodes(page.seo.jsonLd)])} />
     </>

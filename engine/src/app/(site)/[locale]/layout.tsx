@@ -22,6 +22,9 @@ import { safeCss } from '@/lib/customCode';
 import { PRESETS, activePresets, activeSnippets } from '@/lib/integrations';
 import { getIntegrations, getPublicCaptcha } from '@/server/integrations/settings';
 import { CaptchaProvider } from '@/components/site/Captcha';
+import { CustomCursor } from '@/components/site/CustomCursor';
+import { PageTransition, Preloader } from '@/components/site/PageTransition';
+import { RevealFooter, SideRails } from '@/components/site/SiteMotion';
 import { responsiveImages } from '@/lib/responsive';
 import { isProfile } from '@/lib/navigation';
 import { titleTemplate } from '@/lib/siteSettings';
@@ -120,6 +123,16 @@ export default async function SiteLayout({
   ]);
   /* Any tag switched on loads through /integrations.js, which also holds each
      one back until its consent category is granted (2.16). */
+  /* 2.19 (T29) — the footer is wrapped only for the reveal or its own colour,
+     so an untouched site's footer is where it always was in the DOM. */
+  const footerWrap = (footer: React.ReactNode) =>
+    chrome.footer.reveal || chrome.footer.background ? (
+      <div className="he-ftr-wrap" style={chrome.footer.background ? ({ '--he-footer-bg': chrome.footer.background } as React.CSSProperties) : undefined}>
+        {footer}
+      </div>
+    ) : (
+      footer
+    );
   const tagsOn = activePresets(integrations).length > 0 || activeSnippets(integrations).length > 0;
   const gtmNoscript = integrations.gtm.enabled && integrations.gtm.noscript && PRESETS.gtm.id.test(integrations.gtm.id);
   const css = themeToCss(theme);
@@ -174,6 +187,7 @@ export default async function SiteLayout({
           className="he-site"
           data-header={chrome.header.variant}
           data-header-overlay={chrome.header.overlay ? '' : undefined}
+          data-transition={chrome.transition.style !== 'off' ? chrome.transition.style : undefined}
         >
           <script dangerouslySetInnerHTML={{ __html: PREFS_SCRIPT }} />
           {/*
@@ -211,6 +225,7 @@ export default async function SiteLayout({
             cta={navigation.headerCta}
             secondaryCta={navigation.headerSecondaryCta}
             searchHref={blogIndexPath(permalinks)}
+            overlayNav={navigation.overlay}
             primaryServices={catalogue.primary}
             secondaryServices={catalogue.secondary}
             contact={{
@@ -225,7 +240,8 @@ export default async function SiteLayout({
           />
           <div className="he-shift">
             <main id="main">{children}</main>
-            <Footer
+            {footerWrap(
+              <Footer
               siteName={settings.name}
               tagline={settings.tagline}
               email={settings.contactEmail}
@@ -238,8 +254,24 @@ export default async function SiteLayout({
               shareChip={chrome.footer.shareChip}
               motionToggle={chrome.motionToggle}
               themeToggle={chrome.themeToggle}
-            />
+            />,
+            )}
           </div>
+          {/* 2.19 — motion and chrome extras, each only when switched on. */}
+          {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} />}
+          {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
+          {chrome.cursor.style !== 'off' && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
+          {chrome.transition.style !== 'off' && <PageTransition style={chrome.transition.style} />}
+          {chrome.transition.preloader && (
+            <Preloader>
+              {theme.brand?.logoUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={theme.brand.logoUrl} alt="" />
+              ) : (
+                <span>{settings.name}</span>
+              )}
+            </Preloader>
+          )}
           {chrome.backToTop && <BackToTop />}
           <Popups popups={popups} locale={locale} />
           {/* Last, and above the popups: it is the one thing a visitor is being

@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { isSafeHref } from './navigation';
 
+/** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
+const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Site chrome
    ───────────────────────────────────────────────────────────────────────────
@@ -24,7 +27,7 @@ const href = z.string().trim().min(1).max(500).refine(isSafeHref, 'Use a path li
  * HD5 logo between split links · HD6 logo row over a links row · HD7 floating rounded box ·
  * HD8 wide left sidebar · HD9 narrow left rail. The last two sit beside the page from 1024px up.
  */
-export const HEADER_VARIANTS = ['classic', 'centered', 'slim', 'pill', 'splitLogo', 'stacked', 'boxed', 'sidebar', 'rail'] as const;
+export const HEADER_VARIANTS = ['classic', 'centered', 'slim', 'pill', 'splitLogo', 'stacked', 'boxed', 'sidebar', 'rail', 'menuButtonInline'] as const;
 export type HeaderVariant = (typeof HEADER_VARIANTS)[number];
 
 /** MM1 compact panel · MM2 full-width sheet · MM3 links + image cards · MM4 full-screen three-level. */
@@ -67,6 +70,29 @@ export const chromeSchema = z.object({
       menuLabel: z.string().trim().max(20).optional(),
       /** HD9 — where the menu button sits on the rail. */
       railButton: z.enum(['top', 'center']).optional(),
+
+      /* ── 2.18/2.19 (T25) ─────────────────────────────────────────────── */
+      /** menuButtonInline — which end the round menu button sits at. */
+      menuSide: z.enum(['left', 'right']).optional(),
+      /** The bar's own background: solid (as before), none, or frosted glass over the page. */
+      background: z.enum(['solid', 'transparent', 'glass']).optional(),
+      /** Glass: how much the page behind is blurred, in px. */
+      glassBlur: z.number().int().min(0).max(30).optional(),
+      /** Glass: the tint laid over the blur, as a percentage of the page colour. */
+      glassOpacity: z.number().int().min(0).max(100).optional(),
+      /** While scrolling: always there (as before), hide going down and return going up, or shrink. */
+      behaviour: z.enum(['always', 'hide', 'shrink']).optional(),
+      /** Phones: the logo at the left (as before) or centred between the buttons. */
+      logoMobile: z.enum(['left', 'center']).optional(),
+      /** The bar's height per tier, in px; empty keeps the stylesheet's. */
+      height: z
+        .object({
+          base: z.number().int().min(40).max(160).optional(),
+          laptop: z.number().int().min(40).max(160).optional(),
+          tablet: z.number().int().min(40).max(160).optional(),
+          mobile: z.number().int().min(40).max(160).optional(),
+        })
+        .optional(),
     })
     .optional(),
 
@@ -81,6 +107,21 @@ export const chromeSchema = z.object({
       /** Where the header buttons sit inside the open menu. */
       ctaPosition: z.enum(['top', 'bottom']).optional(),
       largeType: z.boolean().optional(),
+
+      /* ── 2.19 (T26) — the full-screen menus, also opened by the menu button on wide screens ── */
+      /** The header's own menu, or the separate Overlay menu from Menus. */
+      source: z.enum(['main', 'overlay']).optional(),
+      /** Item size in the full-screen menus: large (as before) or huge. */
+      size: z.enum(['large', 'huge']).optional(),
+      /** How the menu arrives. */
+      entrance: z.enum(['none', 'fade', 'slide', 'stagger']).optional(),
+      /** How much of the page shows through, 0–100 — 100 is the solid page colour (as before). */
+      opacity: z.number().int().min(30).max(100).optional(),
+      /** A picture beside the list, from the item under the pointer (Menus → an item's picture). */
+      hoverImages: z.boolean().optional(),
+      /** The contact column — its heading, and a phone number beside the email. */
+      contactTitle: z.string().trim().max(60).optional(),
+      phone: z.string().trim().max(40).regex(/^\+?[0-9 ()./-]{0,40}$/, 'A phone number').optional(),
     })
     .optional(),
 
@@ -89,6 +130,51 @@ export const chromeSchema = z.object({
       variant: z.enum(FOOTER_VARIANTS).optional(),
       /** A "Share this page" chip on the footer's top edge (Unilever). */
       shareChip: z.boolean().optional(),
+      /** 2.19 (T29) — the page lifts off the footer, which waits underneath. */
+      reveal: z.boolean().optional(),
+      /** Keep the reveal on phones too; off by default, where it costs more than it shows. */
+      revealOnMobile: z.boolean().optional(),
+      /** The footer's own background, when it should differ from the page's — a hex colour. */
+      background: z.string().trim().regex(HEX, 'A hex colour such as #000000').optional(),
+    })
+    .optional(),
+
+  /** 2.19 (T27) — a pointer of the site's own, on fine pointers only. */
+  cursor: z
+    .object({
+      style: z.enum(['off', 'dotRing', 'dot', 'ring', 'blend']).optional(),
+      /** The word over pictures and films ("View"); empty shows none. */
+      mediaLabel: z.string().trim().max(16).optional(),
+    })
+    .optional(),
+
+  /** 2.19 (T28) — how one page gives way to the next. */
+  transition: z
+    .object({
+      style: z.enum(['off', 'fadeUp', 'fade', 'slide', 'curtain']).optional(),
+      /** The logo over the page on the very first load, for at most a second and a half. */
+      preloader: z.boolean().optional(),
+    })
+    .optional(),
+
+  /** 2.19 (T30) — fixed rails down the sides of wide screens. */
+  rails: z
+    .object({
+      enabled: z.boolean().optional(),
+      /** Scroll-to-top with a progress bar: on which side, or none. */
+      scrollSide: z.enum(['left', 'right', 'none']).optional(),
+      scrollLabel: z.string().trim().max(30).optional(),
+      /** The site's social links, with a label: on which side, or none. */
+      socialSide: z.enum(['left', 'right', 'none']).optional(),
+      socialLabel: z.string().trim().max(30).optional(),
+      /** Appear only once the reader is a screen down. */
+      afterFirstScreen: z.boolean().optional(),
+      /** Invert against whatever is behind them, so they read over light and dark sections alike. */
+      autoContrast: z.boolean().optional(),
+      /** Pages to leave them off — paths, `*` at the end for everything under one. */
+      hideOn: z.array(z.string().trim().max(200).regex(/^\/[A-Za-z0-9._~\-/%]*\*?$/)).max(20).optional(),
+      /** The width they appear from, in px. */
+      minWidth: z.number().int().min(768).max(2560).optional(),
     })
     .optional(),
 
@@ -137,6 +223,13 @@ export type ResolvedChrome = {
     ctaOnMobile: boolean;
     menuLabel: string;
     railButton: 'top' | 'center';
+    menuSide: 'left' | 'right';
+    background: 'solid' | 'transparent' | 'glass';
+    glassBlur: number;
+    glassOpacity: number;
+    behaviour: 'always' | 'hide' | 'shrink';
+    logoMobile: 'left' | 'center';
+    height: { base?: number; laptop?: number; tablet?: number; mobile?: number };
   };
   megaMenu: MegaVariant;
   mobileMenu: {
@@ -145,8 +238,27 @@ export type ResolvedChrome = {
     align: 'left' | 'center';
     ctaPosition: 'top' | 'bottom';
     largeType: boolean;
+    source: 'main' | 'overlay';
+    size: 'large' | 'huge';
+    entrance: 'none' | 'fade' | 'slide' | 'stagger';
+    opacity: number;
+    hoverImages: boolean;
+    contactTitle?: string;
+    phone?: string;
   };
-  footer: { variant: FooterVariant; shareChip: boolean };
+  footer: { variant: FooterVariant; shareChip: boolean; reveal: boolean; revealOnMobile: boolean; background?: string };
+  cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
+  transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean };
+  rails: {
+    scrollSide: 'left' | 'right' | 'none';
+    scrollLabel: string;
+    socialSide: 'left' | 'right' | 'none';
+    socialLabel: string;
+    afterFirstScreen: boolean;
+    autoContrast: boolean;
+    hideOn: string[];
+    minWidth: number;
+  } | null;
   announcement: { text: string; linkLabel?: string; href?: string; dismissible: boolean } | null;
   regionBar: { message: string; buttonLabel: string; options: { label: string; href: string }[] } | null;
   backToTop: boolean;
@@ -179,6 +291,13 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       ctaOnMobile: c.header?.ctaOnMobile ?? false,
       menuLabel: c.header?.menuLabel || 'Menu',
       railButton: c.header?.railButton ?? 'top',
+      menuSide: c.header?.menuSide ?? 'left',
+      background: c.header?.background ?? 'solid',
+      glassBlur: c.header?.glassBlur ?? 14,
+      glassOpacity: c.header?.glassOpacity ?? 60,
+      behaviour: c.header?.behaviour ?? 'always',
+      logoMobile: c.header?.logoMobile ?? 'left',
+      height: c.header?.height ?? {},
     },
     megaMenu: beside ? 'compact' : (c.megaMenu ?? 'compact'),
     mobileMenu: {
@@ -187,8 +306,35 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       align: c.mobileMenu?.align ?? 'left',
       ctaPosition: c.mobileMenu?.ctaPosition ?? 'top',
       largeType: c.mobileMenu?.largeType ?? false,
+      source: c.mobileMenu?.source ?? 'main',
+      size: c.mobileMenu?.size ?? 'large',
+      entrance: c.mobileMenu?.entrance ?? 'none',
+      opacity: c.mobileMenu?.opacity ?? 100,
+      hoverImages: c.mobileMenu?.hoverImages ?? false,
+      contactTitle: c.mobileMenu?.contactTitle || undefined,
+      phone: c.mobileMenu?.phone || undefined,
     },
-    footer: { variant: c.footer?.variant ?? 'sitemap', shareChip: c.footer?.shareChip ?? false },
+    footer: {
+      variant: c.footer?.variant ?? 'sitemap',
+      shareChip: c.footer?.shareChip ?? false,
+      reveal: c.footer?.reveal ?? false,
+      revealOnMobile: c.footer?.revealOnMobile ?? false,
+      background: c.footer?.background && HEX.test(c.footer.background) ? c.footer.background : undefined,
+    },
+    cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
+    transition: { style: c.transition?.style ?? 'off', preloader: c.transition?.preloader ?? false },
+    rails: c.rails?.enabled
+      ? {
+          scrollSide: c.rails.scrollSide ?? 'left',
+          scrollLabel: c.rails.scrollLabel || 'Scroll to top',
+          socialSide: c.rails.socialSide ?? 'right',
+          socialLabel: c.rails.socialLabel || 'Follow us —',
+          afterFirstScreen: c.rails.afterFirstScreen ?? false,
+          autoContrast: c.rails.autoContrast ?? false,
+          hideOn: c.rails.hideOn ?? [],
+          minWidth: c.rails.minWidth ?? 1181,
+        }
+      : null,
     announcement: announcement
       ? {
           text: announcement.text!,
@@ -221,6 +367,7 @@ export const HEADER_VARIANT_LABELS: Record<HeaderVariant, { label: string; hint:
   boxed: { label: 'Floating box', hint: 'The whole bar in a rounded box off the page edge' },
   sidebar: { label: 'Sidebar', hint: 'The full menu in a column down the left, from 1024px up' },
   rail: { label: 'Narrow rail', hint: 'A slim strip down the left with the menu button, from 1024px up' },
+  menuButtonInline: { label: 'Menu button and links', hint: 'A round menu button, the logo, links and a button; the menu button opens the full-screen menu everywhere' },
 };
 
 export const MEGA_VARIANT_LABELS: Record<MegaVariant, { label: string; hint: string }> = {

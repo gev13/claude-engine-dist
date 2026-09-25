@@ -25,6 +25,7 @@ type Cta = { label: string; href: string };
 
 type Resolved = {
   header: NavItem[];
+  overlay?: NavItem[];
   /** Null when there is no header button. */
   headerCta: Cta | null;
   headerSecondaryCta: Cta | null;
@@ -65,9 +66,10 @@ function NavigationScreenInner() {
   const [socialStyle, setSocialStyle] = useState<SocialLabelStyle>('icon');
   const [saved, setSaved] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'header' | 'footer'>('header');
+  const [tab, setTab] = useState<'header' | 'footer' | 'overlay'>('header');
+  const [overlay, setOverlay] = useState<NavItem[]>([]);
 
-  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[]; ss: SocialLabelStyle }) =>
+  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[]; ss: SocialLabelStyle; ov?: NavItem[] }) =>
     JSON.stringify(s);
 
   useEffect(() => {
@@ -85,10 +87,11 @@ function NavigationScreenInner() {
     setAddress(n.footerAddress ?? '');
     setSocial(n.social ?? []);
     setSocialStyle(n.socialStyle ?? 'icon');
-    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [], ss: n.socialStyle ?? 'icon' }));
+    setOverlay(n.overlay ?? []);
+    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [], ss: n.socialStyle ?? 'icon', ov: n.overlay ?? [] }));
   }, [data]);
 
-  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social, ss: socialStyle }) !== saved;
+  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social, ss: socialStyle, ov: overlay }) !== saved;
 
   async function save() {
     const pair = (value: Cta, name: string) => {
@@ -123,6 +126,7 @@ function NavigationScreenInner() {
         ...(social.length ? { social } : {}),
         // Icons are the default and are left out, so an untouched site saves what it always did.
         ...(socialStyle !== 'icon' ? { socialStyle } : {}),
+        ...(overlay.length ? { overlay } : {}),
       };
       const result = await api<Response>('/api/admin/navigation', { method: 'PUT', json: body });
       await mutate(result, { revalidate: false });
@@ -176,7 +180,7 @@ function NavigationScreenInner() {
       )}
 
       <nav className="mb-6 flex gap-1 border-b-2 border-hairline">
-        {(['header', 'footer'] as const).map((t) => (
+        {(['header', 'overlay', 'footer'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -186,12 +190,20 @@ function NavigationScreenInner() {
               tab === t ? 'border-flare text-bone' : 'border-transparent text-smoke hover:text-bone',
             )}
           >
-            {t === 'header' ? 'Header menu' : 'Footer menu'}
+            {t === 'header' ? 'Header menu' : t === 'overlay' ? 'Overlay menu' : 'Footer menu'}
           </button>
         ))}
       </nav>
 
-      {tab === 'header' ? (
+      {tab === 'overlay' ? (
+        <Panel title="Overlay menu">
+          <p className="m-0 mb-4 text-[13px] text-smoke">
+            The full-screen menu’s own list, when it should differ from the header’s — another order, or an item such as “Request a quote”. Used when Appearance → Menus
+            → the full-screen menu takes its items from here. A picture on an item is shown beside the menu while that item is under the pointer.
+          </p>
+          <ItemList items={overlay} onChange={setOverlay} pages={pages?.items ?? []} allowChildren withImage />
+        </Panel>
+      ) : tab === 'header' ? (
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <Panel title="Header menu">
             <ItemList
@@ -397,11 +409,14 @@ function ItemList({
   onChange,
   pages,
   allowChildren = false,
+  withImage = false,
 }: {
   items: NavItem[];
   onChange: (next: NavItem[]) => void;
   pages: PageRow[];
   allowChildren?: boolean;
+  /** 2.19 — a picture per item, for the overlay menu's hover image. */
+  withImage?: boolean;
 }) {
   const [open, setOpen] = useState<string | null>(null);
 
@@ -449,6 +464,7 @@ function ItemList({
               </div>
 
               <HrefField value={item.href} onChange={(href) => set(i, { href })} pages={pages} />
+              {withImage && <ItemImage value={item.imageUrl} onChange={(imageUrl) => set(i, { imageUrl })} />}
 
               <label className="flex items-center gap-2.5 text-[13px] text-ash">
                 <input
@@ -633,6 +649,40 @@ function HrefField({
             ))}
         </Select>
       </div>
+    </Field>
+  );
+}
+
+/** A picture for one menu item, from the media library (2.19). */
+function ItemImage({ value, onChange }: { value?: string; onChange: (next: string | undefined) => void }) {
+  const [picking, setPicking] = useState(false);
+  return (
+    <Field label="Picture" hint="shown beside the full-screen menu while this item is pointed at">
+      <div className="flex items-center gap-3">
+        {value ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={value} alt="" className="h-10 w-16 border-2 border-hairline object-cover" />
+        ) : (
+          <span className="flex h-10 w-16 items-center justify-center border-2 border-dashed border-hairline text-[10px] text-smoke">None</span>
+        )}
+        <AdminButton type="button" variant="secondary" onClick={() => setPicking(true)}>
+          Choose
+        </AdminButton>
+        {value && (
+          <AdminButton type="button" variant="ghost" onClick={() => onChange(undefined)}>
+            Clear
+          </AdminButton>
+        )}
+      </div>
+      <MediaPicker
+        open={picking}
+        accept="image"
+        onClose={() => setPicking(false)}
+        onSelect={(media) => {
+          onChange(media.url);
+          setPicking(false);
+        }}
+      />
     </Field>
   );
 }

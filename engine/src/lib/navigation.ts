@@ -78,6 +78,8 @@ export type NavChild = z.infer<typeof childItem>;
 const navItem = z.object({
   ...baseItem,
   children: z.array(childItem).max(24).optional(),
+  /** 2.19 — shown beside a full-screen menu while this item is under the pointer. */
+  imageUrl: imageUrl.optional(),
 });
 
 export type NavItem = z.infer<typeof navItem>;
@@ -179,6 +181,8 @@ const cta = z.object({ label: z.string().trim().min(1).max(60), href });
 
 export const navigationSchema = z.object({
   header: z.array(navItem).max(12).optional(),
+  /** 2.19 (T26) — the full-screen menu's own list, when it should differ from the header's. */
+  overlay: z.array(navItem).max(12).optional(),
   headerCta: cta.optional(),
   /** A quieter second button beside the first ("Log in"). */
   headerSecondaryCta: cta.optional(),

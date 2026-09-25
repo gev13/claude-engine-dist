@@ -1,10 +1,12 @@
 import { z } from 'zod';
+import { cardHoverSchema } from './cardHover';
 
 /** Ids become part of a CSS selector, so they are constrained to what is safe there. */
 export const BLOCK_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 import {
   type BlockStyle,
   blockStyleSchema,
+  columnOrderSchema,
   columnWidthSchema,
   length,
   textTagSchema,
@@ -76,6 +78,10 @@ const slide = z.object({
     .optional(),
   /** P3-B9 — stars on a testimonial, in halves. */
   rating: z.number().min(0).max(5).multipleOf(0.5).optional(),
+  /** 2.19 — a testimonial's company, after its role (the caption). */
+  company: text(80),
+  /** 2.19 — a colour behind the picture, which then draws as a logo: fitted, not cropped. */
+  avatarColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
 });
 
 export type CarouselSlide = z.infer<typeof slide>;
@@ -378,8 +384,16 @@ export const blockSchemas = {
          muted and looped while on screen); `url` is its poster. */
       .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional() }))
       .min(1)
-      .max(40),
+      .max(200),
     link: libraryLink.optional(),
+    /**
+     * 2.19 — a long gallery shows `perPage` first, then the next lot from a
+     * "Load more" button, or by itself near the end of the list (`infinite`,
+     * which keeps the button for keyboards). Every picture is already in the
+     * block, so nothing is fetched.
+     */
+    pagination: z.enum(['none', 'loadMore', 'infinite']).default('none'),
+    perPage: z.number().int().min(1).max(200).default(12),
   }),
 
   /** EL12 — panels side by side; the open one widens. Stacks on phones. */
@@ -408,6 +422,8 @@ export const blockSchemas = {
     layout: z.enum(PROJECT_LAYOUTS).default('classic'),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
     hover: z.enum(['zoom', 'greyscale', 'swap', 'none']).default('zoom'),
+    /** 2.19 — how the whole card moves under the pointer (lift, tilt…), beside the picture's own `hover`. */
+    cardHover: cardHoverSchema.optional(),
     filter: z.boolean().default(true),
     allLabel: z.string().trim().max(30).default('All'),
     /**
@@ -580,6 +596,8 @@ export const blockSchemas = {
         category: z.boolean().optional(),
         readMore: z.boolean().optional(),
         ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
+        /** 2.19 — how each card answers the pointer; unset is nothing new. */
+        hover: cardHoverSchema.optional(),
       })
       .optional(),
   }),
@@ -681,6 +699,8 @@ export const blockSchemas = {
         z.object({
           id: z.string().min(1).max(64).regex(BLOCK_ID_PATTERN),
           width: columnWidthSchema,
+          /** Its place at the smaller tiers; absent is the written order. */
+          order: columnOrderSchema.optional(),
           /** Columns take the same Design Options panel that blocks do. */
           style: blockStyleSchema.optional(),
           /** Parsed by `parseBlock` in turn; see parseRowProps below. */
@@ -1420,8 +1440,13 @@ export const blockSchemas = {
       .array(
         z.object({
           name: z.string().trim().min(1).max(80),
+          /** 2.19 — shown as "Role · Company"; `meta` is the older free line, kept for stored reviews. */
+          role: text(80),
+          company: text(80),
           meta: text(80),
           avatarUrl: mediaUrl.optional(),
+          /** 2.19 — a colour behind the picture, which then draws as a logo: fitted, not cropped. */
+          avatarColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
           rating: z.number().min(0).max(5).multipleOf(0.5).optional(),
           title: text(120),
           text: z.string().trim().min(1).max(800),
@@ -1432,6 +1457,17 @@ export const blockSchemas = {
       .min(1)
       .max(24),
     link: libraryLink.optional(),
+    /** 2.19 — leave the stars off even where a review has a rating. */
+    hideRatings: z.boolean().optional(),
+    /** 2.19 — the cards' own look; unset is the theme's surface, hairline and card radius. */
+    card: z
+      .object({
+        background: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
+        radius: z.number().int().min(0).max(40).optional(),
+        border: z.boolean().optional(),
+        quoteMark: z.boolean().optional(),
+      })
+      .optional(),
   }),
 
   /** P3-A8 — a table of contents built from the headings on the page. */
@@ -1658,6 +1694,7 @@ export type ParsedBlock = { id: string; type: BlockType; props: unknown; style?:
 export type ParsedColumn = {
   id: string;
   width: z.infer<typeof columnWidthSchema>;
+  order?: z.infer<typeof columnOrderSchema>;
   style?: BlockStyle;
   blocks: ParsedBlock[];
 };
@@ -1697,6 +1734,7 @@ function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>, depth: numb
     columns: props.columns.map((column) => ({
       id: column.id,
       width: column.width,
+      ...(column.order && Object.keys(column.order).length > 0 ? { order: column.order } : {}),
       style: column.style && Object.keys(column.style).length > 0 ? column.style : undefined,
       blocks: (column.blocks as AnyBlock[])
         .map((child) => (child && typeof child === 'object' ? parseBlock(child, depth + 1) : null))

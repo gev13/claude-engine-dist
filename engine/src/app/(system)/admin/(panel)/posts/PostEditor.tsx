@@ -11,6 +11,7 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { SeoPanel } from '@/components/admin/SeoPanel';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
 import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
+import { PageAppearanceFields, type PageAppearanceValue } from '@/components/admin/PageAppearanceFields';
 import { PreviewButton } from '@/components/admin/PreviewButton';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Textarea } from '@/components/admin/ui';
 import { TranslationsPanel } from '@/components/admin/TranslationsPanel';
@@ -64,6 +65,7 @@ export type PostEditorRecord = {
   primaryCategoryId: string | null;
   categoryIds: string[];
   customCss: string;
+  appearance?: PageAppearanceValue;
   /** ISO string, or null when the post has never been published. */
   publishedAt: string | null;
   /** What the public post shows (2.13). */
@@ -86,6 +88,7 @@ type FormValue = {
   primaryCategoryId: string;
   categoryIds: string[];
   customCss: string;
+  appearance?: PageAppearanceValue;
   /** Value of the datetime-local input, in the browser's own timezone. */
   publishedAt: string;
 };
@@ -124,6 +127,7 @@ const blankValue: FormValue = {
   primaryCategoryId: '',
   categoryIds: [],
   customCss: '',
+  appearance: {},
   publishedAt: '',
 };
 
@@ -143,6 +147,7 @@ function toValue(record?: PostEditorRecord): FormValue {
     primaryCategoryId: record.primaryCategoryId ?? '',
     categoryIds: record.categoryIds ?? [],
     customCss: record.customCss ?? '',
+    appearance: record.appearance ?? {},
     publishedAt: toLocalInput(record.publishedAt),
   };
 }
@@ -162,6 +167,7 @@ type PostApiRow = {
   coverMediaId: string | null;
   primaryCategoryId: string | null;
   customCss: string;
+  appearance?: PageAppearanceValue;
   publishedAt: string | null;
 };
 
@@ -251,6 +257,7 @@ export function PostEditor({
       primaryCategoryId: value.primaryCategoryId || null,
       categoryIds,
       customCss: value.customCss,
+      appearance: value.appearance ?? {},
       // Left undefined when there is nothing to say, so publishing stamps
       // "now" server-side rather than being blanked by an empty field.
       publishedAt: publishedIso ?? (saved.publishedAt ? null : undefined),
@@ -685,6 +692,7 @@ export function PostEditor({
             )}
           </Panel>
 
+          <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="post" />
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="post" />
 
           {/* Only an existing post has history; a new one has nothing to show. */}

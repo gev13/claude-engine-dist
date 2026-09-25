@@ -6,6 +6,7 @@ import type { AnyBlock } from '@/lib/blocks';
 import type { SeoFields } from '@/server/db/schema';
 import { localeConfig, type Locale } from '@/lib/locales';
 import { pageDefinitions, pageDefinitionByPath } from '@/content/pages';
+import { readPageAppearance, type PageAppearance } from '@/lib/pageAppearance';
 
 export type PublicPage = {
   id: string;
@@ -23,6 +24,8 @@ export type PublicPage = {
   seo: SeoFields;
   /** CSS for this page alone, written into a <style> after the theme. */
   customCss: string;
+  /** 2.19 — this page's own background and palette. */
+  appearance: PageAppearance;
   updatedAt: Date;
   publishedAt: Date | null;
   /** True when this came from the bundled definitions, not the database. */
@@ -55,6 +58,7 @@ function fromDefinition(path: string, locale: Locale): PublicPage | null {
     blocks: def.blocks,
     seo: def.seo,
     customCss: '',
+    appearance: {},
     updatedAt: new Date(),
     publishedAt: new Date(),
     fallback: true,
@@ -91,6 +95,7 @@ function toPublic(row: typeof pages.$inferSelect): PublicPage {
     blocks: (row.blocks ?? []) as AnyBlock[],
     seo: (row.seo ?? {}) as SeoFields,
     customCss: row.customCss ?? '',
+    appearance: readPageAppearance(row.appearance),
     updatedAt: row.updatedAt,
     publishedAt: row.publishedAt,
     fallback: false,

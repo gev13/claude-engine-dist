@@ -507,6 +507,14 @@
   .he-rev__name { display: block; font-size: 15px; font-weight: 600; color: var(--color-bone); }
   .he-rev__meta { display: block; font-size: 13px; color: var(--color-smoke); }
   .he-rev__more { margin-top: 36px; text-align: center; }
+  /* 2.19 — testimonial cards: their own background and radius, no border, a
+     quote mark, and a logo fitted on a coloured circle. */
+  .he-rev__list[style*='--he-rev-bg'] .he-rev__card { background: var(--he-rev-bg); }
+  .he-rev__list[style*='--he-rev-radius'] .he-rev__card { border-radius: var(--he-rev-radius); }
+  .he-rev__list.no-border .he-rev__card { border-color: transparent; }
+  .he-rev__list.has-mark .he-rev__text::before { content: '\201C'; display: block; height: 0.5em; margin-bottom: 10px; font-family: var(--font-display); font-size: 56px; line-height: 1; color: var(--color-flare); }
+  .he-rev__avatar.is-logo > .he-fill { padding: 22%; object-fit: contain; }
+  .he-rev__avatar.is-logo img { object-fit: contain; }
 
   /* ── P3-A8: table of contents ────────────────────────────────────────── */
 

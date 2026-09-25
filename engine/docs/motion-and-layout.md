@@ -1,0 +1,74 @@
+# Header, menus, motion and layout
+
+Since 2.19. Every option starts at what the site already did, and anything
+that moves is still for a visitor who asks for less motion — the system
+setting or the site's own switch.
+
+## The header — Appearance → Header & menus
+
+- **Menu button and links** — a new layout: a round menu button, the logo,
+  links and a button. The menu button opens the full-screen menu at every
+  width. Choose which end the button sits at.
+- **Background** — solid (as before), none, or frosted glass with its own
+  blur and tint.
+- **While scrolling** — always there (as before), hides going down and comes
+  back going up, or shrinks. Hiding needs the header to stick to the top.
+- **Height** per screen size, and the **logo centred** on phones.
+
+## The full-screen menu — Appearance → Header & menus
+
+- **Lists** the header's menu, or a separate **Overlay menu** (Menus →
+  Overlay menu), whose links can each have a picture.
+- **Link size** large or huge; **arrives** at once, fading, sliding, or one
+  link after another; how **solid** it is.
+- **Pictures** — the picture of the link under the pointer, beside the list.
+- The creative full-screen menu's contact column takes a **heading** and a
+  **phone** number beside the email.
+- Focus stays inside the open menu, and Escape closes it.
+
+## The footer — Appearance → Footer
+
+- **Reveal** — the page lifts off the footer, which waits underneath. Off on
+  phones unless you ask; a footer taller than most of the screen scrolls
+  normally.
+- **Its own background** colour.
+
+## Site-wide — Appearance → Site-wide
+
+- **Pointer** — a dot, a ring, both, or a disc that inverts what is under
+  it, with an optional word over pictures ("View"). A mouse only; the text
+  caret stays in fields.
+- **Page changes** — fade and rise, fade, slide or a curtain between pages
+  of the site. Links to other sites, new tabs, downloads and the back button
+  are left alone.
+- **Preloader** — the logo over the first page of a visit, for a second and
+  a half at most.
+- **Side rails** — *Scroll to top* with a progress bar on one side, the
+  social links on the other, from a width you choose; optionally only after
+  the first screen, inverted against what is behind them, and left off the
+  pages you list (`/blog/*`).
+
+## One page's colours — the page, post or project editor
+
+- **Background** — its own colour.
+- **Palette** — the site's alternate palette (Appearance → Colours) for
+  this page only. A section can take it too: *Alternate colours* in its
+  Design tab.
+
+## Blocks
+
+- **Hide on** — any of Large desktop, Desktop, Tablet and Mobile, each on
+  its own (the old setting hid a size *and everything smaller*; blocks that
+  used it are unchanged).
+- **A column's place** — in a row, *Width & design* → *Place* per size, so
+  the picture can come first on a phone in a row of three.
+- **Cards that answer the pointer** — Post list (Each card shows), Projects,
+  and Appearance → Blog: lift, grow, shadow or a 3D tilt with its own
+  perspective, angle and glare; and a picture that zooms in. A mouse only.
+- **Testimonials** — the Reviews block takes a role and a company, a logo on
+  a coloured circle (set a *Circle colour*), no stars if you like, and the
+  cards' own background, corners, border and quote mark. The Quotes slider
+  takes the same company and circle.
+- **Long galleries** — up to 200 pictures, shown all at once (as before),
+  a few then *Load more*, or more as the visitor scrolls. *Add several from
+  the library* picks many at once. The viewer swipes on a touch screen.

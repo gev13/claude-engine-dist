@@ -86,10 +86,10 @@ describe('compare, gallery, accordion, projects, steps', () => {
     expect(blockSchemas.compare.parse({ beforeUrl: '/media/a.webp', afterUrl: '/media/b.webp' })).toMatchObject({ orientation: 'horizontal', start: 50 });
   });
 
-  it('keeps a gallery between 1 and 40 pictures', () => {
+  it('keeps a gallery between 1 and 200 pictures (40 before 2.19)', () => {
     const picture = { url: '/media/a.webp' };
     expect(blockSchemas.gallery.safeParse({ images: [] }).success).toBe(false);
-    expect(blockSchemas.gallery.safeParse({ images: Array.from({ length: 41 }, () => picture) }).success).toBe(false);
+    expect(blockSchemas.gallery.safeParse({ images: Array.from({ length: 201 }, () => picture) }).success).toBe(false);
     expect(blockSchemas.gallery.safeParse({ images: [{ url: 'javascript:alert(1)' }] }).success).toBe(false);
   });
 

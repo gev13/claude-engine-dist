@@ -140,6 +140,42 @@
   .he-menu.is-fullscreen .he-menu__list > li:nth-child(5) { animation-delay: calc(200ms * var(--he-motion, 1)); }
   .he-menu.is-fullscreen .he-menu__list > li:nth-child(n + 6) { animation-delay: calc(250ms * var(--he-motion, 1)); }
 
+  /* ── 2.19 (T26): the full-screen menu's own options ─────────────────── */
+  .he-menu.is-huge .he-menu__row { font-size: clamp(40px, 8vw, 112px); letter-spacing: -0.04em; }
+  /* See-through: the page colour at the chosen strength, the page blurred behind. */
+  .he-menu[style*='--he-menu-alpha'] { background: color-mix(in srgb, var(--color-ink) var(--he-menu-alpha), transparent); backdrop-filter: blur(12px); }
+  .he-menu.is-enter-fade { animation: he-fade calc(300ms * var(--he-motion, 1)) ease both; }
+  .he-menu.is-enter-fade .he-menu__list > li { animation: none; }
+  .he-menu.is-enter-slide { animation: he-menu-slide calc(420ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .he-menu.is-enter-slide .he-menu__list > li { animation: none; }
+  .he-menu.is-enter-stagger .he-menu__list > li { animation: he-menu-rise calc(500ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+  .he-menu.is-enter-stagger .he-menu__list > li:nth-child(2) { animation-delay: calc(60ms * var(--he-motion, 1)); }
+  .he-menu.is-enter-stagger .he-menu__list > li:nth-child(3) { animation-delay: calc(120ms * var(--he-motion, 1)); }
+  .he-menu.is-enter-stagger .he-menu__list > li:nth-child(4) { animation-delay: calc(180ms * var(--he-motion, 1)); }
+  .he-menu.is-enter-stagger .he-menu__list > li:nth-child(n + 5) { animation-delay: calc(240ms * var(--he-motion, 1)); }
+  @keyframes he-menu-slide { from { transform: translateX(-100%); } to { transform: none; } }
+  /* The pointed item's picture, fixed beside the list on wide screens. */
+  .he-menu__picture { display: none; }
+  @media (width >= 64rem) {
+    .he-menu.has-pictures .he-menu__picture {
+      position: fixed;
+      top: 50%;
+      right: clamp(24px, 6vw, 96px);
+      display: block;
+      width: min(34vw, 460px);
+      aspect-ratio: 4 / 5;
+      overflow: hidden;
+      border-radius: var(--he-card-radius, 16px);
+      translate: 0 -50%;
+      pointer-events: none;
+      animation: he-fade calc(250ms * var(--he-motion, 1)) ease both;
+    }
+    .he-menu.has-pictures .he-menu__body { max-width: calc(100% - min(34vw, 460px) - 64px); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .he-menu:is(.is-enter-fade, .is-enter-slide, .is-enter-stagger), .he-menu[class*='is-enter-'] .he-menu__list > li { animation: none; }
+  }
+
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }
   .he-menu--fullscreenCentered :is(.he-menu__sub, .he-menu__services) { text-align: center; }
@@ -179,4 +215,49 @@
     .he-menu__plus { transition: none; }
   }
   .he-reduce-motion .he-menu.is-fullscreen .he-menu__list > li { animation: none; }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2.19 (T25) — the header's background, scroll behaviour, height and the
+   "menu button and links" variant. Unlayered, like the other rules here that
+   must beat the base bar.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.he-hdr.is-bg-transparent:not(.is-shrunk) .he-hdr__bar { background: transparent; border-color: transparent; backdrop-filter: none; }
+.he-hdr.is-bg-glass .he-hdr__bar {
+  background: color-mix(in srgb, var(--color-ink) var(--he-glass-tint, 60%), transparent);
+  backdrop-filter: blur(var(--he-glass-blur, 14px)) saturate(1.2);
+}
+.he-hdr { transition: transform calc(0.3s * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
+.he-hdr.is-sticky.is-tucked { transform: translateY(-100%); }
+.he-hdr.is-shrunk .he-hdr__inner { min-height: 52px; }
+.he-hdr.is-shrunk .he-hdr__img { max-height: 30px; width: auto; }
+.he-hdr .he-hdr__inner { transition: min-height calc(0.25s * var(--he-motion, 1)); }
+
+/* Height per tier, when set. */
+.he-hdr.has-height .he-hdr__inner { min-height: var(--hh-base, 64px); }
+@media (width <= 1440px) { .he-hdr.has-height .he-hdr__inner { min-height: var(--hh-laptop, var(--hh-base, 64px)); } }
+@media (width <= 1024px) { .he-hdr.has-height .he-hdr__inner { min-height: var(--hh-tablet, var(--hh-laptop, var(--hh-base, 64px))); } }
+@media (width <= 768px) { .he-hdr.has-height .he-hdr__inner { min-height: var(--hh-mobile, var(--hh-tablet, var(--hh-laptop, var(--hh-base, 64px)))); } }
+
+/* The round menu button, shown at every width on this header. */
+.he-hdr__toggle.is-round { display: inline-flex; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 999px; background: var(--color-surface); }
+.he-hdr__toggle.is-round:hover { background: var(--color-surface-2, var(--color-hairline)); }
+.he-hdr--menuButtonInline .he-hdr__inner { grid-template-columns: auto auto minmax(0, 1fr) auto; }
+.he-hdr--menuButtonInline.is-menu-right .he-hdr__inner { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+.he-hdr--menuButtonInline .he-hdr__nav { justify-self: end; }
+.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary { background: transparent; border: 1.5px solid var(--color-flare); color: var(--color-flare-soft); }
+.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary:hover { background: var(--color-flare); color: var(--color-bone); }
+
+/* Phones: the logo centred between the menu button and the header button. */
+@media (width <= 768px) {
+  .he-hdr.is-logo-center .he-hdr__inner { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); }
+  .he-hdr.is-logo-center .he-hdr__logo { grid-column: 2; grid-row: 1; justify-self: center; }
+  .he-hdr.is-logo-center .he-hdr__toggle { grid-column: 1; grid-row: 1; justify-self: start; }
+  .he-hdr.is-logo-center .he-hdr__actions { grid-column: 3; grid-row: 1; justify-self: end; }
+  .he-hdr.is-logo-center .he-hdr__nav { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .he-hdr, .he-hdr .he-hdr__inner { transition: none; }
 }

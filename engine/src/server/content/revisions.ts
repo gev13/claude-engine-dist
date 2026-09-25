@@ -37,12 +37,12 @@ export const REVISION_LIMIT = 30;
  */
 const PAGE_FIELDS = [
   'slug', 'path', 'title', 'navLabel', 'summary', 'excerpt', 'status', 'blocks',
-  'seo', 'parentId', 'sortOrder', 'template', 'priorityTier', 'customCss',
+  'seo', 'parentId', 'sortOrder', 'template', 'priorityTier', 'customCss', 'appearance',
 ] as const;
 
 const POST_FIELDS = [
   'slug', 'title', 'excerpt', 'body', 'blocks', 'layout', 'kind', 'status', 'seo',
-  'coverMediaId', 'primaryCategoryId', 'readingMinutes', 'customCss',
+  'coverMediaId', 'primaryCategoryId', 'readingMinutes', 'customCss', 'appearance',
 ] as const;
 
 /** A project's content columns (2.14). Terms live in their own table and are not versioned. */

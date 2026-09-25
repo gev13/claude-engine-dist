@@ -25,7 +25,9 @@ import { BlockDesignPanel } from '@/components/admin/BlockDesignPanel';
 import { ItemStylePanel } from '@/components/admin/ItemStylePanel';
 import { FigureStylePanel } from '@/components/admin/FigureStylePanel';
 import type { FigureStyle } from '@/lib/figureStyle';
-import { LengthField } from '@/components/admin/styleFields';
+import { ColorField, LengthField } from '@/components/admin/styleFields';
+import { CardHoverFields } from '@/components/admin/CardHoverFields';
+import type { CardHover } from '@/lib/cardHover';
 import type { ItemStyle } from '@/lib/itemStyle';
 import { Wireframe } from '@/components/admin/Wireframe';
 import { CARD_GRID_WIREFRAMES, CAROUSEL_WIREFRAMES, HERO_WIREFRAMES, type Shape } from '@/lib/wireframes';
@@ -837,7 +839,8 @@ type PriceItem = { name: string; price?: string; description?: string; imageUrl?
 type PriceGroup = { title?: string; note?: string; items: PriceItem[] };
 type HoursDay = { day: Weekday; slots: { open: string; close: string }[] };
 type NoteItem = { label: string; text: string };
-type ReviewItem = { name: string; meta?: string; avatarUrl?: string; rating?: number; title?: string; text: string; date?: string; source?: string };
+type ReviewItem = { name: string; role?: string; company?: string; meta?: string; avatarUrl?: string; avatarColor?: string; rating?: number; title?: string; text: string; date?: string; source?: string };
+type ReviewCard = { background?: string; radius?: number; border?: boolean; quoteMark?: boolean };
 type ReviewSummary = { rating: number; count?: string; label?: string; link?: { label: string; href: string } };
 type PlaylistItem = { source: string; videoTitle: string; posterUrl?: string; duration?: string };
 type FormFieldRow = {
@@ -1231,6 +1234,8 @@ type SlideItem = {
   caption?: string;
   specs?: { label: string; value: string }[];
   rating?: number;
+  company?: string;
+  avatarColor?: string;
 };
 
 function SlideFields({ item, update, mode }: { item: SlideItem; update: (patch: Partial<SlideItem>) => void; mode: string }) {
@@ -1243,16 +1248,28 @@ function SlideFields({ item, update, mode }: { item: SlideItem; update: (patch: 
         <Field label="Quote">
           <Textarea rows={3} value={item.body ?? ''} onChange={opt('body')} />
         </Field>
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Name">
             <Input value={item.title ?? ''} onChange={opt('title')} />
           </Field>
-          <Field label="Role or company">
+          <Field label="Role">
             <Input value={item.caption ?? ''} onChange={opt('caption')} />
+          </Field>
+          <Field label="Company">
+            <Input value={item.company ?? ''} onChange={opt('company')} />
           </Field>
         </div>
         <RatingSelect value={item.rating} onChange={(rating) => update({ rating })} />
-        <MediaInput label="Photo (optional)" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
+        <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+          <MediaInput label="Photo or logo (optional)" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
+          <ColorField
+            label="Circle colour"
+            hint="set one to show a logo on it, fitted rather than cropped"
+            placeholder="none"
+            value={item.avatarColor}
+            onChange={(avatarColor) => update({ avatarColor: avatarColor || undefined })}
+          />
+        </div>
       </>
     );
   }
@@ -1510,13 +1527,37 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
 type Column = {
   id: string;
   width: { base: number; laptop?: number; tablet?: number; mobile?: number };
+  order?: { laptop?: number; tablet?: number; mobile?: number };
   style?: BlockStyle;
   blocks: AnyBlockLike[];
 };
 
+/** Picks several files from the library in one go, for the lists that hold many (2.19). */
+function AddSeveral({ onAdd, label = 'Add several from the library' }: { onAdd: (files: { url: string; altText: string | null }[]) => void; label?: string }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <div>
+        <AdminButton variant="secondary" onClick={() => setOpen(true)}>
+          {label}
+        </AdminButton>
+      </div>
+      <MediaPicker open={open} onClose={() => setOpen(false)} onSelect={() => undefined} onSelectMany={onAdd} />
+    </>
+  );
+}
+
 type AnyBlockLike = { id: string; type: string; props: Record<string, unknown>; style?: BlockStyle };
 
 const readColumns = (props: Props): Column[] => (Array.isArray(props.columns) ? (props.columns as Column[]) : []);
+
+const PLACE_NAMES = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth'];
+
+/** What an unset place means: the tier above's, else where the column is listed. */
+function inheritedPlace(order: Column['order'], key: 'laptop' | 'tablet' | 'mobile', index: number): string {
+  const above = key === 'mobile' ? (order?.tablet ?? order?.laptop) : key === 'tablet' ? order?.laptop : undefined;
+  return above ? `Inherit — ${PLACE_NAMES[above - 1]!.toLowerCase()}` : `As listed — ${PLACE_NAMES[index]!.toLowerCase()}`;
+}
 
 /** The width a breakpoint takes when nobody has set one — the same chain `rowToCss` walks. */
 function inheritedSpan(width: Column['width'], key: 'laptop' | 'tablet' | 'mobile'): number {
@@ -1748,6 +1789,41 @@ function ColumnEditor({
                   </Field>
                 ))}
               </div>
+
+              {/* Where this column sits at each smaller tier (2.19). Unset
+                  inherits the tier above; unset everywhere is the order
+                  the columns are listed in. */}
+              {total > 1 && (
+                <div className="grid gap-3 sm:grid-cols-4">
+                  {(['laptop', 'tablet', 'mobile'] as const).map((key) => (
+                    <Field
+                      key={key}
+                      label={`Place ${key === 'laptop' ? '≤1440' : key === 'tablet' ? '≤1024' : '≤768'}`}
+                      hint={key === 'laptop' ? 'first, second…' : undefined}
+                    >
+                      <Select
+                        value={String(column.order?.[key] ?? '')}
+                        onChange={(e) => {
+                          const order = { ...column.order };
+                          if (e.target.value) order[key] = Number(e.target.value);
+                          else delete order[key];
+                          const next = { ...column };
+                          if (Object.keys(order).length > 0) next.order = order;
+                          else delete next.order;
+                          onChange(next);
+                        }}
+                      >
+                        <option value="">{inheritedPlace(column.order, key, index)}</option>
+                        {Array.from({ length: total }, (_, i) => i + 1).map((n) => (
+                          <option key={n} value={n}>
+                            {PLACE_NAMES[n - 1]}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  ))}
+                </div>
+              )}
 
               <BlockDesignPanel
                 style={column.style}
@@ -2829,10 +2905,36 @@ function TypeFields({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.lightbox !== false} onChange={(e) => set({ ...props, lightbox: e.target.checked })} />
             Open pictures in a full-screen viewer
           </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PropSelect
+              label="A long gallery"
+              k="pagination"
+              fallback="none"
+              options={[['none', 'Shows every picture'], ['loadMore', 'Shows some, then a “Load more” button'], ['infinite', 'Shows more as the visitor scrolls']]}
+              props={props}
+              set={set}
+            />
+            {(str(props, 'pagination') || 'none') !== 'none' && (
+              <Field label="Pictures at a time">
+                <Input
+                  type="number"
+                  min={1}
+                  max={200}
+                  value={num(props, 'perPage', 12)}
+                  onChange={(e) => set({ ...props, perPage: Math.min(200, Math.max(1, Math.round(Number(e.target.value) || 1))) })}
+                />
+              </Field>
+            )}
+          </div>
+          <AddSeveral
+            onAdd={(files) =>
+              set({ ...props, images: [...arr<GalleryImage>(props, 'images').filter((image) => image.url), ...files.map((m) => ({ url: m.url, ...(m.altText ? { alt: m.altText } : {}) }))].slice(0, 200) })
+            }
+          />
           <Repeater
-            label="Pictures (up to 40)"
+            label="Pictures (up to 200)"
             items={arr<GalleryImage>(props, 'images')}
-            onChange={(images) => set({ ...props, images: images.slice(0, 40) })}
+            onChange={(images) => set({ ...props, images: images.slice(0, 200) })}
             blank={(): GalleryImage => ({ url: '' })}
             addLabel="Add picture"
             renderRow={(item, update) => (
@@ -2926,7 +3028,7 @@ function TypeFields({
                   </Select>
                 </Field>
                 <PropSelect
-                  label="On hover"
+                  label="Picture on hover"
                   k="hover"
                   fallback="zoom"
                   options={[['zoom', 'Zoom in'], ['swap', 'Show the second picture'], ['greyscale', 'Greyscale until hovered'], ['none', 'Nothing']]}
@@ -2936,6 +3038,9 @@ function TypeFields({
               </>
             )}
           </div>
+          {str(props, 'layout') !== 'list' && str(props, 'layout') !== 'carousel' && (
+            <CardHoverFields zoom={false} value={props.cardHover as CardHover | undefined} onChange={(cardHover) => set({ ...props, cardHover })} />
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-end gap-2 pb-3 text-[14px] text-ash">
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.filter !== false} onChange={(e) => set({ ...props, filter: e.target.checked })} />
@@ -3381,6 +3486,11 @@ function TypeFields({
       const summary = props.summary as ReviewSummary | undefined;
       const setSummary = (patch: Partial<ReviewSummary> | null) =>
         set(withOpt(props, 'summary', patch === null ? undefined : { rating: 5, ...summary, ...patch }));
+      const setReviewCard = (patch: Partial<ReviewCard>) => {
+        const next: Record<string, unknown> = { ...(props.card as ReviewCard | undefined), ...patch };
+        for (const key of Object.keys(next)) if (next[key] === undefined) delete next[key];
+        set(withOpt(props, 'card', Object.keys(next).length ? next : undefined));
+      };
       return (
         <>
           {HEAD_FIELDS(props, set)}
@@ -3423,12 +3533,15 @@ function TypeFields({
             addLabel="Add review"
             renderRow={(item, update) => (
               <>
-                <div className="grid gap-3 sm:grid-cols-[1.4fr_1.4fr_0.8fr]">
+                <div className="grid gap-3 sm:grid-cols-[1.2fr_1fr_1fr_0.7fr]">
                   <Field label="Name">
                     <Input value={item.name ?? ''} onChange={(e) => update({ name: e.target.value })} />
                   </Field>
-                  <Field label="Role, company or place">
-                    <Input value={item.meta ?? ''} onChange={(e) => update({ meta: e.target.value || undefined })} />
+                  <Field label="Role">
+                    <Input value={item.role ?? ''} placeholder="Head of CRM" onChange={(e) => update({ role: e.target.value || undefined })} />
+                  </Field>
+                  <Field label="Company">
+                    <Input value={item.company ?? ''} onChange={(e) => update({ company: e.target.value || undefined })} />
                   </Field>
                   <Field label="Stars">
                     <Select value={item.rating === undefined ? '' : String(item.rating)} onChange={(e) => update({ rating: e.target.value === '' ? undefined : Number(e.target.value) })}>
@@ -3455,10 +3568,57 @@ function TypeFields({
                     <Input value={item.source ?? ''} placeholder="Google" onChange={(e) => update({ source: e.target.value || undefined })} />
                   </Field>
                 </div>
-                <MediaInput label="Photo" value={item.avatarUrl} onChange={(avatarUrl) => update({ avatarUrl })} hint="their initial is shown without one" />
+                {/* The older free line, still shown where Role and Company are empty. */}
+                {item.meta !== undefined && !item.role && !item.company && (
+                  <Field label="Role, company or place" hint="shown while Role and Company are empty">
+                    <Input value={item.meta ?? ''} onChange={(e) => update({ meta: e.target.value || undefined })} />
+                  </Field>
+                )}
+                <div className="grid gap-3 sm:grid-cols-[2fr_1fr]">
+                  <MediaInput label="Photo or logo" value={item.avatarUrl} onChange={(avatarUrl) => update({ avatarUrl })} hint="their initial is shown without one" />
+                  <ColorField
+                    label="Circle colour"
+                    hint="set one to show a logo on it, fitted rather than cropped"
+                    placeholder="none"
+                    value={item.avatarColor}
+                    onChange={(avatarColor) => update({ avatarColor: avatarColor || undefined })}
+                  />
+                </div>
               </>
             )}
           />
+          <details className="border-2 border-hairline bg-ink px-3 py-2">
+            <summary className="cursor-pointer py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke hover:text-bone">The cards</summary>
+            <div className="grid gap-3 pt-3 pb-1 sm:grid-cols-2">
+              <ColorField
+                label="Background"
+                placeholder="the theme’s surface"
+                value={(props.card as ReviewCard | undefined)?.background}
+                onChange={(background) => setReviewCard({ background: background || undefined })}
+              />
+              <Field label="Corner radius" hint="px — empty is the theme’s card radius">
+                <Input
+                  type="number"
+                  min={0}
+                  max={40}
+                  value={(props.card as ReviewCard | undefined)?.radius ?? ''}
+                  onChange={(e) => setReviewCard({ radius: e.target.value === '' ? undefined : Math.min(40, Math.max(0, Math.round(Number(e.target.value) || 0))) })}
+                />
+              </Field>
+              <label className="flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={(props.card as ReviewCard | undefined)?.border !== false} onChange={(e) => setReviewCard({ border: e.target.checked ? undefined : false })} />
+                A border round each card
+              </label>
+              <label className="flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={(props.card as ReviewCard | undefined)?.quoteMark === true} onChange={(e) => setReviewCard({ quoteMark: e.target.checked || undefined })} />
+                A quote mark above each review
+              </label>
+              <label className="flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.hideRatings === true} onChange={(e) => set(withOpt(props, 'hideRatings', e.target.checked || undefined))} />
+                Leave the stars off
+              </label>
+            </div>
+          </details>
           <OptLink label="Button below the reviews" props={props} set={set} k="link" />
         </>
       );
@@ -4859,6 +5019,9 @@ function PostCardFields({ props, set }: { props: Props; set: Setter }) {
             <option value="1/1">Square</option>
           </Select>
         </Field>
+      </div>
+      <div className="border-t-2 border-hairline pt-3 pb-1">
+        <CardHoverFields value={card.hover as CardHover | undefined} onChange={(hover) => setCard('hover', hover)} />
       </div>
     </details>
   );

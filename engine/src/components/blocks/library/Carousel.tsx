@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';
 import type { CarouselSlide, blockSchemas } from '@/lib/blocks';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
+import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { BlockHead, BlockTitle } from '../parts';
 import { MediaFill } from './media';
@@ -849,14 +850,20 @@ function QuoteSlider(p: P) {
               </span>
               {s.rating !== undefined && <Stars value={s.rating} className="he-qslide__stars" />}
               {s.body && <blockquote className="he-qslide__text">{s.body}</blockquote>}
-              {(s.title || s.caption) && (
+              {(s.title || s.caption || s.company) && (
                 <figcaption className="he-qslide__cap">
-                  {s.imageUrl && (
-                    <SiteImg src={s.imageUrl} alt="" className="he-qslide__avatar" loading="lazy" />
-                  )}
+                  {s.imageUrl &&
+                    (s.avatarColor && isColor(s.avatarColor) ? (
+                      // A colour behind the picture makes it a logo: fitted on the circle, not cropped.
+                      <span className="he-qslide__avatar is-logo" style={{ background: s.avatarColor }}>
+                        <SiteImg src={s.imageUrl} alt="" loading="lazy" />
+                      </span>
+                    ) : (
+                      <SiteImg src={s.imageUrl} alt="" className="he-qslide__avatar" loading="lazy" />
+                    ))}
                   <span>
                     {s.title && <span className="he-qslide__name">{s.title}</span>}
-                    {s.caption && <span className="he-qslide__role">{s.caption}</span>}
+                    {(s.caption || s.company) && <span className="he-qslide__role">{[s.caption, s.company].filter(Boolean).join(' · ')}</span>}
                   </span>
                 </figcaption>
               )}

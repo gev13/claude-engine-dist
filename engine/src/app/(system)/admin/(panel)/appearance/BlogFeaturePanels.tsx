@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CardHoverFields } from '@/components/admin/CardHoverFields';
 import { Field, Input, Panel, Select } from '@/components/admin/ui';
 import type { BlogSettings } from '@/lib/blog';
 import { SHARE_LABELS, SHARE_NETWORKS, type ShareNetwork } from '@/lib/share';
@@ -216,6 +217,9 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
               options={[['', 'As the layout draws it'], ['16/9', 'Wide 16:9'], ['3/2', '3:2'], ['4/3', '4:3'], ['1/1', 'Square']]}
               onChange={(value) => setCard('ratio', value || undefined)}
             />
+          </div>
+          <div className="mt-4 max-w-[600px]">
+            <CardHoverFields value={card.hover} onChange={(hover) => setCard('hover', hover)} />
           </div>
         </div>
       </div>

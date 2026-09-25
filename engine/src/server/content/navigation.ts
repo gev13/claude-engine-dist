@@ -56,6 +56,8 @@ export type HeaderCta = { label: string; href: string };
 
 export type ResolvedNavigation = {
   header: NavItem[];
+  /** 2.19 — the Overlay menu; empty when none is saved (the header's is used). */
+  overlay: NavItem[];
   /** Null when there is no button: none saved, and none bundled. */
   headerCta: HeaderCta | null;
   headerSecondaryCta: HeaderCta | null;
@@ -103,6 +105,7 @@ export async function getNavigation(locale?: Locale): Promise<ResolvedNavigation
     footer: saved.footer ?? bundled.footer,
     footerNote: saved.footerNote,
     footerAddress: saved.footerAddress,
+    overlay: saved.overlay ?? [],
     social: saved.social ?? [],
     socialStyle: saved.socialStyle,
     fallback,

@@ -10,6 +10,7 @@ import type { TextTag } from '@/lib/blockStyle';
 import { areaPath, formatChartValue, linePath, linePoints, niceScale, percentOf, pieSlices } from '@/lib/chart';
 import type { Crumb } from '@/lib/seo/jsonld';
 import { getMessages } from '@/server/content/messages';
+import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { BlockHead } from '../parts';
@@ -350,39 +351,54 @@ export function ReviewsBlock(p: P<'reviews'>) {
       </div>
     </div>
   );
+  /* 2.19 — the cards' own look, as custom properties. Each value has passed
+     the schema's colour grammar or is a bounded integer; checked again here
+     because it lands in a style attribute. */
+  const card = p.card ?? {};
+  const cardVars: Record<string, string> = {};
+  if (card.background && isColor(card.background)) cardVars['--he-rev-bg'] = card.background;
+  if (typeof card.radius === 'number' && card.radius >= 0 && card.radius <= 40) cardVars['--he-rev-radius'] = `${card.radius}px`;
+  const circle = (color?: string) => (color && isColor(color) ? { background: color } : undefined);
   const list = (
-    <ul className={cn('he-rev__list', `is-${p.layout}`)} style={{ '--cols': p.columns } as React.CSSProperties}>
-      {p.items.map((r, i) => (
-        <li key={r.name + i} className="he-rev__item">
-          <figure className="he-rev__card">
-            {(r.rating !== undefined || r.source) && (
-              <div className="he-rev__top">
-                {r.rating !== undefined && <Stars value={r.rating} />}
-                {r.source && <span className="he-rev__source">{r.source}</span>}
-              </div>
-            )}
-            {r.title && <p className="he-rev__title">{r.title}</p>}
-            <blockquote className="he-rev__text">
-              <p>{r.text}</p>
-            </blockquote>
-            <figcaption className="he-rev__who">
-              {r.avatarUrl ? (
-                <span className="he-rev__avatar">
-                  <MediaFill imageUrl={r.avatarUrl} alt="" className="he-fill" sizes="thumb" />
-                </span>
-              ) : (
-                <span className="he-rev__avatar is-initial" aria-hidden="true">
-                  {r.name.trim().charAt(0).toUpperCase()}
-                </span>
+    <ul
+      className={cn('he-rev__list', `is-${p.layout}`, card.border === false && 'no-border', card.quoteMark && 'has-mark')}
+      style={{ '--cols': p.columns, ...cardVars } as React.CSSProperties}
+    >
+      {p.items.map((r, i) => {
+        const rating = p.hideRatings ? undefined : r.rating;
+        const line = [[r.role, r.company].filter(Boolean).join(' · ') || r.meta, r.date].filter(Boolean).join(' · ');
+        return (
+          <li key={r.name + i} className="he-rev__item">
+            <figure className="he-rev__card">
+              {(rating !== undefined || r.source) && (
+                <div className="he-rev__top">
+                  {rating !== undefined && <Stars value={rating} />}
+                  {r.source && <span className="he-rev__source">{r.source}</span>}
+                </div>
               )}
-              <span>
-                <span className="he-rev__name">{r.name}</span>
-                {(r.meta || r.date) && <span className="he-rev__meta">{[r.meta, r.date].filter(Boolean).join(' · ')}</span>}
-              </span>
-            </figcaption>
-          </figure>
-        </li>
-      ))}
+              {r.title && <p className="he-rev__title">{r.title}</p>}
+              <blockquote className="he-rev__text">
+                <p>{r.text}</p>
+              </blockquote>
+              <figcaption className="he-rev__who">
+                {r.avatarUrl ? (
+                  <span className={cn('he-rev__avatar', r.avatarColor && 'is-logo')} style={circle(r.avatarColor)}>
+                    <MediaFill imageUrl={r.avatarUrl} alt="" className="he-fill" sizes="thumb" />
+                  </span>
+                ) : (
+                  <span className="he-rev__avatar is-initial" aria-hidden="true" style={circle(r.avatarColor)}>
+                    {r.name.trim().charAt(0).toUpperCase()}
+                  </span>
+                )}
+                <span>
+                  <span className="he-rev__name">{r.name}</span>
+                  {line && <span className="he-rev__meta">{line}</span>}
+                </span>
+              </figcaption>
+            </figure>
+          </li>
+        );
+      })}
     </ul>
   );
 

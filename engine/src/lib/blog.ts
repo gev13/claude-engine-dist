@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { type CardHover, cardHoverSchema } from './cardHover';
 import { SHARE_NETWORKS, type ShareNetwork } from './share';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -130,6 +131,8 @@ export const blogSchema = z.object({
       category: z.boolean().optional(),
       readMore: z.boolean().optional(),
       ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
+      /** 2.19 — how each card answers the pointer. */
+      hover: cardHoverSchema.optional(),
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -143,7 +146,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1' }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';

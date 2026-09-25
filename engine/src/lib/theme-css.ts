@@ -74,7 +74,8 @@ export const COLOR_TOKENS: Record<string, string> = {
   selection: '--he-selection',
 };
 
-function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' = 'colors'): Decl[] {
+/** The colour tokens of one palette, checked — exported for a page that takes the alternate palette (2.19). */
+export function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' = 'colors'): Decl[] {
   const out: Decl[] = [];
   const colors = theme[which] ?? {};
   for (const [key, token] of Object.entries(COLOR_TOKENS)) {
@@ -290,6 +291,15 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   // inert even when a palette is saved.
   if (theme.chrome?.themeToggle && safeSelector === ':root') {
     parts.push(block(':root[data-scheme="alt"]', colorDecls(theme, 'colorsAlt')));
+  }
+
+  /* 2.19 (T31) — the same palette on one section or one page: a section
+     marked "alternate colours" in the Design panel carries this class. The
+     tokens inherit, so everything inside it follows; emitted only once an
+     alternate palette has been saved. */
+  const alt = colorDecls(theme, 'colorsAlt');
+  if (alt.length > 0 && safeSelector === ':root') {
+    parts.push(block('.he-scheme-alt', [...alt, ['color', 'var(--color-bone)']]));
   }
 
   parts.push(localeFontCss(theme, safeSelector));

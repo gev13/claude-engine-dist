@@ -11,6 +11,8 @@ import {
   SECTION_WIDTHS,
   SECTION_WIDTH_LABELS,
   STYLE_BREAKPOINTS,
+  VISIBILITY_TIERS,
+  hiddenTiers,
   type BlockStyle,
   type SpacingBox,
   type StyleBreakpoint,
@@ -277,6 +279,16 @@ export function BlockDesignPanel({
       {!outerOnly && (
       <section>
         <PanelTitle>Background</PanelTitle>
+        {/* 2.19 (T31) — every colour of the section at once, from the alternate palette. */}
+        <label className="mb-4 flex items-center gap-2 text-[13px] text-ash">
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-flare"
+            checked={current.scheme === 'alt'}
+            onChange={(e) => set(['scheme'])(e.target.checked ? 'alt' : undefined)}
+          />
+          Alternate colours — a light section on a dark site, or the reverse (Appearance → Colours → alternate)
+        </label>
         <div className="grid gap-4 sm:grid-cols-2">
           <ColorField
             label="Colour"
@@ -575,23 +587,32 @@ export function BlockDesignPanel({
           </p>
         </Field>
 
+        {/* 2.19 (T32) — each tier on its own, so a block can show on phones only. The
+            old "this width and below" setting is shown as the tiers it hid, and
+            replaced by these the first time one is changed. */}
         <div className="mt-4 flex flex-wrap gap-4">
-          {STYLE_BREAKPOINTS.map((bp) => (
-            <label key={bp} className="flex items-center gap-2 text-[13px] text-ash">
-              <input
-                type="checkbox"
-                checked={current.hideOn?.includes(bp) ?? false}
-                onChange={(e) => {
-                  const set_ = new Set(current.hideOn ?? []);
-                  if (e.target.checked) set_.add(bp);
-                  else set_.delete(bp);
-                  set(['hideOn'])(set_.size ? [...set_] : undefined);
-                }}
-                className="h-4 w-4 accent-flare"
-              />
-              Hide on {TIER_LABELS[bp].toLowerCase()} (≤{TIER_WIDTH[bp]}px)
-            </label>
-          ))}
+          {VISIBILITY_TIERS.map((tier) => {
+            const hidden = hiddenTiers(current);
+            return (
+              <label key={tier} className="flex items-center gap-2 text-[13px] text-ash">
+                <input
+                  type="checkbox"
+                  checked={hidden.includes(tier)}
+                  onChange={(e) => {
+                    const next = new Set(hidden);
+                    if (e.target.checked) next.add(tier);
+                    else next.delete(tier);
+                    const ordered = VISIBILITY_TIERS.filter((t) => next.has(t));
+                    set(['hideOn'])(undefined);
+                    set(['hideAt'])(ordered.length ? ordered : undefined);
+                  }}
+                  className="h-4 w-4 accent-flare"
+                />
+                Hide on {TIER_LABELS[tier].toLowerCase()}
+                {tier === 'base' ? ' (above 1440px)' : ` (${TIER_RANGE_LABEL[tier]})`}
+              </label>
+            );
+          })}
         </div>
 
         <label className="mt-4 flex items-center gap-2 text-[13px] text-ash">
@@ -637,6 +658,8 @@ function PickedFile({ label, hint, value, onChoose, onClear }: { label: string; 
     </Field>
   );
 }
+
+const TIER_RANGE_LABEL: Record<'laptop' | 'tablet' | 'mobile', string> = { laptop: '1025–1440px', tablet: '769–1024px', mobile: '768px and under' };
 
 function PanelTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="m-0 mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-flare">{children}</h3>;

@@ -40,6 +40,8 @@ export type HeaderProps = {
   nav: NavItem[];
   cta: Cta;
   secondaryCta: Cta;
+  /** 2.19 — the Overlay menu (Menus), used by the full-screen menu when chosen. */
+  overlayNav?: NavItem[];
   primaryServices: readonly ServiceLink[];
   secondaryServices: readonly ServiceLink[];
   /** The contact column of the MN7 menu. */
@@ -117,6 +119,8 @@ export function Header(props: HeaderProps) {
   const [openId, setOpenId] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  /** 2.19 — hidden while scrolling down, back while scrolling up (`behaviour: hide`). */
+  const [tucked, setTucked] = useState(false);
   const [overMedia, setOverMedia] = useState(false);
   const [announcementHidden, setAnnouncementHidden] = useState(false);
 
@@ -143,11 +147,22 @@ export function Header(props: HeaderProps) {
   }, [pathname]);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8);
+    let last = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrolled(y > 8);
+      if (h.behaviour === 'hide') {
+        // Only past the header's own height, and only after a few pixels of intent.
+        const height = wrapRef.current?.offsetHeight ?? 64;
+        if (y <= height) setTucked(false);
+        else if (Math.abs(y - last) > 6) setTucked(y > last);
+      }
+      last = y;
+    };
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [h.behaviour]);
 
   /* Transparent only over a hero that runs under the header; anywhere else
      the header stays solid so its text never lands on the wrong background. */
@@ -295,7 +310,7 @@ export function Header(props: HeaderProps) {
     <button
       ref={toggleRef}
       type="button"
-      className="he-hdr__toggle"
+      className={cn('he-hdr__toggle', h.variant === 'menuButtonInline' && 'is-round')}
       aria-expanded={menuOpen}
       aria-controls="he-menu"
       aria-label={menuOpen ? 'Close menu' : `Open ${h.menuLabel.toLowerCase()}`}
@@ -305,6 +320,22 @@ export function Header(props: HeaderProps) {
       {showLabel && <span className="he-hdr__toggle-label">{h.menuLabel}</span>}
     </button>
   );
+
+  /* 2.19 (T25) — the glass tint and blur, and the bar's height per tier, as
+     custom properties the stylesheet reads. Numbers only, all checked by the
+     schema; nothing is set when nothing was chosen. */
+  const heights = h.height;
+  const hasHeight = Boolean(heights.base || heights.laptop || heights.tablet || heights.mobile);
+  const headerStyle =
+    h.background === 'glass' || hasHeight
+      ? ({
+          ...(h.background === 'glass' ? { '--he-glass-blur': `${h.glassBlur}px`, '--he-glass-tint': `${h.glassOpacity}%` } : {}),
+          ...(heights.base ? { '--hh-base': `${heights.base}px` } : {}),
+          ...(heights.laptop ? { '--hh-laptop': `${heights.laptop}px` } : {}),
+          ...(heights.tablet ? { '--hh-tablet': `${heights.tablet}px` } : {}),
+          ...(heights.mobile ? { '--hh-mobile': `${heights.mobile}px` } : {}),
+        } as React.CSSProperties)
+      : undefined;
 
   const services = [
     { title: 'Core services', links: props.primaryServices },
@@ -321,8 +352,16 @@ export function Header(props: HeaderProps) {
         h.overlay && 'is-overlay',
         solid && 'is-solid',
         h.variant === 'rail' && `is-rail-${h.railButton}`,
+        // 2.19 (T25) — each only when chosen, so an untouched header keeps its classes.
+        h.background !== 'solid' && `is-bg-${h.background}`,
+        h.behaviour === 'hide' && tucked && !menuOpen && openId === null && 'is-tucked',
+        h.behaviour === 'shrink' && scrolled && 'is-shrunk',
+        h.logoMobile === 'center' && 'is-logo-center',
+        h.variant === 'menuButtonInline' && `is-menu-${h.menuSide}`,
+        hasHeight && 'has-height',
       )}
       data-collapse={h.collapseAt}
+      style={headerStyle}
     >
       {chrome.announcement && !announcementHidden && (
         <div className="he-announce he-shift">
@@ -401,6 +440,23 @@ export function Header(props: HeaderProps) {
                 {actions}
               </div>
             </>
+          ) : h.variant === 'menuButtonInline' ? (
+            // 2.19 (T25) — a round menu button that opens the full-screen menu at every width, then the logo, links and button.
+            h.menuSide === 'left' ? (
+              <>
+                {toggle}
+                <Brand siteName={siteName} brand={brand} />
+                {nav_}
+                {actions}
+              </>
+            ) : (
+              <>
+                <Brand siteName={siteName} brand={brand} />
+                {nav_}
+                {actions}
+                {toggle}
+              </>
+            )
           ) : h.variant === 'rail' ? (
             // HD9 — the menu button is the navigation; the stylesheet lays the rail out down the side.
             <>
@@ -440,7 +496,7 @@ export function Header(props: HeaderProps) {
           toggleRef.current?.focus();
         }}
         config={chrome.mobileMenu}
-        nav={nav}
+        nav={chrome.mobileMenu.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
         cta={cta}
         secondaryCta={secondaryCta}
         services={services}
@@ -710,20 +766,49 @@ function MobileMenu({
 }) {
   const [drill, setDrill] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  /** 2.19 — the item under the pointer, for the picture beside the menu. */
+  const [pointed, setPointed] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (open) closeRef.current?.focus();
     else {
       setDrill(null);
       setExpanded(new Set());
+      setPointed(null);
     }
+  }, [open]);
+
+  /* 2.19 (T26) — focus stays inside while the menu is open: Tab from the last
+     control returns to the first, Shift+Tab from the first to the last. */
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key !== 'Tab' || !panelRef.current) return;
+      const focusable = [...panelRef.current.querySelectorAll<HTMLElement>('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')].filter(
+        (el) => el.getClientRects().length > 0,
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0]!;
+      const last = focusable[focusable.length - 1]!;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
   const drawer = config.variant === 'drawer' || config.variant === 'push';
   // MN5–MN7 open sub-items in place, like the accordions, in much larger type.
   const fullscreen = config.variant.startsWith('fullscreen');
-  const showContact = config.variant === 'fullscreenCreative' && Boolean(contact.email || contact.address || contact.social.length);
+  const showContact = config.variant === 'fullscreenCreative' && Boolean(contact.email || contact.address || contact.social.length || config.phone);
+  const picture = config.hoverImages && fullscreen ? nav.find((item) => item.id === pointed)?.imageUrl : undefined;
   const drilled = config.variant === 'drilldown' ? nav.find((i) => i.id === drill) : undefined;
 
   const ctas = (cta || secondaryCta) && (
@@ -779,6 +864,7 @@ function MobileMenu({
       {drawer && open && <div className="he-menu-backdrop" onClick={onClose} aria-hidden="true" />}
       <div
         id="he-menu"
+        ref={panelRef}
         hidden={!open}
         role="dialog"
         aria-modal="true"
@@ -791,7 +877,12 @@ function MobileMenu({
           config.largeType && 'is-large',
           fullscreen && 'is-fullscreen',
           showContact && 'has-contact',
+          // 2.19 (T26) — each only when chosen.
+          fullscreen && config.size === 'huge' && 'is-huge',
+          config.entrance !== 'none' && `is-enter-${config.entrance}`,
+          config.hoverImages && fullscreen && 'has-pictures',
         )}
+        style={config.opacity < 100 ? ({ '--he-menu-alpha': `${config.opacity}%` } as React.CSSProperties) : undefined}
       >
         <div className="he-menu__top">
           <Brand siteName={siteName} brand={brand} onClick={onClose} />
@@ -819,7 +910,7 @@ function MobileMenu({
               {nav.map((item) => {
                 if (!hasChildren(item)) {
                   return (
-                    <li key={item.id}>
+                    <li key={item.id} onPointerEnter={config.hoverImages ? () => setPointed(item.id) : undefined}>
                       <Link href={item.href} {...linkAttrs(item)} className="he-menu__row" onClick={onClose}>
                         {item.label}
                       </Link>
@@ -838,7 +929,7 @@ function MobileMenu({
                 }
                 const isOpen = expanded.has(item.id);
                 return (
-                  <li key={item.id}>
+                  <li key={item.id} onPointerEnter={config.hoverImages ? () => setPointed(item.id) : undefined}>
                     <button
                       type="button"
                       className="he-menu__row"
@@ -885,9 +976,21 @@ function MobileMenu({
             ))}
         </div>
 
+        {picture && (
+          // The pointed item's own picture, beside the list (2.19).
+          <div className="he-menu__picture" aria-hidden="true">
+            <SiteImg key={picture} src={picture} alt="" className="he-fill" sizes="half" />
+          </div>
+        )}
+
         {showContact && (
           <aside className="he-menu__aside" aria-label="Contact">
-            <div className="he-menu__heading">Get in touch</div>
+            <div className="he-menu__heading">{config.contactTitle || 'Get in touch'}</div>
+            {config.phone && (
+              <a href={`tel:${config.phone.replace(/[^+0-9]/g, '')}`} className="he-menu__email">
+                {config.phone}
+              </a>
+            )}
             {contact.email && (
               <a href={`mailto:${contact.email}`} className="he-menu__email">
                 {contact.email}

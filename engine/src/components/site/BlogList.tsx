@@ -1,7 +1,9 @@
 import { PostCollection } from '@/components/blocks/dynamic';
 import { Card, CardGrid } from '@/components/ui/Card';
 import type { ResolvedBlog } from '@/lib/blog';
+import { wantsTilt } from '@/lib/cardHover';
 import { formatDate } from '@/lib/utils';
+import { CardTilt } from './CardTilt';
 import { postPath, type Permalinks } from '@/lib/permalinks';
 import type { listPosts } from '@/server/content/posts';
 
@@ -44,11 +46,12 @@ export function BlogList({
     return (
       <CardGrid cols={3} id={listId}>
         {posts.map((p) => (
-          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)}>
+          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)} hover={card.hover}>
             {p.excerpt}
             {card.readMore && labels?.readMore && <span className="he-card__more">{labels.readMore} →</span>}
           </Card>
         ))}
+        {wantsTilt(card.hover) && <CardTilt />}
       </CardGrid>
     );
   }

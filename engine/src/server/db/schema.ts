@@ -298,6 +298,8 @@ export const pages = pgTable(
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
     /** Custom CSS for this page alone, written into a <style> after the theme. */
     customCss: text('custom_css').notNull().default(''),
+    /** 2.19 — this page's own background and palette (lib/pageAppearance.ts). */
+    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' }>().notNull().default(sql`'{}'::jsonb`),
     /** Nesting for the sitemap tree. */
     parentId: uuid('parent_id'),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -382,6 +384,8 @@ export const posts = pgTable(
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
     /** Custom CSS for this page alone, written into a <style> after the theme. */
     customCss: text('custom_css').notNull().default(''),
+    /** 2.19 — this page's own background and palette (lib/pageAppearance.ts). */
+    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' }>().notNull().default(sql`'{}'::jsonb`),
     coverMediaId: uuid('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
     primaryCategoryId: uuid('primary_category_id').references(() => categories.id, { onDelete: 'set null' }),
     readingMinutes: integer('reading_minutes').notNull().default(0),

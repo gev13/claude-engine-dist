@@ -30,6 +30,22 @@ export const SECTION_WIDTH_LABELS: Record<SectionWidth, string> = {
 
 /** Breakpoints, mirroring the theme's so the two never disagree. */
 export const STYLE_BREAKPOINTS = ['laptop', 'tablet', 'mobile'] as const;
+
+/** Every tier, the widest first — what `hideAt` names (2.19). */
+export const VISIBILITY_TIERS = ['base', 'laptop', 'tablet', 'mobile'] as const;
+export type VisibilityTier = (typeof VISIBILITY_TIERS)[number];
+
+/**
+ * The tiers a block is hidden on: `hideAt` as saved, or the old `hideOn`
+ * read as it always rendered — hidden at that width and every narrower one.
+ */
+export function hiddenTiers(style: { hideAt?: readonly VisibilityTier[]; hideOn?: readonly (typeof STYLE_BREAKPOINTS)[number][] } | undefined): VisibilityTier[] {
+  if (!style) return [];
+  if (style.hideAt) return [...style.hideAt];
+  if (!style.hideOn?.length) return [];
+  const widest = Math.min(...style.hideOn.map((bp) => VISIBILITY_TIERS.indexOf(bp)));
+  return VISIBILITY_TIERS.slice(widest);
+}
 export type StyleBreakpoint = (typeof STYLE_BREAKPOINTS)[number];
 
 export const box = z.object({
@@ -116,6 +132,21 @@ export const columnWidthSchema = z.object({
 });
 
 export type ColumnWidth = z.infer<typeof columnWidthSchema>;
+
+/**
+ * Where a column sits at the smaller tiers (2.19) — "the picture first on a
+ * phone" in a row of three, which `reverseOnMobile` cannot say. Each tier
+ * inherits from the one above, like a width; unset everywhere is the order
+ * the columns were written in.
+ */
+const place = z.number().int().min(1).max(6);
+export const columnOrderSchema = z.object({
+  laptop: place.optional(),
+  tablet: place.optional(),
+  mobile: place.optional(),
+});
+
+export type ColumnOrder = z.infer<typeof columnOrderSchema>;
 
 /** The layout presets offered in the editor, mirroring the reference builder. */
 export const COLUMN_PRESETS: { label: string; spans: ColumnSpan[] }[] = [
@@ -228,6 +259,9 @@ export const blockStyleSchema = z.object({
 
   /** P3-C5 — stays in view while its row, or the page, scrolls past. */
   sticky: z.boolean().optional(),
+
+  /** 2.19 (T31) — the site's alternate palette on this section, every colour at once. */
+  scheme: z.enum(['alt']).optional(),
   /** P3-C5 — the page settles on this block when scrolling stops near it. */
   snap: z.boolean().optional(),
 
@@ -266,8 +300,14 @@ export const blockStyleSchema = z.object({
 
   swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
 
-  /** Hidden at these widths and below. */
+  /** Hidden at these widths and below — how visibility was stored before 2.19; still read. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),
+  /**
+   * 2.19 (T32) — hidden on exactly these tiers, each on its own: a block can
+   * show on phones only. Wins over `hideOn`, which the editor replaces with
+   * this the first time visibility is changed.
+   */
+  hideAt: z.array(z.enum(VISIBILITY_TIERS)).max(4).optional(),
 
   /** Kept out of the render entirely, without being deleted. */
   disabled: z.boolean().optional(),

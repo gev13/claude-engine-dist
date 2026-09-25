@@ -16,7 +16,9 @@ import {
   parseVideoUrl,
   videoEmbedUrl,
 } from '@/lib/embeds';
+import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
+import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 import { Carousel } from './Carousel';
@@ -304,6 +306,40 @@ export function GalleryBlock(p: P<'gallery'>) {
   const current = open === null ? undefined : p.images[open];
   const go = (step: number) => setOpen((i) => (i === null ? i : (i + step + count) % count));
 
+  // 2.19 — a long gallery shows a lot at a time. The lightbox still walks every picture.
+  const paged = p.pagination !== 'none';
+  const [revealed, setRevealed] = useState(p.perPage);
+  const visible = paged ? p.images.slice(0, revealed) : p.images;
+  const more = paged && revealed < count;
+  const showMore = () => setRevealed((n) => Math.min(count, n + p.perPage));
+  const sentinel = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (p.pagination !== 'infinite' || !more || !sentinel.current) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) showMore();
+    }, { rootMargin: '0px 0px 400px 0px' });
+    observer.observe(sentinel.current);
+    return () => observer.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed after each lot
+  }, [p.pagination, more, revealed]);
+
+  // A swipe on a touch screen moves the lightbox, like the arrow keys.
+  const swipeFrom = useRef<{ x: number; y: number } | null>(null);
+  const swiped = useRef(false);
+  const onSwipeStart = (e: React.PointerEvent) => {
+    swipeFrom.current = e.pointerType === 'mouse' ? null : { x: e.clientX, y: e.clientY };
+  };
+  const onSwipeEnd = (e: React.PointerEvent) => {
+    const from = swipeFrom.current;
+    swipeFrom.current = null;
+    if (!from || count < 2) return;
+    const dx = e.clientX - from.x;
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(e.clientY - from.y)) {
+      swiped.current = true; // the click that follows is the end of the swipe, not a tap on the backdrop
+      go(dx < 0 ? 1 : -1);
+    }
+  };
+
   return (
     <section className={cn('he-lsec he-gal-sec', toneClass(p.tone))}>
       <div className="shell">
@@ -313,7 +349,7 @@ export function GalleryBlock(p: P<'gallery'>) {
             className={cn('he-gal', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`)}
             style={{ '--cols': p.columns } as CSSProperties}
           >
-            {p.images.map((image, i) => {
+            {visible.map((image, i) => {
               // Inside a link or the lightbox button a second control would be a button in a button.
               const plain = !image.href && !p.lightbox;
               const media = (
@@ -352,7 +388,15 @@ export function GalleryBlock(p: P<'gallery'>) {
               );
             })}
           </ul>
+          {more && p.pagination === 'infinite' && <div ref={sentinel} className="he-gal__sentinel" aria-hidden="true" />}
         </div>
+        {more && (
+          <div className="he-show__more">
+            <button type="button" className="he-cbtn is-outline is-medium" onClick={showMore}>
+              {t('archive.loadMore')}
+            </button>
+          </div>
+        )}
         {p.link && (
           <div className="he-show__more">
             <SmartLink href={p.link.href} className="he-cbtn is-outline is-medium">
@@ -367,7 +411,13 @@ export function GalleryBlock(p: P<'gallery'>) {
           className="he-lightbox"
           aria-label={t('block.pictureViewer')}
           onClose={() => setOpen(null)}
-          onClick={closeOnBackdrop}
+          onClick={(e) => {
+            if (swiped.current) swiped.current = false;
+            else closeOnBackdrop(e);
+          }}
+          onPointerDown={onSwipeStart}
+          onPointerUp={onSwipeEnd}
+          onPointerCancel={() => (swipeFrom.current = null)}
           onKeyDown={(e) => {
             if (e.key === 'ArrowRight') go(1);
             if (e.key === 'ArrowLeft') go(-1);
@@ -530,6 +580,7 @@ function ProjectsGrid(p: ProjectsProps) {
     .filter(({ item }) => !category || cardCategories(item).includes(category))
     .slice(0, manualLimit);
   const isList = p.layout === 'list';
+  const moves = cardHoverProps(p.cardHover);
   const canLoad =
     p.source === 'collection'
       ? Boolean(p.more && all.length < p.more.total)
@@ -636,7 +687,7 @@ function ProjectsGrid(p: ProjectsProps) {
                 );
                 const onPicture = p.layout === 'overlay' || p.layout === 'metro';
                 return (
-                  <li key={`${item.title}-${i}`} className="he-proj__item">
+                  <li key={`${item.title}-${i}`} className={cn('he-proj__item', moves.className)} style={moves.style}>
                     {/* Linked category chips sit beside the card's own link, never inside it. */}
                     {item.chips && item.chips.length > 0 && !onPicture && (
                       <ul className="he-proj__chips">
@@ -668,6 +719,7 @@ function ProjectsGrid(p: ProjectsProps) {
                 );
               })}
             </ul>
+            {wantsTilt(p.cardHover) && <CardTilt />}
           </div>
         )}
 

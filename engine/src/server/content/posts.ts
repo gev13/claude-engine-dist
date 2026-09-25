@@ -6,6 +6,7 @@ import { categories, media, postCategories, posts, users } from '@/server/db/sch
 import type { AnyBlock } from '@/lib/blocks';
 import { resolvePostLayout, type PostLayout } from '@/lib/blog';
 import { postPath, type Permalinks } from '@/lib/permalinks';
+import { readPageAppearance, type PageAppearance } from '@/lib/pageAppearance';
 
 /**
  * The category a post is filed under in its address: the primary one, or —
@@ -43,6 +44,8 @@ export type PostDetail = PostListItem & {
   status: string;
   /** This post's own CSS, sanitised again where it is written into the page. */
   customCss: string;
+  /** 2.19 — this post's own background and palette. */
+  appearance: PageAppearance;
   /** Translations of one another share this (package 8). */
   translationGroupId: string;
   seo: Record<string, unknown>;
@@ -225,6 +228,7 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
         layout: posts.layout,
         status: posts.status,
         customCss: posts.customCss,
+        appearance: posts.appearance,
         kind: posts.kind,
         seo: posts.seo,
         publishedAt: posts.publishedAt,
@@ -268,6 +272,7 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
       layout: resolvePostLayout(row.layout),
       status: row.status,
       customCss: row.customCss ?? '',
+      appearance: readPageAppearance(row.appearance),
       kind: row.kind,
       seo: (row.seo ?? {}) as Record<string, unknown>,
       publishedAt: row.publishedAt,

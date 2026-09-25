@@ -33,6 +33,8 @@ import { ReadySections } from './TemplatePickers';
 import { cn } from '@/lib/utils';
 import { BLOCK_WIREFRAMES } from '@/lib/wireframes';
 import { countHeadingOnes, withoutHeadingOne } from '@/lib/headings';
+import { hiddenTiers } from '@/lib/blockStyle';
+import { TIER_LABELS } from '@/lib/theme';
 
 /** Grouping for the "add block" menu — flat lists of 18 are hard to scan. */
 const GROUPS: { label: string; types: BlockType[] }[] = [
@@ -50,6 +52,9 @@ const GROUPS: { label: string; types: BlockType[] }[] = [
   { label: 'Navigation', types: ['subNav', 'breadcrumbs', 'toc', 'search'] },
 ];
 
+
+/** Tier names short enough for a badge (2.19). */
+const TIER_SHORT = { base: 'large', laptop: 'desktop', tablet: 'tablet', mobile: 'phone' } as const;
 
 /** One-line preview so a collapsed block is still identifiable. */
 function summarise(block: AnyBlock): string {
@@ -151,6 +156,16 @@ function SortableBlock({
             title="Hidden from the live page, but kept here."
           >
             Hidden
+          </span>
+        )}
+
+        {!style?.disabled && hiddenTiers(style).length > 0 && (
+          // 2.19 (T32) — where this block is left out, at a glance.
+          <span
+            className="shrink-0 font-mono text-[9px] uppercase tracking-[0.12em] text-smoke"
+            title={`Not shown on: ${hiddenTiers(style).map((tier) => TIER_LABELS[tier].toLowerCase()).join(', ')}`}
+          >
+            {hiddenTiers(style).length === 4 ? 'Hidden everywhere' : `Not on ${hiddenTiers(style).map((tier) => TIER_SHORT[tier]).join(' · ')}`}
           </span>
         )}
 

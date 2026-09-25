@@ -89,6 +89,8 @@ export const projectOptionsSchema = z.object({
     .max(60)
     .refine((value) => value === '' || isColor(value), 'A colour such as #000000')
     .optional(),
+  /** 2.19 — the site's alternate palette for this project's page. */
+  scheme: z.enum(['inherit', 'alt']).optional(),
 });
 
 export function readProjectOptions(value: unknown): z.output<typeof projectOptionsSchema> {

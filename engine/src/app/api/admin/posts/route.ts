@@ -19,6 +19,7 @@ import { captureRevision } from '@/server/content/revisions';
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { db } from '@/server/db';
 import { categories, postCategories, posts, users, type Block, type SeoFields } from '@/server/db/schema';
+import { pageAppearanceSchema } from '@/lib/pageAppearance';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -36,6 +37,7 @@ const createSchema = z.object({
   seo: seoSchema.optional(),
   /** CSS for this one page. Sanitised by the schema on the way in. */
   customCss: z.string().max(CSS_MAX).transform(safeCss).optional(),
+  appearance: pageAppearanceSchema.optional(),
   coverMediaId: z.string().uuid().nullable().optional(),
   primaryCategoryId: z.string().uuid().nullable().optional(),
   categoryIds: z.array(z.string().uuid()).max(20).optional(),
@@ -168,6 +170,7 @@ export async function POST(request: Request) {
         status,
         seo: (input.seo ?? {}) as SeoFields,
         customCss: input.customCss ?? '',
+        appearance: input.appearance ?? {},
         coverMediaId: input.coverMediaId ?? null,
         primaryCategoryId: input.primaryCategoryId ?? null,
         readingMinutes: readingMinutes(body),

@@ -40,6 +40,7 @@ import {
 } from '@/lib/chrome';
 import { isSafeHref } from '@/lib/navigation';
 import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
+import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel } from './ChromeExtrasPanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
 import {
@@ -629,6 +630,8 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
+              <HeaderExtrasPanel chrome={theme.chrome} set={set} />
+
               <Panel title="Desktop dropdowns">
                 <VariantPicker<MegaVariant>
                   label="What a menu link with sub-items opens"
@@ -686,6 +689,8 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
+              <MenuExtrasPanel chrome={theme.chrome} set={set} />
+
               <Panel title="Announcement ribbon">
                 <div className="space-y-4">
                   <Toggle label="Show an announcement above the header" value={theme.chrome?.announcement?.enabled} onChange={set(['chrome', 'announcement', 'enabled'])} />
@@ -728,6 +733,7 @@ function AppearanceScreenInner() {
           )}
 
           {tab === 'Footer' && (
+            <>
             <Panel title="Footer">
               <div className="space-y-5">
                 <VariantPicker<FooterVariant>
@@ -744,6 +750,8 @@ function AppearanceScreenInner() {
                 </p>
               </div>
             </Panel>
+            <FooterExtrasPanel chrome={theme.chrome} set={set} />
+            </>
           )}
 
           {tab === 'Blog' && (
@@ -863,6 +871,7 @@ function AppearanceScreenInner() {
 
           {tab === 'Site-wide' && (
             <>
+              <MotionExtrasPanel chrome={theme.chrome} set={set} />
               <Panel title="Visitor controls">
                 <div className="space-y-3">
                   <Toggle label="Back-to-top button" value={theme.chrome?.backToTop} onChange={set(['chrome', 'backToTop'])} />
@@ -871,11 +880,13 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
-              {theme.chrome?.themeToggle && (
+              {/* Always offered since 2.19: a page or a section can use it without the visitor switch. */}
+              {(
                 <Panel title="Alternate colours">
                   <p className="m-0 mb-4 text-[13px] text-smoke">
-                    What the switch changes to — usually a light version of a dark site, or the reverse. Anything left empty
-                    keeps the main palette.
+                    A second palette — usually a light version of a dark site, or the reverse. The visitor switch changes to
+                    it; a page, a post, a project or a section can use it on its own. Anything left empty keeps the main
+                    palette.
                   </p>
                   <div className="grid gap-4 sm:grid-cols-2">
                     <ColorField label="Page background" value={get(['colorsAlt', 'background'])} onChange={set(['colorsAlt', 'background'])} />

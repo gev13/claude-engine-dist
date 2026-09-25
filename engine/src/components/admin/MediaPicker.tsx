@@ -19,17 +19,21 @@ export function MediaPicker({
   open,
   onClose,
   onSelect,
+  onSelectMany,
   accept = 'image',
 }: {
   open: boolean;
   onClose: () => void;
   onSelect: (media: Media) => void;
+  /** When given, a click ticks a file and a button adds every ticked one, in the order ticked (2.19). */
+  onSelectMany?: (media: Media[]) => void;
   /** Restrict the browse list. 'any' shows everything. */
   accept?: 'image' | 'video' | 'document' | 'animation' | 'any';
 }) {
   const [query, setQuery] = useState('');
   const [uploadError, setUploadError] = useState('');
   const [uploading, setUploading] = useState(false);
+  const [picked, setPicked] = useState<Media[]>([]);
   const fileInput = useRef<HTMLInputElement>(null);
 
   const params = new URLSearchParams({ perPage: '60' });
@@ -83,7 +87,25 @@ export function MediaPicker({
             <AdminButton variant="secondary" onClick={() => fileInput.current?.click()} disabled={uploading}>
               {uploading ? 'Uploading…' : 'Upload'}
             </AdminButton>
-            <AdminButton variant="ghost" onClick={onClose}>
+            {onSelectMany && (
+              <AdminButton
+                disabled={picked.length === 0}
+                onClick={() => {
+                  onSelectMany(picked);
+                  setPicked([]);
+                  onClose();
+                }}
+              >
+                {picked.length === 0 ? 'Tick some files' : `Add ${picked.length}`}
+              </AdminButton>
+            )}
+            <AdminButton
+              variant="ghost"
+              onClick={() => {
+                setPicked([]);
+                onClose();
+              }}
+            >
               Close
             </AdminButton>
           </div>
@@ -118,18 +140,28 @@ export function MediaPicker({
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {data?.items.map((item) => {
               const isImage = item.mimeType.startsWith('image/');
+              const place = picked.findIndex((m) => m.id === item.id);
               return (
                 <button
                   key={item.id}
                   type="button"
+                  aria-pressed={onSelectMany ? place >= 0 : undefined}
                   onClick={() => {
+                    if (onSelectMany) {
+                      setPicked((current) => (place >= 0 ? current.filter((m) => m.id !== item.id) : [...current, item]));
+                      return;
+                    }
                     onSelect(item);
                     onClose();
                   }}
                   className={cn(
-                    'group flex flex-col border-2 border-hairline bg-ink text-left transition-colors hover:border-flare',
+                    'group relative flex flex-col border-2 border-hairline bg-ink text-left transition-colors hover:border-flare',
+                    place >= 0 && 'border-flare',
                   )}
                 >
+                  {place >= 0 && (
+                    <span className="absolute top-2 right-2 z-10 grid h-6 min-w-6 place-items-center bg-flare px-1.5 font-mono text-[11px] text-ink">{place + 1}</span>
+                  )}
                   <span className="flex aspect-[4/3] items-center justify-center overflow-hidden bg-surface">
                     {isImage ? (
                       // eslint-disable-next-line @next/next/no-img-element

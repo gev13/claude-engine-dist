@@ -9,6 +9,48 @@ told about before taking it.
 
 ---
 
+## 2.19.0 — 2026-09-25
+
+**The header.** A new layout — a round menu button, the logo, links and a
+button, the menu button opening the full-screen menu at every width. Any
+header can now be solid, see-through or frosted glass; hide going down and
+come back going up, or shrink; have its own height per screen size; and
+centre the logo on phones.
+
+**The full-screen menu** can list a separate Overlay menu (Menus), whose
+links carry pictures shown beside the list under the pointer; its links can
+be huge, arrive one after another, and let the page show through. The
+creative menu's contact column takes a heading and a phone number. Focus
+stays inside the open menu.
+
+**Site-wide motion**, each off until chosen (Appearance → Site-wide): the
+site's own pointer (dot, ring, both, or an inverting disc, with a word over
+pictures); page transitions (fade, rise, slide or a curtain); a logo
+preloader on the first page of a visit; and side rails with scroll-to-top
+progress and the social links. **The footer** can wait underneath the page
+and be revealed, and take its own background.
+
+**One page's colours.** A page, post or project can have its own
+background and use the site's alternate palette; a section can use the
+alternate palette from its Design tab.
+
+**Blocks.** Hide a block on any screen size on its own, not only "this size
+and smaller". Put a column first (or second…) per screen size. Cards in post
+lists, the blog's archives and projects can lift, grow, cast a shadow or
+tilt in 3D with a glare, and zoom their picture. Reviews take a role and a
+company, a logo on a coloured circle, no stars, and their own card
+background, corners and quote mark — the Quotes slider too. Galleries hold
+200 pictures and can show a few with *Load more* or load as the visitor
+scrolls; the viewer swipes; several pictures can be added from the library
+at once.
+
+**Also fixed.** The blurred video play button had lost its blur in Chrome.
+
+Includes a database migration: a colours column on pages and posts. Take the
+backup the Updates screen offers.
+
+---
+
 ## 2.18.0 — 2026-09-25
 
 **Around each post.** Appearance → Blog now offers, each off until chosen:
