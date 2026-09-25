@@ -456,12 +456,30 @@ export function HorizontalAccordionBlock(p: P<'horizontalAccordion'>) {
 
 /* ── EL13: projects ───────────────────────────────────────────────────────── */
 
-export function ProjectsBlock(p: P<'projects'>) {
+/** A card as the block draws it; a collection's cards also carry linked category chips. */
+type ProjectItem = P<'projects'>['items'][number] & { chips?: { label: string; href: string }[] };
+
+/**
+ * The next lot of a collection, fetched from `/api/projects` — only what the
+ * block's own filters select, published, in the block's order.
+ */
+export type ProjectsMore = { query: string; total: number };
+
+type ProjectsProps = Omit<P<'projects'>, 'items'> & { items: ProjectItem[]; more?: ProjectsMore };
+
+/** The categories a card is filed under — its chips, or the one typed on a manual card. */
+const cardCategories = (item: ProjectItem) =>
+  item.chips?.length ? item.chips.map((chip) => chip.label) : item.category ? [item.category] : [];
+
+export function ProjectsBlock(p: ProjectsProps) {
+  // A manual list with nothing in it — a collection has its own empty state below.
+  if (p.source !== 'collection' && p.items.length === 0) return null;
   return p.layout === 'carousel' ? <ProjectsCarousel {...p} /> : <ProjectsGrid {...p} />;
 }
 
 /** P3-B6 — the projects as the carousel's cards, sharing its controls and pause rules. */
-function ProjectsCarousel(p: P<'projects'>) {
+function ProjectsCarousel(p: ProjectsProps) {
+  const t = useMessages();
   const parsed = blockSchemas.carousel.safeParse({
     tone: p.tone,
     mode: 'cards',
@@ -471,32 +489,64 @@ function ProjectsCarousel(p: P<'projects'>) {
     intro: p.intro?.slice(0, 400),
     link: p.link,
     slides: p.items.map((item) => ({
-      eyebrow: [item.category, item.year].filter(Boolean).join(' · ') || undefined,
+      eyebrow: [cardCategories(item)[0], item.year].filter(Boolean).join(' · ') || undefined,
       title: item.title,
       body: item.summary,
       imageUrl: item.imageUrl,
       alt: item.alt,
       href: item.href,
-      buttonLabel: item.href ? 'View project' : undefined,
+      buttonLabel: item.href ? t('project.view') : undefined,
     })),
     perView: { base: p.columns, tablet: 2, mobile: 1.15 },
   });
   return parsed.success ? <Carousel {...parsed.data} /> : <ProjectsGrid {...p} layout="classic" />;
 }
 
-function ProjectsGrid(p: P<'projects'>) {
+function ProjectsGrid(p: ProjectsProps) {
   const t = useMessages();
-  const categories = useMemo(
-    () => Array.from(new Set(p.items.map((item) => item.category).filter((c): c is string => Boolean(c)))),
-    [p.items],
-  );
+  /* Cards fetched by "Load more" join the ones the server rendered, in state,
+     so the category filter keeps working across all of them. */
+  const [extra, setExtra] = useState<ProjectItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [revealed, setRevealed] = useState(p.perPage);
+  const all = useMemo(() => [...p.items, ...extra], [p.items, extra]);
+  const categories = useMemo(() => Array.from(new Set(all.flatMap(cardCategories))), [all]);
   const [category, setCategory] = useState<string | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const [still, setStill] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
-  const shown = p.items.map((item, i) => ({ item, i })).filter(({ item }) => !category || item.category === category);
+  // A manual list that loads more shows `perPage` first and reveals the rest a lot at a time.
+  const manualLimit = p.source !== 'collection' && p.pagination === 'loadMore' ? revealed : Infinity;
+  const shown = all
+    .map((item, i) => ({ item, i }))
+    .filter(({ item }) => !category || cardCategories(item).includes(category))
+    .slice(0, manualLimit);
   const isList = p.layout === 'list';
+  const canLoad =
+    p.source === 'collection'
+      ? Boolean(p.more && all.length < p.more.total)
+      : p.pagination === 'loadMore' && revealed < all.length;
+
+  async function loadMore() {
+    if (p.source !== 'collection') {
+      setRevealed((n) => n + p.perPage);
+      return;
+    }
+    if (!p.more) return;
+    setLoading(true);
+    try {
+      const response = await fetch(`/api/projects?${p.more.query}&offset=${all.length}`);
+      if (!response.ok) throw new Error(String(response.status));
+      const data = (await response.json()) as { items: ProjectItem[] };
+      setExtra((current) => [...current, ...data.items]);
+    } catch {
+      /* Nothing to fall back to: the archives and the sitemap list every
+         project, so a failed fetch costs this button, not the content. */
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
     const sync = () => setStill(motionReduced());
@@ -515,8 +565,8 @@ function ProjectsGrid(p: P<'projects'>) {
     cursor.style.setProperty('--y', `${e.clientY - box.top}px`);
   };
 
-  const meta = (item: (typeof p.items)[number]) =>
-    [item.category, item.year].filter(Boolean).join(' · ') || null;
+  const meta = (item: ProjectItem) =>
+    [item.chips?.length ? null : item.category, item.year].filter(Boolean).join(' · ') || null;
 
   return (
     <section className={cn('he-lsec he-proj-sec', toneClass(p.tone))}>
@@ -539,7 +589,7 @@ function ProjectsGrid(p: P<'projects'>) {
               </button>
             ))}
             <p className="sr-only" aria-live="polite">
-              {category ? `${shown.length} ${shown.length === 1 ? 'project' : 'projects'} in ${category}` : ''}
+              {category ? `${shown.length} — ${category}` : ''}
             </p>
           </div>
         )}
@@ -582,6 +632,18 @@ function ProjectsGrid(p: P<'projects'>) {
                 const onPicture = p.layout === 'overlay' || p.layout === 'metro';
                 return (
                   <li key={`${item.title}-${i}`} className="he-proj__item">
+                    {/* Linked category chips sit beside the card's own link, never inside it. */}
+                    {item.chips && item.chips.length > 0 && !onPicture && (
+                      <ul className="he-proj__chips">
+                        {item.chips.map((chip) => (
+                          <li key={chip.href}>
+                            <SmartLink href={chip.href} className="he-proj__chip-link">
+                              {chip.label}
+                            </SmartLink>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
                     <MaybeLink href={item.href} className="he-proj__link">
                       <div className="he-proj__media">
                         <MediaFill imageUrl={item.imageUrl} alt={item.alt} className="he-fill" />
@@ -602,6 +664,16 @@ function ProjectsGrid(p: P<'projects'>) {
                 );
               })}
             </ul>
+          </div>
+        )}
+
+        {p.source === 'collection' && all.length === 0 && <p className="he-proj__empty">{t('project.none')}</p>}
+
+        {canLoad && (
+          <div className="he-show__more">
+            <button type="button" className="he-cbtn is-outline is-medium" onClick={() => void loadMore()} aria-busy={loading || undefined}>
+              {loading ? t('archive.loading') : t('archive.loadMore')}
+            </button>
           </div>
         )}
 

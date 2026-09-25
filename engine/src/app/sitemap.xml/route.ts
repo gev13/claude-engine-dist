@@ -11,6 +11,7 @@ export function GET() {
       { path: '/sitemaps/services.xml', lastModified: now },
       { path: '/sitemaps/blog.xml', lastModified: now },
       { path: '/sitemaps/careers.xml', lastModified: now },
+      { path: '/sitemaps/projects.xml', lastModified: now },
     ]),
     { headers: XML_HEADERS },
   );

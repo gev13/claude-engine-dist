@@ -1,5 +1,7 @@
 'use client';
 
+import useSWR from 'swr';
+import { fetcher } from '@/lib/admin/client';
 import dynamic from 'next/dynamic';
 import { useMemo, useState } from 'react';
 import { nanoid } from 'nanoid';
@@ -2870,10 +2872,12 @@ function TypeFields({
             </label>
             {props.filter !== false && <Text label="“All” button" k="allLabel" props={props} set={set} placeholder="All" />}
           </div>
+          <ProjectsSourceFields props={props} set={set} />
+          {(str(props, 'source') || 'manual') === 'manual' && (
           <Repeater
-            label="Projects (up to 24)"
+            label="Projects (up to 200)"
             items={arr<ProjectItem>(props, 'items')}
-            onChange={(items) => set({ ...props, items: items.slice(0, 24) })}
+            onChange={(items) => set({ ...props, items: items.slice(0, 200) })}
             blank={(): ProjectItem => ({ title: '' })}
             addLabel="Add project"
             renderRow={(item, update) => (
@@ -2907,6 +2911,7 @@ function TypeFields({
               </>
             )}
           />
+          )}
           <OptLink label="Button below the projects" props={props} set={set} k="link" />
         </>
       );
@@ -4730,5 +4735,133 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
         </>
       )}
     </>
+  );
+}
+
+type ProjectTermRow = { id: string; taxonomy: 'category' | 'tag'; slug: string; name: string; count: number };
+
+/**
+ * T6 (2.14) — where a projects block's cards come from. "From Projects" reads
+ * the published collection, so a new project appears on the home page's
+ * highlights, the listing page and a service page's related work without
+ * anybody editing those pages. The filters pick by slug, which is what the
+ * block stores.
+ */
+function ProjectsSourceFields({ props, set }: { props: Props; set: Setter }) {
+  const source = str(props, 'source') || 'manual';
+  const { data } = useSWR<{ items: ProjectTermRow[] }>(source === 'collection' ? '/api/admin/projects/terms' : null, fetcher);
+  const pick = (key: 'categories' | 'tags', slug: string) => {
+    const current = arr<string>(props, key);
+    set({ ...props, [key]: current.includes(slug) ? current.filter((s) => s !== slug) : [...current, slug] });
+  };
+  const terms = (taxonomy: 'category' | 'tag') => (data?.items ?? []).filter((t) => t.taxonomy === taxonomy);
+  const pagination = str(props, 'pagination') || 'none';
+
+  return (
+    <div className="flex flex-col gap-3 border-2 border-hairline p-3">
+      <PropSelect
+        label="Where the projects come from"
+        k="source"
+        fallback="manual"
+        options={[
+          ['manual', 'Typed in below'],
+          ['collection', 'From Projects — published projects, automatically'],
+        ]}
+        props={props}
+        set={set}
+      />
+      {source === 'collection' && (
+        <>
+          {(['category', 'tag'] as const).map((taxonomy) => {
+            const key = taxonomy === 'category' ? 'categories' : 'tags';
+            const list = terms(taxonomy);
+            return (
+              <Field key={taxonomy} label={taxonomy === 'category' ? 'Only these categories' : 'Only these tags'} hint="none ticked means every one">
+                {list.length === 0 ? (
+                  <p className="m-0 text-[13px] text-smoke">None yet — add them under Projects → Categories &amp; tags.</p>
+                ) : (
+                  <div className="flex flex-wrap gap-x-4 gap-y-2">
+                    {list.map((term) => (
+                      <label key={term.id} className="flex items-center gap-2 text-[13px] text-ash">
+                        <input
+                          type="checkbox"
+                          className="h-3.5 w-3.5 accent-flare"
+                          checked={arr<string>(props, key).includes(term.slug)}
+                          onChange={() => pick(key, term.slug)}
+                        />
+                        {term.name}
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </Field>
+            );
+          })}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <PropSelect
+              label="Order"
+              k="order"
+              fallback="manual"
+              options={[
+                ['manual', 'The order set on each project'],
+                ['newest', 'Newest first'],
+                ['random', 'Shuffled'],
+              ]}
+              props={props}
+              set={set}
+            />
+            <Field label="How many" hint={pagination === 'none' ? 'in all' : 'per page'}>
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={num(props, 'limit', 12)}
+                onChange={(e) => set({ ...props, limit: Math.min(100, Math.max(1, Math.round(Number(e.target.value) || 1))) })}
+              />
+            </Field>
+            <PropSelect
+              label="More than that"
+              k="pagination"
+              fallback="none"
+              options={[
+                ['none', 'Stop there'],
+                ['loadMore', '“Load more” button'],
+                ['pages', 'Real pages — /page/2'],
+              ]}
+              props={props}
+              set={set}
+            />
+          </div>
+          <PropCheck label="Featured projects only" k="featuredOnly" props={props} set={set} />
+          <PropCheckOn label="On a project's own page, leave that project out" k="excludeCurrent" props={props} set={set} />
+        </>
+      )}
+      {source === 'manual' && (
+        <div className="grid gap-3 sm:grid-cols-2">
+          <PropSelect
+            label="More than a screenful"
+            k="pagination"
+            fallback="none"
+            options={[
+              ['none', 'Show them all'],
+              ['loadMore', 'A few, then “Load more”'],
+            ]}
+            props={props}
+            set={set}
+          />
+          {pagination === 'loadMore' && (
+            <Field label="Show first">
+              <Input
+                type="number"
+                min={1}
+                max={100}
+                value={num(props, 'perPage', 12)}
+                onChange={(e) => set({ ...props, perPage: Math.min(100, Math.max(1, Math.round(Number(e.target.value) || 1))) })}
+              />
+            </Field>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

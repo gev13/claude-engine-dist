@@ -132,4 +132,12 @@ describe('the refusals on the way to a tag', () => {
     expect(beforeTag).toMatch(/took the engine's copy/);
     expect(beforeTag).toMatch(/Nothing has been tagged/);
   });
+
+  /* `npm run` runs the script from engine/, and the names it compares come
+     from `git diff --name-only`, relative to the repository root. Without
+     `:(top)` the pathspec matched nothing and every file the site owned was
+     reported lost — which refused a perfectly good merge on 2.13.0. */
+  it('compares each file by its path from the repository root', () => {
+    expect(source).toMatch(/'--', `:\(top\)\$\{file\}`/);
+  });
 });

@@ -245,6 +245,26 @@ async function main() {
     `listed: ${careerPaths.join(', ') || 'nothing'}`,
   );
 
+  /* Projects (2.14) — whatever the projects sitemap lists: a project emits
+     CreativeWork, and an archive is an ordinary page. */
+  section('Projects');
+  const projectsMap = await text('/sitemaps/projects.xml');
+  const projectEntries = sitemapEntries(projectsMap.body);
+  const projectPath = projectEntries.find((e) => e.changefreq === 'monthly')?.path;
+  const projectArchive = projectEntries.find((e) => e.changefreq === 'weekly')?.path;
+  if (projectPath) {
+    const html = await checkPage(projectPath);
+    check('  project emits CreativeWork structured data', html.includes('"@type":"CreativeWork"'));
+  } else {
+    skip('published project renders', 'no projects published yet');
+  }
+  if (projectArchive) await checkPage(projectArchive);
+  else skip('project archive renders', 'no project categories or tags in use yet');
+  const moreProjects = await get('/api/projects?limit=2');
+  check('public project list answers with JSON', moreProjects.status === 200, `got ${moreProjects.status}`);
+  const badProjects = await get('/api/projects?category=%3Cscript%3E');
+  check('public project list refuses a malformed filter', badProjects.status === 400, `got ${badProjects.status}`);
+
   /* The endpoint is reachable and refuses a body it cannot read. 429 counts
      as a pass: the limiter is five an hour, and a few smoke runs will trip it
      — which is the feature working, not a regression. */
@@ -265,8 +285,8 @@ async function main() {
   const sitemap = await text('/sitemap.xml');
   check('sitemap index served', sitemap.res.status === 200);
   check(
-    '  references the four segments',
-    ['/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml', '/sitemaps/careers.xml'].every((s) =>
+    '  references every segment',
+    ['/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml', '/sitemaps/careers.xml', '/sitemaps/projects.xml'].every((s) =>
       sitemap.body.includes(s),
     ),
   );
@@ -355,6 +375,9 @@ async function main() {
     '/api/admin/cookies',
     '/api/admin/code',
     '/api/admin/permalinks',
+    '/api/admin/projects',
+    '/api/admin/projects/terms',
+    '/api/admin/projects/settings',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

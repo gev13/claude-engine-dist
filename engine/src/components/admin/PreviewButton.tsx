@@ -16,7 +16,7 @@ export function PreviewButton({
   entityId,
   disabled,
 }: {
-  entityType: 'page' | 'post';
+  entityType: 'page' | 'post' | 'project';
   entityId: string;
   disabled?: boolean;
 }) {

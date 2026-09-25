@@ -16,7 +16,7 @@ import { env } from '@/lib/env';
    preview link.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export type PreviewTarget = { entityType: 'page' | 'post'; entityId: string };
+export type PreviewTarget = { entityType: 'page' | 'post' | 'project'; entityId: string };
 
 /** Long enough to send to a client and hear back; short enough to expire. */
 export const PREVIEW_TTL_SECONDS = 7 * 24 * 3600;
@@ -50,7 +50,7 @@ export function verifyPreviewToken(token: string): PreviewResult {
   if (fields.length !== 3) return { ok: false, reason: 'malformed' };
 
   const [entityType, entityId, expiresRaw] = fields as [string, string, string];
-  if (entityType !== 'page' && entityType !== 'post') return { ok: false, reason: 'malformed' };
+  if (entityType !== 'page' && entityType !== 'post' && entityType !== 'project') return { ok: false, reason: 'malformed' };
 
   // Constant-time, and length-checked first because timingSafeEqual throws on
   // a length mismatch rather than returning false.

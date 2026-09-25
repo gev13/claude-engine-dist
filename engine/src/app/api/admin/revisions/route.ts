@@ -7,7 +7,7 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const query = z.object({
-  entityType: z.enum(['page', 'post']),
+  entityType: z.enum(['page', 'post', 'project']),
   entityId: z.string().uuid(),
 });
 
@@ -22,7 +22,7 @@ export async function GET(request: Request) {
       entityType: url.searchParams.get('entityType'),
       entityId: url.searchParams.get('entityId'),
     });
-    if (!parsed.success) return badRequest('Provide entityType (page or post) and a valid entityId.');
+    if (!parsed.success) return badRequest('Provide entityType (page, post or project) and a valid entityId.');
 
     return ok({ items: await listRevisions(parsed.data.entityType, parsed.data.entityId) });
   });

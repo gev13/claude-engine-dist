@@ -27,7 +27,7 @@ function spellings(path: string): string[] {
  * Paths whose output depends on *any* piece of content: the homepage pulls in
  * services and recent posts, and every sitemap enumerates the lot.
  */
-const ALWAYS = ['/', '/sitemap.xml', '/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml'];
+const ALWAYS = ['/', '/sitemap.xml', '/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml', '/sitemaps/projects.xml'];
 
 /**
  * Invalidate the ISR cache for the paths a mutation touched, plus the shared

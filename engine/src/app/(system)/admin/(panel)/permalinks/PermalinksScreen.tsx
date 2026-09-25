@@ -13,6 +13,8 @@ import {
   categoryPath,
   pagedPath,
   postPath,
+  projectPath,
+  projectTermPath,
   withSlash,
   type Permalinks,
 } from '@/lib/permalinks';
@@ -176,6 +178,28 @@ export function PermalinksScreen() {
             >
               <Input id="pl-page" value={form.pageSegment} onChange={(e) => set('pageSegment', e.target.value)} />
             </Field>
+          </div>
+        </Panel>
+
+        <Panel title="Projects">
+          <div className="flex flex-col gap-5">
+            <Field label="A project" htmlFor="pl-project" hint={`e.g. ${shown(projectPath(form, 'launch-campaign'), form)}`}>
+              <Input id="pl-project" value={form.projectBase} onChange={(e) => set('projectBase', e.target.value)} />
+            </Field>
+            <Field
+              label="Project categories"
+              htmlFor="pl-project-category"
+              hint={`e.g. ${shown(projectTermPath(form, 'category', 'branding'), form)}`}
+            >
+              <Input id="pl-project-category" value={form.projectCategoryBase} onChange={(e) => set('projectCategoryBase', e.target.value)} />
+            </Field>
+            <Field label="Project tags" htmlFor="pl-project-tag" hint={`e.g. ${shown(projectTermPath(form, 'tag', 'logo-design'), form)}`}>
+              <Input id="pl-project-tag" value={form.projectTagBase} onChange={(e) => set('projectTagBase', e.target.value)} />
+            </Field>
+            <p className="m-0 text-[12px] leading-relaxed text-smoke">
+              A site moving from a WordPress portfolio theme usually wants /portfolio, /portfolio-category and
+              /portfolio-tag. The page that lists every project is an ordinary page with a Projects block on it.
+            </p>
           </div>
         </Panel>
 

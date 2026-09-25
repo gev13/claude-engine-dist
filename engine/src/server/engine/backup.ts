@@ -35,6 +35,10 @@ export const BACKUP_TABLES = [
   'categories',
   'posts',
   'post_categories',
+  // 2.14 — projects reference media and users; the links reference both ends.
+  'projects',
+  'project_terms',
+  'project_term_links',
   /* Jobs reference media and users, so they come after both; applications
      reference jobs, so they come after those. */
   'jobs',
@@ -69,6 +73,9 @@ const TABLE_OBJECTS: Record<BackupTable, unknown> = {
   categories: schema.categories,
   posts: schema.posts,
   post_categories: schema.postCategories,
+  projects: schema.projects,
+  project_terms: schema.projectTerms,
+  project_term_links: schema.projectTermLinks,
   jobs: schema.jobs,
   applications: schema.applications,
   settings: schema.settings,

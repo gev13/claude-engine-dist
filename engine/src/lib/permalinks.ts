@@ -89,8 +89,25 @@ export const permalinksSchema = z
       .refine((value) => SEGMENT.test(value), 'One word — lowercase letters, digits and dashes')
       .default('page'),
     trailingSlash: z.enum(TRAILING_SLASH_MODES).default('never'),
+    /* ── Projects (2.14) ── WordPress portfolio themes use /portfolio,
+       /portfolio-category and /portfolio-tag; a new site gets the plainer
+       /projects family. */
+    projectBase: basePath('/projects'),
+    projectCategoryBase: basePath('/projects/category'),
+    projectTagBase: basePath('/projects/tag'),
   })
   .superRefine((value, ctx) => {
+    const bases = [
+      ['blogIndex', value.blogIndex],
+      ['categoryBase', value.categoryBase],
+      ['projectBase', value.projectBase],
+      ['projectCategoryBase', value.projectCategoryBase],
+      ['projectTagBase', value.projectTagBase],
+    ] as const;
+    bases.forEach(([key, path], index) => {
+      const clash = bases.slice(0, index).find(([, other]) => other === path);
+      if (clash) ctx.addIssue({ code: 'custom', path: [key], message: `The same address as the ${clash[0]}` });
+    });
     if (value.categoryBase === value.blogIndex) {
       ctx.addIssue({ code: 'custom', path: ['categoryBase'], message: 'The category base cannot be the blog index itself' });
     }
@@ -144,6 +161,18 @@ export function categoryPath(p: Permalinks, slug: string, page?: number): string
  * sits under the blog index, the way WordPress files it under "uncategorised"
  * rather than inventing a word for it.
  */
+/** Where a project lives: `/projects/<slug>`, or `/portfolio/<slug>` on a site that says so. */
+export function projectPath(p: Permalinks, slug: string): string {
+  return `${p.projectBase}/${slug}`;
+}
+
+export type ProjectTaxonomy = 'category' | 'tag';
+
+/** A project category's or tag's archive, and its pages. */
+export function projectTermPath(p: Permalinks, taxonomy: ProjectTaxonomy, slug: string, page?: number): string {
+  return pagedPath(`${taxonomy === 'category' ? p.projectCategoryBase : p.projectTagBase}/${slug}`, page, p);
+}
+
 export function postPath(p: Permalinks, post: { slug: string; categorySlug?: string | null }): string {
   if (p.postPattern === 'root') return `/${post.slug}`;
   if (p.postPattern === 'category' && post.categorySlug) return `/${post.categorySlug}/${post.slug}`;
@@ -153,6 +182,8 @@ export function postPath(p: Permalinks, post: { slug: string; categorySlug?: str
 /* ── Reading addresses ───────────────────────────────────────────────────── */
 
 export type BlogMatch =
+  | { kind: 'project'; slug: string }
+  | { kind: 'projectTerm'; taxonomy: ProjectTaxonomy; slug: string; page: number }
   | { kind: 'blogIndex'; page: number }
   | { kind: 'research'; page: number }
   | { kind: 'category'; slug: string; page: number }
@@ -181,6 +212,13 @@ export function matchBlogPath(p: Permalinks, path: string): BlogMatch[] {
     if (SLUG.test(slug)) matches.push({ kind: 'category', slug, page });
   }
 
+  for (const [taxonomy, termBase] of [['category', p.projectCategoryBase], ['tag', p.projectTagBase]] as const) {
+    if (base.startsWith(`${termBase}/`)) {
+      const slug = base.slice(termBase.length + 1);
+      if (SLUG.test(slug)) matches.push({ kind: 'projectTerm', taxonomy, slug, page });
+    }
+  }
+
   // Any page may carry a paginated list; the resolver checks it has one.
   if (paged) {
     matches.push({ kind: 'paged', base, page });
@@ -190,6 +228,8 @@ export function matchBlogPath(p: Permalinks, path: string): BlogMatch[] {
   const segments = path.split('/').filter(Boolean);
   const last = segments[segments.length - 1];
   if (!last || !SLUG.test(last)) return matches;
+
+  if (path === `${p.projectBase}/${last}`) matches.push({ kind: 'project', slug: last });
 
   const underIndex = path === `${p.blogIndex === '/' ? '' : p.blogIndex}/${last}`;
   if (p.postPattern === 'index' && underIndex) matches.push({ kind: 'post', slug: last });
@@ -237,6 +277,13 @@ export function permalinkCollisions(
       if (`/${slug}` === p.categoryBase.split('/').slice(0, 2).join('/')) {
         problems.push(`The category “${slug}” has the same name as the start of the category base.`);
       }
+    }
+  }
+
+  if (p.postPattern === 'category') {
+    const projectFirst = p.projectBase.split('/')[1];
+    if (site.categorySlugs.includes(projectFirst ?? '')) {
+      problems.push(`The category “${projectFirst}” has the same name as the start of the project address ${p.projectBase}.`);
     }
   }
 

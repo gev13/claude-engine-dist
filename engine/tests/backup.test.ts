@@ -48,6 +48,21 @@ describe('what an archive holds', () => {
     expect(order.indexOf('media')).toBeLessThan(order.indexOf('pages'));
     expect(order.indexOf('posts')).toBeLessThan(order.indexOf('post_categories'));
     expect(order.indexOf('categories')).toBeLessThan(order.indexOf('post_categories'));
+    expect(order.indexOf('projects')).toBeLessThan(order.indexOf('project_term_links'));
+    expect(order.indexOf('project_terms')).toBeLessThan(order.indexOf('project_term_links'));
+  });
+
+  /* A table added to the schema and forgotten here is a table a restore
+     quietly empties. Every table is either backed up or deliberately left
+     out — the decision has to be made, not defaulted. */
+  it('accounts for every table in the schema', async () => {
+    const schema = await import('../src/server/db/schema');
+    const { getTableName, isTable } = await import('drizzle-orm');
+    const names = Object.values(schema)
+      .filter((value) => isTable(value))
+      .map((table) => getTableName(table as never));
+    const accounted = new Set<string>([...BACKUP_TABLES, ...EXCLUDED_TABLES]);
+    expect(names.filter((name) => !accounted.has(name))).toEqual([]);
   });
 });
 

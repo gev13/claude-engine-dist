@@ -7,6 +7,9 @@ import { pageTrail } from '@/server/content/trail';
 import { db } from '@/server/db';
 import { PostArticle } from '@/components/site/blog/PostArticle';
 import { getPostForPreview } from '@/server/content/posts';
+import { ProjectArticle } from '@/components/site/projects/ProjectViews';
+import { getProjectForPreview } from '@/server/content/projects';
+import { getProjectTemplate } from '@/server/content/projectTemplate';
 import { getPermalinks } from '@/server/routing/config';
 import { pages, posts } from '@/server/db/schema';
 
@@ -43,6 +46,19 @@ export default async function PreviewPage({ params }: Props) {
         <PreviewBar status={post.status} expiresAt={result.expiresAt} />
         <main>
           <PostArticle post={post} permalinks={await getPermalinks()} preview />
+        </main>
+      </div>
+    );
+  }
+
+  if (entityType === 'project') {
+    const project = await getProjectForPreview(entityId);
+    if (!project) notFound();
+    return (
+      <div className="he-site">
+        <PreviewBar status={project.status} expiresAt={result.expiresAt} />
+        <main>
+          <ProjectArticle project={project} template={await getProjectTemplate()} permalinks={await getPermalinks()} preview />
         </main>
       </div>
     );

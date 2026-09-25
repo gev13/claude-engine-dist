@@ -299,6 +299,12 @@
   .he-proj__title { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.2; }
   .he-proj__meta { margin: 6px 0 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
   .he-proj__summary { margin: 10px 0 0; font-size: 15px; color: var(--color-ash); }
+  /* 2.14 — a collection's cards carry their categories as links, below the card. */
+  .he-proj__item:has(> .he-proj__chips) { display: flex; flex-direction: column; }
+  .he-proj__chips { order: 2; display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .he-proj__chip-link { display: inline-block; padding: 4px 10px; border: 1px solid var(--color-hairline); border-radius: 999px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--color-ash); text-decoration: none; transition: border-color calc(150ms * var(--he-motion, 1)), color calc(150ms * var(--he-motion, 1)); }
+  .he-proj__chip-link:hover { border-color: var(--color-flare); color: var(--color-bone); }
+  .he-proj__empty { margin: 0; color: var(--color-smoke); }
   .he-proj.is-minimal .he-proj__media { aspect-ratio: 3 / 4; border-radius: 0; }
   .he-proj.is-minimal .he-proj__text { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--he-gap, 4px 12px); }
   .he-proj.is-minimal .he-proj__title { font-size: 17px; }

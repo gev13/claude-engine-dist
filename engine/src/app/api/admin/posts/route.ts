@@ -11,10 +11,10 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { revalidateContent } from '@/server/content/revalidate';
-import { postPathById } from '@/server/content/posts';
+import { firstCategory, postPathById } from '@/server/content/posts';
 import { getPermalinks } from '@/server/routing/config';
 import { POST_LAYOUTS } from '@/lib/blog';
-import { blogIndexPath } from '@/lib/permalinks';
+import { blogIndexPath, postPath } from '@/lib/permalinks';
 import { captureRevision } from '@/server/content/revisions';
 import { sanitizeRichText } from '@/server/content/sanitize';
 import { db } from '@/server/db';
@@ -98,6 +98,7 @@ export async function GET(request: Request) {
           updatedAt: posts.updatedAt,
           authorId: posts.authorId,
           categoryName: categories.name,
+          categorySlug: firstCategory('slug'),
           authorFirst: users.firstName,
           authorLast: users.lastName,
         })
@@ -111,7 +112,14 @@ export async function GET(request: Request) {
       db.select({ n: sql<number>`count(*)::int` }).from(posts).where(where),
     ]);
 
-    return ok({ items, total: count?.n ?? 0, page, perPage });
+    // Where each post lives under this site's permalinks, for the list's own labels.
+    const permalinks = await getPermalinks();
+    return ok({
+      items: items.map((item) => ({ ...item, publicPath: postPath(permalinks, item) })),
+      total: count?.n ?? 0,
+      page,
+      perPage,
+    });
   });
 }
 

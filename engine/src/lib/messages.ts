@@ -56,6 +56,14 @@ export const MESSAGES = {
   'blog.resultsFor': '{count} results for “{query}”',
   'blog.oneResultFor': '1 result for “{query}”',
 
+  /* ── Projects (2.14) ─────────────────────────────────────────────────── */
+  'project.view': 'View project',
+  'project.none': 'No projects here yet.',
+  'project.client': 'Client',
+  'project.year': 'Year',
+  'project.visit': 'Visit the site',
+  'project.projects': 'Projects',
+
   /* ── Archive pages (2.13) ───────────────────────────────────────────── */
   'archive.page': 'Page {n}',
   'archive.pagination': 'Pages',

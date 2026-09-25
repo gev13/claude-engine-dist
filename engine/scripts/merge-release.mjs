@@ -51,7 +51,11 @@ const git = (args, opts = {}) =>
 /** Do the release and the merge result agree about this file? */
 const sameAs = (ref, file) => {
   try {
-    execFileSync('git', ['diff', '--quiet', ref, 'HEAD', '--', file], { stdio: 'ignore' });
+    /* `:(top)` — the file names come from `git diff --name-only`, which is
+       relative to the repository root, while this script runs from
+       `engine/`. A bare pathspec was read relative to that, matched nothing,
+       and every file the site owned looked "lost" (2.13.0 on gameguardz). */
+    execFileSync('git', ['diff', '--quiet', ref, 'HEAD', '--', `:(top)${file}`], { stdio: 'ignore' });
     return true; // exit 0 — identical, so this site's version did not survive
   } catch {
     return false; // exit 1 — they differ, which is what a kept customisation looks like

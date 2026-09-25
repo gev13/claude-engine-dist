@@ -45,6 +45,11 @@ export const CONTENT_TABLES = [
   'pages',
   'posts',
   'post_categories',
+  /* Projects (2.14): the work, then its categories and tags, then the links
+     between them — deleted in the reverse order, so nothing is orphaned. */
+  'projects',
+  'project_terms',
+  'project_term_links',
   /* Jobs are content — an open role is something a site says. Applications are
      NOT, and are deliberately absent: an applicant sent their CV to one
      company for one job, and carrying that to another site is the same
@@ -61,6 +66,9 @@ const TABLE_OBJECTS: Record<ContentTable, unknown> = {
   pages: schema.pages,
   posts: schema.posts,
   post_categories: schema.postCategories,
+  projects: schema.projects,
+  project_terms: schema.projectTerms,
+  project_term_links: schema.projectTermLinks,
   jobs: schema.jobs,
   redirects: schema.redirects,
 };
@@ -73,6 +81,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
   media: ['uploadedById'],
   pages: ['authorId'],
   posts: ['authorId'],
+  projects: ['authorId'],
   jobs: ['authorId'],
   redirects: ['createdById'],
   settings: ['updatedById'],
@@ -89,7 +98,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
  * tell the destination it had already been installed, and `engine.update*` is
  * one site's record of what it last checked.
  */
-export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks'] as const;
+export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks', 'projects'] as const;
 const PORTABLE_SETTING_PREFIX = 'site.';
 
 export const NEVER_EXPORTED_SETTING_KEYS = [

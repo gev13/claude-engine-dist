@@ -148,6 +148,9 @@ describe('the tables that travel', () => {
       'pages',
       'posts',
       'post_categories',
+      'projects',
+      'project_terms',
+      'project_term_links',
       'jobs',
       'redirects',
     ]);
@@ -188,5 +191,9 @@ describe('the tables that travel', () => {
     expect(order.indexOf('categories')).toBeLessThan(order.indexOf('posts'));
     expect(order.indexOf('posts')).toBeLessThan(order.indexOf('post_categories'));
     expect(order.indexOf('categories')).toBeLessThan(order.indexOf('post_categories'));
+    // 2.14 — a project carries covers; its links join it to its categories and tags.
+    expect(order.indexOf('media')).toBeLessThan(order.indexOf('projects'));
+    expect(order.indexOf('projects')).toBeLessThan(order.indexOf('project_term_links'));
+    expect(order.indexOf('project_terms')).toBeLessThan(order.indexOf('project_term_links'));
   });
 });

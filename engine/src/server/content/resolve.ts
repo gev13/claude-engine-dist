@@ -7,6 +7,7 @@ import type { Locale } from '@/lib/locales';
 import {
   DEFAULT_PERMALINKS,
   categoryPath,
+  projectTermPath,
   matchBlogPath,
   pagedPath,
   type BlogMatch,
@@ -16,6 +17,8 @@ import { getPermalinks } from '@/server/routing/config';
 import { getCategory, type CategoryRef } from './categories';
 import { getPageByPath, type PublicPage } from './pages';
 import { countPosts, getPost, postUrl, type PostDetail } from './posts';
+import { countProjects, getProject, getProjectTerm, type ProjectDetail, type ProjectTermRef } from './projects';
+import { getProjectTemplate } from './projectTemplate';
 import { getTheme } from './theme';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -51,6 +54,8 @@ export type Resolved =
   | { kind: 'research'; paging: Paging }
   | { kind: 'category'; category: CategoryRef; paging: Paging }
   | { kind: 'post'; post: PostDetail }
+  | { kind: 'project'; project: ProjectDetail }
+  | { kind: 'projectTerm'; term: ProjectTermRef; paging: Paging }
   | { kind: 'redirect'; to: string };
 
 export const resolvePath = cache(async (path: string, locale: Locale): Promise<Resolved | null> => {
@@ -123,6 +128,28 @@ async function resolveMatch(match: BlogMatch, { permalinks, blog, locale, path }
       );
       return settle(paging, path, permalinks, () => ({ kind: 'category', category, paging }));
     }
+    case 'project': {
+      const project = await getProject(match.slug, locale);
+      return project ? { kind: 'project', project } : null;
+    }
+    case 'projectTerm': {
+      const term = await getProjectTerm(match.taxonomy, match.slug, locale);
+      if (!term) return null;
+      const template = await getProjectTemplate();
+      const perPage = template.archive.perPage;
+      const count = await countProjects({
+        ...(match.taxonomy === 'category' ? { categories: [term.slug] } : { tags: [term.slug] }),
+        locale,
+      });
+      const paging: Paging = {
+        number: match.page,
+        perPage,
+        count,
+        total: Math.max(1, Math.ceil(count / perPage)),
+        base: projectTermPath(permalinks, match.taxonomy, term.slug),
+      };
+      return settle(paging, path, permalinks, () => ({ kind: 'projectTerm', term, paging }));
+    }
     case 'paged': {
       const page = await getPageByPath(match.base, locale);
       const list = page ? findServerList(page.blocks as AnyBlock[]) : undefined;
@@ -168,11 +195,14 @@ async function archivePaging(
 }
 
 async function listPaging(list: ServerList, number: number, base: string, _permalinks: Permalinks, locale: Locale): Promise<Paging> {
-  const count = await countPosts({
-    kind: list.kind === 'all' ? undefined : list.kind,
-    categorySlug: list.categorySlug,
-    locale,
-  });
+  const count =
+    list.type === 'projects'
+      ? await countProjects({ ...list.projects, locale })
+      : await countPosts({
+          kind: list.kind === 'all' ? undefined : list.kind,
+          categorySlug: list.categorySlug,
+          locale,
+        });
   return { number, perPage: list.limit, count, total: Math.max(1, Math.ceil(count / list.limit)), base };
 }
 

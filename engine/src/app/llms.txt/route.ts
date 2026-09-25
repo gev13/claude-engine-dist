@@ -6,7 +6,9 @@ import { allPublishedPagePaths } from '@/server/content/pages';
 import { getServiceCatalogue } from '@/server/content/services';
 import { listPosts, postUrl } from '@/server/content/posts';
 import { getPermalinks } from '@/server/routing/config';
-import { blogIndexPath, withSlash } from '@/lib/permalinks';
+import { blogIndexPath, projectPath, withSlash } from '@/lib/permalinks';
+import { allPublishedProjects } from '@/server/content/projects';
+import { localeConfig } from '@/lib/locales';
 import { getSiteSettings } from '@/server/content/siteSettings';
 
 export const revalidate = 3600;
@@ -57,6 +59,12 @@ export async function GET() {
       link(site.blogLabel, blogIndexPath(permalinks)),
       ...posts.map((p) => link(p.title, postUrl(permalinks, p), p.excerpt)),
     );
+  }
+
+  // 2.14 — the work, which is what a visitor usually came to see.
+  const work = (await allPublishedProjects()).filter((project) => project.locale === localeConfig().defaultLocale).slice(0, 30);
+  if (work.length > 0) {
+    lines.push('', '## Projects', '', ...work.map((project) => link(project.title, projectPath(permalinks, project.slug), project.summary)));
   }
 
   /* Open roles only. A filled advert is `noindex` and carries no JobPosting,

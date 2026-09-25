@@ -406,6 +406,106 @@ export const postCategories = pgTable(
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Projects (2.14) — a portfolio, built from blocks, filed under categories
+   and tags of its own. Shaped like posts where it can be (status, schedule,
+   trash, locale, translation group) and like pages where it has to be (a
+   block tree, not an article).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/** What a project can switch off or change for itself alone. See lib/projects.ts. */
+export type ProjectOptions = {
+  /** Leave the automatic "More projects" off this one. */
+  hideMore?: boolean;
+  /** This project's page background, e.g. a black page on a charcoal site. */
+  background?: string;
+};
+
+export const projects = pgTable(
+  'projects',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    slug: varchar('slug', { length: 200 }).notNull(),
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
+    title: varchar('title', { length: 300 }).notNull(),
+    /** One line for cards — not the meta description (see pages.summary). */
+    summary: varchar('summary', { length: 300 }).notNull().default(''),
+    /** The meta description. */
+    excerpt: text('excerpt').notNull().default(''),
+    /** Sanitised rich text shown in the project's header. */
+    intro: text('intro').notNull().default(''),
+    coverMediaId: uuid('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
+    /** A second picture a card swaps to on hover. */
+    hoverMediaId: uuid('hover_media_id').references(() => media.id, { onDelete: 'set null' }),
+    /** The full-width picture or video at the top of the project's page. */
+    heroMediaId: uuid('hero_media_id').references(() => media.id, { onDelete: 'set null' }),
+    client: varchar('client', { length: 200 }).notNull().default(''),
+    year: varchar('year', { length: 20 }).notNull().default(''),
+    /** The live work, when there is one to link to. */
+    url: varchar('url', { length: 500 }).notNull().default(''),
+    blocks: jsonb('blocks').$type<Block[]>().notNull().default(sql`'[]'::jsonb`),
+    seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
+    customCss: text('custom_css').notNull().default(''),
+    options: jsonb('options').$type<ProjectOptions>().notNull().default(sql`'{}'::jsonb`),
+    status: contentStatus('status').notNull().default('draft'),
+    publishedAt: timestamp('published_at', { withTimezone: true }),
+    /** The order an editor chose, for lists that ask for it. */
+    sortOrder: integer('sort_order').notNull().default(0),
+    /** Shown where a list asks for featured work — the home page's highlights. */
+    featured: boolean('featured').notNull().default(false),
+    authorId: uuid('author_id').references(() => users.id, { onDelete: 'set null' }),
+    /** Soft delete, set with `status = 'archived'` — the same belt and braces as pages and posts. */
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('projects_slug_key').on(t.locale, t.slug),
+    index('projects_translation_idx').on(t.translationGroupId),
+    index('projects_status_published_idx').on(t.status, t.publishedAt),
+    index('projects_featured_idx').on(t.featured),
+  ],
+);
+
+/** A project's categories and tags, in one table told apart by `taxonomy`. */
+export const projectTerms = pgTable(
+  'project_terms',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    /** `category` or `tag`. */
+    taxonomy: varchar('taxonomy', { length: 10 }).notNull(),
+    slug: varchar('slug', { length: 200 }).notNull(),
+    name: varchar('name', { length: 200 }).notNull(),
+    description: text('description').notNull().default(''),
+    seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
+    sortOrder: integer('sort_order').notNull().default(0),
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('project_terms_slug_key').on(t.locale, t.taxonomy, t.slug),
+    index('project_terms_translation_idx').on(t.translationGroupId),
+  ],
+);
+
+export const projectTermLinks = pgTable(
+  'project_term_links',
+  {
+    projectId: uuid('project_id')
+      .notNull()
+      .references(() => projects.id, { onDelete: 'cascade' }),
+    termId: uuid('term_id')
+      .notNull()
+      .references(() => projectTerms.id, { onDelete: 'cascade' }),
+    /** The category a project is filed under first — the one "More projects" follows. */
+    isPrimary: boolean('is_primary').notNull().default(false),
+  },
+  (t) => [primaryKey({ columns: [t.projectId, t.termId] }), index('project_term_links_term_idx').on(t.termId)],
+);
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Settings, enquiries, audit
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -496,7 +596,7 @@ export const formSubmissions = pgTable(
  * Append-only. No UPDATE or DELETE path exists in the application; a database
  * trigger (see drizzle/0001_audit_immutable.sql) enforces it at the engine.
  */
-export const revisionEntity = pgEnum('revision_entity', ['page', 'post']);
+export const revisionEntity = pgEnum('revision_entity', ['page', 'post', 'project']);
 
 /**
  * Content history.

@@ -44,9 +44,9 @@ import {
   GalleryBlock,
   HorizontalAccordionBlock,
   MapBlock,
-  ProjectsBlock,
   VideoBlock,
 } from './library/showcase';
+import { ProjectsSource } from './library/ProjectsSource';
 import { BreadcrumbsBlock, BusinessHoursBlock, ChartBlock, PriceListBlock, ReviewsBlock, SearchBlock, TextPathBlock } from './library/widgets';
 import { FlipBoxBlock, HotspotsBlock, ShareBlock, TocBlock } from './library/widgets-client';
 import type { Crumb } from '@/lib/seo/jsonld';
@@ -106,7 +106,7 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
   video: VideoBlock,
   gallery: GalleryBlock,
   horizontalAccordion: HorizontalAccordionBlock,
-  projects: ProjectsBlock,
+  projects: ProjectsSource,
   map: MapBlock,
   chart: ChartBlock,
   hotspots: HotspotsBlock,
@@ -193,7 +193,12 @@ const isLive = (block: ParsedBlock) => block.style?.disabled !== true;
  * (the breadcrumbs block) and, for the one post list that pages on the
  * server, which page this is.
  */
-export type RenderContext = { trail?: Crumb[]; paging?: Paging & { blockId: string } };
+export type RenderContext = {
+  trail?: Crumb[];
+  paging?: Paging & { blockId: string };
+  /** The project whose page this is — a projects block can leave it out (2.14). */
+  currentProjectId?: string;
+};
 
 function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
   const props = block.props as ParsedRowProps;
@@ -231,8 +236,11 @@ function renderBlock(block: ParsedBlock, ctx: RenderContext): React.ReactNode {
       <Component
         {...(block.props as object)}
         {...(block.type === 'breadcrumbs' ? { trail: ctx.trail } : {})}
-        {...(block.type === 'form' || block.type === 'cardGrid' || block.type === 'postList' ? { blockId: block.id } : {})}
-        {...(block.type === 'postList' && ctx.paging?.blockId === block.id ? { paging: ctx.paging } : {})}
+        {...(block.type === 'form' || block.type === 'cardGrid' || block.type === 'postList' || block.type === 'projects'
+          ? { blockId: block.id }
+          : {})}
+        {...((block.type === 'postList' || block.type === 'projects') && ctx.paging?.blockId === block.id ? { paging: ctx.paging } : {})}
+        {...(block.type === 'projects' && ctx.currentProjectId ? { currentProjectId: ctx.currentProjectId } : {})}
       />
     </BlockShell>
   );
@@ -285,6 +293,7 @@ export function BlockRenderer({
   showNames = false,
   trail,
   paging,
+  currentProjectId,
 }: {
   blocks: AnyBlock[] | null | undefined;
   /** Print each block's name above it — the `library` page template. */
@@ -293,8 +302,10 @@ export function BlockRenderer({
   trail?: Crumb[];
   /** Which page of its server-paged post list this address is (2.13). */
   paging?: Paging & { blockId: string };
+  /** On a project's own page, its id (2.14). */
+  currentProjectId?: string;
 }) {
-  const ctx: RenderContext = { trail, paging };
+  const ctx: RenderContext = { trail, paging, currentProjectId };
   const parsed = parseBlocks(blocks).filter(isLive);
   // P3-C5 — a block that asks the page to snap to it turns gentle snapping on for the page.
   const css = collectCss(parsed) + (anyStyle(parsed, (s) => s.snap) ? 'html{scroll-snap-type:y proximity}' : '');

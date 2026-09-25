@@ -19,6 +19,7 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Pages', href: '/admin/pages' },
       { label: 'Posts', href: '/admin/posts' },
       { label: 'Categories', href: '/admin/categories' },
+      { label: 'Projects', href: '/admin/projects' },
       { label: 'Roles', href: '/admin/jobs' },
       { label: 'Media', href: '/admin/media' },
     ],

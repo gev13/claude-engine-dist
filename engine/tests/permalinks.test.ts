@@ -34,6 +34,9 @@ describe('permalinks — the defaults are today’s addresses', () => {
       categoryBase: '/blog/category',
       pageSegment: 'page',
       trailingSlash: 'never',
+      projectBase: '/projects',
+      projectCategoryBase: '/projects/category',
+      projectTagBase: '/projects/tag',
     });
     expect(postPath(DEFAULT_PERMALINKS, { slug: 'hello', categorySlug: 'news' })).toBe('/blog/hello');
     expect(categoryPath(DEFAULT_PERMALINKS, 'news')).toBe('/blog/category/news');
@@ -159,7 +162,7 @@ describe('lists that page on the server', () => {
         props: { columns: [{ id: 'c', blocks: [{ id: 'b', type: 'postList', props: { pagination: 'server', limit: 12, kind: 'article' } }] }] },
       },
     ];
-    expect(findServerList(blocks as never)).toEqual({ blockId: 'b', kind: 'article', categorySlug: undefined, limit: 12 });
+    expect(findServerList(blocks as never)).toEqual({ blockId: 'b', type: 'postList', kind: 'article', categorySlug: undefined, limit: 12 });
     expect(findServerList([{ id: 'x', type: 'postList', props: { pagination: 'pages' } }] as never)).toBeUndefined();
   });
 
@@ -200,7 +203,8 @@ describe('no component writes the blog’s address by hand', () => {
   it('builds every post, category and index link from the permalinks', () => {
     const offenders = files
       .filter((file) => !allowed.some((ok) => file.replace(/\\/g, '/').includes(`src/${ok}`)))
-      .filter((file) => /[`'"]\/blog(\/|[`'"?])/.test(withoutComments(readFileSync(file, 'utf8'))));
+      // A quoted '/blog/…', or JSX text building one — `/blog/{row.slug}` hid in the posts list.
+      .filter((file) => /[`'"]\/blog(\/|[`'"?])|\/blog\/\{/.test(withoutComments(readFileSync(file, 'utf8'))));
     expect(offenders.map((file) => path.relative(root, file))).toEqual([]);
   });
 });

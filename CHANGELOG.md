@@ -9,6 +9,57 @@ told about before taking it.
 
 ---
 
+## 2.14.0 — 2026-09-25
+
+**Projects.** A portfolio, as content: each project is a page of its own,
+built from blocks, filed under categories and tags, with a cover for cards, a
+picture it swaps to on hover, and a full-width header picture or video. It has
+drafts, scheduled publishing, a preview link, revisions and a trash, like a
+post. Content → Projects; an author writes them and an editor publishes them.
+
+Every project page shares one layout, set once under Projects → Page template:
+a full-width hero, the title beside the hero, or the title alone; category
+chips and the client, year and live link, each optional; then the project's
+own blocks; then **More projects** from the same category (topped up with the
+newest when there are too few), as a grid or a carousel; then any blocks you
+want after every project — usually a call to action. A project can leave
+"More projects" off, or give its page a background colour of its own.
+
+Categories and tags each have an archive page, paged on the server, with the
+description you write for them. Projects have their own sitemap, `CreativeWork`
+structured data, a section in `llms.txt`, and can appear in the site's search.
+They travel with Export & import and with backups.
+
+**Lists that fill themselves.** A Projects block can now take its cards *from
+Projects* instead of a typed list: some categories or tags, featured only,
+leave out the project whose page this is, in your order, newest first or
+shuffled — so the home page's highlights, a listing page and a service page's
+related work update themselves when a project is published. Past the first
+few: a **Load more** button, or real pages (`/work/page/2/`). Each card shows
+its categories as links, and the filter buttons are the real categories.
+
+A typed list is unchanged, and can now hold 200 and show a few at a time.
+
+**Addresses.** Settings → Permalinks gains the three project addresses —
+`/projects/<slug>` and its category and tag archives by default, or
+`/portfolio`, `/portfolio-category` and `/portfolio-tag` for a site moving
+from a WordPress portfolio theme — and the 301s from old addresses cover
+projects too.
+
+**Also fixed.**
+
+- `npm run release:merge` refused every merge into a site that had changed a
+  file of its own, reporting the site's copies as lost when they had
+  survived. It compared the files from the wrong directory.
+- The posts list in the admin shows each post's real address, not `/blog/…`.
+- Backups have a test that fails when a new table is neither backed up nor
+  deliberately left out.
+
+Includes a database migration: three new tables and a new revision type. Take
+the backup the Updates screen offers.
+
+---
+
 ## 2.13.0 — 2026-09-25
 
 **The blog's addresses are a setting.** Settings → Permalinks decides where a

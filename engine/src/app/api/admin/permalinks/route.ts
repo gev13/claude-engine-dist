@@ -11,12 +11,14 @@ import {
   permalinkCollisions,
   permalinksSchema,
   postPath,
+  projectPath,
+  projectTermPath,
   type Permalinks,
 } from '@/lib/permalinks';
 import { collapseChains, type MatchType, type RedirectRule } from '@/lib/redirectRules';
 import { revalidateEverything } from '@/server/content/revalidate';
 import { db } from '@/server/db';
-import { categories, pages, posts, postCategories, redirects, settings } from '@/server/db/schema';
+import { categories, pages, posts, postCategories, projectTerms, projects, redirects, settings } from '@/server/db/schema';
 import { getPermalinks, invalidateRouting } from '@/server/routing/config';
 
 export const runtime = 'nodejs';
@@ -71,6 +73,22 @@ async function movedAddresses(from: Permalinks, to: Permalinks): Promise<{ from:
   }
   for (const category of categoryRows) {
     moves.push({ from: categoryPath(from, category.slug), to: categoryPath(to, category.slug) });
+  }
+
+  // 2.14 — projects and their archives move with their bases.
+  const [projectRows, termRows] = await Promise.all([
+    db
+      .select({ slug: projects.slug })
+      .from(projects)
+      .where(and(eq(projects.status, 'published'), isNull(projects.deletedAt))),
+    db.select({ taxonomy: projectTerms.taxonomy, slug: projectTerms.slug }).from(projectTerms),
+  ]);
+  for (const project of projectRows) {
+    moves.push({ from: projectPath(from, project.slug), to: projectPath(to, project.slug) });
+  }
+  for (const term of termRows) {
+    const taxonomy = term.taxonomy === 'tag' ? 'tag' : 'category';
+    moves.push({ from: projectTermPath(from, taxonomy, term.slug), to: projectTermPath(to, taxonomy, term.slug) });
   }
   return moves.filter((move) => move.from !== move.to);
 }

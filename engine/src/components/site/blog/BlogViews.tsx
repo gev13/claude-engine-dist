@@ -27,6 +27,17 @@ import { getSiteSettings } from '@/server/content/siteSettings';
 import { getTheme } from '@/server/content/theme';
 import { searchPosts } from '@/server/search';
 import { BlogSearch } from './BlogSearch';
+import { ProjectsBlock } from '@/components/blocks/library/showcase';
+import { blockSchemas } from '@/lib/blocks';
+import { projectItem, type ProjectCard } from '@/lib/projects';
+import { searchProjectCards } from '@/server/content/projects';
+import { getProjectTemplate } from '@/server/content/projectTemplate';
+
+/** Projects a search matched, as the projects block draws them. */
+function ProjectsBlockResults({ items, title }: { items: ProjectCard[]; title: string }) {
+  const block = blockSchemas.projects.safeParse({ title, titleAs: 'h2', layout: 'classic', columns: 3, filter: false, source: 'collection' });
+  return block.success ? <ProjectsBlock {...block.data} items={items.map(projectItem)} /> : null;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The blog's own pages
@@ -148,6 +159,9 @@ export async function BlogIndexView({
   const latest =
     !page && !query ? await listPosts({ limit: paging.perPage, offset: (paging.number - 1) * paging.perPage, locale }) : [];
   const results = query ? await searchPosts(query, 24) : [];
+  // Projects join the results when Projects → Page template says they belong in search (2.14).
+  const projectResults =
+    query && (await getProjectTemplate(locale)).inSearch ? await searchProjectCards(query, permalinks, 12) : [];
 
   return (
     <>
@@ -178,7 +192,12 @@ export async function BlogIndexView({
       </Section>
 
       {query ? (
-        <SearchResults query={query} results={results} permalinks={permalinks} t={t} />
+        <>
+          {projectResults.length > 0 && (
+            <ProjectsBlockResults items={projectResults} title={t('project.projects')} />
+          )}
+          <SearchResults query={query} results={results} permalinks={permalinks} t={t} />
+        </>
       ) : page ? (
         <BlockRenderer
           blocks={rest}

@@ -13,7 +13,7 @@ import { postPath, type Permalinks } from '@/lib/permalinks';
  * categories screen lists them. One expression, so a card and the route that
  * answers it agree.
  */
-const firstCategory = (column: 'slug' | 'name') =>
+export const firstCategory = (column: 'slug' | 'name') =>
   sql<string | null>`coalesce(${column === 'slug' ? categories.slug : categories.name}, (
     select c.${sql.raw(column)} from ${postCategories} pc
     join ${categories} c on c.id = pc.category_id

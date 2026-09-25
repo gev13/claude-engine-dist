@@ -3,6 +3,9 @@ import type { Metadata } from 'next';
 import { BlockRenderer } from '@/components/blocks/Renderer';
 import { ArchiveView, BlogIndexView, PagingLinks } from '@/components/site/blog/BlogViews';
 import { PostArticle } from '@/components/site/blog/PostArticle';
+import { ProjectArchiveView, ProjectArticle } from '@/components/site/projects/ProjectViews';
+import { allPublishedProjects, getProjectTranslations, termsWithProjects } from '@/server/content/projects';
+import { getProjectTemplate } from '@/server/content/projectTemplate';
 import { safeCss } from '@/lib/customCode';
 import { handleMiss } from '@/server/content/miss';
 import { JsonLd } from '@/components/site/JsonLd';
@@ -17,7 +20,16 @@ import {
 } from '@/lib/seo/jsonld';
 import { servicePath, site } from '@/lib/site';
 import { messageReader } from '@/lib/messages';
-import { blogIndexPath, pagedPath, postPath, researchPath, categoryPath, withSlash } from '@/lib/permalinks';
+import {
+  blogIndexPath,
+  categoryPath,
+  pagedPath,
+  postPath,
+  projectPath,
+  projectTermPath,
+  researchPath,
+  withSlash,
+} from '@/lib/permalinks';
 import { getServiceBySlug, getServices } from '@/server/content/services';
 import { allPublishedPagePaths, getTranslations } from '@/server/content/pages';
 import { allPublishedPostSlugs, getPostTranslations } from '@/server/content/posts';
@@ -68,11 +80,13 @@ export async function generateStaticParams({
 }): Promise<{ slug?: string[] }[]> {
   const config = localeConfig();
   const locale = config.locales.includes(params.locale) ? params.locale : config.defaultLocale;
-  const [pages, posts, categories, permalinks] = await Promise.all([
+  const [pages, posts, categories, permalinks, projects, terms] = await Promise.all([
     allPublishedPagePaths(locale),
     allPublishedPostSlugs(locale),
     listCategories(locale),
     getPermalinks(),
+    allPublishedProjects(),
+    termsWithProjects(),
   ]);
   const paths = new Set<string>([
     ...pages.map((p) => p.path),
@@ -80,6 +94,8 @@ export async function generateStaticParams({
     researchPath(permalinks),
     ...categories.map((c) => categoryPath(permalinks, c.slug)),
     ...posts.map((p) => postPath(permalinks, p)),
+    ...projects.filter((p) => p.locale === locale).map((p) => projectPath(permalinks, p.slug)),
+    ...terms.filter((t) => t.locale === locale).map((t) => projectTermPath(permalinks, t.taxonomy, t.slug)),
   ]);
   return [...paths].map(toParams);
 }
@@ -104,6 +120,34 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const own = (paging: Paging | undefined, base: string) => (paging ? pagedPath(paging.base, paging.number, permalinks) : base);
 
   switch (resolved.kind) {
+    case 'project': {
+      const { project } = resolved;
+      const translations = await getProjectTranslations(project.translationGroupId);
+      return buildMetadata({
+        seo: project.seo,
+        title: project.title,
+        description: project.excerpt || project.summary,
+        path: projectPath(permalinks, project.slug),
+        locale,
+        translations: translations.map((tr) => ({ locale: tr.locale, path: projectPath(permalinks, tr.slug) })),
+        type: 'article',
+        publishedTime: isoDate(project.publishedAt),
+        modifiedTime: isoDate(project.updatedAt),
+        imageUrl: project.coverUrl,
+        siteName: settings.name,
+      });
+    }
+    case 'projectTerm': {
+      const { term, paging } = resolved;
+      return buildMetadata({
+        seo: paging.number > 1 ? undefined : term.seo,
+        title: paged(term.name, paging),
+        description: term.description || settings.description,
+        path: own(paging, projectTermPath(permalinks, term.taxonomy, term.slug)),
+        locale,
+        siteName: settings.name,
+      });
+    }
     case 'post': {
       const { post } = resolved;
       const translations = await getPostTranslations(post.translationGroupId);
@@ -186,6 +230,25 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
       return permanentRedirect(withSlash(resolved.to));
     case 'post':
       return <PostArticle post={resolved.post} permalinks={permalinks} locale={locale} />;
+    case 'project':
+      return (
+        <ProjectArticle
+          project={resolved.project}
+          template={await getProjectTemplate(locale)}
+          permalinks={permalinks}
+          locale={locale}
+        />
+      );
+    case 'projectTerm':
+      return (
+        <ProjectArchiveView
+          term={resolved.term}
+          paging={resolved.paging}
+          template={await getProjectTemplate(locale)}
+          permalinks={permalinks}
+          locale={locale}
+        />
+      );
     case 'blogIndex':
       return (
         <BlogIndexView

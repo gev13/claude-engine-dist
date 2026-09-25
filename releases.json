@@ -1,6 +1,14 @@
 {
-  "latest": "2.13.0",
+  "latest": "2.14.0",
   "releases": [
+    {
+      "version": "2.14.0",
+      "date": "2026-09-25",
+      "summary": "Projects: a portfolio built from blocks, with categories, tags, archive pages and a shared page template. A Projects block can fill itself from them \u2014 featured, by category, with load-more or real pages. Project addresses join Permalinks.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.13.0",
       "date": "2026-09-25",

@@ -8,13 +8,13 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { PREVIEW_TTL_SECONDS, createPreviewToken, previewPath } from '@/server/content/preview';
 import { db } from '@/server/db';
-import { pages, posts } from '@/server/db/schema';
+import { pages, posts, projects } from '@/server/db/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 const schema = z.object({
-  entityType: z.enum(['page', 'post']),
+  entityType: z.enum(['page', 'post', 'project']),
   entityId: z.string().uuid(),
 });
 
@@ -37,7 +37,9 @@ export async function POST(request: Request) {
     const row =
       entityType === 'page'
         ? (await db.select({ authorId: pages.authorId, title: pages.title }).from(pages).where(eq(pages.id, entityId)).limit(1))[0]
-        : (await db.select({ authorId: posts.authorId, title: posts.title }).from(posts).where(eq(posts.id, entityId)).limit(1))[0];
+        : entityType === 'project'
+          ? (await db.select({ authorId: projects.authorId, title: projects.title }).from(projects).where(eq(projects.id, entityId)).limit(1))[0]
+          : (await db.select({ authorId: posts.authorId, title: posts.title }).from(posts).where(eq(posts.id, entityId)).limit(1))[0];
 
     if (!row) return notFound('That content does not exist.');
     if (!ownsOrAdmin(guard.user, row.authorId)) return badRequest('You cannot preview that.');

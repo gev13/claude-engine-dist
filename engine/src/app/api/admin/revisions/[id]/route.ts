@@ -4,7 +4,7 @@ import { requireUser } from '@/server/api/guard';
 import { ownsOrAdmin } from '@/server/auth/rbac';
 import { getRevision } from '@/server/content/revisions';
 import { db } from '@/server/db';
-import { pages, posts } from '@/server/db/schema';
+import { pages, posts, projects } from '@/server/db/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -26,7 +26,9 @@ export async function GET(request: Request, ctx: Context) {
     const authorId =
       revision.entityType === 'page'
         ? (await db.select({ a: pages.authorId }).from(pages).where(eq(pages.id, revision.entityId)).limit(1))[0]?.a
-        : (await db.select({ a: posts.authorId }).from(posts).where(eq(posts.id, revision.entityId)).limit(1))[0]?.a;
+        : revision.entityType === 'project'
+          ? (await db.select({ a: projects.authorId }).from(projects).where(eq(projects.id, revision.entityId)).limit(1))[0]?.a
+          : (await db.select({ a: posts.authorId }).from(posts).where(eq(posts.id, revision.entityId)).limit(1))[0]?.a;
 
     if (!ownsOrAdmin(guard.user, authorId)) return notFound('That revision no longer exists.');
 

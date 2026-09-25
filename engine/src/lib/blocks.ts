@@ -395,6 +395,30 @@ export const blockSchemas = {
     hover: z.enum(['zoom', 'greyscale', 'swap', 'none']).default('zoom'),
     filter: z.boolean().default(true),
     allLabel: z.string().trim().max(30).default('All'),
+    /**
+     * T6 (2.14) — `manual` is the list typed in below (every block before
+     * 2.14); `collection` reads published projects from Projects, filtered
+     * here, so a new project appears wherever it belongs without anybody
+     * editing the page.
+     */
+    source: z.enum(['manual', 'collection']).default('manual'),
+    /** Collection: category and tag slugs; empty means every project. */
+    categories: z.array(z.string().trim().max(200)).max(20).default([]),
+    tags: z.array(z.string().trim().max(200)).max(20).default([]),
+    featuredOnly: z.boolean().default(false),
+    /** Collection: on a project's own page, leave that project out. */
+    excludeCurrent: z.boolean().default(true),
+    order: z.enum(['manual', 'newest', 'random']).default('manual'),
+    /** Collection: how many — per page when it pages. */
+    limit: z.number().int().min(1).max(100).default(12),
+    /**
+     * `loadMore` — the first `limit`, then a button that fetches the next lot
+     * (manual lists reveal the rest). `pages` — real `/page/2` addresses,
+     * rendered on the server (collection only).
+     */
+    pagination: z.enum(['none', 'loadMore', 'pages']).default('none'),
+    /** Manual lists that load more: how many show first. */
+    perPage: z.number().int().min(1).max(100).default(12),
     items: z
       .array(
         z.object({
@@ -408,8 +432,8 @@ export const blockSchemas = {
           href: safeHref.optional(),
         }),
       )
-      .min(1)
-      .max(24),
+      .max(200)
+      .default([]),
     link: libraryLink.optional(),
   }),
 

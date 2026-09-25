@@ -51,6 +51,14 @@ export const PERMISSIONS = {
   'posts:delete': ['admin', 'manager', 'editor', 'author'],
   'posts:publish': ['admin', 'manager', 'editor'],
 
+  // Projects (2.14) follow posts exactly, and their categories and tags follow
+  // the blog's categories.
+  'projects:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'projects:write': ['admin', 'manager', 'editor', 'author'],
+  'projects:delete': ['admin', 'manager', 'editor', 'author'],
+  'projects:publish': ['admin', 'manager', 'editor'],
+  'projectTerms:write': ['admin', 'manager', 'editor'],
+
   // A job advert is content, and follows the content rules exactly: an author
   // may write one and may not put it on the careers page.
   'jobs:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],

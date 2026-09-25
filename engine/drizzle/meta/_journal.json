@@ -43,6 +43,13 @@
       "when": 1790325166326,
       "tag": "0005_mighty_stellaris",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790327521467,
+      "tag": "0006_daffy_mongu",
+      "breakpoints": true
     }
   ]
 }

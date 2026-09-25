@@ -1,9 +1,10 @@
 import 'server-only';
 import { getPermalinks } from '@/server/routing/config';
 import { postPathById } from './posts';
+import { projectPathById } from './projects';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
-import { contentRevisions, pages, posts, users } from '@/server/db/schema';
+import { contentRevisions, pages, posts, projects, users } from '@/server/db/schema';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Content history
@@ -17,7 +18,7 @@ import { contentRevisions, pages, posts, users } from '@/server/db/schema';
    editor's work, and the same reasoning governs `revalidateContent`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export type RevisionEntity = 'page' | 'post';
+export type RevisionEntity = 'page' | 'post' | 'project';
 
 /** Kept per entity. Older revisions are pruned as new ones arrive. */
 export const REVISION_LIMIT = 30;
@@ -39,8 +40,14 @@ const POST_FIELDS = [
   'coverMediaId', 'primaryCategoryId', 'readingMinutes', 'customCss',
 ] as const;
 
+/** A project's content columns (2.14). Terms live in their own table and are not versioned. */
+const PROJECT_FIELDS = [
+  'slug', 'title', 'summary', 'excerpt', 'intro', 'status', 'blocks', 'seo', 'customCss', 'options',
+  'coverMediaId', 'hoverMediaId', 'heroMediaId', 'client', 'year', 'url', 'sortOrder', 'featured',
+] as const;
+
 export function snapshotFields(entityType: RevisionEntity): readonly string[] {
-  return entityType === 'page' ? PAGE_FIELDS : POST_FIELDS;
+  return entityType === 'page' ? PAGE_FIELDS : entityType === 'project' ? PROJECT_FIELDS : POST_FIELDS;
 }
 
 /** Reduce a row to the fields a revision stores. */
@@ -262,6 +269,31 @@ export async function restoreRevision(
       entityId: revision.entityId,
       revisionNumber: revision.revisionNumber,
       path: updated?.path ?? null,
+    };
+  }
+
+  if (revision.entityType === 'project') {
+    const [existing] = await db.select().from(projects).where(eq(projects.id, revision.entityId)).limit(1);
+    if (!existing) return { ok: false, reason: 'entity_missing' };
+    const [updated] = await db
+      .update(projects)
+      .set(restorableSet('project', snapshot))
+      .where(eq(projects.id, revision.entityId))
+      .returning();
+    await captureRevision({
+      entityType: 'project',
+      entityId: revision.entityId,
+      row: updated as unknown as Record<string, unknown>,
+      reason: 'restore',
+      actorId: actor.id,
+      actorEmail: actor.email,
+    });
+    return {
+      ok: true,
+      entityType: 'project',
+      entityId: revision.entityId,
+      revisionNumber: revision.revisionNumber,
+      path: updated ? await projectPathById(await getPermalinks(), updated.id) : null,
     };
   }
 

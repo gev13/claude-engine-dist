@@ -34,6 +34,8 @@ type PostRow = {
   publishedAt: string | null;
   updatedAt: string;
   categoryName: string | null;
+  /** Where it lives under this site's permalinks. */
+  publicPath: string;
   authorFirst: string | null;
   authorLast: string | null;
 };
@@ -193,7 +195,7 @@ export function PostsList() {
                         {row.title}
                       </Link>
                       <div className="mt-0.5 font-mono text-[11px] text-smoke">
-                        /blog/{row.slug} · {row.readingMinutes} min
+                        {row.publicPath} · {row.readingMinutes} min
                       </div>
                     </Td>
                     <Td>{row.categoryName ?? <span className="text-smoke">Uncategorised</span>}</Td>

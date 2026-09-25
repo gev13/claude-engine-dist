@@ -7,7 +7,7 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateContent, revalidateEverything } from '@/server/content/revalidate';
 import { getRevision, restoreRevision } from '@/server/content/revisions';
 import { db } from '@/server/db';
-import { pages, posts } from '@/server/db/schema';
+import { pages, posts, projects } from '@/server/db/schema';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -37,11 +37,17 @@ export async function POST(request: Request, ctx: Context) {
             .from(pages)
             .where(eq(pages.id, revision.entityId))
             .limit(1))[0]
-        : (await db
-            .select({ authorId: posts.authorId, template: posts.kind })
-            .from(posts)
-            .where(eq(posts.id, revision.entityId))
-            .limit(1))[0];
+        : revision.entityType === 'project'
+          ? (await db
+              .select({ authorId: projects.authorId, template: projects.status })
+              .from(projects)
+              .where(eq(projects.id, revision.entityId))
+              .limit(1))[0]
+          : (await db
+              .select({ authorId: posts.authorId, template: posts.kind })
+              .from(posts)
+              .where(eq(posts.id, revision.entityId))
+              .limit(1))[0];
 
     if (!target) return conflict('The content this revision belongs to has been deleted.');
     if (!ownsOrAdmin(guard.user, target.authorId)) return notFound('That revision no longer exists.');
@@ -67,6 +73,8 @@ export async function POST(request: Request, ctx: Context) {
     if (result.path) revalidateContent([result.path]);
     // A restored service page changes the catalogue, which every listing reads.
     if (revision.entityType === 'page' && target.template === 'service') revalidateEverything();
+    // A project is listed by collections on any page.
+    if (revision.entityType === 'project') revalidateEverything();
 
     return ok({ restored: result });
   });
