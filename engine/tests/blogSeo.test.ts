@@ -50,14 +50,14 @@ describe('feeds', () => {
 
 describe('titles', () => {
   it('are “Page — Site” until the site says otherwise', () => {
-    expect(titleTemplate({ name: 'BetBoyz' })).toBe('%s — BetBoyz');
-    expect(titleTemplate({ name: 'BetBoyz', titleSeparator: '|' })).toBe('%s | BetBoyz');
-    expect(titleTemplate({ name: 'BetBoyz', titleFormat: 'plain' })).toBe('%s');
+    expect(titleTemplate({ name: 'Northfold' })).toBe('%s — Northfold');
+    expect(titleTemplate({ name: 'Northfold', titleSeparator: '|' })).toBe('%s | Northfold');
+    expect(titleTemplate({ name: 'Northfold', titleFormat: 'plain' })).toBe('%s');
   });
 
   it('can be used exactly as written, per page', () => {
-    const exact = buildMetadata({ title: 'BetBoyz iGaming CRM | Retention', description: '', path: '/crm', seo: { exactTitle: true } });
-    expect(exact.title).toEqual({ absolute: 'BetBoyz iGaming CRM | Retention' });
+    const exact = buildMetadata({ title: 'Northfold Studio | Retention', description: '', path: '/crm', seo: { exactTitle: true } });
+    expect(exact.title).toEqual({ absolute: 'Northfold Studio | Retention' });
     expect(buildMetadata({ title: 'About', description: '', path: '/about' }).title).toBe('About');
   });
 });

@@ -9,6 +9,18 @@ told about before taking it.
 
 ---
 
+## 2.22.1 — 2026-09-25
+
+**Nothing fixed that should be editable.** Every “Read more” on cards,
+posts, related posts, search results and picture rows now comes from Site
+translations (`block.readMore`, `blog.readMore`) instead of fixed English.
+The media band's fade starts from the site's accent colour instead of a
+fixed one, and the space the notch header leaves above the first section
+follows the header's own height setting. Sample names in the shipped tests
+are neutral.
+
+---
+
 ## 2.22.0 — 2026-09-25
 
 **Picture rows.** A Card grid layout for a list of services: a large

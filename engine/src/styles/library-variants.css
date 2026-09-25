@@ -209,9 +209,9 @@
   .he-band.is-h-short { min-height: clamp(240px, 40vh, 420px); }
   .he-band.is-ov-gradient::after { background: linear-gradient(to top, rgb(0 0 0 / 0.78), rgb(0 0 0 / 0.05) 72%); }
   /* 2.21 — a colour fading in from one side, over the picture; the text and buttons can turn dark on it. */
-  .he-band.has-fade::after { background: linear-gradient(to right, var(--he-fade-color) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
-  .he-band.has-fade.is-fade-right::after { background: linear-gradient(to left, var(--he-fade-color) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
-  .he-band.has-fade { background: var(--he-fade-color); }
+  .he-band.has-fade::after { background: linear-gradient(to right, var(--he-fade-color, var(--color-flare)) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
+  .he-band.has-fade.is-fade-right::after { background: linear-gradient(to left, var(--he-fade-color, var(--color-flare)) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
+  .he-band.has-fade { background: var(--he-fade-color, var(--color-flare)); }
   .he-band.is-text-dark :is(h1, h2, h3, h4, .he-lbody, .type-eyebrow) { color: var(--color-ink); }
   .he-band.is-text-dark {
     --he-btn-primary-bg: var(--color-ink); --he-btn-primary-text: var(--color-bone); --he-btn-primary-border: var(--color-ink);

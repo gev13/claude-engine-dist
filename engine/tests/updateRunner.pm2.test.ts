@@ -24,20 +24,20 @@ import { ENGINE_VERSION } from '@/lib/version';
 
 const source = readFileSync(fileURLToPath(new URL('../src/server/engine/update.ts', import.meta.url)), 'utf8');
 
-const HERE = '/var/www/xeriglux/engine';
+const HERE = '/var/www/site-b/engine';
 const entry = (name: string, cwd: string) => ({ name, pm2_env: { pm_cwd: cwd } });
 
 describe('finding the process to reload', () => {
   it('finds the site running from this directory, whatever it is called', () => {
-    const list = [entry('gameguardz', '/var/www/gameguardz/engine'), entry('xeriglux', HERE)];
-    expect(pickPm2Process(list, HERE)).toBe('xeriglux');
+    const list = [entry('site-a', '/var/www/site-a/engine'), entry('site-b', HERE)];
+    expect(pickPm2Process(list, HERE)).toBe('site-b');
   });
 
   /* The case that broke a real site: two sites under one pm2, and neither
      called "engine". Reloading the wrong one would restart somebody else's
      site and still leave this one stale. */
   it('never reaches for another site on the same server', () => {
-    const list = [entry('gameguardz', '/var/www/gameguardz/engine')];
+    const list = [entry('site-a', '/var/www/site-a/engine')];
     expect(pickPm2Process(list, HERE)).toBeNull();
   });
 

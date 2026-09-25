@@ -54,7 +54,7 @@ const sameAs = (ref, file) => {
     /* `:(top)` — the file names come from `git diff --name-only`, which is
        relative to the repository root, while this script runs from
        `engine/`. A bare pathspec was read relative to that, matched nothing,
-       and every file the site owned looked "lost" (2.13.0 on gameguardz). */
+       and every file the site owned looked "lost" (2.13.0, on a fork site). */
     execFileSync('git', ['diff', '--quiet', ref, 'HEAD', '--', `:(top)${file}`], { stdio: 'ignore' });
     return true; // exit 0 — identical, so this site's version did not survive
   } catch {

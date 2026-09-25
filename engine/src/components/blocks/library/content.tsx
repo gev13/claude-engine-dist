@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { MoreIcon } from '@/components/ui/More';
+import { MessageText } from '@/components/site/MessageText';
 import type { blockSchemas } from '@/lib/blocks';
 import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -89,7 +90,7 @@ export function MediaBand(p: P<'mediaBand'>) {
   const media = <MediaFill imageUrl={p.imageUrl} videoUrl={p.videoUrl} alt={p.alt} className="he-band__bg" />;
   const hasText = Boolean(p.eyebrow || p.title || p.body || p.links.length);
   // Checked again: the colour lands in a style attribute.
-  const fade = p.fade && isColor(p.fade.color) ? p.fade : undefined;
+  const fade = p.fade && (!p.fade.color || isColor(p.fade.color)) ? p.fade : undefined;
   return (
     <section
       className={cn(
@@ -100,7 +101,7 @@ export function MediaBand(p: P<'mediaBand'>) {
         p.parallax !== 'none' && `has-parallax is-plx-${p.parallax} is-plx-${p.strength}`,
         fade && `has-fade is-fade-${fade.side} is-text-${fade.text}`,
       )}
-      style={fade ? ({ '--he-fade-color': fade.color, '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
+      style={fade ? ({ ...(fade.color ? { '--he-fade-color': fade.color } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
     >
       {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
       {hasText && (
@@ -191,7 +192,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                   {c.body && <p className="he-mrows__text">{c.body}</p>}
                   {c.href && (
                     <Link href={c.href} className="he-mrows__link he-more">
-                      {c.buttonLabel || 'Read more'}
+                      {c.buttonLabel || <MessageText k="block.readMore" />}
                       <span className="sr-only">: {c.title}</span>
                       <MoreIcon />
                     </Link>

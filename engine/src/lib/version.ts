@@ -14,7 +14,7 @@ import { z } from 'zod';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /** Keep in step with package.json — `tests/version.test.ts` enforces it. */
-export const ENGINE_VERSION = '2.22.0';
+export const ENGINE_VERSION = '2.22.1';
 
 /** `1.2.3`, optionally with a pre-release such as `1.2.3-beta.1`. */
 const SEMVER = /^(\d+)\.(\d+)\.(\d+)(?:-([0-9A-Za-z.-]+))?$/;

@@ -323,7 +323,13 @@
    content. A transparent border rather than padding: padding would replace
    the section's own, where a border adds to it — and a panel's colour still
    paints underneath it. */
-.he-site[data-header='notch'] #main > :first-child { border-top: 80px solid transparent; }
+.he-site[data-header='notch'] #main > :first-child { border-top: var(--he-ns-base, 80px) solid transparent; }
+@media (width <= 1440px) {
+  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-laptop, var(--he-ns-base, 80px)); }
+}
+@media (width <= 1024px) {
+  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-tablet, var(--he-ns-laptop, var(--he-ns-base, 80px))); }
+}
 @media (width <= 768px) {
-  .he-site[data-header='notch'] #main > :first-child { border-top-width: 64px; }
+  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-mobile, 64px); }
 }

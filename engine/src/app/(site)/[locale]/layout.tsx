@@ -191,6 +191,8 @@ export default async function SiteLayout({
           data-header={chrome.header.variant}
           data-header-overlay={chrome.header.overlay ? '' : undefined}
           data-transition={chrome.transition.style !== 'off' ? chrome.transition.style : undefined}
+          /* 2.22 — the space the first section leaves for the notch follows the header's own height setting. */
+          style={chrome.header.variant === 'notch' ? notchSpace(chrome.header.height) : undefined}
         >
           <script dangerouslySetInnerHTML={{ __html: PREFS_SCRIPT }} />
           {/*
@@ -306,4 +308,14 @@ export default async function SiteLayout({
       </body>
     </html>
   );
+}
+
+/** The notch's height per tier, as the space the first section leaves under it — only the tiers that were set. */
+function notchSpace(height: { base?: number; laptop?: number; tablet?: number; mobile?: number }): React.CSSProperties | undefined {
+  const out: Record<string, string> = {};
+  for (const tier of ['base', 'laptop', 'tablet', 'mobile'] as const) {
+    const px = height[tier];
+    if (typeof px === 'number' && px >= 40 && px <= 160) out[`--he-ns-${tier}`] = `${px}px`;
+  }
+  return Object.keys(out).length ? (out as React.CSSProperties) : undefined;
 }

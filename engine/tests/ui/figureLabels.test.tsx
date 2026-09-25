@@ -117,9 +117,9 @@ describe('a hero that draws the diagram itself', () => {
 
   it('keeps labels somebody wrote', () => {
     const { container } = render(
-      <BlockFields type="hero" props={{ figure: 'converge', figureLabels: ['Hexens', 'BetBoyz', 'GameGuardz'] }} set={() => {}} />,
+      <BlockFields type="hero" props={{ figure: 'converge', figureLabels: ['Research', 'Operations', 'The product'] }} set={() => {}} />,
     );
-    expect(boxes(container)).toContain('Hexens');
+    expect(boxes(container)).toContain('Research');
     expect(boxes(container)).not.toContain('SOURCE A');
   });
 

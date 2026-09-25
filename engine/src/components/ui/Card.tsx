@@ -1,4 +1,5 @@
 import Link from '@/components/ui/SiteLink';
+import { MessageText } from '@/components/site/MessageText';
 import { type CardHover, cardHoverProps } from '@/lib/cardHover';
 import { cn } from '@/lib/utils';
 import { ArrowRight } from './Button';
@@ -54,6 +55,7 @@ export function Card({
   className,
   interactive = true,
   hover,
+  moreLabel,
 }: {
   href?: string;
   eyebrow?: React.ReactNode;
@@ -66,6 +68,8 @@ export function Card({
   interactive?: boolean;
   /** How the whole card answers the pointer (2.19); unset changes nothing. */
   hover?: CardHover;
+  /** The words of the link line, in the reader's language — from Site translations. */
+  moreLabel?: string;
 }) {
   const moves = cardHoverProps(hover);
   const body = (
@@ -95,7 +99,7 @@ export function Card({
       {meta && <div className="mt-auto pt-5">{meta}</div>}
       {href && (
         <span className="he-more mt-auto flex items-center gap-2 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft transition-colors group-hover:text-flare-hot">
-          Read more
+          {moreLabel || <MessageText k="block.readMore" />}
           <ArrowRight className="he-more__icon transition-transform duration-200 group-hover:translate-x-1" />
         </span>
       )}

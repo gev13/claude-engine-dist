@@ -46,7 +46,7 @@ export function BlogList({
     return (
       <CardGrid cols={3} id={listId}>
         {posts.map((p) => (
-          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)} hover={card.hover}>
+          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)} hover={card.hover} moreLabel={labels?.readMore}>
             {p.excerpt}
             {card.readMore && labels?.readMore && <span className="he-card__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </Card>

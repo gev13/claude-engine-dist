@@ -1549,12 +1549,12 @@ function AddSeveral({ onAdd, label = 'Add several from the library' }: { onAdd: 
   );
 }
 
-type BandFade = { side: 'left' | 'right'; color: string; solid: number; clear: number; text: 'light' | 'dark' };
+type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: number; text: 'light' | 'dark' };
 
 /** 2.21 — the media band's colour fading in from one side, over the picture. */
 function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
   const fade = props.fade as BandFade | undefined;
-  const update = (patch: Partial<BandFade>) => set({ ...props, fade: { side: 'left', color: '#17bde7', solid: 42, clear: 72, text: 'light', ...fade, ...patch } });
+  const update = (patch: Partial<BandFade>) => set({ ...props, fade: { side: 'left', solid: 42, clear: 72, text: 'light', ...fade, ...patch } });
   const percent = (raw: string, fallback: number) => (raw === '' ? fallback : Math.min(100, Math.max(0, Math.round(Number(raw) || 0))));
   return (
     <details className="border-2 border-hairline bg-ink px-3 py-2" open={Boolean(fade)}>
@@ -1566,7 +1566,7 @@ function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
         </label>
         {fade && (
           <div className="grid gap-3 sm:grid-cols-3">
-            <ColorField label="Colour" value={fade.color} onChange={(color) => color && update({ color })} />
+            <ColorField label="Colour" value={fade.color} placeholder="the site’s accent" onChange={(color) => update({ color: color || undefined })} />
             <Field label="From">
               <Select value={fade.side} onChange={(e) => update({ side: e.target.value as BandFade['side'] })}>
                 <option value="left">The left</option>

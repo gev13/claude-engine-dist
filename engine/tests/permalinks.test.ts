@@ -19,7 +19,7 @@ import { findServerList } from '../src/lib/listing';
 import { pageWindow, resultRange } from '../src/components/site/Pagination';
 import { formatMessage } from '../src/lib/messages';
 
-/** The BetBoyz shape: posts under their category, archives at /category, slashes everywhere. */
+/** A migrated WordPress shape: posts under their category, archives at /category, slashes everywhere. */
 const wp: Permalinks = permalinksSchema.parse({
   postPattern: 'category',
   categoryBase: '/category',

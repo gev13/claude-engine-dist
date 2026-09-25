@@ -29,6 +29,7 @@ export const MESSAGES = {
   /* ── The blog ────────────────────────────────────────────────────────── */
   'blog.readMore': 'Read more',
   'blog.featured': 'Featured',
+  'block.readMore': 'Read more',
   'blog.keepReading': 'Keep reading',
   'blog.backToBlog': 'Back to the blog',
   'blog.aboutAuthor': 'About the author',

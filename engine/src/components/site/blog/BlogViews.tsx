@@ -387,6 +387,7 @@ function SearchResults({
           {results.map((p) => (
             <Card
               key={p.id}
+              moreLabel={t('blog.readMore')}
               eyebrow={
                 <>
                   {p.kind === 'research' ? t('blog.research') : (p.categoryName ?? t('blog.article'))}

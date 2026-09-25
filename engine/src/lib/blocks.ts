@@ -869,7 +869,8 @@ export const blockSchemas = {
     fade: z
       .object({
         side: z.enum(['left', 'right']).default('left'),
-        color: z.string().trim().refine(isColor, 'Not a valid colour'),
+        /** Unset is the site's accent colour, so the band follows the theme. */
+        color: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
         solid: z.number().int().min(0).max(100).default(42),
         clear: z.number().int().min(0).max(100).default(72),
         text: z.enum(['light', 'dark']).default('light'),

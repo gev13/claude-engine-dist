@@ -26,7 +26,8 @@ type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>
 
 /** Service index — reads the canonical catalogue, never props. */
 export async function ServicesIndexBlock(p: P<'servicesIndex'>) {
-  const catalogue = await getServiceCatalogue();
+  const [catalogue, messages] = await Promise.all([getServiceCatalogue(), getMessages()]);
+  const readMore = messageReader(messages)('block.readMore');
   const list =
     p.tier === 'primary' ? catalogue.primary : p.tier === 'secondary' ? catalogue.secondary : catalogue.all;
   return (
@@ -39,6 +40,7 @@ export async function ServicesIndexBlock(p: P<'servicesIndex'>) {
             eyebrow={p.eyebrows === 'none' ? undefined : s.tier === 'primary' ? p.primaryLabel || 'Core' : p.secondaryLabel || 'Specialist'}
             title={s.title}
             href={s.path}
+            moreLabel={readMore}
           >
             {s.blurb}
           </Card>
@@ -179,6 +181,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                 title={post.title}
                 href={postPath(permalinks, post)}
                 hover={p.card?.hover}
+                moreLabel={t('blog.readMore')}
               >
                 {post.excerpt}
               </Card>

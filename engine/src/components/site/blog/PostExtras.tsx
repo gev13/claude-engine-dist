@@ -145,7 +145,7 @@ export function RelatedPosts({ blog, posts, permalinks, t }: { blog: ResolvedBlo
       </Heading>
       <CardGrid cols={3}>
         {posts.map((p) => (
-          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postUrl(permalinks, p)}>
+          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postUrl(permalinks, p)} moreLabel={t('blog.readMore')}>
             {p.excerpt}
           </Card>
         ))}
