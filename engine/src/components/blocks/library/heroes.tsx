@@ -25,6 +25,8 @@ function Text({ p, align = 'left' }: { p: P; align?: 'left' | 'center' }) {
           {p.announcement.label} <span aria-hidden="true">›</span>
         </Link>
       )}
+      {/* 2.22 — the small line above the eyebrow ("Services / 02"), as the classic hero has it. */}
+      {p.kicker && <p className={cn('he-hero__kicker', align === 'center' && 'is-center')}>{p.kicker}</p>}
       {p.eyebrow && <Eyebrow className={align === 'center' ? 'justify-center' : undefined}>{p.eyebrow}</Eyebrow>}
       <BlockTitle as={p.titleAs ?? 'h1'} className="he-hero__title">
         {p.title}

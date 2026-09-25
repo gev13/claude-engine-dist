@@ -236,7 +236,7 @@ function localeFontCss(theme: Theme, selector: string): string {
 export const CUT_SIZES = { cards: 20, buttons: 10, inputs: 8, chips: 6, images: 24, panel: 28 } as const;
 
 /** Classes that wear the input shape: every text field the site draws. */
-const INPUT_SELECTOR = ':is(input.he-fb__input:not([type=file]),textarea.he-fb__input,.he-nl__input,.he-srch__input)';
+const INPUT_SELECTOR = ':is(input.he-fb__input:not([type=file]),textarea.he-fb__input,.he-nl__input,.he-srch__input,.he-field)';
 /** …and the chip shape: choices, filters and category chips. */
 const CHIP_SELECTOR = ':is(.he-fb__choice>span,.he-proj__chip,.he-chip)';
 const BUTTON_SELECTOR = ':is(.he-btn,.he-cbtn:not(.is-text))';
@@ -323,6 +323,25 @@ function shapeCss(theme: Theme, scope: string): string {
         ['border-left', '1px solid color-mix(in srgb,currentColor 32%,transparent)'],
       ]),
     );
+  }
+
+  // 2.22 — every "Read more" arrow (`.he-more__icon`, an svg or a text arrow) on a small tinted circle.
+  if (buttons.more === 'circle') {
+    parts.push(
+      block(at('.he-more__icon'), [
+        ['display', 'inline-grid'],
+        ['place-items', 'center'],
+        ['box-sizing', 'content-box'],
+        ['width', '14px'],
+        ['height', '14px'],
+        ['padding', '7px'],
+        ['border-radius', '50%'],
+        ['background', 'color-mix(in srgb,currentColor 14%,transparent)'],
+        ['line-height', '1'],
+        ['font-size', '12px'],
+      ]),
+    );
+    parts.push(block(at('.he-more'), [['gap', '10px']]));
   }
 
   const eyebrow = theme.eyebrow ?? {};

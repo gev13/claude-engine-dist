@@ -176,6 +176,8 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
         </div>
         <Check label="An “All” chip" checked={blog?.chipAll !== false} onChange={(v) => set(['blog', 'chipAll'])(v ? undefined : false)} />
         <Check label="Breadcrumbs above the title — Home › Blog › Category" checked={blog?.archiveBreadcrumbs === true} onChange={(v) => set(['blog', 'archiveBreadcrumbs'])(v || undefined)} />
+        <Check label="The search box at the end of the category bar" checked={blog?.searchInBar === true} onChange={(v) => set(['blog', 'searchInBar'])(v || undefined)} />
+        <Check label="The newest post as a large card — picture left — above the list" checked={blog?.featured === true} onChange={(v) => set(['blog', 'featured'])(v || undefined)} />
         <Choice
           label="A category’s heading"
           hint="the picture is set with each category"

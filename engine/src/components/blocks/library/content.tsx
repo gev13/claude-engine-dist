@@ -2,6 +2,7 @@ import Link from '@/components/ui/SiteLink';
 import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
+import { MoreIcon } from '@/components/ui/More';
 import type { blockSchemas } from '@/lib/blocks';
 import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -167,6 +168,43 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     );
   }
 
+  // 2.22 (GG1) — one row per service: a large picture, a running number, the title, text and a link.
+  if (p.variant === 'mediaRows') {
+    const numbered = p.numbered !== false;
+    return (
+      <section className={cn('he-lsec', toneClass(p.tone))}>
+        <div className="shell">
+          {head}
+          <ul className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`)} style={p.gap ? { gap: p.gap } : undefined}>
+            {p.cards.map((c, i) => (
+              <li key={c.title + i} className={cn('he-mrows__item', !c.imageUrl && 'no-media', itemClass(p.blockId, i, c.style))}>
+                {c.imageUrl && (
+                  <div className="he-mrows__media">
+                    <MediaFill imageUrl={c.imageUrl} alt={c.alt ?? ''} className="he-fill" sizes="half" />
+                  </div>
+                )}
+                <div className="he-mrows__body">
+                  {(numbered || c.eyebrow) && (
+                    <p className="he-mrows__num">{[numbered ? String(i + 1).padStart(2, '0') : null, c.eyebrow].filter(Boolean).join(' · ')}</p>
+                  )}
+                  <h3 className="he-mrows__title">{c.title}</h3>
+                  {c.body && <p className="he-mrows__text">{c.body}</p>}
+                  {c.href && (
+                    <Link href={c.href} className="he-mrows__link he-more">
+                      {c.buttonLabel || 'Read more'}
+                      <span className="sr-only">: {c.title}</span>
+                      <MoreIcon />
+                    </Link>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+    );
+  }
+
   // V2 — one row per service: icon, text, a checklist and a button.
   if (p.variant === 'rows') {
     return (
@@ -280,9 +318,9 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
 export function StatsFigures(p: P<'stats'>) {
   if (p.variant === 'counters') return <StatsCounters {...p} />;
   return (
-    <section className={cn('he-lsec he-figs', toneClass(p.tone))}>
+    <section className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}>
       <div className="shell">
-        <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align="center" />
+        <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />
         {p.imageUrl && (
           <div className="he-figs__media">
             <MediaFill imageUrl={p.imageUrl} alt={p.alt} className="he-fill" />
@@ -309,9 +347,9 @@ export function StatsFigures(p: P<'stats'>) {
 
 function StatsCounters(p: P<'stats'>) {
   return (
-    <section className={cn('he-lsec he-counters', toneClass(p.tone))}>
+    <section className={cn('he-lsec he-counters', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}>
       <div className="shell">
-        {(p.title || p.eyebrow || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align="center" />}
+        {(p.title || p.eyebrow || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />}
         <ul className={cn('he-counters__grid', `is-icon-${p.iconPosition}`)} style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>
           {p.items.map((s, i) => (
             <li key={s.label + i} className="he-counter">

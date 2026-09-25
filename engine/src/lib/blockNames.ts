@@ -41,6 +41,7 @@ export const CARD_GRID_LABELS: Record<(typeof CARD_GRID_VARIANTS)[number], strin
   imageCards: 'Image cards',
   rows: 'Rows with a checklist',
   overlay: 'Text over a picture',
+  mediaRows: 'Picture rows — a large picture, number, title and link',
 };
 
 type VariantInfo = {
@@ -70,7 +71,7 @@ const VARIANTS: Partial<Record<BlockType, VariantInfo>> = {
     prop: 'variant',
     fallback: 'cards',
     labels: CARD_GRID_LABELS,
-    patterns: { tiles: 'CT4', mosaic: 'CT4', icons: 'CT5', imageCards: 'CT5', rows: 'V2', overlay: 'V3' },
+    patterns: { tiles: 'CT4', mosaic: 'CT4', icons: 'CT5', imageCards: 'CT5', rows: 'V2', overlay: 'V3', mediaRows: 'GG1' },
   },
   stats: {
     prop: 'variant',

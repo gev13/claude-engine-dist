@@ -346,7 +346,7 @@ export function PostCollection({
             {!minimal && date}
             {card.readingTime && labels.minRead && <span className="he-plst__read">{`${post.readingMinutes} ${labels.minRead}`}</span>}
             {withExcerpt && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
-            {card.readMore && labels.readMore && <span className="he-plst__more">{labels.readMore} →</span>}
+            {card.readMore && labels.readMore && <span className="he-plst__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </div>
           {minimal && (
             <span className="he-plst__arrow" aria-hidden="true">

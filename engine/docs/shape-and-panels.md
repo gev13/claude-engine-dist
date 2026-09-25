@@ -60,3 +60,27 @@ turn dark for a light colour.
 
 Chakra Petch joins the catalogue, and a section's own typography can use any
 catalogue face.
+
+## Sections added in 2.22
+
+- **Picture rows** — a Card grid layout: a large picture on the left, a
+  running number (01, 02…), the title, text and a *Read more* link. For a
+  list of services.
+- **Rows of mixed widths** — a Card grid can hold its cards in rows of
+  different counts: `2-3` is two, then three, then two… Leave it empty for
+  the even grid. Cards can carry a running number too.
+- **Stats** — the numbers can glow in the accent colour, and thin lines can
+  stand between the figures, which then sit to the left.
+- **Check lists** — the marker on a tinted circle, hairline rules between
+  rows, and each list in a card.
+- **Forms** — a short line beside the send button: *We reply within one
+  working day*.
+- **Category index** — a new block: the blog's categories, or the
+  projects', as numbered cards with their descriptions, each linking to its
+  archive. Read from the site, so a new category appears on its own.
+- **Blog** (Appearance → Blog) — the search box at the end of the category
+  bar, and the newest post as a large card (picture left) above the list.
+- **“Read more” links** (Appearance → Buttons) — the arrow on a small
+  circle, everywhere a card, a post or a row links on.
+- **Hero kicker** — the small line above the eyebrow (“Services / 02”) on
+  every hero layout, not only the classic one.

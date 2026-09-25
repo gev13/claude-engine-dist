@@ -319,8 +319,11 @@
 @media (width <= 768px) {
   .he-hdr--notch .he-hdr__inner { min-height: 64px; padding-right: 16px; }
 }
-/* The first section starts below the tab, so the tab never sits on its content. */
-.he-site[data-header='notch'] #main > :first-child { padding-top: 80px; }
+/* The first section starts below the tab, so the tab never sits on its
+   content. A transparent border rather than padding: padding would replace
+   the section's own, where a border adds to it — and a panel's colour still
+   paints underneath it. */
+.he-site[data-header='notch'] #main > :first-child { border-top: 80px solid transparent; }
 @media (width <= 768px) {
-  .he-site[data-header='notch'] #main > :first-child { padding-top: 64px; }
+  .he-site[data-header='notch'] #main > :first-child { border-top-width: 64px; }
 }

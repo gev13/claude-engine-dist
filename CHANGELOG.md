@@ -9,6 +9,27 @@ told about before taking it.
 
 ---
 
+## 2.22.0 — 2026-09-25
+
+**Picture rows.** A Card grid layout for a list of services: a large
+picture, a running number, the title, text and a *Read more* link. The
+Card grid can also hold its cards in **rows of mixed widths** — two, then
+three — and number them.
+
+**Stats** can glow in the accent colour and stand apart with thin lines.
+**Check lists** can put their marker on a tinted circle, use hairline rules
+and sit in a card. **Forms** take a short line beside the send button.
+
+**Category index** — a new block listing the blog's categories (or the
+projects') as numbered cards, each linking to its archive.
+
+**Blog** — the search box can sit at the end of the category bar, and the
+newest post can open the blog as a large card. **“Read more” links** can
+carry their arrow on a small circle, everywhere. Every hero layout now shows
+its kicker line.
+
+---
+
 ## 2.21.0 — 2026-09-25
 
 **Cut corners.** Cards, buttons, form fields, chips and pictures can have

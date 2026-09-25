@@ -40,11 +40,11 @@ export function BlogSearch({
         value={value}
         onChange={(e) => setValue(e.target.value)}
         placeholder={labels.placeholder}
-        className="min-w-0 flex-1 border-2 border-hairline bg-surface px-4 py-2.5 text-[15px] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none sm:max-w-[420px]"
+        className="he-field min-w-0 flex-1 border-2 border-hairline bg-surface px-4 py-2.5 text-[15px] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none sm:max-w-[420px]"
       />
       <button
         type="submit"
-        className="border-2 border-flare bg-flare px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-bone transition-colors hover:bg-flare-hot hover:text-ink"
+        className="he-chip border-2 border-flare bg-flare px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-bone transition-colors hover:bg-flare-hot hover:text-ink"
       >
         {labels.submit}
       </button>

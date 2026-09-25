@@ -92,7 +92,7 @@ const perView = z.number().min(1).max(6);
 const libraryLinks = z.array(libraryLink).max(2).default([]);
 
 /** CT4 image tiles · CT5 icon features · CT5 image cards · V2 rows · V3 text over a picture; `cards` is the original grid. */
-export const CARD_GRID_VARIANTS = ['cards', 'tiles', 'mosaic', 'icons', 'imageCards', 'rows', 'overlay'] as const;
+export const CARD_GRID_VARIANTS = ['cards', 'tiles', 'mosaic', 'icons', 'imageCards', 'rows', 'overlay', 'mediaRows'] as const;
 
 /** CT3 — where text sits on a full-width media band. */
 export const MEDIA_BAND_POSITIONS = ['center', 'bottomLeft', 'topLeft', 'right', 'left'] as const;
@@ -224,6 +224,10 @@ export const blockSchemas = {
     countUp: z.boolean().default(true),
     items: z.array(z.object({ value: z.string(), label: z.string(), unit: text(12), iconUrl: mediaUrl.optional() })),
     footnote: z.string().optional(),
+    /** 2.22 — the numbers glow in the accent colour. */
+    glow: z.boolean().optional(),
+    /** 2.22 — thin rules between the figures, which then sit to the left. */
+    dividers: z.boolean().optional(),
   }),
 
   /**
@@ -280,6 +284,13 @@ export const blockSchemas = {
     /** V4 — icon features: how the icon is drawn, and where. `boxed` / `top` is the original look. */
     iconStyle: z.enum(['boxed', 'plain', 'outlined', 'circle']).default('boxed'),
     iconPosition: z.enum(['top', 'left', 'floating']).default('top'),
+    /** 2.22 — a small running number ("01") over each card's title; the picture rows show it unless told not to. */
+    numbered: z.boolean().optional(),
+    /**
+     * 2.22 — cards: how many cards each row holds, in turn — "2-3" is two,
+     * then three, then two… A bento of mixed widths; unset is the even grid.
+     */
+    pattern: z.string().regex(/^[1-4](-[1-4]){1,5}$/, 'Counts of 1 to 4, separated by hyphens, e.g. 2-3').optional(),
     cards: z.array(
       z.object({
         /** This card's own colour, spacing and edge — see `lib/itemStyle.ts`. */
@@ -499,6 +510,12 @@ export const blockSchemas = {
     iconUrl: mediaUrl.optional(),
     /** `rows` (ruled lines) is the original look. */
     layout: z.enum(['rows', 'plain', 'inline', 'grid']).default('rows'),
+    /** 2.22 — the marker on a tinted circle. */
+    markerStyle: z.enum(['plain', 'circle']).optional(),
+    /** 2.22 — hairline rules between rows instead of the 2px ones. */
+    thinRules: z.boolean().optional(),
+    /** 2.22 — each list in a card of its own. */
+    boxed: z.boolean().optional(),
     lists: z.array(
       z.object({
         title: z.string().optional(),
@@ -1484,6 +1501,24 @@ export const blockSchemas = {
       .optional(),
   }),
 
+  /**
+   * 2.22 (GG2) — the blog's categories (or the projects') as a grid of
+   * numbered cards, each with its description, linking to its archive. Read
+   * from the site, so a new category appears without editing the page.
+   */
+  categoryIndex: z.object({
+    tone,
+    eyebrow: text(80),
+    title: text(160),
+    titleAs: textTagSchema.optional(),
+    intro: text(1000),
+    source: z.enum(['blog', 'projects']).default('blog'),
+    numbered: z.boolean().default(true),
+    descriptions: z.boolean().default(true),
+    columns: z.union([z.literal(2), z.literal(3)]).default(2),
+    limit: z.number().int().min(1).max(24).default(12),
+  }),
+
   /** P3-A8 — a table of contents built from the headings on the page. */
   toc: z.object({
     tone,
@@ -1554,6 +1589,8 @@ export const blockSchemas = {
     layout: z.enum(['card', 'plain']).default('card'),
     align: z.enum(['left', 'center']).default('left'),
     submitLabel: text(40),
+    /** 2.22 — a short line beside the send button: "We reply within one working day". */
+    submitNote: text(160),
     successTitle: text(120),
     successText: text(400),
     /* ── 2.16 (T12, T13) ────────────────────────────────────────────────── */
@@ -1688,6 +1725,7 @@ export const blockLabels: Record<BlockType, string> = {
   share: 'Share buttons',
   reviews: 'Reviews',
   toc: 'Table of contents',
+  categoryIndex: 'Category index',
   breadcrumbs: 'Breadcrumbs',
   textPath: 'Text on a path',
   search: 'Search box',

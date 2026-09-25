@@ -1638,6 +1638,10 @@ const libraryLayouts: PageDefinition = {
     b('cardGrid', { variant: 'rows', eyebrow: 'Services', title: 'Rows with a checklist', hover: 'zoom', cards: SERVICE_ROWS }),
     b('cardGrid', { variant: 'overlay', eyebrow: 'Work', title: 'Text over a picture', columns: 3, hover: 'zoom', shadow: true, cards: PICTURE_CARDS.slice(0, 3) }),
     b('cardGrid', { variant: 'overlay', title: 'Every other column lower', columns: 3, offset: true, cards: PICTURE_CARDS }),
+    // 2.22 (GG1) — one row per service: a large picture, a running number, the title, text and a link.
+    b('cardGrid', { variant: 'mediaRows', eyebrow: 'What we do', title: 'Picture rows', hover: 'zoom', cards: PICTURE_CARDS.slice(0, 3).map((c) => ({ ...c, buttonLabel: 'Read more' })) }),
+    // 2.22 — rows of mixed widths: two cards, then three.
+    b('cardGrid', { title: 'Rows of mixed widths', pattern: '2-3', numbered: true, gap: '12px', cards: FEATURES.slice(0, 5).map(([title, body]) => ({ title, body })) }),
     b('cardGrid', { variant: 'imageCards', title: 'Image cards that lift, offset', columns: 4, offset: true, hover: 'lift', cards: PICTURE_CARDS.slice(0, 4) }),
     b('cardGrid', { variant: 'icons', eyebrow: 'Features', title: 'Outlined icons beside the text', iconStyle: 'outlined', iconPosition: 'left', columns: 3, cards: featureCards() }),
     b('cardGrid', { variant: 'icons', title: 'Icons floating over cards', iconStyle: 'circle', iconPosition: 'floating', shadow: true, hover: 'lift', tone: 'raised', columns: 3, cards: featureCards() }),
@@ -2228,6 +2232,8 @@ const libraryNavigation: PageDefinition = {
     }),
     b('toc', { title: 'Everything on this page', style: 'numbered', levels: 'h2', collapsible: true, tone: 'raised' }),
     b('toc', { title: 'On this page', style: 'list', levels: 'h2' }),
+    // 2.22 (GG2) — the blog's categories, numbered, from Posts → Categories.
+    b('categoryIndex', { eyebrow: 'Categories', title: 'Where we write from', columns: 2 }),
   ]),
 };
 

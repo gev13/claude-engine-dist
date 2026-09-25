@@ -78,7 +78,7 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
   const id = useId();
   const buttons = theme.buttons ?? {};
   return (
-    <Panel title="Face, glow and arrow">
+    <Panel title="Face, glow, arrows and links">
       <div className="grid gap-4 sm:grid-cols-2">
         <ChoiceField label="Button font" value={buttons.font} inherited="mono" groups={FONT_GROUPS} onChange={set(['buttons', 'font'])} />
         <ChoiceField
@@ -103,6 +103,16 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           />
         </Field>
         <ColorField label="Glow colour" value={buttons.glow?.color} placeholder="the button’s own, softened" onChange={set(['buttons', 'glow', 'color'])} />
+        <ChoiceField
+          label="“Read more” links"
+          value={buttons.more}
+          inherited="arrow"
+          options={[
+            { value: 'arrow', label: 'Text and an arrow' },
+            { value: 'circle', label: 'Text and an arrow on a circle' },
+          ]}
+          onChange={set(['buttons', 'more'])}
+        />
       </div>
     </Panel>
   );

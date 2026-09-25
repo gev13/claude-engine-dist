@@ -48,7 +48,7 @@ export function BlogList({
         {posts.map((p) => (
           <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)} hover={card.hover}>
             {p.excerpt}
-            {card.readMore && labels?.readMore && <span className="he-card__more">{labels.readMore} →</span>}
+            {card.readMore && labels?.readMore && <span className="he-card__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </Card>
         ))}
         {wantsTilt(card.hover) && <CardTilt />}

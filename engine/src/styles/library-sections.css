@@ -1,0 +1,147 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   2.22 — sections and details from the GameGuardz pattern book
+   ──────────────────────────────────────────────────────────────────────────
+   Picture rows and the bento grid (card grid), glowing and ruled stats,
+   check lists on circles and in cards, a line beside a form's button, the
+   blog's search in its category bar and a featured post, the category index,
+   and the hero's kicker on every hero. Every rule is keyed to a class a
+   block carries only when its option is chosen, so nothing here restyles a
+   stored page.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* ── Picture rows (cardGrid · mediaRows) ─────────────────────────────── */
+  .he-mrows { display: grid; gap: var(--he-gap, 12px); margin: 0; padding: 0; list-style: none; }
+  .he-mrows.has-head { margin-top: 40px; }
+  .he-mrows__item {
+    display: grid;
+    grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+    align-items: center;
+    gap: clamp(24px, 3.5vw, 44px);
+    padding-right: clamp(20px, 4vw, 48px);
+    overflow: hidden;
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
+    background: var(--color-surface);
+  }
+  .is-raised .he-mrows__item { background: var(--color-surface-2); }
+  .he-mrows__item.no-media { grid-template-columns: minmax(0, 1fr); padding: 32px; }
+  .he-mrows__media { position: relative; align-self: stretch; min-height: 240px; aspect-ratio: 50 / 33; background: var(--color-surface-2); }
+  .he-mrows__media .he-fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-mrows.is-hover-zoom .he-mrows__item:hover .he-fill { transform: scale(1.05); }
+  .he-mrows.is-hover-lift .he-mrows__item { transition: transform calc(250ms * var(--he-motion, 1)); }
+  .he-mrows.is-hover-lift .he-mrows__item:hover { transform: translateY(-4px); }
+  .he-mrows__body { padding-block: 28px; }
+  .he-mrows__num { margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ash); }
+  .he-mrows__title { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.3vw, 30px); font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-bone); }
+  .he-mrows__text { margin: 14px 0 0; max-width: 62ch; font-size: var(--he-block-text, 16px); line-height: 1.6; color: var(--color-ash); }
+  .he-mrows__link { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-flare-soft); }
+  .he-mrows__link:hover { color: var(--color-flare-hot); }
+
+  /* ── Bento: rows of mixed widths (cardGrid · pattern) ────────────────── */
+  .he-bento { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: var(--he-gap, 12px); }
+  .he-bento__cell { grid-column: span var(--span, 4); min-width: 0; }
+
+  /* ── Stats: glow and thin dividers ───────────────────────────────────── */
+  .has-glow :is(.he-stat__value, .he-figs__value, .he-counter__value) {
+    color: var(--color-flare-hot);
+    text-shadow: 0 0 10px color-mix(in srgb, var(--color-flare) 75%, transparent), 0 0 36px color-mix(in srgb, var(--color-flare) 50%, transparent);
+  }
+  .has-dividers :is(.he-figs__grid, .he-counters__grid) { gap: 0; text-align: left; }
+  .has-dividers .he-counter { align-items: flex-start; text-align: left; }
+  .has-dividers .he-figs__label { margin-inline: 0; }
+  .has-dividers :is(.he-stat, .he-figs__item, .he-counter) { padding-inline: 40px 32px; }
+  .has-dividers :is(.he-stat, .he-figs__item, .he-counter):first-child { padding-left: 0; }
+  .has-dividers :is(.he-stat, .he-figs__item, .he-counter) + :is(.he-stat, .he-figs__item, .he-counter) { border-left: 1px solid var(--color-hairline); }
+
+  /* ── Check lists: circles, hairlines, cards ──────────────────────────── */
+  .he-tick { stroke: var(--color-flare); }
+  .he-ilist.is-marker-circle :is(.he-tick, .he-ilist__mark, .he-ilist__img) {
+    box-sizing: content-box;
+    width: 14px;
+    height: 14px;
+    margin-top: 0;
+    padding: 9px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-flare) 12%, transparent);
+  }
+  .he-ilist.is-marker-circle .he-ilist__item { align-items: center; }
+  .he-ilist-box { padding: 8px 28px 8px 20px; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
+  .is-raised .he-ilist-box { background: var(--color-surface-2); }
+
+  /* ── A line beside a form's send button ──────────────────────────────── */
+  .he-fb__actions:has(.he-fb__note) { align-items: center; }
+  .he-fb__note { margin: 0 0 0 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--color-smoke); }
+
+  /* ── Blog: search in the category bar, and the featured post ─────────── */
+  .he-catbar__search { flex: 1 1 280px; max-width: 460px; margin-left: auto; }
+  .he-featpost-wrap { margin-bottom: 48px; }
+  .he-featpost__label { margin: 0 0 18px; }
+  .he-featpost {
+    display: grid;
+    grid-template-columns: minmax(0, 9fr) minmax(0, 11fr);
+    align-items: center;
+    overflow: hidden;
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
+    background: var(--color-surface);
+    color: inherit;
+  }
+  .he-featpost__media { position: relative; aspect-ratio: 16 / 10; background: var(--color-surface-2); }
+  .he-featpost__media .he-fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-featpost:hover .he-fill { transform: scale(1.04); }
+  .he-featpost__body { padding: clamp(24px, 3vw, 40px); }
+  .he-featpost__meta { margin: 0 0 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-featpost__title { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px); font-weight: 600; line-height: 1.2; color: var(--color-bone); }
+  .he-featpost__excerpt { margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-ash); }
+
+  /* ── The category index ──────────────────────────────────────────────── */
+  .he-catidx { display: grid; grid-template-columns: repeat(var(--cols, 2), minmax(0, 1fr)); gap: var(--he-gap, 12px); margin: 0; padding: 0; list-style: none; }
+  .he-catidx__card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    height: 100%;
+    padding: 28px;
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
+    background: var(--color-surface);
+    color: inherit;
+    transition: background-color calc(150ms * var(--he-motion, 1));
+  }
+  .is-raised .he-catidx__card { background: var(--color-surface-2); }
+  .he-catidx__card:hover { background: var(--color-surface-2); }
+  .he-catidx__num { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; color: var(--color-flare-soft); }
+  .he-catidx__name { margin: 4px 0 0; font-family: var(--font-display); font-size: 20px; font-weight: 600; color: var(--color-bone); }
+  .he-catidx__desc { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--color-ash); }
+
+  /* ── The hero's kicker, on every hero ────────────────────────────────── */
+  .he-hero__kicker { margin: 0 0 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-flare); }
+  .he-hero__kicker.is-center { text-align: center; }
+
+  @media (width <= 1024px) {
+    .he-bento__cell { grid-column: span 6; }
+    .has-dividers :is(.he-figs__grid, .he-counters__grid, .he-stats) { row-gap: 28px; }
+  }
+  @media (width <= 768px) {
+    .he-mrows__item, .he-featpost { grid-template-columns: minmax(0, 1fr); padding-right: 0; }
+    .he-mrows__media { min-height: 0; }
+    .he-mrows__body { padding: 20px 20px 28px; }
+    .he-bento__cell { grid-column: 1 / -1; }
+    .he-catidx { grid-template-columns: minmax(0, 1fr); }
+    .has-dividers :is(.he-stat, .he-figs__item, .he-counter) { padding-inline: 0; }
+    .has-dividers :is(.he-stat, .he-figs__item, .he-counter) + :is(.he-stat, .he-figs__item, .he-counter) { border-left: 0; }
+    .he-fb__note { flex-basis: 100%; margin: 4px 0 0; }
+  }
+}
+
+/* Unlayered: the list's rows draw their rules with Tailwind utilities, which
+   outrank anything in the components layer. */
+.he-ilist.is-thin .he-ilist__item { border-top-width: 1px; }
+.he-ilist.is-thin .he-ilist__item:last-child { border-bottom-width: 1px; }
+.he-ilist-box .he-ilist.is-rows .he-ilist__item:first-child { border-top-width: 0; }
+.he-ilist-box .he-ilist.is-rows .he-ilist__item:last-child { border-bottom-width: 0; }
+/* …and the stat tiles paint their surface, gap and padding with utilities too. */
+.has-dividers .he-stats { gap: 0; }
+.has-dividers .he-stat { background: transparent; padding-inline: 40px 32px; }
+.has-dividers .he-stat:first-child { padding-left: 0; }
+@media (width <= 768px) {
+  .has-dividers .he-stat { padding-inline: 0; }
+}

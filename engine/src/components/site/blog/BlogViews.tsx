@@ -12,7 +12,7 @@ import { resolveBlog, type ResolvedBlog } from '@/lib/blog';
 import type { ServerList } from '@/lib/listing';
 import type { Locale } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
-import { absoluteWithSlash, blogIndexPath, categoryPath, feedPath, pagedPath, researchPath, type Permalinks } from '@/lib/permalinks';
+import { absoluteWithSlash, blogIndexPath, categoryPath, feedPath, pagedPath, postPath, researchPath, type Permalinks } from '@/lib/permalinks';
 import { SITE_URL } from '@/lib/env';
 import { blogNode, breadcrumbs, graph, itemList, webPage, type Crumb } from '@/lib/seo/jsonld';
 import { site } from '@/lib/site';
@@ -89,9 +89,22 @@ export function PagingLinks({ paging, permalinks }: { paging: Paging; permalinks
  * or, as a site chooses (2.18), one "Categories" menu. The Research chip
  * shows only where there is research, unless the site says always or never.
  */
-async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; permalinks: Permalinks; t: T; blog: ResolvedBlog }) {
+async function CategoryBar({
+  locale,
+  permalinks,
+  t,
+  blog,
+  search,
+}: {
+  locale: Locale;
+  permalinks: Permalinks;
+  t: T;
+  blog: ResolvedBlog;
+  /** 2.22 — the search box, at the end of the bar. */
+  search?: React.ReactNode;
+}) {
   const categories = await listCategories(locale);
-  if (categories.length === 0) return null;
+  if (categories.length === 0) return search ? <Section size="sm">{search}</Section> : null;
   const research =
     blog.chipResearch === 'show' || (blog.chipResearch === 'auto' && (await countPosts({ kind: 'research', locale })) > 0);
 
@@ -122,6 +135,7 @@ async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; pe
               ))}
             </ul>
           </details>
+          {search && <div className="he-catbar__search">{search}</div>}
         </nav>
       </Section>
     );
@@ -157,6 +171,7 @@ async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; pe
             {c.name}
           </Link>
         ))}
+        {search && <div className="he-catbar__search">{search}</div>}
       </nav>
     </Section>
   );
@@ -175,6 +190,32 @@ function ArchiveCrumbs({ trail }: { trail: Crumb[] }) {
       <BreadcrumbsBlock {...props.data} trail={trail} />
     </div>
   ) : null;
+}
+
+/** 2.22 — one post as a large card: its cover on the left, the words on the right. */
+function FeaturedPost({ post, permalinks, t }: { post: PostListItem; permalinks: Permalinks; t: T }) {
+  const meta = [post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article')), post.publishedAt ? formatDate(post.publishedAt) : null]
+    .filter(Boolean)
+    .join(' · ');
+  return (
+    <div className="he-featpost-wrap">
+      <p className="label-mono he-featpost__label">{t('blog.featured')}</p>
+      <Link href={postPath(permalinks, post)} className="he-featpost">
+        <div className="he-featpost__media">
+          {post.coverUrl ? (
+            <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="half" />
+          ) : (
+            <span className="he-fill he-media-empty" aria-hidden="true" />
+          )}
+        </div>
+        <div className="he-featpost__body">
+          {meta && <p className="he-featpost__meta">{meta}</p>}
+          <h2 className="he-featpost__title">{post.title}</h2>
+          {post.excerpt && <p className="he-featpost__excerpt">{post.excerpt}</p>}
+        </div>
+      </Link>
+    </div>
+  );
 }
 
 /** "Showing 1–12 of 110 results", when the site asks for it. */
@@ -220,6 +261,20 @@ export async function BlogIndexView({
   const latest =
     !page && !query ? await listPosts({ limit: paging.perPage, offset: (paging.number - 1) * paging.perPage, locale }) : [];
   const results = query ? await searchPosts(query, 24) : [];
+  const search = (
+    <BlogSearch
+      initialQuery={query ?? ''}
+      action={indexPath}
+      labels={{
+        label: t('chrome.search'),
+        placeholder: t('blog.searchArticles'),
+        submit: t('chrome.search'),
+        clear: t('blog.clear'),
+      }}
+    />
+  );
+  // 2.22 — the newest post as a large card on the first page, when chosen.
+  const lead = blog.featured && paging.number === 1 && latest.length > 1 ? latest[0] : undefined;
   // Projects join the results when Projects → Page template says they belong in search (2.14).
   const projectResults =
     query && (await getProjectTemplate(locale)).inSearch ? await searchProjectCards(query, permalinks, 12) : [];
@@ -238,20 +293,13 @@ export async function BlogIndexView({
         </Section>
       )}
 
-      <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} />
+      <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={blog.searchInBar ? search : undefined} />
 
-      <Section size="sm" rule={!query}>
-        <BlogSearch
-          initialQuery={query ?? ''}
-          action={indexPath}
-          labels={{
-            label: t('chrome.search'),
-            placeholder: t('blog.searchArticles'),
-            submit: t('chrome.search'),
-            clear: t('blog.clear'),
-          }}
-        />
-      </Section>
+      {!blog.searchInBar && (
+        <Section size="sm" rule={!query}>
+          {search}
+        </Section>
+      )}
 
       {query ? (
         <>
@@ -274,8 +322,9 @@ export async function BlogIndexView({
           ) : (
             <>
               {blog.resultCount && <ResultCount paging={paging} t={t} />}
+              {lead && <FeaturedPost post={lead} permalinks={permalinks} t={t} />}
               <BlogList
-                posts={latest}
+                posts={lead ? latest.slice(1) : latest}
                 blog={blog}
                 fallbackEyebrow={site.blogLabel}
                 permalinks={permalinks}

@@ -210,6 +210,8 @@ export function blankProps(type: BlockType): Record<string, unknown> {
       return { title: 'What people say', items: [{ name: 'Name', rating: 5, text: 'A short review in the customer’s own words.' }] };
     case 'toc':
       return { title: 'On this page' };
+    case 'categoryIndex':
+      return { title: 'Where we write from', source: 'blog' };
     case 'breadcrumbs':
       return {};
     case 'textPath':
@@ -3520,6 +3522,7 @@ function TypeFields({
             <Text label="Thank-you heading" k="successTitle" props={props} set={set} placeholder="Thank you — that is with us." />
             <Text label="Thank-you text" k="successText" props={props} set={set} />
           </div>
+          <Text label="A line beside the send button" k="submitNote" props={props} set={set} placeholder="We reply within one working day" />
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
         </>
@@ -3666,6 +3669,36 @@ function TypeFields({
         </>
       );
     }
+
+    case 'categoryIndex':
+      return (
+        <>
+          {HEAD_FIELDS(props, set)}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <PropSelect label="Whose categories" k="source" fallback="blog" options={[['blog', 'The blog’s'], ['projects', 'The projects’']]} props={props} set={set} />
+            <Field label="Per row">
+              <Select value={String(num(props, 'columns', 2))} onChange={(e) => set({ ...props, columns: Number(e.target.value) })}>
+                <option value="2">Two</option>
+                <option value="3">Three</option>
+              </Select>
+            </Field>
+            <Field label="At most">
+              <Input type="number" min={1} max={24} value={num(props, 'limit', 12)} onChange={(e) => set({ ...props, limit: Math.min(24, Math.max(1, Math.round(Number(e.target.value) || 1))) })} />
+            </Field>
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.numbered !== false} onChange={(e) => set({ ...props, numbered: e.target.checked })} />
+              Number them (01, 02…)
+            </label>
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.descriptions !== false} onChange={(e) => set({ ...props, descriptions: e.target.checked })} />
+              Show each description
+            </label>
+          </div>
+          <p className="m-0 text-[12px] text-smoke">The categories, their names and descriptions come from Posts → Categories (or Projects → Categories), in their own order.</p>
+        </>
+      );
 
     case 'toc':
       return (
@@ -4281,6 +4314,16 @@ function TypeFields({
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Intro" k="intro" props={props} set={set} rows={2} />
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.glow === true} onChange={(e) => set(withOpt(props, 'glow', e.target.checked ? true : undefined))} />
+              The numbers glow in the accent colour
+            </label>
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.dividers === true} onChange={(e) => set(withOpt(props, 'dividers', e.target.checked ? true : undefined))} />
+              Thin lines between the figures, set to the left
+            </label>
+          </div>
           {variant === 'counters' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect label="Icons" k="iconPosition" fallback="top" options={[['top', 'Above the number'], ['left', 'Beside the number']]} props={props} set={set} />
@@ -4411,6 +4454,24 @@ function TypeFields({
               onChange={(gap: string | undefined) => set({ ...props, gap })}
             />
           </div>
+          {(variant === 'cards' || variant === 'mediaRows') && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="flex items-center gap-2 text-[14px] text-ash">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-flare"
+                  checked={variant === 'mediaRows' ? props.numbered !== false : props.numbered === true}
+                  onChange={(e) => set(withOpt(props, 'numbered', e.target.checked === (variant === 'mediaRows') ? undefined : e.target.checked))}
+                />
+                A running number (01, 02…) over each title
+              </label>
+              {variant === 'cards' && (
+                <Field label="Rows of mixed widths" hint="cards per row, in turn — e.g. 2-3; empty for the even grid">
+                  <Input value={str(props, 'pattern')} placeholder="2-3" spellCheck={false} onChange={(e) => set(withOpt(props, 'pattern', e.target.value.trim() || undefined))} />
+                </Field>
+              )}
+            </div>
+          )}
           {variant === 'icons' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect
@@ -4566,6 +4627,20 @@ function TypeFields({
               set={set}
             />
             <PropSelect label="Layout" k="layout" fallback="rows" options={[['rows', 'Rows with lines'], ['plain', 'Plain list'], ['inline', 'In a line'], ['grid', 'Grid']]} props={props} set={set} />
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-2">
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.markerStyle === 'circle'} onChange={(e) => set(withOpt(props, 'markerStyle', e.target.checked ? 'circle' : undefined))} />
+              The marker on a tinted circle
+            </label>
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.thinRules === true} onChange={(e) => set(withOpt(props, 'thinRules', e.target.checked ? true : undefined))} />
+              Hairline rules between rows
+            </label>
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.boxed === true} onChange={(e) => set(withOpt(props, 'boxed', e.target.checked ? true : undefined))} />
+              Each list in a card
+            </label>
           </div>
           {custom && <PropMedia label="Icon" k="iconUrl" hint="a small square picture, shown before every entry" props={props} set={set} />}
           <Repeater

@@ -279,6 +279,8 @@ export function FormBlock(p: P) {
           <button type="submit" className="he-cbtn is-medium is-primary" disabled={state === 'sending'}>
             {state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}
           </button>
+          {/* 2.22 — a line beside the send button, on the last step only. */}
+          {last && p.submitNote && <p className="he-fb__note">{p.submitNote}</p>}
         </div>
       </form>
     );

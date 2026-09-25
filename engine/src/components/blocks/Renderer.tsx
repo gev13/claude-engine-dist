@@ -57,6 +57,7 @@ import { MAX_SAVED_DEPTH, SAVED_BLOCK_TYPE } from '@/lib/blockTree';
 import { getSavedTree } from '@/server/content/savedBlocks';
 import type { BlockStyle } from '@/lib/blockStyle';
 import { ShapeDividers } from './library/effects';
+import { CategoryIndexBlock } from './library/CategoryIndex';
 import { TiltObserver } from './library/TiltObserver';
 import { FormBlock } from './library/FormBlock';
 import { LottieBlock } from './library/LottieBlock';
@@ -121,6 +122,7 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
   share: ShareBlock,
   reviews: ReviewsBlock,
   toc: TocBlock,
+  categoryIndex: CategoryIndexBlock,
   breadcrumbs: BreadcrumbsBlock,
   textPath: TextPathBlock,
   search: SearchBlock,
@@ -286,6 +288,7 @@ function renderBlock(block: ParsedBlock, ctx: RenderContext): React.ReactNode {
           : {})}
         {...((block.type === 'postList' || block.type === 'projects') && ctx.paging?.blockId === block.id ? { paging: ctx.paging } : {})}
         {...(block.type === 'projects' && ctx.currentProjectId ? { currentProjectId: ctx.currentProjectId } : {})}
+        {...(block.type === 'categoryIndex' ? { locale: ctx.locale } : {})}
       />
     </BlockShell>
   );

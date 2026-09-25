@@ -49,7 +49,7 @@ const GROUPS: { label: string; types: BlockType[] }[] = [
   { label: 'Data and info', types: ['chart', 'priceList', 'businessHours'] },
   { label: 'Collections', types: ['cardGrid', 'projects', 'team', 'reviews', 'logoWall', 'marquee', 'quote', 'servicesIndex', 'postList', 'infoPanel'] },
   { label: 'Conversion', types: ['cta', 'pricing', 'newsletter', 'appPromo', 'faq', 'contactForm', 'form', 'pager'] },
-  { label: 'Navigation', types: ['subNav', 'breadcrumbs', 'toc', 'search'] },
+  { label: 'Navigation', types: ['subNav', 'breadcrumbs', 'toc', 'search', 'categoryIndex'] },
 ];
 
 

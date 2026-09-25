@@ -82,7 +82,7 @@ export function Tick({ className }: { className?: string }) {
       stroke="#ec3013"
       strokeWidth="3"
       aria-hidden="true"
-      className={cn('mt-[6px] shrink-0', className)}
+      className={cn('he-tick mt-[6px] shrink-0', className)}
     >
       <path d="M4 12.5l5 5L20 6.5" />
     </svg>

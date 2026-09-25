@@ -425,6 +425,8 @@ export const themeSchema = z.object({
       glow: z.object({ color: color.optional(), size: z.number().int().min(0).max(60).optional() }).optional(),
       /** 2.21 — a button's arrow inline (as before), or in a compartment of its own behind a thin divider. */
       icon: z.enum(['inline', 'cell']).optional(),
+      /** 2.22 — a "Read more" link's arrow as it is, or on a small circle. */
+      more: z.enum(['arrow', 'circle']).optional(),
     })
     .optional(),
 

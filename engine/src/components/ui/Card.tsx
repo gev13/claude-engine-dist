@@ -94,9 +94,9 @@ export function Card({
       {children && <div className="mt-3 text-[15px] text-ash">{children}</div>}
       {meta && <div className="mt-auto pt-5">{meta}</div>}
       {href && (
-        <span className="mt-auto flex items-center gap-2 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft transition-colors group-hover:text-flare-hot">
+        <span className="he-more mt-auto flex items-center gap-2 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft transition-colors group-hover:text-flare-hot">
           Read more
-          <ArrowRight className="transition-transform duration-200 group-hover:translate-x-1" />
+          <ArrowRight className="he-more__icon transition-transform duration-200 group-hover:translate-x-1" />
         </span>
       )}
     </div>
@@ -114,8 +114,8 @@ export function Card({
 /** Big numeral + caption, as in the Home "300+ / Zero / $120B+ / 90%" band. */
 export function StatCard({ value, label }: { value: string; label: string }) {
   return (
-    <div className="bg-surface px-6 py-7">
-      <div className="display text-[clamp(34px,5vw,46px)] text-flare-hot">{value}</div>
+    <div className="he-stat bg-surface px-6 py-7">
+      <div className="he-stat__value display text-[clamp(34px,5vw,46px)] text-flare-hot">{value}</div>
       <div className="mt-2.5 text-[14px] text-ash">{label}</div>
     </div>
   );

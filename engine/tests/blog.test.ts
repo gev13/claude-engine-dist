@@ -28,6 +28,9 @@ describe('blog layouts (BL1, BL2)', () => {
       archiveBreadcrumbs: false,
       card: {},
       categoryHero: 'title',
+      // 2.22 — search below the bar and no featured post, as before.
+      searchInBar: false,
+      featured: false,
     });
   });
 

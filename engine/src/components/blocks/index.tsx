@@ -74,13 +74,13 @@ export function StatsBlock(p: P<'stats'>) {
   if (p.variant !== 'tiles') return <StatsFigures {...p} />;
 
   return (
-    <Section tone={p.tone ?? 'base'} size="md">
+    <Section tone={p.tone ?? 'base'} size="md" className={cn(p.glow && 'has-glow', p.dividers && 'has-dividers')}>
       {p.title || p.intro ? (
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-8" />
       ) : (
         p.eyebrow && <div className="mb-8 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{p.eyebrow}</div>
       )}
-      <div className="grid grid-cols-1 gap-0.5 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="he-stats grid grid-cols-1 gap-0.5 sm:grid-cols-2 lg:grid-cols-4">
         {p.items.map((s) => (
           <StatCard key={s.label} value={s.unit ? `${s.value}${s.unit}` : s.value} label={s.label} />
         ))}
@@ -169,25 +169,51 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
   // Image tiles (CT4), icon features and image cards (CT5); `cards` is below.
   if (p.variant !== 'cards') return <CardGridVariant {...p} />;
 
+  // 2.22 — a running number over the title, before any eyebrow of the card's own.
+  const eyebrowOf = (c: (typeof p.cards)[number], i: number) =>
+    p.numbered ? [String(i + 1).padStart(2, '0'), c.eyebrow].filter(Boolean).join(' · ') : c.eyebrow;
+  const cards = p.cards.map((c, i) => (
+    <Card key={c.title} eyebrow={eyebrowOf(c, i)} title={c.title} href={c.href} badge={c.badge} className={itemClass(p.blockId, i, c.style)}>
+      {c.body}
+    </Card>
+  ));
+  const spans = bentoSpans(p.pattern, p.cards.length);
+
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
-      <CardGrid cols={p.columns} gapSize={p.gap}>
-        {p.cards.map((c, i) => (
-          <Card
-            key={c.title}
-            eyebrow={c.eyebrow}
-            title={c.title}
-            href={c.href}
-            badge={c.badge}
-            className={itemClass(p.blockId, i, c.style)}
-          >
-            {c.body}
-          </Card>
-        ))}
-      </CardGrid>
+      {spans ? (
+        // 2.22 — rows of mixed widths, in the pattern given ("2-3": two, then three…).
+        <div className="he-bento" style={p.gap ? { gap: p.gap } : undefined}>
+          {cards.map((card, i) => (
+            <div key={i} className="he-bento__cell" style={{ '--span': spans[i] } as React.CSSProperties}>
+              {card}
+            </div>
+          ))}
+        </div>
+      ) : (
+        <CardGrid cols={p.columns} gapSize={p.gap}>
+          {cards}
+        </CardGrid>
+      )}
     </Section>
   );
+}
+
+/**
+ * The twelfths each card of a bento takes: "2-3" gives rows of two halves,
+ * then three thirds, and repeats. The last row shares its width among the
+ * cards it actually has, so it never leaves a gap. Null for no pattern.
+ */
+export function bentoSpans(pattern: string | undefined, count: number): number[] | null {
+  if (!pattern || !/^[1-4](-[1-4]){1,5}$/.test(pattern)) return null;
+  const rows = pattern.split('-').map(Number);
+  const spans: number[] = [];
+  for (let r = 0; spans.length < count; r++) {
+    const perRow = Math.min(rows[r % rows.length]!, count - spans.length);
+    for (let k = 0; k < perRow; k++) spans.push(12 / perRow);
+  }
+  return spans.map((n) => Math.round(n));
 }
 
 /* ── numberedList ─────────────────────────────────────────────────────────── */
@@ -262,11 +288,11 @@ export function CheckListsBlock(p: P<'checkLists'>) {
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       <div className={p.lists.length > 1 ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16' : ''}>
         {p.lists.map((list, li) => (
-          <div key={li}>
+          <div key={li} className={p.boxed ? 'he-ilist-box' : undefined}>
             {list.title && (
               <h3 className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{list.title}</h3>
             )}
-            <ul className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`)}>
+            <ul className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}>
               {list.items.map((raw, i) => {
                 const item: { text: string; href?: string; note?: string } = typeof raw === 'string' ? { text: raw } : raw;
                 return (

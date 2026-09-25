@@ -1,6 +1,14 @@
 {
-  "latest": "2.21.0",
+  "latest": "2.22.0",
   "releases": [
+    {
+      "version": "2.22.0",
+      "date": "2026-09-25",
+      "summary": "Picture rows and mixed-width rows for the card grid, glowing and ruled stats, check lists on circles and in cards, a line beside a form's button, a category index block, blog search in the category bar and a featured post, and round “Read more” arrows.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.21.0",
       "date": "2026-09-25",

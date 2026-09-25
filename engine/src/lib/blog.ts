@@ -137,6 +137,10 @@ export const blogSchema = z.object({
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
   categoryHero: z.enum(['title', 'full']).optional(),
+  /** 2.22 — the search box at the end of the category bar instead of below it. */
+  searchInBar: z.boolean().optional(),
+  /** 2.22 — the newest post as a large card, picture left, above the list on the blog's first page. */
+  featured: z.boolean().optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
@@ -170,6 +174,8 @@ export type ResolvedBlog = {
   archiveBreadcrumbs: boolean;
   card: PostCardOptions;
   categoryHero: 'title' | 'full';
+  searchInBar: boolean;
+  featured: boolean;
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -195,6 +201,8 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     archiveBreadcrumbs: blog?.archiveBreadcrumbs ?? false,
     card: blog?.card ?? {},
     categoryHero: blog?.categoryHero ?? 'title',
+    searchInBar: blog?.searchInBar ?? false,
+    featured: blog?.featured ?? false,
   };
 }
 
