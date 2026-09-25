@@ -399,7 +399,7 @@ export function TocBlock(p: P<'toc'>) {
   useEffect(() => {
     const self = ref.current;
     const main = document.querySelector('main');
-    const scope = p.scope === 'row' ? (self?.closest('.he-row') ?? main) : main;
+    const scope = p.scope === 'row' ? (self?.closest('.he-row') ?? main) : p.scope === 'article' ? (self?.closest('article') ?? main) : main;
     if (!self || !scope) return;
 
     const found: TocItem[] = [];
@@ -516,7 +516,7 @@ export function ShareBlock(p: P<'share'>) {
 
   const networks = p.networks.filter((n) => n !== 'native' || canShare);
   const named = p.style === 'buttons' || p.style === 'text';
-  const floating = p.position === 'floating';
+  const floating = p.position === 'floating' || p.position === 'floatingLeft';
 
   return (
     <section className={cn('he-lsec he-shr-sec', toneClass(p.tone), `is-${p.align}`, `is-${p.position}`)}>

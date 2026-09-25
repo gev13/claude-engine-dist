@@ -9,6 +9,58 @@ told about before taking it.
 
 ---
 
+## 2.18.0 — 2026-09-25
+
+**Around each post.** Appearance → Blog now offers, each off until chosen:
+share buttons above or below the article or as a bar down the left side
+(Pinterest is new); a contents list that follows the reader in a side column
+and marks the section being read, or sits above the article; previous and
+next posts, as two links or an *Up next* card in the corner; *Keep reading*
+from the same category or any shared one, two to six, as a grid or a
+carousel, with its own heading; an author box with the picture, bio and links
+each author sets in their Profile; a *Back to the blog* link; your own line
+above the title (`{category} · {minutes} min read`); and a new opening —
+the cover at its own shape, then a title card.
+
+**The blog's archives.** Categories as chips or one *Categories* menu; the
+All and Research chips optional (Research now shows only when there is
+research); breadcrumbs; what each card shows — date, category, reading time,
+*Read more* — and its picture shape, on archives and in the Post list block;
+a category heading with its picture; and blocks above and below every
+category's posts (Posts → Category pages).
+
+**RSS.** `/feed` for the blog and `…/category/<name>/feed` for each
+category, the addresses WordPress used. Blog pages announce their feed.
+Permalinks → Feeds changes or switches them off.
+
+**SEO fixes.** The Open Graph picture chosen in a page's SEO panel is finally
+used — else its hero or cover, else a new default in Settings — with its real
+size. Structured data typed into the SEO panel is now added to the page.
+Pages, posts and projects marked `noindex` leave the sitemap. Titles can drop
+the site name, change the separator, or — per page — be used exactly as
+written. The Organization lists the site's social profiles and its logo.
+
+**The 404 page** can be any page (Settings → Pages); it keeps the 404 status
+and stays out of search. The built-in one's words are in Site translations,
+and its "All services" button appears only where there is a services page.
+
+**Social links** gain Behance, Dribbble, Vimeo, Pinterest, Telegram,
+WhatsApp, Discord, Threads, Reddit, Twitch, Medium, email and phone, and can
+show as names or short labels ("Fb. / Ig. / Lk.") in the header menu and the
+footer.
+
+**Services follow their pages.** Links and structured data use each service
+page's real address, not `/services/<slug>`; the Services index block's
+"Core" and "Specialist" labels can be renamed or hidden.
+
+**Also fixed.** One unreadable value on the Settings screen no longer resets
+every setting to the defaults.
+
+Includes a database migration: author details on accounts and a picture on
+categories. Take the backup the Updates screen offers.
+
+---
+
 ## 2.17.0 — 2026-09-25
 
 **Video that plays on iPhones.** The site now answers the partial requests

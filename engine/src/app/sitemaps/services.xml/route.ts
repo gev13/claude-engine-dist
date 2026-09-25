@@ -7,7 +7,7 @@ export const revalidate = 3600;
 export async function GET() {
   // The trailing-slash form every URL below is written in is a setting; load it first.
   await getPermalinks();
-  const services = (await allPublishedPagePaths()).filter((p) => p.template === 'service');
+  const services = (await allPublishedPagePaths()).filter((p) => p.template === 'service' && p.indexable !== false);
 
   return new Response(
     urlSet(

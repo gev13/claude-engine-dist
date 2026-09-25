@@ -13,6 +13,8 @@ export type CategoryRef = {
   locale: Locale;
   /** Translations of one another share this (package 8). */
   translationGroupId: string;
+  /** 2.18 — the picture its archive can open with. */
+  imageUrl: string | null;
 };
 
 const columns = {
@@ -23,6 +25,7 @@ const columns = {
   seo: categories.seo,
   locale: categories.locale,
   translationGroupId: categories.translationGroupId,
+  imageUrl: categories.imageUrl,
 };
 
 const shape = (row: {
@@ -33,6 +36,7 @@ const shape = (row: {
   seo: unknown;
   locale: string;
   translationGroupId: string;
+  imageUrl: string | null;
 }): CategoryRef => ({
   ...row,
   seo: (row.seo ?? {}) as Record<string, unknown>,

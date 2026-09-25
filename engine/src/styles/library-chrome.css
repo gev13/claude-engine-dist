@@ -151,6 +151,7 @@
   .he-menu__social { display: flex; gap: 10px; margin: 20px 0 0; padding: 0; list-style: none; }
   .he-menu__social a { display: grid; place-items: center; width: 42px; height: 42px; border: 1px solid var(--color-hairline); border-radius: 999px; color: var(--color-bone); }
   .he-menu__social a:hover { border-color: var(--color-bone); }
+  .he-menu__social a:not(:has(svg)) { width: auto; padding: 0 14px; font-size: 14px; }
   .he-menu__social svg { width: 18px; height: 18px; }
   @media (width >= 64rem) {
     /* `:not([hidden])` so this display never overrides the closed menu's display: none. */

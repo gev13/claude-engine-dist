@@ -197,9 +197,9 @@
   .he-social.is-outlined .he-social__a { border: 1.5px solid color-mix(in srgb, currentColor 40%, transparent); }
   .he-social.is-filled .he-social__a { background: var(--color-bone); color: var(--color-ink); }
   .he-social.is-boxed .he-social__a { border-radius: 12px; background: var(--color-surface); }
-  .he-social.is-text { gap: 6px 22px; }
-  .he-social.is-text .he-social__a { width: auto; height: auto; border-radius: 0; font-size: calc(var(--s) * 0.36); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
-  .he-social.is-text .he-social__a:hover { transform: none; text-decoration-color: currentColor; }
+  .he-social:is(.is-text, .is-short) { gap: 6px 22px; }
+  .he-social:is(.is-text, .is-short) .he-social__a { width: auto; height: auto; border-radius: 0; font-size: calc(var(--s) * 0.36); font-weight: 600; text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; }
+  .he-social:is(.is-text, .is-short) .he-social__a:hover { transform: none; text-decoration-color: currentColor; }
   .he-social.is-brand:not(.is-filled) .he-social__a { color: var(--brand); }
   .he-social.is-brand.is-filled .he-social__a { background: var(--brand); color: var(--brand-on, #fff); }
 

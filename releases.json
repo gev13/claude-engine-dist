@@ -1,6 +1,14 @@
 {
-  "latest": "2.17.0",
+  "latest": "2.18.0",
   "releases": [
+    {
+      "version": "2.18.0",
+      "date": "2026-09-25",
+      "summary": "Posts can have a share bar, a contents column that follows the reader, previous/next, related posts by category and an author box; archives gain a categories menu, breadcrumbs, card options, category pictures, blocks around the posts and RSS feeds. Share pictures, custom structured data and title control finally work, the 404 page can be any page, and social links gain 13 networks and short labels.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.17.0",
       "date": "2026-09-25",

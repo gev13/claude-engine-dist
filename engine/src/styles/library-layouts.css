@@ -23,6 +23,10 @@
   .he-plst__title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.2; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 5px; transition: text-decoration-color calc(150ms * var(--he-motion, 1)); }
   .he-plst__link:hover .he-plst__title { text-decoration-color: currentColor; }
   .he-plst__date { font-size: 13px; color: var(--color-smoke); }
+  /* 2.18 — card options (Appearance → Blog, and the post list block). */
+  .he-plst__read { font-size: 13px; color: var(--color-smoke); }
+  .he-plst__more { margin-top: 4px; font-size: 14px; font-weight: 600; color: var(--he-link, var(--color-flare-soft)); }
+  .he-plst.has-ratio:not(.is-overlay) .he-plst__media { aspect-ratio: var(--he-plst-ratio); }
   .he-plst__excerpt { margin: 0; font-size: 15px; color: var(--color-ash); }
   .he-plst__link:focus-visible { outline: 3px solid var(--color-flare); outline-offset: 4px; border-radius: 8px; }
 

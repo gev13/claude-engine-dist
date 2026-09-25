@@ -30,7 +30,7 @@ import type { ItemStyle } from '@/lib/itemStyle';
 import { Wireframe } from '@/components/admin/Wireframe';
 import { CARD_GRID_WIREFRAMES, CAROUSEL_WIREFRAMES, HERO_WIREFRAMES, type Shape } from '@/lib/wireframes';
 import { CARD_GRID_LABELS, CAROUSEL_LABELS, HERO_LABELS } from '@/lib/blockNames';
-import { SOCIAL_LABELS, SOCIAL_NETWORKS } from '@/lib/navigation';
+import { SOCIAL_LABELS, SOCIAL_NETWORKS, SOCIAL_SHORT, type SocialNetwork } from '@/lib/navigation';
 import { VIDEO_HOST_LABEL, parseVideoUrl } from '@/lib/embeds';
 import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from '@/lib/hours';
 import { SHARE_LABELS, SHARE_NETWORKS } from '@/lib/share';
@@ -799,7 +799,7 @@ type StatItem = { value: string; label: string; unit?: string; iconUrl?: string 
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
 type ButtonItem = { label: string; href: string; style?: string; icon?: string; iconSide?: string; iconOnly?: boolean; shadow?: boolean };
 type ProgressItem = { label: string; value: number; note?: string };
-type SocialItem = { network: string; href: string };
+type SocialItem = { network: string; href: string; short?: string };
 type PlanItem = {
   name: string;
   tagline?: string;
@@ -1115,7 +1115,7 @@ function HoursFields({ props, set }: { props: Props; set: Setter }) {
 
 function SocialRowFields({ item, update }: { item: SocialItem; update: (patch: Partial<SocialItem>) => void }) {
   return (
-    <div className="grid gap-3 sm:grid-cols-[1fr_2fr]">
+    <div className="grid gap-3 sm:grid-cols-[1fr_2fr_0.6fr]">
       <Field label="Network">
         <Select value={item.network ?? 'linkedin'} onChange={(e) => update({ network: e.target.value })}>
           {SOCIAL_NETWORKS.map((n) => (
@@ -1126,7 +1126,10 @@ function SocialRowFields({ item, update }: { item: SocialItem; update: (patch: P
         </Select>
       </Field>
       <Field label="Profile link">
-        <Input value={item.href ?? ''} placeholder="https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
+        <Input value={item.href ?? ''} placeholder={item.network === 'email' ? 'mailto:…' : item.network === 'phone' ? 'tel:…' : 'https://'} spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
+      </Field>
+      <Field label="Short label">
+        <Input value={item.short ?? ''} maxLength={8} placeholder={SOCIAL_SHORT[item.network as SocialNetwork] ?? ''} onChange={(e) => update({ short: e.target.value.trim() || undefined })} />
       </Field>
     </div>
   );
@@ -2501,7 +2504,7 @@ function TypeFields({
               label="Style"
               k="style"
               fallback="outlined"
-              options={[['plain', 'Icons'], ['outlined', 'Outlined circles'], ['filled', 'Filled circles'], ['boxed', 'Boxed'], ['text', 'Names']]}
+              options={[['plain', 'Icons'], ['outlined', 'Outlined circles'], ['filled', 'Filled circles'], ['boxed', 'Boxed'], ['text', 'Names'], ['short', 'Short labels — Fb. / Ig.']]}
               props={props}
               set={set}
             />
@@ -3256,7 +3259,7 @@ function TypeFields({
             <PropSelect label="Style" k="style" fallback="buttons" options={[['buttons', 'Buttons with names'], ['icons', 'Icons'], ['outlined', 'Outlined circles'], ['text', 'Names only']]} props={props} set={set} />
             <PropSelect label="Size" k="size" fallback="medium" options={SIZE_OPTIONS} props={props} set={set} />
             <PropSelect label="Alignment" k="align" fallback="left" options={[['left', 'Left'], ['center', 'Centre'], ['right', 'Right']]} props={props} set={set} />
-            <PropSelect label="Position" k="position" fallback="inline" options={[['inline', 'In the page'], ['floating', 'Floating at the side (wide screens)']]} props={props} set={set} />
+            <PropSelect label="Position" k="position" fallback="inline" options={[['inline', 'In the page'], ['floating', 'Floating at the right (wide screens)'], ['floatingLeft', 'Floating at the left (wide screens)']]} props={props} set={set} />
           </div>
           <PropCheck label="Use each network’s brand colour" k="brandColors" props={props} set={set} />
         </>
@@ -4479,6 +4482,15 @@ function TypeFields({
               <option value="secondary">Specialist only</option>
             </Select>
           </Field>
+          <div className="grid gap-3 sm:grid-cols-3">
+            <PropSelect label="Label on each card" k="eyebrows" fallback="tier" options={[['tier', 'Its tier'], ['none', 'Nothing']]} props={props} set={set} />
+            {str(props, 'eyebrows') !== 'none' && (
+              <>
+                <Text label="Core services are called" k="primaryLabel" props={props} set={set} placeholder="Core" />
+                <Text label="Specialist services are called" k="secondaryLabel" props={props} set={set} placeholder="Specialist" />
+              </>
+            )}
+          </div>
         </>
       );
 
@@ -4811,7 +4823,44 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
           </p>
         </>
       )}
+      {['list', 'minimal', 'overlay', 'compact', 'wide'].includes(str(props, 'variant')) && <PostCardFields props={props} set={set} />}
     </>
+  );
+}
+
+/** What each card in a list layout shows (2.18); unset is what the layout always showed. */
+function PostCardFields({ props, set }: { props: Props; set: Setter }) {
+  const card = (props.card ?? {}) as Record<string, unknown>;
+  const setCard = (key: string, value: unknown) => {
+    const next = { ...card, [key]: value };
+    for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+    set({ ...props, card: Object.keys(next).length ? next : undefined });
+  };
+  const box = (label: string, key: string, on: boolean, value: (checked: boolean) => unknown) => (
+    <label className="flex items-center gap-2 text-[13px] text-ash">
+      <input type="checkbox" className="h-4 w-4 accent-flare" checked={on} onChange={(e) => setCard(key, value(e.target.checked))} />
+      {label}
+    </label>
+  );
+  return (
+    <details className="border-2 border-hairline bg-ink px-3 py-2">
+      <summary className="cursor-pointer py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke hover:text-bone">Each card shows</summary>
+      <div className="grid gap-2 pt-3 pb-1 sm:grid-cols-2">
+        {box('The category', 'category', card.category !== false, (v) => (v ? undefined : false))}
+        {box('The date', 'date', card.date !== false, (v) => (v ? undefined : false))}
+        {box('The reading time', 'readingTime', card.readingTime === true, (v) => v || undefined)}
+        {box('“Read more →”', 'readMore', card.readMore === true, (v) => v || undefined)}
+        <Field label="Picture shape">
+          <Select value={(card.ratio as string) ?? ''} onChange={(e) => setCard('ratio', e.target.value || undefined)}>
+            <option value="">As the layout draws it</option>
+            <option value="16/9">Wide 16:9</option>
+            <option value="3/2">3:2</option>
+            <option value="4/3">4:3</option>
+            <option value="1/1">Square</option>
+          </Select>
+        </Field>
+      </div>
+    </details>
   );
 }
 

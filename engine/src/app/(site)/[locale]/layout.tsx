@@ -10,7 +10,6 @@ import { BackToTop, RegionBar } from '@/components/site/SiteExtras';
 import { resolveChrome } from '@/lib/chrome';
 import { PREFS_SCRIPT } from '@/lib/motion';
 import { graph, organization, siteNavigation, website } from '@/lib/seo/jsonld';
-import { servicePath } from '@/lib/site';
 import { getTheme } from '@/server/content/theme';
 import { getNavigation } from '@/server/content/navigation';
 import { isInstalled } from '@/server/install/status';
@@ -24,6 +23,8 @@ import { PRESETS, activePresets, activeSnippets } from '@/lib/integrations';
 import { getIntegrations, getPublicCaptcha } from '@/server/integrations/settings';
 import { CaptchaProvider } from '@/components/site/Captcha';
 import { responsiveImages } from '@/lib/responsive';
+import { isProfile } from '@/lib/navigation';
+import { titleTemplate } from '@/lib/siteSettings';
 import { TagsNavigation } from '@/components/site/TagsNavigation';
 import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
@@ -61,7 +62,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
   return {
     metadataBase: new URL(SITE_URL),
-    title: { default: `${settings.tagline} — ${settings.name}`, template: `%s — ${settings.name}` },
+    title: { default: `${settings.tagline} ${settings.titleSeparator ?? '—'} ${settings.name}`, template: titleTemplate(settings) },
     description: settings.description,
     applicationName: settings.name,
     authors: [{ name: settings.name, url: SITE_URL }],
@@ -128,7 +129,7 @@ export default async function SiteLayout({
     ...navigation.header
       .flatMap((item) => [item, ...(item.children ?? [])])
       .map((item) => ({ name: item.label, path: item.href })),
-    ...catalogue.all.map((s) => ({ name: s.title, path: servicePath(s.slug) })),
+    ...catalogue.all.map((s) => ({ name: s.title, path: s.path })),
   ];
 
   return (
@@ -216,6 +217,7 @@ export default async function SiteLayout({
               email: settings.contactEmail || undefined,
               address: navigation.footerAddress || undefined,
               social: navigation.social ?? [],
+              socialStyle: navigation.socialStyle,
             }}
             locales={config.locales}
             locale={locale}
@@ -231,6 +233,7 @@ export default async function SiteLayout({
               columns={navigation.footer}
               note={navigation.footerNote}
               social={navigation.social}
+              socialStyle={navigation.socialStyle}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}
               motionToggle={chrome.motionToggle}
@@ -251,7 +254,17 @@ export default async function SiteLayout({
               <TagsNavigation />
             </>
           )}
-          <JsonLd data={graph([organization(settings), website({ ...settings, searchPath: blogIndexPath(permalinks) }), siteNavigation(navLinks)])} />
+          <JsonLd
+            data={graph([
+              organization({
+                ...settings,
+                sameAs: (navigation.social ?? []).filter(isProfile).map((link) => link.href),
+                logoUrl: theme.brand?.logoUrl && /^\/[A-Za-z0-9._~\-/%]*$/.test(theme.brand.logoUrl) ? theme.brand.logoUrl : undefined,
+              }),
+              website({ ...settings, searchPath: blogIndexPath(permalinks) }),
+              siteNavigation(navLinks),
+            ])}
+          />
         </div>
         </CaptchaProvider>
         </MessagesProvider>

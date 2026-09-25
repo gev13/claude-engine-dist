@@ -29,6 +29,11 @@ export const MESSAGES = {
   /* ── The blog ────────────────────────────────────────────────────────── */
   'blog.readMore': 'Read more',
   'blog.keepReading': 'Keep reading',
+  'blog.backToBlog': 'Back to the blog',
+  'blog.aboutAuthor': 'About the author',
+  'blog.share': 'Share this',
+  'blog.upNext': 'Up next',
+  'blog.dismiss': 'Close',
   'blog.minRead': 'min read',
   'blog.article': 'Article',
   'blog.research': 'Research',
@@ -126,9 +131,12 @@ export const MESSAGES = {
   'countdown.seconds': 'Seconds',
 
   /* ── Not found ───────────────────────────────────────────────────────── */
-  'notFound.title': 'That page does not exist',
-  'notFound.body': 'It may have moved, or the address may be wrong.',
-  'notFound.home': 'Back to the home page',
+  // Read by the built-in 404 since 2.18; the English is what that page always said.
+  'notFound.eyebrow': 'Error 404',
+  'notFound.title': 'That page isn\'t here.',
+  'notFound.body': 'The link may be out of date, or the page may have moved. The services index and the knowledge base are the two best places to pick the thread back up.',
+  'notFound.home': 'Back to the homepage',
+  'notFound.services': 'All services',
 
   /* ── Inside the blocks ────────────────────────────────────────────────
      Controls a visitor operates rather than content an editor writes: the

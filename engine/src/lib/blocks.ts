@@ -100,11 +100,12 @@ export const BUTTON_STYLES = ['primary', 'outline', 'soft', 'text'] as const;
 export const BUTTON_ICONS = ['none', 'arrow', 'plus', 'play', 'mail'] as const;
 export const NOTICE_KINDS = ['info', 'success', 'warning', 'danger'] as const;
 export const COUNTDOWN_UNITS = ['months', 'days', 'hours', 'minutes', 'seconds'] as const;
-export const SOCIAL_STYLES = ['plain', 'outlined', 'filled', 'text', 'boxed'] as const;
+/** `short` (2.18) — "Fb. / Ig. / Lk.". */
+export const SOCIAL_STYLES = ['plain', 'outlined', 'filled', 'text', 'boxed', 'short'] as const;
 export const TEAM_VARIANTS = ['cards', 'overlay', 'split'] as const;
 
 const sizeSml = z.enum(['small', 'medium', 'large']);
-const socialItem = z.object({ network: z.enum(SOCIAL_NETWORKS), href: safeHref });
+const socialItem = z.object({ network: z.enum(SOCIAL_NETWORKS), href: safeHref, short: z.string().trim().max(8).optional() });
 /** A date and time the countdown runs to; anything `Date.parse` reads. */
 const dateTime = z
   .string()
@@ -536,6 +537,10 @@ export const blockSchemas = {
     titleAs: textTagSchema.optional(),
     intro: z.string().optional(),
     tier: z.enum(['primary', 'secondary', 'all']).default('all'),
+    /** 2.18 — the small label on each card: the tier, or nothing. */
+    eyebrows: z.enum(['tier', 'none']).default('tier'),
+    primaryLabel: z.string().trim().max(40).optional(),
+    secondaryLabel: z.string().trim().max(40).optional(),
   }),
 
   /** Auto-populated post list. */
@@ -567,6 +572,16 @@ export const blockSchemas = {
     pager: z.enum(['numbers', 'prevNext', 'loadMore']).default('numbers'),
     /** With `server`: "Showing 1–12 of 110 results" above the list. */
     resultCount: z.boolean().default(false),
+    /** 2.18 — what each card shows in the list layouts; unset is what they always showed. */
+    card: z
+      .object({
+        date: z.boolean().optional(),
+        readingTime: z.boolean().optional(),
+        category: z.boolean().optional(),
+        readMore: z.boolean().optional(),
+        ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
+      })
+      .optional(),
   }),
 
   /** The contact form; `split` (CF3) puts text and a picture beside a form card. */
@@ -1382,8 +1397,8 @@ export const blockSchemas = {
     size: sizeSml.default('medium'),
     brandColors: z.boolean().default(false),
     align: z.enum(['left', 'center', 'right']).default('left'),
-    /** `floating` pins the buttons to the side of the screen on wide screens. */
-    position: z.enum(['inline', 'floating']).default('inline'),
+    /** `floating` pins the buttons to the side of the screen on wide screens; `floatingLeft` (2.18) to the left side. */
+    position: z.enum(['inline', 'floating', 'floatingLeft']).default('inline'),
   }),
 
   /** P3-A7 — reviews with star ratings and where they came from, with a rating summary. */
@@ -1424,8 +1439,8 @@ export const blockSchemas = {
     tone,
     title: text(80),
     levels: z.enum(['h2', 'h2h3']).default('h2h3'),
-    /** `row` lists only the headings in the same row — a contents list beside an article. */
-    scope: z.enum(['page', 'row']).default('page'),
+    /** `row` lists only the headings in the same row — a contents list beside an article; `article` (2.18) only the post's own. */
+    scope: z.enum(['page', 'row', 'article']).default('page'),
     style: z.enum(TOC_STYLES).default('boxed'),
     sticky: z.boolean().default(false),
     collapsible: z.boolean().default(false),

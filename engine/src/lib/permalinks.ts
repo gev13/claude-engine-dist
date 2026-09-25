@@ -95,6 +95,15 @@ export const permalinksSchema = z
     projectBase: basePath('/projects'),
     projectCategoryBase: basePath('/projects/category'),
     projectTagBase: basePath('/projects/tag'),
+    /* ── Feeds (2.18) ── `/feed` for the blog and `/blog/category/x/feed` for
+       a category, as WordPress served them, so subscribers keep theirs. */
+    feeds: z.boolean().default(true),
+    feedSegment: z
+      .string()
+      .trim()
+      .toLowerCase()
+      .refine((value) => SEGMENT.test(value), 'One word — lowercase letters, digits and dashes')
+      .default('feed'),
   })
   .superRefine((value, ctx) => {
     const bases = [
@@ -146,6 +155,26 @@ export function blogIndexPath(p: Permalinks = DEFAULT_PERMALINKS, page?: number)
 
 export function researchPath(p: Permalinks = DEFAULT_PERMALINKS, page?: number): string {
   return pagedPath(researchBase(p.blogIndex), page, p);
+}
+
+/** The blog's RSS feed, or null when feeds are off (2.18). */
+export function feedPath(p: Permalinks, categorySlug?: string): string | null {
+  if (!p.feeds) return null;
+  return categorySlug ? `${p.categoryBase}/${categorySlug}/${p.feedSegment}` : `/${p.feedSegment}`;
+}
+
+/**
+ * Which feed an address asks for: the blog's, a category's, or none. Pure,
+ * for the middleware, which rewrites a feed to the one route that writes it.
+ */
+export function feedTarget(p: Permalinks, path: string): { category?: string } | null {
+  if (!p.feeds) return null;
+  if (path === `/${p.feedSegment}`) return {};
+  const prefix = `${p.categoryBase}/`;
+  const suffix = `/${p.feedSegment}`;
+  if (!path.startsWith(prefix) || !path.endsWith(suffix)) return null;
+  const slug = path.slice(prefix.length, -suffix.length);
+  return /^[a-z0-9-]{1,200}$/.test(slug) ? { category: slug } : null;
 }
 
 export function categoryPath(p: Permalinks, slug: string, page?: number): string {

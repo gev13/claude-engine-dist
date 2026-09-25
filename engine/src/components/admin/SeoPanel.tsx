@@ -76,7 +76,11 @@ export function SeoPanel({
           onChange={(e) => set('title', e.target.value)}
           placeholder={fallbackTitle}
         />
-        <div className="mt-1 flex justify-end">
+        <div className="mt-1 flex items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-[13px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={value.exactTitle === true} onChange={(e) => set('exactTitle', e.target.checked || undefined)} />
+            Use exactly this title — without the site name after it
+          </label>
           <Counter value={value.title ?? fallbackTitle} ideal={TITLE_IDEAL} />
         </div>
       </Field>
@@ -180,6 +184,8 @@ export function SeoPanel({
             </Select>
           </Field>
 
+          <JsonLdField value={value.jsonLd} onChange={(next) => set('jsonLd', next)} />
+
           <div>
             <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Extra meta tags</div>
             {extraMeta.map((meta, i) => (
@@ -239,5 +245,44 @@ export function SeoPanel({
         accept="image"
       />
     </div>
+  );
+}
+
+/**
+ * Structured data of the editor's own, added to the page's graph (2.18). Kept
+ * as text while it is being typed, and only handed up once it is valid — an
+ * object or a list of objects — so a half-typed brace never saves.
+ */
+function JsonLdField({ value, onChange }: { value: unknown[] | undefined; onChange: (next: Record<string, unknown>[] | undefined) => void }) {
+  const [text, setText] = useState(() => (value && value.length ? JSON.stringify(value.length === 1 ? value[0] : value, null, 2) : ''));
+  const [problem, setProblem] = useState('');
+  return (
+    <Field label="Structured data (JSON-LD)" hint="an object or a list of objects; added to the page’s own graph" error={problem || undefined}>
+      <Textarea
+        rows={5}
+        spellCheck={false}
+        className="font-mono text-[12px]"
+        value={text}
+        placeholder={'{ "@type": "Event", "name": "…" }'}
+        onChange={(e) => {
+          const next = e.target.value;
+          setText(next);
+          if (!next.trim()) {
+            setProblem('');
+            onChange(undefined);
+            return;
+          }
+          try {
+            const parsed: unknown = JSON.parse(next);
+            const list = Array.isArray(parsed) ? parsed : [parsed];
+            if (!list.every((item) => item && typeof item === 'object' && !Array.isArray(item))) throw new Error('objects');
+            setProblem('');
+            onChange(list as Record<string, unknown>[]);
+          } catch {
+            setProblem('Not valid yet — it needs to be a JSON object, or a list of them.');
+          }
+        }}
+      />
+    </Field>
   );
 }

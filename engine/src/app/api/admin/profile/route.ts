@@ -6,6 +6,7 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { db } from '@/server/db';
 import { users } from '@/server/db/schema';
+import { SOCIAL_NETWORKS, imageUrl, isSafeHref } from '@/lib/navigation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -17,6 +18,9 @@ const publicColumns = {
   firstName: users.firstName,
   lastName: users.lastName,
   phone: users.phone,
+  bio: users.bio,
+  avatarUrl: users.avatarUrl,
+  links: users.links,
   role: users.role,
   totpEnabledAt: users.totpEnabledAt,
   lastLoginAt: users.lastLoginAt,
@@ -29,6 +33,10 @@ const updateSchema = z.object({
   username: z.string().min(3).max(64).regex(/^[a-zA-Z0-9._-]+$/, 'Letters, numbers, dot, dash and underscore only.').optional(),
   email: z.string().email().max(255).optional(),
   phone: z.string().max(40).nullable().optional(),
+  /* 2.18 — the author box under a post. Public wherever that box is on. */
+  bio: z.string().trim().max(1000).optional(),
+  avatarUrl: imageUrl.nullable().optional(),
+  links: z.array(z.object({ network: z.enum(SOCIAL_NETWORKS), href: z.string().trim().max(500).refine(isSafeHref, 'A full https:// address') })).max(8).optional(),
 });
 
 /** Always scoped to the caller — the id never comes from the request. */
@@ -72,6 +80,9 @@ export async function PATCH(request: Request) {
         ...(input.username !== undefined ? { username: input.username } : {}),
         ...(input.email !== undefined ? { email: input.email } : {}),
         ...(input.phone !== undefined ? { phone: input.phone } : {}),
+        ...(input.bio !== undefined ? { bio: input.bio } : {}),
+        ...(input.avatarUrl !== undefined ? { avatarUrl: input.avatarUrl } : {}),
+        ...(input.links !== undefined ? { links: input.links } : {}),
       })
       .where(eq(users.id, guard.user.id))
       .returning(publicColumns);

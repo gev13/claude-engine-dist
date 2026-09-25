@@ -1,7 +1,7 @@
 import Link from '@/components/ui/SiteLink';
 import { SiteMark } from '@/components/ui/Logo';
 import type { FooterVariant } from '@/lib/chrome';
-import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLink, linkAttrs } from '@/lib/navigation';
+import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { SocialIcon } from './icons';
 import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras';
@@ -22,20 +22,22 @@ export type FooterProps = {
   columns: Column[];
   note?: string;
   social: SocialLink[];
+  /** 2.18 — icons, names or short labels, as set in Menus. */
+  socialStyle?: SocialLabelStyle;
   variant?: FooterVariant;
   shareChip?: boolean;
   motionToggle?: boolean;
   themeToggle?: boolean;
 };
 
-function Socials({ social }: { social: SocialLink[] }) {
+function Socials({ social, style = 'icon' }: { social: SocialLink[]; style?: SocialLabelStyle }) {
   if (social.length === 0) return null;
   return (
-    <ul className="he-ftr__social">
+    <ul className={style === 'icon' ? 'he-ftr__social' : 'he-ftr__social is-text'}>
       {social.map((s) => (
         <li key={s.network + s.href}>
-          <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={SOCIAL_LABELS[s.network]}>
-            <SocialIcon network={s.network} />
+          <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
+            {socialText(s, style) ?? <SocialIcon network={s.network} />}
           </a>
         </li>
       ))}
@@ -55,7 +57,7 @@ function Mark({ siteName }: { siteName: string }) {
 }
 
 export function Footer(props: FooterProps) {
-  const { siteName, tagline, email, address, columns, note, social } = props;
+  const { siteName, tagline, email, address, columns, note, social, socialStyle } = props;
   const variant = props.variant ?? 'sitemap';
   const year = new Date().getFullYear();
 
@@ -109,7 +111,7 @@ export function Footer(props: FooterProps) {
               ))}
             </ul>
           )}
-          <Socials social={social} />
+          <Socials social={social} style={socialStyle} />
           {toggles}
           <div className="he-ftr__fine">
             <span>{copyright}</span>
@@ -147,7 +149,7 @@ export function Footer(props: FooterProps) {
                   {email}
                 </a>
               )}
-              <Socials social={social} />
+              <Socials social={social} style={socialStyle} />
               <Mark siteName={siteName} />
             </div>
             <div className="he-ftr__cols">{cols}</div>
@@ -173,13 +175,13 @@ export function Footer(props: FooterProps) {
                 {email}
               </a>
             )}
-            {brandBlock && <Socials social={social} />}
+            {brandBlock && <Socials social={social} style={socialStyle} />}
           </div>
           {cols}
         </div>
         {!brandBlock && social.length > 0 && (
           <div className="he-ftr__socialrow">
-            <Socials social={social} />
+            <Socials social={social} style={socialStyle} />
           </div>
         )}
         {bottom}

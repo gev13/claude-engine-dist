@@ -386,12 +386,13 @@
 
   /* A floating bar sits beside the page on wide screens and in line below that. */
   @media (width > 64rem) {
-    .he-shr-sec.is-floating { height: 0; padding: 0; border: 0; }
-    .he-shr-sec.is-floating .shell { position: fixed; top: 50%; right: 16px; z-index: 30; width: auto; max-width: none; padding: 0; translate: 0 -50%; }
-    .he-shr-sec.is-floating .he-shr__title { display: none; }
-    .he-shr-sec.is-floating .he-shr { flex-direction: column; }
-    .he-shr-sec.is-floating .he-shr.is-buttons .he-shr__a { width: var(--s); padding-inline: 0; }
-    .he-shr-sec.is-floating .he-shr:is(.is-buttons, .is-text) .he-shr__a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) { height: 0; padding: 0; border: 0; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) .shell { position: fixed; top: 50%; right: 16px; z-index: 30; width: auto; max-width: none; padding: 0; translate: 0 -50%; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) .he-shr__title { display: none; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) .he-shr { flex-direction: column; }
+    .he-shr-sec.is-floatingLeft .shell { right: auto; left: 16px; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) .he-shr.is-buttons .he-shr__a { width: var(--s); padding-inline: 0; }
+    .he-shr-sec:is(.is-floating, .is-floatingLeft) .he-shr:is(.is-buttons, .is-text) .he-shr__a span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   }
 
   /* ── Desktop ≤ 1440px ────────────────────────────────────────────────── */

@@ -9,6 +9,7 @@ import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
 import type { Role } from '@/lib/roles';
 import { errorMessage } from '../_shared';
+import { AuthorPanel, type AuthorFields } from './AuthorPanel';
 
 type Profile = {
   id: string;
@@ -17,6 +18,9 @@ type Profile = {
   firstName: string;
   lastName: string;
   phone: string | null;
+  bio: string;
+  avatarUrl: string | null;
+  links: AuthorFields['links'];
   role: Role;
   totpEnabledAt: string | null;
   lastLoginAt: string | null;
@@ -176,6 +180,8 @@ function ProfileScreenInner() {
               </div>
             </form>
           </Panel>
+
+          {data && <AuthorPanel value={{ bio: data.bio ?? '', avatarUrl: data.avatarUrl ?? null, links: data.links ?? [] }} onSaved={() => void mutate()} />}
 
           <div className="space-y-6">
             <Panel title="Change password">

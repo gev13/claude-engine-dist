@@ -26,6 +26,7 @@ import { toSlug } from '@/lib/slug';
 import { cn } from '@/lib/utils';
 import type { SeoFields } from '@/server/db/schema';
 import { ConfirmDelete, errorMessage } from '../_shared';
+import { MediaPicker } from '@/components/admin/MediaPicker';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Categories
@@ -40,6 +41,7 @@ type CategoryRow = {
   slug: string;
   name: string;
   description: string;
+  imageUrl?: string | null;
   seo: SeoFields;
   parentId: string | null;
   sortOrder: number;
@@ -53,18 +55,20 @@ type FormValue = {
   name: string;
   slug: string;
   description: string;
+  imageUrl: string | null;
   parentId: string;
   sortOrder: number;
   seo: SeoFields;
 };
 
-const blankForm: FormValue = { name: '', slug: '', description: '', parentId: '', sortOrder: 0, seo: {} };
+const blankForm: FormValue = { name: '', slug: '', description: '', imageUrl: null, parentId: '', sortOrder: 0, seo: {} };
 
 function toForm(row: CategoryRow): FormValue {
   return {
     name: row.name,
     slug: row.slug,
     description: row.description,
+    imageUrl: row.imageUrl ?? null,
     parentId: row.parentId ?? '',
     sortOrder: row.sortOrder,
     seo: row.seo ?? {},
@@ -77,6 +81,7 @@ export function CategoriesManager({ categoryBase = DEFAULT_PERMALINKS.categoryBa
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [form, setForm] = useState<FormValue>(blankForm);
+  const [picking, setPicking] = useState(false);
   const [slugLocked, setSlugLocked] = useState(false);
   const [busy, setBusy] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -114,6 +119,7 @@ export function CategoriesManager({ categoryBase = DEFAULT_PERMALINKS.categoryBa
       name: form.name.trim(),
       slug: form.slug.trim() || undefined,
       description: form.description,
+      imageUrl: form.imageUrl,
       parentId: form.parentId || null,
       sortOrder: Number.isFinite(form.sortOrder) ? form.sortOrder : 0,
       seo: form.seo,
@@ -288,6 +294,29 @@ export function CategoriesManager({ categoryBase = DEFAULT_PERMALINKS.categoryBa
                   rows={3}
                   value={form.description}
                   onChange={(e) => set('description', e.target.value)}
+                />
+              </Field>
+
+              <Field label="Picture" hint="shown on the category page when Appearance → Blog gives categories a full heading">
+                <div className="flex items-center gap-3">
+                  <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-smoke">{form.imageUrl ?? 'None'}</span>
+                  <AdminButton type="button" variant="secondary" onClick={() => setPicking(true)}>
+                    Choose
+                  </AdminButton>
+                  {form.imageUrl && (
+                    <AdminButton type="button" variant="ghost" onClick={() => set('imageUrl', null)}>
+                      Clear
+                    </AdminButton>
+                  )}
+                </div>
+                <MediaPicker
+                  open={picking}
+                  accept="image"
+                  onClose={() => setPicking(false)}
+                  onSelect={(media) => {
+                    set('imageUrl', media.url);
+                    setPicking(false);
+                  }}
                 />
               </Field>
 

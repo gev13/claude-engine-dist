@@ -2,6 +2,7 @@ import { getPermalinks } from '@/server/routing/config';
 import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { CAREERS_PATH } from '@/lib/careers';
 import { allPublishedPagesByGroup } from '@/server/content/pages';
+import { getSiteSettings } from '@/server/content/siteSettings';
 
 export const revalidate = 3600;
 
@@ -15,13 +16,19 @@ export const revalidate = 3600;
  */
 export async function GET() {
   // The trailing-slash form every URL below is written in is a setting; load it first.
-  await getPermalinks();
+  const [, settings] = await Promise.all([getPermalinks(), getSiteSettings()]);
   /* Services have their own sitemap; library pages are noindex reference
      pages; and `/careers` belongs to the careers sitemap, which lists it
      whether or not an editor has written a landing page for it — listing it
      in both would put one URL in two files. */
   const pages = (await allPublishedPagesByGroup()).filter(
-    (p) => p.template !== 'service' && p.template !== 'library' && p.path !== CAREERS_PATH,
+    (p) =>
+      p.template !== 'service' &&
+      p.template !== 'library' &&
+      p.path !== CAREERS_PATH &&
+      // 2.18 — a page that asks not to be indexed, and the page shown as the 404, are not listed.
+      p.indexable &&
+      p.id !== settings.notFoundPageId,
   );
 
   return new Response(

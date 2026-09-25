@@ -1,5 +1,5 @@
 import 'server-only';
-import { and, desc, eq, ilike, inArray, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, desc, eq, gt, ilike, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { localeConfig, type Locale } from '@/lib/locales';
 import { db } from '@/server/db';
 import { categories, media, postCategories, posts, users } from '@/server/db/schema';
@@ -47,6 +47,8 @@ export type PostDetail = PostListItem & {
   translationGroupId: string;
   seo: Record<string, unknown>;
   authorName: string | null;
+  /** 2.18 — for the author box. */
+  author?: { bio: string; avatarUrl: string | null; links: { network: string; href: string }[] };
   updatedAt: Date;
   categories: { slug: string; name: string }[];
 };
@@ -61,6 +63,8 @@ const isPublic = and(
 export async function listPosts(opts: {
   kind?: 'article' | 'research';
   categorySlug?: string;
+  /** In any of these categories — "related posts" by any shared category (2.18). */
+  categorySlugs?: string[];
   /** Leave this post out — "more from this category" on the post itself. */
   excludeId?: string;
   limit?: number;
@@ -86,6 +90,15 @@ export async function listPosts(opts: {
         .from(postCategories)
         .innerJoin(categories, eq(categories.id, postCategories.categoryId))
         .where(eq(categories.slug, categorySlug));
+      conditions.push(inArray(posts.id, ids));
+    }
+    if (opts.categorySlugs) {
+      if (opts.categorySlugs.length === 0) return [];
+      const ids = db
+        .select({ id: postCategories.postId })
+        .from(postCategories)
+        .innerJoin(categories, eq(categories.id, postCategories.categoryId))
+        .where(inArray(categories.slug, opts.categorySlugs));
       conditions.push(inArray(posts.id, ids));
     }
 
@@ -139,6 +152,52 @@ export async function countPosts(
   }
 }
 
+/**
+ * The posts either side of this one, by publication date, of the same kind
+ * and language — for "previous and next" under a post (2.18).
+ */
+export async function adjacentPosts(post: { id: string; kind: string; publishedAt: Date | null }, requested?: Locale): Promise<{ previous: PostListItem | null; next: PostListItem | null }> {
+  if (!post.publishedAt) return { previous: null, next: null };
+  const locale = requested ?? localeConfig().defaultLocale;
+  const pick = async (direction: 'before' | 'after') => {
+    try {
+      const [row] = await db
+        .select({
+          id: posts.id,
+          slug: posts.slug,
+          title: posts.title,
+          excerpt: posts.excerpt,
+          kind: posts.kind,
+          publishedAt: posts.publishedAt,
+          readingMinutes: posts.readingMinutes,
+          categorySlug: firstCategory('slug'),
+          categoryName: firstCategory('name'),
+          coverUrl: media.url,
+        })
+        .from(posts)
+        .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
+        .leftJoin(media, eq(media.id, posts.coverMediaId))
+        .where(
+          and(
+            isPublic,
+            eq(posts.locale, locale),
+            eq(posts.kind, post.kind as 'article' | 'research'),
+            sql`${posts.id} <> ${post.id}`,
+            // Through the column, so the date is written the way the driver expects.
+            direction === 'before' ? lt(posts.publishedAt, post.publishedAt!) : gt(posts.publishedAt, post.publishedAt!),
+          ),
+        )
+        .orderBy(direction === 'before' ? desc(posts.publishedAt) : posts.publishedAt)
+        .limit(1);
+      return row ?? null;
+    } catch {
+      return null;
+    }
+  };
+  const [previous, next] = await Promise.all([pick('before'), pick('after')]);
+  return { previous, next };
+}
+
 export async function getPost(slug: string, requested?: Locale): Promise<PostDetail | null> {
   const locale = requested ?? localeConfig().defaultLocale;
   return loadPost(and(eq(posts.slug, slug), eq(posts.locale, locale), isPublic));
@@ -175,6 +234,9 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
         categoryName: firstCategory('name'),
         authorFirst: users.firstName,
         authorLast: users.lastName,
+        authorBio: users.bio,
+        authorAvatar: users.avatarUrl,
+        authorLinks: users.links,
         coverUrl: media.url,
       })
       .from(posts)
@@ -215,6 +277,7 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
       categoryName: row.categoryName,
       coverUrl: row.coverUrl,
       authorName,
+      author: authorName ? { bio: row.authorBio ?? '', avatarUrl: row.authorAvatar ?? null, links: row.authorLinks ?? [] } : undefined,
       categories: cats,
     };
   } catch {
@@ -275,11 +338,14 @@ export async function allPublishedPostsByGroup(): Promise<
     locale: Locale;
     updatedAt: Date;
     alternates: { locale: Locale; slug: string; categorySlug: string | null }[];
+    /** False when the post's robots field says noindex (2.18). */
+    indexable: boolean;
   }[]
 > {
   try {
     const rows = await db
       .select({
+        indexable: sql<boolean>`coalesce(${posts.seo}->>'robots', '') !~* 'noindex'`,
         slug: posts.slug,
         categorySlug: firstCategory('slug'),
         locale: posts.locale,
@@ -304,6 +370,7 @@ export async function allPublishedPostsByGroup(): Promise<
       locale: row.locale as Locale,
       updatedAt: row.updatedAt,
       alternates: byGroup.get(row.groupId) ?? [],
+      indexable: row.indexable,
     }));
   } catch {
     return [];

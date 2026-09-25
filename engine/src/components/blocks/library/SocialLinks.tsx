@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import { SocialIcon } from '@/components/site/icons';
 import type { blockSchemas } from '@/lib/blocks';
-import { SOCIAL_LABELS, type SocialNetwork } from '@/lib/navigation';
+import { SOCIAL_LABELS, opensElsewhere, socialText, type SocialNetwork } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { getNavigation } from '@/server/content/navigation';
 
@@ -18,10 +18,23 @@ const BRAND: Record<SocialNetwork, string> = {
   youtube: '#ff0033',
   github: '#8b949e',
   tiktok: '#25f4ee',
+  behance: '#1769ff',
+  dribbble: '#ea4c89',
+  vimeo: '#1ab7ea',
+  pinterest: '#e60023',
+  telegram: '#26a5e4',
+  whatsapp: '#25d366',
+  discord: '#5865f2',
+  threads: '#e7e9ea',
+  reddit: '#ff4500',
+  twitch: '#9146ff',
+  medium: '#e7e9ea',
+  email: '#8b949e',
+  phone: '#8b949e',
 };
 
 /** The icon colour on a filled brand circle, where white would vanish. */
-const BRAND_ON: Partial<Record<SocialNetwork, string>> = { x: '#0f1419', tiktok: '#0f1419' };
+const BRAND_ON: Partial<Record<SocialNetwork, string>> = { x: '#0f1419', tiktok: '#0f1419', threads: '#0f1419', medium: '#0f1419' };
 
 /**
  * EL6 — social profile links. `site` reads the links saved in Menus, so a
@@ -41,13 +54,12 @@ export async function SocialLinksBlock(p: P) {
             <li key={link.network + link.href}>
               <a
                 href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
+                {...(opensElsewhere(link) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
                 className="he-social__a"
                 aria-label={p.style === 'text' ? undefined : SOCIAL_LABELS[link.network]}
                 style={p.brandColors ? ({ '--brand': BRAND[link.network], '--brand-on': BRAND_ON[link.network] ?? '#fff' } as React.CSSProperties) : undefined}
               >
-                {p.style === 'text' ? SOCIAL_LABELS[link.network] : <SocialIcon network={link.network} />}
+                {p.style === 'text' ? SOCIAL_LABELS[link.network] : p.style === 'short' ? socialText(link, 'short') : <SocialIcon network={link.network} />}
               </a>
             </li>
           ))}

@@ -71,6 +71,13 @@
       "when": 1790333802018,
       "tag": "0009_overconfident_the_hunter",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1790336131943,
+      "tag": "0010_fearless_mandrill",
+      "breakpoints": true
     }
   ]
 }

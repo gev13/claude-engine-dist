@@ -15,7 +15,7 @@ type KnownField = {
   key: string;
   label: string;
   hint?: string;
-  kind: 'text' | 'email' | 'boolean' | 'list' | 'choice';
+  kind: 'text' | 'email' | 'boolean' | 'list' | 'choice' | 'page';
   options?: { value: string; label: string }[];
 };
 
@@ -52,6 +52,33 @@ const KNOWN: KnownField[] = [
     hint: 'blocks indexing in robots.txt and the robots meta tag — for staging',
   },
   { key: 'seo.defaultRobots', label: 'Default robots directive', kind: 'text', hint: 'e.g. index,follow' },
+  // 2.18
+  {
+    key: 'seo.titleFormat',
+    label: 'Page titles',
+    kind: 'choice',
+    hint: 'a page can still ask for its exact title in its own SEO panel',
+    options: [
+      { value: 'site', label: 'Page — Site name' },
+      { value: 'plain', label: 'The page’s title alone' },
+    ],
+  },
+  {
+    key: 'seo.titleSeparator',
+    label: 'Between the title and the site name',
+    kind: 'choice',
+    options: [
+      { value: '—', label: '— (em dash)' },
+      { value: '|', label: '| (bar)' },
+      { value: '-', label: '- (hyphen)' },
+      { value: '–', label: '– (en dash)' },
+      { value: '·', label: '· (middle dot)' },
+    ],
+  },
+  { key: 'seo.ogImageUrl', label: 'Default share picture', kind: 'text', hint: 'a /media/… address — shared for pages with no picture of their own' },
+  { key: 'pages.notFoundPageId', label: 'Page shown for a missing address', kind: 'page', hint: 'any published page; it keeps the 404 status, is never indexed and is left out of the sitemap' },
+  { key: 'pages.notFoundLinkLabel', label: 'Built-in 404: second button', kind: 'text', hint: 'e.g. Read the blog — with no page chosen above' },
+  { key: 'pages.notFoundLinkHref', label: 'Built-in 404: second button link', kind: 'text', hint: 'a path such as /blog; empty links to the services index where there is one' },
 ];
 
 const KNOWN_KEYS = new Set(KNOWN.map((field) => field.key));
@@ -203,6 +230,21 @@ function SettingsScreenInner() {
             </div>
           </Panel>
 
+          <Panel title="Pages">
+            <div className="space-y-4">
+              {KNOWN.filter((field) => field.key.startsWith('pages.')).map((field) => (
+                <KnownInput
+                  key={field.key}
+                  field={field}
+                  text={text[field.key] ?? ''}
+                  checked={flags[field.key] ?? false}
+                  onText={(value) => setText((current) => ({ ...current, [field.key]: value }))}
+                  onCheck={(value) => setFlags((current) => ({ ...current, [field.key]: value }))}
+                />
+              ))}
+            </div>
+          </Panel>
+
           <Panel title="Media">
             <div className="space-y-4">
               {KNOWN.filter((field) => field.key.startsWith('media.')).map((field) => (
@@ -277,6 +319,8 @@ function KnownInput({
     );
   }
 
+  if (field.kind === 'page') return <PageChoice field={field} value={text} onChange={onText} />;
+
   if (field.kind === 'choice') {
     return (
       <Field label={field.label} hint={field.hint} htmlFor={`setting-${field.key}`}>
@@ -300,6 +344,24 @@ function KnownInput({
         value={text}
         onChange={(event) => onText(event.target.value)}
       />
+    </Field>
+  );
+}
+
+/** A published page, picked from a list (2.18). */
+function PageChoice({ field, value, onChange }: { field: KnownField; value: string; onChange: (value: string) => void }) {
+  const { data } = useSWR<{ items: { id: string; title: string; path: string; locale: string }[] }>('/api/admin/pages?status=published&perPage=100', fetcher);
+  return (
+    <Field label={field.label} hint={field.hint} htmlFor={`setting-${field.key}`}>
+      <Select id={`setting-${field.key}`} value={value} onChange={(event) => onChange(event.target.value)}>
+        <option value="">The built-in page</option>
+        {(data?.items ?? []).map((page) => (
+          <option key={page.id} value={page.id}>
+            {page.title} — {page.path}
+            {page.locale !== 'en' ? ` (${page.locale})` : ''}
+          </option>
+        ))}
+      </Select>
     </Field>
   );
 }

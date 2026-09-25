@@ -124,6 +124,29 @@ export async function getPageByPath(path: string, requested?: Locale): Promise<P
 }
 
 /**
+ * A public page by its id — the page chosen as the 404 (2.18). Its
+ * translation in `requested` when one exists, else the page itself.
+ */
+export async function getPublicPageById(id: string, requested?: Locale): Promise<PublicPage | null> {
+  if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
+  try {
+    const [row] = await db.select().from(pages).where(and(eq(pages.id, id), isPublic)).limit(1);
+    if (!row) return null;
+    if (requested && row.locale !== requested) {
+      const [translated] = await db
+        .select()
+        .from(pages)
+        .where(and(eq(pages.translationGroupId, row.translationGroupId), eq(pages.locale, requested), isPublic))
+        .limit(1);
+      if (translated) return toPublic(translated);
+    }
+    return toPublic(row);
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Where else this page exists, as `{ locale, path }`.
  *
  * This is what the language switcher offers and what `hreflang` is built from
@@ -148,11 +171,12 @@ export async function getTranslations(translationGroupId: string): Promise<{ loc
 /** Every published path in one language, for sitemaps and static params. */
 export async function allPublishedPagePaths(
   requested?: Locale,
-): Promise<{ path: string; title: string; updatedAt: Date; template: string; priorityTier: string | null }[]> {
+): Promise<{ path: string; title: string; updatedAt: Date; template: string; priorityTier: string | null; indexable?: boolean }[]> {
   const locale = requested ?? localeConfig().defaultLocale;
   try {
     const rows = await db
       .select({
+        indexable: sql<boolean>`coalesce(${pages.seo}->>'robots', '') !~* 'noindex'`,
         path: pages.path,
         title: pages.title,
         updatedAt: pages.updatedAt,
@@ -191,11 +215,16 @@ export async function allPublishedPagesByGroup(): Promise<
     template: string;
     priorityTier: string | null;
     alternates: { locale: Locale; path: string }[];
+    id: string;
+    /** False when the page's own robots field says noindex (2.18) — the sitemap leaves it out. */
+    indexable: boolean;
   }[]
 > {
   try {
     const rows = await db
       .select({
+        id: pages.id,
+        indexable: sql<boolean>`coalesce(${pages.seo}->>'robots', '') !~* 'noindex'`,
         path: pages.path,
         locale: pages.locale,
         updatedAt: pages.updatedAt,
@@ -215,6 +244,8 @@ export async function allPublishedPagesByGroup(): Promise<
     }
 
     return rows.map((row) => ({
+      id: row.id,
+      indexable: row.indexable,
       path: row.path,
       locale: row.locale as Locale,
       updatedAt: row.updatedAt,

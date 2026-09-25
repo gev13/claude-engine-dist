@@ -58,7 +58,7 @@ export async function revalidateSavedBlockUsers(savedBlockId: string, seen = new
   const permalinks = await getPermalinks();
   const paths: string[] = [];
   for (const use of await usageOf(savedBlockId)) {
-    if (use.contentType === 'popups' || use.contentType === 'projectTemplate') {
+    if (use.contentType === 'popups' || use.contentType === 'projectTemplate' || use.contentType === 'blogArchive') {
       revalidateEverything();
       return;
     }
@@ -126,6 +126,16 @@ export async function detachEverywhere(savedBlockId: string): Promise<number> {
     const cta = detach(value.cta);
     await db.update(settings).set({ value: { ...value, cta }, updatedAt: new Date() }).where(eq(settings.key, key));
     await recordUsage('projectTemplate', key, cta as AnyBlock[]);
+  }
+
+  for (const key of byKind('blogArchive')) {
+    const [row] = await db.select().from(settings).where(eq(settings.key, key)).limit(1);
+    if (!row) continue;
+    const value = (row.value ?? {}) as { before?: unknown; after?: unknown };
+    const before = detach(value.before);
+    const after = detach(value.after);
+    await db.update(settings).set({ value: { ...value, before, after }, updatedAt: new Date() }).where(eq(settings.key, key));
+    await recordUsage('blogArchive', key, [...(before as AnyBlock[]), ...(after as AnyBlock[])]);
   }
 
   return uses.length;

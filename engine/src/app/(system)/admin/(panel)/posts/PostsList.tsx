@@ -113,7 +113,15 @@ export function PostsList() {
       <PageHeader
         title="Posts"
         description="Articles and research write-ups for the knowledge base."
-        actions={<AdminLinkButton href="/admin/posts/new">New post</AdminLinkButton>}
+        actions={
+          <div className="flex flex-wrap gap-2">
+            {/* 2.18 — the blocks around every category's posts. */}
+            <AdminLinkButton href="/admin/posts/archive" variant="secondary">
+              Category pages
+            </AdminLinkButton>
+            <AdminLinkButton href="/admin/posts/new">New post</AdminLinkButton>
+          </div>
+        }
       />
 
       <Panel>

@@ -14,6 +14,20 @@ describe('blog layouts (BL1, BL2)', () => {
       archivePerPage: undefined,
       archivePager: 'numbers',
       resultCount: false,
+      // 2.18 — every extra off, related posts as they always were, cards as each layout drew them.
+      share: { position: 'off', networks: ['facebook', 'x', 'pinterest', 'linkedin'] },
+      toc: { position: 'off', levels: 'h2h3', title: undefined },
+      prevNext: 'off',
+      related: { source: 'kind', count: 3, layout: 'grid', title: undefined },
+      authorBox: false,
+      backLink: false,
+      eyebrow: undefined,
+      chipAll: true,
+      chipResearch: 'auto',
+      filterStyle: 'chips',
+      archiveBreadcrumbs: false,
+      card: {},
+      categoryHero: 'title',
     });
   });
 

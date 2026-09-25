@@ -21,6 +21,8 @@ export const DATE_FORMATS = {
 
 export type DateFormat = keyof typeof DATE_FORMATS;
 
+export const TITLE_SEPARATORS = ['—', '|', '-', '·', '–'] as const;
+
 export const siteSettingsSchema = z.object({
   /** Page titles, Open Graph, Organization and WebSite JSON-LD. */
   name: z.string().trim().min(1).max(120).optional(),
@@ -43,16 +45,51 @@ export const siteSettingsSchema = z.object({
   discourageSearchEngines: z.boolean().optional(),
   /** Default robots directive when a page does not set its own. */
   defaultRobots: z.string().trim().max(120).optional(),
+
+  /* 2.18 — titles and sharing. */
+  /** What sits between a page's title and the site's name. */
+  titleSeparator: z.enum(TITLE_SEPARATORS).optional(),
+  /** `site` — "Page — Site", as always; `plain` — the page's title alone. */
+  titleFormat: z.enum(['site', 'plain']).optional(),
+  /** The picture shared for a page that has none of its own. */
+  ogImageUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^(|\/[A-Za-z0-9._~\-/%]*)$/, 'A picture from the media library')
+    .optional(),
+
+  /* 2.18 — the page shown for an address that does not exist. */
+  notFoundPageId: z.string().uuid().or(z.literal('')).optional(),
+  /** A second button on the built-in 404, beside "Back to the homepage". */
+  notFoundLinkLabel: z.string().trim().max(60).optional(),
+  notFoundLinkHref: z.string().trim().max(300).optional(),
 });
 
 export type SiteSettings = z.infer<typeof siteSettingsSchema>;
 
 export const emptySiteSettings: SiteSettings = {};
 
-/** Never throws: a malformed row degrades to the bundled defaults. */
+/**
+ * Never throws, and never loses more than it must: each field is checked on
+ * its own (2.18), so one bad value degrades that field to its default rather
+ * than taking every setting with it.
+ */
 export function parseSiteSettings(value: unknown): SiteSettings {
-  const result = siteSettingsSchema.safeParse(value ?? {});
-  return result.success ? result.data : emptySiteSettings;
+  const raw = value && typeof value === 'object' ? (value as Record<string, unknown>) : {};
+  const out: Record<string, unknown> = {};
+  for (const [key, schema] of Object.entries(siteSettingsSchema.shape)) {
+    if (raw[key] === undefined) continue;
+    const parsed = (schema as z.ZodType).safeParse(raw[key]);
+    if (parsed.success) out[key] = parsed.data;
+  }
+  return out as SiteSettings;
+}
+
+/** "Page — Site", or the page alone: the template Next applies to every title (2.18). */
+export function titleTemplate(settings: Pick<SiteSettings, 'titleSeparator' | 'titleFormat'> & { name: string }): string {
+  if (settings.titleFormat === 'plain') return '%s';
+  return `%s ${settings.titleSeparator ?? '—'} ${settings.name}`;
 }
 
 /** Format a date with the configured format and zone. */

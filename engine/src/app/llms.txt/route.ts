@@ -1,6 +1,6 @@
 import { SITE_URL } from '@/lib/env';
 import { CAREERS_PATH } from '@/lib/careers';
-import { servicePath, site } from '@/lib/site';
+import { site } from '@/lib/site';
 import { listJobs } from '@/server/content/jobs';
 import { allPublishedPagePaths } from '@/server/content/pages';
 import { getServiceCatalogue } from '@/server/content/services';
@@ -45,10 +45,10 @@ export async function GET() {
   }
 
   if (catalogue.primary.length > 0) {
-    lines.push('', '## Core services', '', ...catalogue.primary.map((s) => link(s.title, servicePath(s.slug), s.blurb)));
+    lines.push('', '## Core services', '', ...catalogue.primary.map((s) => link(s.title, s.path, s.blurb)));
   }
   if (catalogue.secondary.length > 0) {
-    lines.push('', '## Specialist services', '', ...catalogue.secondary.map((s) => link(s.title, servicePath(s.slug), s.blurb)));
+    lines.push('', '## Specialist services', '', ...catalogue.secondary.map((s) => link(s.title, s.path, s.blurb)));
   }
 
   if (posts.length > 0) {

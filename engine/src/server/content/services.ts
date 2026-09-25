@@ -1,6 +1,6 @@
 import 'server-only';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
-import { type ServiceRef, services as bundledServices } from '@/lib/site';
+import { type ServiceRef, servicePath, services as bundledServices } from '@/lib/site';
 import { db } from '@/server/db';
 import { pages } from '@/server/db/schema';
 
@@ -24,7 +24,7 @@ import { pages } from '@/server/db/schema';
 export type Service = ServiceRef & { pageId: string };
 
 function fromBundled(): Service[] {
-  return bundledServices.map((s) => ({ ...s, pageId: `def:${s.slug}` }));
+  return bundledServices.map((s) => ({ ...s, path: s.path || servicePath(s.slug), pageId: `def:${s.slug}` }));
 }
 
 /**
@@ -40,6 +40,7 @@ export async function getServices(): Promise<Service[]> {
       .select({
         id: pages.id,
         slug: pages.slug,
+        path: pages.path,
         title: pages.title,
         navLabel: pages.navLabel,
         summary: pages.summary,
@@ -65,6 +66,7 @@ export async function getServices(): Promise<Service[]> {
     return rows.map((row) => ({
       pageId: row.id,
       slug: row.slug,
+      path: row.path,
       title: row.title,
       // `navLabel` is exactly "the short name for menus"; fall back to the full
       // title so a page created without one still renders sensibly.
@@ -98,4 +100,10 @@ export async function getServiceCatalogue(): Promise<ServiceCatalogue> {
 export async function getServiceBySlug(slug: string): Promise<Service | null> {
   const all = await getServices();
   return all.find((s) => s.slug === slug) ?? null;
+}
+
+/** The service a page is — by the page itself, wherever its path puts it (2.18). */
+export async function getServiceByPage(pageId: string): Promise<Service | null> {
+  const all = await getServices();
+  return all.find((s) => s.pageId === pageId) ?? null;
 }

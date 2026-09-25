@@ -39,6 +39,7 @@ import {
   type MobileMenuVariant,
 } from '@/lib/chrome';
 import { isSafeHref } from '@/lib/navigation';
+import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
 import {
@@ -855,6 +856,8 @@ function AppearanceScreenInner() {
                   Show a reading-progress bar across the top of the screen on posts
                 </label>
               </Panel>
+              <PostFeaturesPanel blog={theme.blog} set={set} />
+              <ArchiveFeaturesPanel blog={theme.blog} set={set} />
             </>
           )}
 

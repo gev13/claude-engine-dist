@@ -22,7 +22,7 @@ export async function GET() {
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       })),
-      ...posts.map((p) => ({
+      ...posts.filter((p) => p.indexable).map((p) => ({
         path: postPath(permalinks, p),
         locale: p.locale,
         alternates: p.alternates.map((a) => ({ locale: a.locale, path: postPath(permalinks, a) })),

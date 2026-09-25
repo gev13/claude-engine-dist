@@ -77,7 +77,7 @@ export async function expandSavedBlocks(blocks: readonly AnyBlock[], locale?: Lo
 
 /* ── The usage index ─────────────────────────────────────────────────────── */
 
-export type UsageKind = 'page' | 'post' | 'project' | 'popups' | 'projectTemplate' | 'savedBlock';
+export type UsageKind = 'page' | 'post' | 'project' | 'popups' | 'projectTemplate' | 'blogArchive' | 'savedBlock';
 
 /**
  * Record which saved blocks one piece of content uses, replacing what was
@@ -151,6 +151,10 @@ export async function rebuildUsageIndex(): Promise<void> {
       }
       if (base === 'projects' && row.value && typeof row.value === 'object') {
         await recordUsage('projectTemplate', row.key, ((row.value as { cta?: AnyBlock[] }).cta ?? []) as AnyBlock[]);
+      }
+      if (base === 'blogArchive' && row.value && typeof row.value === 'object') {
+        const value = row.value as { before?: AnyBlock[]; after?: AnyBlock[] };
+        await recordUsage('blogArchive', row.key, [...(value.before ?? []), ...(value.after ?? [])]);
       }
     }
   } catch (error) {

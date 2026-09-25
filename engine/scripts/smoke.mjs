@@ -385,6 +385,7 @@ async function main() {
     '/api/admin/webhooks/deliveries',
     '/api/admin/media/settings',
     '/api/admin/media/sizes',
+    '/api/admin/posts/archive',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

@@ -10,15 +10,18 @@ import { safeCss } from '@/lib/customCode';
 import { handleMiss } from '@/server/content/miss';
 import { JsonLd } from '@/components/site/JsonLd';
 import { buildMetadata } from '@/lib/seo/metadata';
+import { heroImage } from '@/lib/seo/heroImage';
+import { shareImage } from '@/server/seo/shareImage';
 import {
   breadcrumbs,
+  customNodes,
   faqFromBlocks,
   graph,
   itemList,
   serviceNode,
   webPage,
 } from '@/lib/seo/jsonld';
-import { servicePath, site } from '@/lib/site';
+import { site } from '@/lib/site';
 import { messageReader } from '@/lib/messages';
 import {
   blogIndexPath,
@@ -30,7 +33,7 @@ import {
   researchPath,
   withSlash,
 } from '@/lib/permalinks';
-import { getServiceBySlug, getServices } from '@/server/content/services';
+import { getServiceByPage, getServices } from '@/server/content/services';
 import { allPublishedPagePaths, getTranslations } from '@/server/content/pages';
 import { allPublishedPostSlugs, getPostTranslations } from '@/server/content/posts';
 import { getCategoryTranslations, listCategories } from '@/server/content/categories';
@@ -119,6 +122,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
   const paged = (title: string, paging?: Paging) =>
     paging && paging.number > 1 ? `${title} — ${t('archive.page', { n: paging.number })}` : title;
   const own = (paging: Paging | undefined, base: string) => (paging ? pagedPath(paging.base, paging.number, permalinks) : base);
+  /** The share picture (2.18): the page's own choice, then `fallback`, then the site's default. */
+  const image = (seo: SeoFields | undefined | null, fallback?: string | null) =>
+    shareImage({ ogImageId: seo?.ogImageId, fallbackUrl: fallback, siteDefault: settings.ogImageUrl || undefined });
 
   switch (resolved.kind) {
     case 'project': {
@@ -134,7 +140,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         type: 'article',
         publishedTime: isoDate(project.publishedAt),
         modifiedTime: isoDate(project.updatedAt),
-        imageUrl: project.coverUrl,
+        image: await image(project.seo, project.coverUrl),
         siteName: settings.name,
       });
     }
@@ -146,6 +152,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         description: term.description || settings.description,
         path: own(paging, projectTermPath(permalinks, term.taxonomy, term.slug)),
         locale,
+        image: await image(term.seo),
         siteName: settings.name,
       });
     }
@@ -163,7 +170,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         publishedTime: isoDate(post.publishedAt),
         modifiedTime: isoDate(post.updatedAt),
         authors: post.authorName ? [post.authorName] : undefined,
-        imageUrl: post.coverUrl,
+        section: post.categoryName ?? undefined,
+        image: await image(post.seo as SeoFields, post.coverUrl),
         siteName: settings.name,
       });
     }
@@ -177,6 +185,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         path: own(paging, categoryPath(permalinks, category.slug)),
         locale,
         translations: translations.map((tr) => ({ locale: tr.locale, path: categoryPath(permalinks, tr.slug) })),
+        image: await image(category.seo as SeoFields),
         siteName: settings.name,
       });
     }
@@ -185,6 +194,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         title: paged(t('blog.research'), resolved.paging),
         description: t('blog.researchIntro'),
         path: own(resolved.paging, researchPath(permalinks)),
+        image: await image(undefined),
         siteName: settings.name,
       });
     case 'blogIndex': {
@@ -194,6 +204,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         title: paged(page?.title ?? site.blogLabel, paging),
         description: page?.excerpt || t('blog.indexIntro', { site: settings.name }),
         path: own(paging, blogIndexPath(permalinks)),
+        image: await image(page?.seo, page ? heroImage(page.blocks) : undefined),
         siteName: settings.name,
       });
     }
@@ -207,10 +218,12 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         path: own(paging, path),
         locale,
         translations,
+        image: await image(page.seo, heroImage(page.blocks)),
         siteName: settings.name,
-        // Library pages are a reference for whoever builds the site, not content
-        // for search engines, whatever the page's own robots field says.
-        noindex: page.template === 'library',
+        /* Library pages are a reference for whoever builds the site, not content
+           for search engines, whatever the page's own robots field says — and
+           the page chosen as the 404 is not a page anybody should land on. */
+        noindex: page.template === 'library' || page.id === settings.notFoundPageId,
       });
     }
   }
@@ -296,16 +309,18 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
 
   // Service pages describe a Service + Offer; the services index is an ItemList.
   if (page.template === 'service') {
-    const svc = await getServiceBySlug(path.replace('/services/', ''));
-    if (svc) nodes.push(serviceNode({ slug: svc.slug, name: svc.title, description: page.excerpt || svc.blurb }));
+    // By the page itself, wherever its path puts it (2.18) — not by guessing a slug from /services/.
+    const svc = await getServiceByPage(page.id);
+    if (svc) nodes.push(serviceNode({ slug: svc.slug, path: svc.path, name: svc.title, description: page.excerpt || svc.blurb }));
   }
-  if (path === '/services') {
+  // Whatever page lists the services is the services index, at whatever address.
+  if (page.blocks.some((block) => block?.type === 'servicesIndex')) {
     const catalogue = await getServices();
     nodes.push(
       itemList({
         path,
-        name: 'Services',
-        items: catalogue.map((s) => ({ name: s.title, path: servicePath(s.slug) })),
+        name: page.title,
+        items: catalogue.map((s) => ({ name: s.title, path: s.path })),
       }),
     );
   }
@@ -332,7 +347,7 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
         <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(page.customCss) }} />
       )}
       {paging && <PagingLinks paging={paging} permalinks={permalinks} />}
-      <JsonLd data={graph(nodes)} />
+      <JsonLd data={graph([...nodes, ...customNodes(page.seo.jsonLd)])} />
     </>
   );
 }

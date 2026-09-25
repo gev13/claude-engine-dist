@@ -1,7 +1,7 @@
 import 'server-only';
 import { nanoid } from 'nanoid';
-import { type FooterColumn, type NavItem, type Navigation, type SocialLink, parseNavigation } from '@/lib/navigation';
-import { footerNav, headerCta, mainNav, servicePath } from '@/lib/site';
+import { type FooterColumn, type NavItem, type Navigation, type SocialLabelStyle, type SocialLink, parseNavigation } from '@/lib/navigation';
+import { footerNav, headerCta, mainNav } from '@/lib/site';
 import type { Locale } from '@/lib/locales';
 import { readLocalised } from './localisedSettings';
 import { getServiceCatalogue } from './services';
@@ -30,12 +30,12 @@ export async function bundledNavigation(): Promise<{
       {
         id: 'col-core',
         title: 'Core services',
-        items: primary.map((s) => ({ id: `f-${s.slug}`, label: s.title, href: servicePath(s.slug) })),
+        items: primary.map((s) => ({ id: `f-${s.slug}`, label: s.title, href: s.path })),
       },
       {
         id: 'col-specialist',
         title: 'Specialist',
-        items: secondary.map((s) => ({ id: `f-${s.slug}`, label: s.title, href: servicePath(s.slug) })),
+        items: secondary.map((s) => ({ id: `f-${s.slug}`, label: s.title, href: s.path })),
       },
       {
         id: 'col-company',
@@ -63,6 +63,8 @@ export type ResolvedNavigation = {
   footerNote?: string;
   footerAddress?: string;
   social: SocialLink[];
+  /** How the profile links are labelled (2.18); icons when unset. */
+  socialStyle?: SocialLabelStyle;
   /** True when nothing has been saved and the bundled menus are in use. */
   fallback: boolean;
 };
@@ -102,6 +104,7 @@ export async function getNavigation(locale?: Locale): Promise<ResolvedNavigation
     footerNote: saved.footerNote,
     footerAddress: saved.footerAddress,
     social: saved.social ?? [],
+    socialStyle: saved.socialStyle,
     fallback,
   };
 }

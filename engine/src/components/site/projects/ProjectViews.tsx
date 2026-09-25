@@ -15,7 +15,7 @@ import type { Locale } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
 import { absoluteWithSlash, pagedPath, projectPath, projectTermPath, type Permalinks } from '@/lib/permalinks';
 import { projectItem, type ProjectTemplate } from '@/lib/projects';
-import { breadcrumbs, graph, itemList, webPage, ORG_ID, type Crumb } from '@/lib/seo/jsonld';
+import { breadcrumbs, graph, itemList, webPage, ORG_ID, type Crumb, customNodes } from '@/lib/seo/jsonld';
 import { isColor } from '@/lib/theme';
 import { cn, isoDate } from '@/lib/utils';
 import { getMessages } from '@/server/content/messages';
@@ -200,6 +200,7 @@ export async function ProjectArticle({
               ...(project.tags.length ? { keywords: project.tags.map((tag) => tag.name).join(', ') } : {}),
             },
             trail.length ? breadcrumbs(trail) : null,
+            ...customNodes((project.seo as { jsonLd?: unknown } | null)?.jsonLd),
           ])}
         />
       )}

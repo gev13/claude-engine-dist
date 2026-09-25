@@ -7,6 +7,9 @@ import type { SeoFields } from '@/server/db/schema';
 
 const DEFAULT_OG = '/og-default.png';
 
+/** A picture to share a page with, with what is known about it (2.18). */
+export type ShareImage = { url: string; width?: number; height?: number; type?: string; alt?: string };
+
 /**
  * Build Next metadata from a page's editable SEO record. Everything here is
  * overridable from the admin panel; the fallbacks keep an un-edited page
@@ -22,6 +25,10 @@ export function buildMetadata(opts: {
   modifiedTime?: string;
   authors?: string[];
   imageUrl?: string | null;
+  /** 2.18 — the resolved share picture (server/seo/shareImage.ts); wins over `imageUrl`. */
+  image?: ShareImage;
+  /** 2.18 — `article:section`: the post's category. */
+  section?: string;
   noindex?: boolean;
   /** The Settings name for `og:site_name`. Callers pass it because this
    *  module is pure; the bundled constant is only the last resort. */
@@ -62,8 +69,17 @@ export function buildMetadata(opts: {
       languages['x-default'] = `${SITE_URL}${url === '/' ? '' : url}`;
     }
   }
-  const image = opts.imageUrl ?? DEFAULT_OG;
-  const absoluteImage = image.startsWith('http') ? image : `${SITE_URL}${image}`;
+  const shared: ShareImage = opts.image ?? (opts.imageUrl ? { url: opts.imageUrl } : { url: DEFAULT_OG, width: 1200, height: 630 });
+  const absoluteImage = shared.url.startsWith('http') ? shared.url : `${SITE_URL}${shared.url}`;
+  /* The bundled picture is 1200×630; anything else says what it is, or
+     nothing — a size claimed for a picture that is not that size makes
+     every network crop it wrongly. */
+  const ogImage = {
+    url: absoluteImage,
+    ...(shared.width && shared.height ? { width: shared.width, height: shared.height } : {}),
+    ...(shared.type ? { type: shared.type } : {}),
+    alt: shared.alt || title,
+  };
 
   const robots = opts.noindex
     ? { index: false, follow: false }
@@ -82,7 +98,8 @@ export function buildMetadata(opts: {
 
   return {
     metadataBase: new URL(SITE_URL),
-    title,
+    // "Use exactly this title" (2.18): no site name after it.
+    title: seo.exactTitle ? { absolute: title } : title,
     description,
     /* Emitted only when there is genuinely more than one language. Counting
        the map's keys would not do: a page that exists only in English still
@@ -103,10 +120,11 @@ export function buildMetadata(opts: {
       url: canonical,
       title: seo.ogTitle?.trim() || title,
       description: seo.ogDescription?.trim() || description,
-      images: [{ url: absoluteImage, width: 1200, height: 630, alt: title }],
+      images: [ogImage],
       ...(opts.publishedTime ? { publishedTime: opts.publishedTime } : {}),
       ...(opts.modifiedTime ? { modifiedTime: opts.modifiedTime } : {}),
       ...(opts.authors ? { authors: opts.authors } : {}),
+      ...(opts.section ? { section: opts.section } : {}),
     },
     twitter: {
       card: seo.twitterCard ?? 'summary_large_image',

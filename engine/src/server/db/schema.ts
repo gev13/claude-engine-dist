@@ -40,6 +40,10 @@ export const users = pgTable(
     firstName: varchar('first_name', { length: 100 }).notNull().default(''),
     lastName: varchar('last_name', { length: 100 }).notNull().default(''),
     phone: varchar('phone', { length: 40 }),
+    /** 2.18 — shown in a post's author box: a few sentences, a picture, and links. Public once the box is on. */
+    bio: text('bio').notNull().default(''),
+    avatarUrl: varchar('avatar_url', { length: 500 }),
+    links: jsonb('links').$type<{ network: string; href: string }[]>().notNull().default(sql`'[]'::jsonb`),
     /** argon2id hash. Never leaves the server. */
     passwordHash: text('password_hash').notNull(),
     role: userRole('role').notNull().default('editor'),
@@ -225,6 +229,8 @@ export const media = pgTable(
 
 export type SeoFields = {
   title?: string;
+  /** 2.18 — use the title exactly as written, without the site's suffix. */
+  exactTitle?: boolean;
   description?: string;
   canonicalUrl?: string;
   robots?: string;
@@ -338,6 +344,8 @@ export const categories = pgTable(
     translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
     name: varchar('name', { length: 200 }).notNull(),
     description: text('description').notNull().default(''),
+    /** 2.18 — the picture a category's archive can open with (Appearance → Blog). */
+    imageUrl: varchar('image_url', { length: 500 }),
     seo: jsonb('seo').$type<SeoFields>().notNull().default(sql`'{}'::jsonb`),
     parentId: uuid('parent_id'),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -554,7 +562,7 @@ export const savedBlockUsage = pgTable(
     savedBlockId: uuid('saved_block_id')
       .notNull()
       .references(() => savedBlocks.id, { onDelete: 'cascade' }),
-    /** `page`, `post`, `project`, `popups`, `projectTemplate` or `savedBlock`. */
+    /** `page`, `post`, `project`, `popups`, `projectTemplate`, `blogArchive` or `savedBlock`. */
     contentType: varchar('content_type', { length: 20 }).notNull(),
     /** The row's id, or the settings key for content kept in settings. */
     contentId: varchar('content_id', { length: 120 }).notNull(),

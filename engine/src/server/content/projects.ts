@@ -285,11 +285,12 @@ export async function getProjectTerm(taxonomy: ProjectTaxonomy, slug: string, re
 /* ── Enumerations, for the sitemap and llms.txt ──────────────────────────── */
 
 export async function allPublishedProjects(): Promise<
-  { id: string; slug: string; title: string; summary: string; locale: Locale; updatedAt: Date; groupId: string }[]
+  { id: string; slug: string; title: string; summary: string; locale: Locale; updatedAt: Date; groupId: string; indexable: boolean }[]
 > {
   try {
     const rows = await db
       .select({
+        indexable: sql<boolean>`coalesce(${projects.seo}->>'robots', '') !~* 'noindex'`,
         id: projects.id,
         slug: projects.slug,
         title: projects.title,

@@ -25,6 +25,10 @@ export type SiteIdentity = {
   description: string;
   /** Omitted from the graph when empty — never a placeholder address. */
   contactEmail?: string;
+  /** 2.18 — the site's own profiles (Menus → Social links), as `sameAs`. */
+  sameAs?: string[];
+  /** 2.18 — the brand logo from Appearance, when one is set; the bundled mark otherwise. */
+  logoUrl?: string;
 };
 
 export function organization(s: SiteIdentity): Node {
@@ -35,7 +39,10 @@ export function organization(s: SiteIdentity): Node {
     url: `${SITE_URL}/`,
     description: s.description,
     ...(s.tagline ? { slogan: s.tagline } : {}),
-    logo: { '@type': 'ImageObject', url: `${SITE_URL}/icon.svg`, width: 512, height: 512 },
+    logo: s.logoUrl
+      ? { '@type': 'ImageObject', url: abs(s.logoUrl) }
+      : { '@type': 'ImageObject', url: `${SITE_URL}/icon.svg`, width: 512, height: 512 },
+    ...(s.sameAs && s.sameAs.length ? { sameAs: s.sameAs } : {}),
     ...(s.contactEmail
       ? {
           email: s.contactEmail,
@@ -322,6 +329,20 @@ export function siteNavigation(links: readonly { name: string; path: string }[] 
     name: nav.map((n) => n.name),
     url: nav.map((n) => abs(n.path)),
   };
+}
+
+/**
+ * The page's own structured data, from its SEO panel (2.18) — stored since
+ * the start and never rendered until now. Only objects that name a schema.org
+ * `@type` survive; a `@context` is dropped, since the graph has one. They
+ * join the generated graph rather than replacing it.
+ */
+export function customNodes(jsonLd: unknown): Node[] {
+  if (!Array.isArray(jsonLd)) return [];
+  return jsonLd
+    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item) && typeof (item as { '@type'?: unknown })['@type'] === 'string')
+    .slice(0, 20)
+    .map(({ '@context': _context, ...node }) => node as Node);
 }
 
 export function graph(nodes: (Node | null | undefined)[]) {

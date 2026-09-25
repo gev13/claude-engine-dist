@@ -52,6 +52,7 @@ async function describeUsage(id: string) {
   }
   if (ids('popups').length) out.push({ kind: 'Popups', title: 'A popup', edit: '/admin/popups', view: null });
   if (ids('projectTemplate').length) out.push({ kind: 'Project template', title: 'After every project', edit: '/admin/projects/template', view: null });
+  if (ids('blogArchive').length) out.push({ kind: 'Category pages', title: 'Around every category’s posts', edit: '/admin/posts/archive', view: null });
   return out;
 }
 

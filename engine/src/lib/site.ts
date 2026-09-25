@@ -30,6 +30,13 @@ export type ServiceRef = {
   blurb: string;
   /** Mockup file this page was ported from. */
   mockup: string;
+  /**
+   * Where the service's page lives (2.18). Services are pages, and a page's
+   * path is whatever it was given — `/what-we-do/strategy/audits`, not
+   * necessarily `/services/<slug>`. Every link and every structured-data URL
+   * uses this.
+   */
+  path: string;
 };
 
 /**
@@ -51,6 +58,7 @@ export function serviceBySlug(slug: string) {
   return services.find((s) => s.slug === slug);
 }
 
+/** Where a service lives when its page gives no path of its own — the bundled catalogue only. */
 export function servicePath(slug: string) {
   return `/services/${slug}`;
 }

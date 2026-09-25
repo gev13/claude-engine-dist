@@ -37,6 +37,9 @@ describe('permalinks — the defaults are today’s addresses', () => {
       projectBase: '/projects',
       projectCategoryBase: '/projects/category',
       projectTagBase: '/projects/tag',
+      // 2.18 — WordPress's feed addresses.
+      feeds: true,
+      feedSegment: 'feed',
     });
     expect(postPath(DEFAULT_PERMALINKS, { slug: 'hello', categorySlug: 'news' })).toBe('/blog/hello');
     expect(categoryPath(DEFAULT_PERMALINKS, 'news')).toBe('/blog/category/news');

@@ -27,19 +27,26 @@ export function BlogList({
   /** The id "Load more" finds this list by in the next page's HTML. */
   listId?: string;
   /** Chips for a post with no category, in the reader's language. */
-  labels?: { research: string; article: string };
+  labels?: { research: string; article: string; minRead?: string; readMore?: string };
 }) {
+  const card = blog.card;
   if (blog.index === 'grid') {
+    /* The card grid's line above the title: its date, as always — or what the
+       site picked (2.18), joined with a middle dot. */
+    const eyebrow = (p: PostRow) => {
+      const parts = [
+        card.category ? (p.kind === 'research' ? labels?.research : (p.categoryName ?? labels?.article)) : null,
+        card.date !== false && p.publishedAt ? formatDate(p.publishedAt) : null,
+        card.readingTime && labels?.minRead ? `${p.readingMinutes} ${labels.minRead}` : null,
+      ].filter(Boolean);
+      return parts.length ? parts.join(' · ') : fallbackEyebrow;
+    };
     return (
       <CardGrid cols={3} id={listId}>
         {posts.map((p) => (
-          <Card
-            key={p.id}
-            eyebrow={p.publishedAt ? formatDate(p.publishedAt) : fallbackEyebrow}
-            title={p.title}
-            href={postPath(permalinks, p)}
-          >
+          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)}>
             {p.excerpt}
+            {card.readMore && labels?.readMore && <span className="he-card__more">{labels.readMore} →</span>}
           </Card>
         ))}
       </CardGrid>
@@ -54,6 +61,7 @@ export function BlogList({
       permalinks={permalinks}
       listId={listId}
       labels={labels}
+      card={card}
     />
   );
 }

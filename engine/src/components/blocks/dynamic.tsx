@@ -5,7 +5,6 @@ import { Card, CardGrid } from '@/components/ui/Card';
 import { Section } from '@/components/ui/Section';
 import { cn } from '@/lib/utils';
 import { blockSchemas } from '@/lib/blocks';
-import { servicePath } from '@/lib/site';
 import { messageReader } from '@/lib/messages';
 import { blogIndexPath, pagedPath, postPath, type Permalinks } from '@/lib/permalinks';
 import { getMessages } from '@/server/content/messages';
@@ -19,6 +18,7 @@ import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
+import type { PostCardOptions } from '@/lib/blog';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
 
@@ -34,9 +34,9 @@ export async function ServicesIndexBlock(p: P<'servicesIndex'>) {
         {list.map((s) => (
           <Card
             key={s.slug}
-            eyebrow={s.tier === 'primary' ? 'Core' : 'Specialist'}
+            eyebrow={p.eyebrows === 'none' ? undefined : s.tier === 'primary' ? p.primaryLabel || 'Core' : p.secondaryLabel || 'Specialist'}
             title={s.title}
-            href={servicePath(s.slug)}
+            href={s.path}
           >
             {s.blurb}
           </Card>
@@ -297,6 +297,7 @@ export function PostCollection({
   permalinks,
   labels = { research: 'Research', article: 'Article' },
   listId,
+  card = {},
 }: {
   posts: PostRow[];
   variant: PostListVariant;
@@ -305,15 +306,17 @@ export function PostCollection({
   perPage?: number;
   permalinks: Permalinks;
   /** The chip on a post with no category, in the reader's language. */
-  labels?: { research: string; article: string };
+  labels?: { research: string; article: string; minRead?: string; readMore?: string };
   /** The id "Load more" finds this list by in the next page's HTML. */
   listId?: string;
+  /** What each card shows (2.18); unset is what these layouts always showed. */
+  card?: PostCardOptions;
 }) {
   const minimal = variant === 'minimal';
   const withExcerpt = variant === 'list' || variant === 'wide' || variant === 'overlay';
 
   const items = posts.map((post) => {
-    const date = post.publishedAt && (
+    const date = card.date !== false && post.publishedAt && (
       <time className="he-plst__date" dateTime={post.publishedAt.toISOString()}>
         {formatDate(post.publishedAt)}
       </time>
@@ -332,10 +335,12 @@ export function PostCollection({
           )}
           {minimal && date}
           <div className="he-plst__text">
-            <span className="he-plst__chip">{post.kind === 'research' ? labels.research : post.categoryName ?? labels.article}</span>
+            {card.category !== false && <span className="he-plst__chip">{post.kind === 'research' ? labels.research : post.categoryName ?? labels.article}</span>}
             <h3 className="he-plst__title">{post.title}</h3>
             {!minimal && date}
+            {card.readingTime && labels.minRead && <span className="he-plst__read">{`${post.readingMinutes} ${labels.minRead}`}</span>}
             {withExcerpt && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
+            {card.readMore && labels.readMore && <span className="he-plst__more">{labels.readMore} →</span>}
           </div>
           {minimal && (
             <span className="he-plst__arrow" aria-hidden="true">
@@ -347,8 +352,8 @@ export function PostCollection({
     );
   });
 
-  const listClass = cn('he-plst', `is-${variant}`);
-  const style = { '--cols': columns } as React.CSSProperties;
+  const listClass = cn('he-plst', `is-${variant}`, card.ratio && 'has-ratio');
+  const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}) } as React.CSSProperties;
 
   if (pagination === 'none') {
     return (
@@ -391,8 +396,9 @@ function PostLayouts({
             pagination={p.pagination === 'server' ? 'none' : p.pagination}
             perPage={p.perPage}
             permalinks={permalinks}
-            labels={{ research: t('blog.research'), article: t('blog.article') }}
+            labels={{ research: t('blog.research'), article: t('blog.article'), minRead: t('blog.minRead'), readMore: t('blog.readMore') }}
             listId={listId}
+            card={p.card}
           />
         </>
       )}

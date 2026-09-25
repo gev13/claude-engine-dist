@@ -203,6 +203,25 @@ export function PermalinksScreen() {
           </div>
         </Panel>
 
+        {/* 2.18 — RSS, at the addresses WordPress used. */}
+        <Panel title="Feeds">
+          <div className="flex flex-col gap-5">
+            <label className="flex items-center gap-2.5 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.feeds} onChange={(e) => set('feeds', e.target.checked)} />
+              RSS feeds for the blog and each category
+            </label>
+            {form.feeds && (
+              <Field
+                label="Feed word"
+                htmlFor="pl-feed"
+                hint={`the blog's feed is ${shown(`/${form.feedSegment}`, form)}; a category's is ${shown(`${categoryPath(form, 'news')}/${form.feedSegment}`, form)}`}
+              >
+                <Input id="pl-feed" value={form.feedSegment} onChange={(e) => set('feedSegment', e.target.value)} />
+              </Field>
+            )}
+          </div>
+        </Panel>
+
         <Panel title="Trailing slash">
           <Field
             label="Addresses end in /"

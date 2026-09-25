@@ -14,6 +14,8 @@ import {
   type FooterColumn,
   type NavChild,
   type NavItem,
+  SOCIAL_SHORT,
+  type SocialLabelStyle,
   type SocialLink,
   isSafeHref,
 } from '@/lib/navigation';
@@ -30,6 +32,7 @@ type Resolved = {
   footerNote?: string;
   footerAddress?: string;
   social: SocialLink[];
+  socialStyle?: SocialLabelStyle;
   fallback: boolean;
 };
 
@@ -59,11 +62,12 @@ function NavigationScreenInner() {
   const [note, setNote] = useState('');
   const [address, setAddress] = useState('');
   const [social, setSocial] = useState<SocialLink[]>([]);
+  const [socialStyle, setSocialStyle] = useState<SocialLabelStyle>('icon');
   const [saved, setSaved] = useState('');
   const [saving, setSaving] = useState(false);
   const [tab, setTab] = useState<'header' | 'footer'>('header');
 
-  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[] }) =>
+  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[]; ss: SocialLabelStyle }) =>
     JSON.stringify(s);
 
   useEffect(() => {
@@ -80,10 +84,11 @@ function NavigationScreenInner() {
     setNote(n.footerNote ?? '');
     setAddress(n.footerAddress ?? '');
     setSocial(n.social ?? []);
-    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [] }));
+    setSocialStyle(n.socialStyle ?? 'icon');
+    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [], ss: n.socialStyle ?? 'icon' }));
   }, [data]);
 
-  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social }) !== saved;
+  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social, ss: socialStyle }) !== saved;
 
   async function save() {
     const pair = (value: Cta, name: string) => {
@@ -101,7 +106,7 @@ function NavigationScreenInner() {
 
     const badSocial = social.find((s) => !isSafeHref(s.href));
     if (badSocial) {
-      toast(`The ${SOCIAL_LABELS[badSocial.network]} link needs a full https:// address.`, 'error');
+      toast(`The ${SOCIAL_LABELS[badSocial.network]} link needs a full https:// address — or mailto: / tel: for email and phone.`, 'error');
       return;
     }
 
@@ -116,6 +121,8 @@ function NavigationScreenInner() {
         ...(note.trim() ? { footerNote: note.trim() } : {}),
         ...(address.trim() ? { footerAddress: address.trim() } : {}),
         ...(social.length ? { social } : {}),
+        // Icons are the default and are left out, so an untouched site saves what it always did.
+        ...(socialStyle !== 'icon' ? { socialStyle } : {}),
       };
       const result = await api<Response>('/api/admin/navigation', { method: 'PUT', json: body });
       await mutate(result, { revalidate: false });
@@ -323,9 +330,16 @@ function NavigationScreenInner() {
             }
           >
             {social.length === 0 && <p className="m-0 text-[13px] text-smoke">No social links yet.</p>}
+            <Field label="Show them as" className="mb-4 max-w-[320px]" hint="in the header menu and the footer; the Social links block has its own">
+              <Select value={socialStyle} onChange={(e) => setSocialStyle(e.target.value as SocialLabelStyle)}>
+                <option value="icon">Icons</option>
+                <option value="name">Names — Instagram, Behance</option>
+                <option value="short">Short labels — Ig. / Be.</option>
+              </Select>
+            </Field>
             <div className="space-y-2">
               {social.map((link, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[180px_1fr_auto]">
+                <div key={i} className="grid gap-2 sm:grid-cols-[180px_1fr_90px_auto]">
                   <Select
                     value={link.network}
                     onChange={(e) =>
@@ -340,9 +354,16 @@ function NavigationScreenInner() {
                   </Select>
                   <Input
                     value={link.href}
-                    placeholder="https://"
+                    placeholder={link.network === 'email' ? 'mailto:hello@example.com' : link.network === 'phone' ? 'tel:+441234567890' : 'https://'}
                     spellCheck={false}
                     onChange={(e) => setSocial(social.map((s, j) => (j === i ? { ...s, href: e.target.value.trim() } : s)))}
+                  />
+                  <Input
+                    value={link.short ?? ''}
+                    placeholder={SOCIAL_SHORT[link.network]}
+                    maxLength={8}
+                    aria-label={`Short label for ${SOCIAL_LABELS[link.network]}`}
+                    onChange={(e) => setSocial(social.map((s, j) => (j === i ? { ...s, short: e.target.value.trim() || undefined } : s)))}
                   />
                   <AdminButton
                     variant="ghost"

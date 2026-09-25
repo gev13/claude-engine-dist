@@ -96,7 +96,11 @@ const footerColumn = z.object({
 export type FooterColumn = z.infer<typeof footerColumn>;
 
 /** Networks the footer can draw an icon for. Anything else is a footer link. */
-export const SOCIAL_NETWORKS = ['x', 'linkedin', 'instagram', 'facebook', 'youtube', 'github', 'tiktok'] as const;
+export const SOCIAL_NETWORKS = [
+  'x', 'linkedin', 'instagram', 'facebook', 'youtube', 'github', 'tiktok',
+  // 2.18
+  'behance', 'dribbble', 'vimeo', 'pinterest', 'telegram', 'whatsapp', 'discord', 'threads', 'reddit', 'twitch', 'medium', 'email', 'phone',
+] as const;
 export type SocialNetwork = (typeof SOCIAL_NETWORKS)[number];
 
 export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
@@ -107,10 +111,69 @@ export const SOCIAL_LABELS: Record<SocialNetwork, string> = {
   youtube: 'YouTube',
   github: 'GitHub',
   tiktok: 'TikTok',
+  behance: 'Behance',
+  dribbble: 'Dribbble',
+  vimeo: 'Vimeo',
+  pinterest: 'Pinterest',
+  telegram: 'Telegram',
+  whatsapp: 'WhatsApp',
+  discord: 'Discord',
+  threads: 'Threads',
+  reddit: 'Reddit',
+  twitch: 'Twitch',
+  medium: 'Medium',
+  email: 'Email',
+  phone: 'Phone',
 };
 
-const socialLink = z.object({ network: z.enum(SOCIAL_NETWORKS), href });
+/** The short form a link shows under the `short` style — "Fb.", "Ig." — unless it has its own. */
+export const SOCIAL_SHORT: Record<SocialNetwork, string> = {
+  x: 'X.',
+  linkedin: 'Lk.',
+  instagram: 'Ig.',
+  facebook: 'Fb.',
+  youtube: 'Yt.',
+  github: 'Gh.',
+  tiktok: 'Tt.',
+  behance: 'Be.',
+  dribbble: 'Dr.',
+  vimeo: 'Vm.',
+  pinterest: 'Pi.',
+  telegram: 'Tg.',
+  whatsapp: 'Wa.',
+  discord: 'Dc.',
+  threads: 'Th.',
+  reddit: 'Rd.',
+  twitch: 'Tw.',
+  medium: 'Md.',
+  email: 'Em.',
+  phone: 'Ph.',
+};
+
+/** How the site's own profile links are labelled in the header and footer (2.18). */
+export const SOCIAL_LABEL_STYLES = ['icon', 'name', 'short'] as const;
+export type SocialLabelStyle = (typeof SOCIAL_LABEL_STYLES)[number];
+
+const socialLink = z.object({
+  network: z.enum(SOCIAL_NETWORKS),
+  href,
+  /** Its own short label, for the `short` style ("Be." rather than the default). */
+  short: z.string().trim().max(8).optional(),
+});
 export type SocialLink = z.infer<typeof socialLink>;
+
+/** What a link says under a label style: nothing (an icon), its name, or its short form. */
+export function socialText(link: SocialLink, style: SocialLabelStyle): string | null {
+  if (style === 'name') return SOCIAL_LABELS[link.network];
+  if (style === 'short') return link.short || SOCIAL_SHORT[link.network];
+  return null;
+}
+
+/** Profiles on the web — what `sameAs` lists. An email address or a phone number is not a profile. */
+export const isProfile = (link: SocialLink) => /^https?:\/\//i.test(link.href) && link.network !== 'email' && link.network !== 'phone';
+
+/** A mailto: or tel: opens here; only a web profile opens a new tab. */
+export const opensElsewhere = (link: SocialLink) => /^https?:\/\//i.test(link.href);
 
 const cta = z.object({ label: z.string().trim().min(1).max(60), href });
 
@@ -124,7 +187,9 @@ export const navigationSchema = z.object({
   footerNote: z.string().trim().max(300).optional(),
   /** Postal address shown by the brand-block footer. Plain text, line breaks kept. */
   footerAddress: z.string().trim().max(300).optional(),
-  social: z.array(socialLink).max(10).optional(),
+  social: z.array(socialLink).max(20).optional(),
+  /** 2.18 — icons (as before), names, or short labels ("Fb. / Ig. / Lk."). */
+  socialStyle: z.enum(SOCIAL_LABEL_STYLES).optional(),
 });
 
 export type Navigation = z.infer<typeof navigationSchema>;

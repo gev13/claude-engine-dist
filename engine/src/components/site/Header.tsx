@@ -5,8 +5,8 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { SiteMark, Wordmark } from '@/components/ui/Logo';
 import type { ResolvedChrome } from '@/lib/chrome';
-import { type NavChild, type NavItem, SOCIAL_LABELS, type SocialNetwork, linkAttrs } from '@/lib/navigation';
-import { type ServiceRef, servicePath } from '@/lib/site';
+import { type NavChild, type NavItem, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
+import type { ServiceRef } from '@/lib/site';
 import type { Theme } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { Icon, SocialIcon } from './icons';
@@ -31,7 +31,7 @@ import { SiteImg } from '@/components/ui/SiteImg';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type Cta = { label: string; href: string } | null;
-type ServiceLink = Pick<ServiceRef, 'slug' | 'title'>;
+type ServiceLink = Pick<ServiceRef, 'slug' | 'title' | 'path'>;
 
 export type HeaderProps = {
   siteName: string;
@@ -52,7 +52,13 @@ export type HeaderProps = {
   searchHref?: string;
 };
 
-export type HeaderContact = { email?: string; address?: string; social: { network: SocialNetwork; href: string }[] };
+export type HeaderContact = {
+  email?: string;
+  address?: string;
+  social: SocialLink[];
+  /** 2.18 — icons, names or short labels, as set in Menus. */
+  socialStyle?: SocialLabelStyle;
+};
 
 type Group = { title?: string; links: NavChild[] };
 
@@ -869,7 +875,7 @@ function MobileMenu({
                 <ul>
                   {group.links.map((s) => (
                     <li key={s.slug}>
-                      <Link href={servicePath(s.slug)} onClick={onClose}>
+                      <Link href={s.path} onClick={onClose}>
                         {s.title}
                       </Link>
                     </li>
@@ -892,8 +898,8 @@ function MobileMenu({
               <ul className="he-menu__social">
                 {contact.social.map((s) => (
                   <li key={s.network + s.href}>
-                    <a href={s.href} target="_blank" rel="noopener noreferrer" aria-label={SOCIAL_LABELS[s.network]}>
-                      <SocialIcon network={s.network} />
+                    <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
+                      {socialText(s, contact.socialStyle ?? 'icon') ?? <SocialIcon network={s.network} />}
                     </a>
                   </li>
                 ))}

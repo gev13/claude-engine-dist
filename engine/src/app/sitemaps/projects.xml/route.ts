@@ -22,7 +22,7 @@ export async function GET() {
 
   return new Response(
     urlSet([
-      ...projects.map((project) => ({
+      ...projects.filter((project) => project.indexable).map((project) => ({
         path: projectPath(permalinks, project.slug),
         locale: project.locale,
         alternates: alternates.get(project.groupId),

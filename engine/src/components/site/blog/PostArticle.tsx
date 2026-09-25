@@ -2,23 +2,23 @@ import Link from '@/components/ui/SiteLink';
 import { BlockRenderer } from '@/components/blocks/Renderer';
 import { JsonLd } from '@/components/site/JsonLd';
 import { ReadingProgress } from '@/components/site/ReadingProgress';
-import { Card, CardGrid } from '@/components/ui/Card';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Heading } from '@/components/ui/Heading';
 import { Prose } from '@/components/ui/Prose';
 import { Section } from '@/components/ui/Section';
 import type { AnyBlock } from '@/lib/blocks';
-import { resolveBlog } from '@/lib/blog';
+import { fillEyebrow, resolveBlog, type ResolvedBlog } from '@/lib/blog';
 import { safeCss } from '@/lib/customCode';
 import { countHeadingOnes } from '@/lib/headings';
 import type { Locale } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
 import { blogIndexPath, categoryPath, type Permalinks } from '@/lib/permalinks';
-import { articleNode, breadcrumbs, faqFromBlocks, graph, webPage, type Crumb } from '@/lib/seo/jsonld';
+import { articleNode, breadcrumbs, customNodes, faqFromBlocks, graph, webPage, type Crumb } from '@/lib/seo/jsonld';
 import { site } from '@/lib/site';
 import { cn, formatDate, isoDate } from '@/lib/utils';
 import { getMessages } from '@/server/content/messages';
-import { listPosts, postUrl, type PostDetail } from '@/server/content/posts';
+import { adjacentPosts, listPosts, postUrl, type PostDetail, type PostListItem } from '@/server/content/posts';
+import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from './PostExtras';
 import { getTheme } from '@/server/content/theme';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { SiteImg } from '@/components/ui/SiteImg';
@@ -39,6 +39,27 @@ import { SiteImg } from '@/components/ui/SiteImg';
    way it does on a page.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/**
+ * "Keep reading" (2.18): posts of the same kind (as always), from the
+ * post's primary category, or from any category it shares — topped up from
+ * the same kind when a category has too few.
+ */
+async function relatedPosts(blog: ResolvedBlog, post: PostDetail, locale?: Locale): Promise<PostListItem[]> {
+  const { source, count } = blog.related;
+  if (source === 'off') return [];
+  const sameKind = () => listPosts({ kind: post.kind, limit: count + 1, locale, excludeId: post.id });
+  if (source === 'kind') return (await sameKind()).slice(0, count);
+  const matched =
+    source === 'primary'
+      ? post.categorySlug
+        ? await listPosts({ categorySlug: post.categorySlug, limit: count, locale, excludeId: post.id })
+        : []
+      : await listPosts({ categorySlugs: post.categories.map((c) => c.slug), limit: count, locale, excludeId: post.id });
+  if (matched.length >= count) return matched.slice(0, count);
+  const seen = new Set(matched.map((p) => p.id));
+  return [...matched, ...(await sameKind()).filter((p) => !seen.has(p.id))].slice(0, count);
+}
+
 export async function PostArticle({
   post,
   permalinks,
@@ -57,9 +78,9 @@ export async function PostArticle({
   const path = postUrl(permalinks, post);
   const indexPath = blogIndexPath(permalinks);
 
-  const related = preview
-    ? []
-    : (await listPosts({ kind: post.kind, limit: 4, locale, excludeId: post.id })).slice(0, 3);
+  const related = preview ? [] : await relatedPosts(blog, post, locale);
+  // 2.18 — the neighbours, only when they are shown.
+  const adjacent = !preview && blog.prevNext !== 'off' ? await adjacentPosts(post, locale) : { previous: null, next: null };
 
   // A layout built around the cover falls back to the standard one when there is no cover.
   const layout = post.coverUrl ? blog.post : 'standard';
@@ -80,12 +101,41 @@ export async function PostArticle({
     { name: post.title, path },
   ];
 
-  const eyebrow = (
+  const categoryLabel = post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article'));
+  const eyebrow = blog.eyebrow ? (
+    // 2.18 — the site's own line: "{category} · {minutes} min read".
     <Eyebrow>
-      {post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article'))}
+      {fillEyebrow(blog.eyebrow, {
+        category: categoryLabel,
+        date: post.publishedAt ? formatDate(post.publishedAt) : '',
+        minutes: post.readingMinutes,
+        minRead: t('blog.minRead'),
+      })}
+    </Eyebrow>
+  ) : (
+    <Eyebrow>
+      {categoryLabel}
       {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
     </Eyebrow>
   );
+  const back = blog.backLink && <BackLink href={indexPath} t={t} />;
+  const tocSide = !preview && (blog.toc.position === 'left' || blog.toc.position === 'right');
+  const tocTop = !preview && blog.toc.position === 'top';
+  const body = showBody && (
+    tocSide ? (
+      <div className={cn('he-post__body', `has-toc-${blog.toc.position}`)}>
+        <PostToc blog={blog} t={t} />
+        <Prose html={post.body} className="mt-12 max-w-[72ch]" />
+      </div>
+    ) : (
+      <>
+        {tocTop && <PostToc blog={blog} t={t} />}
+        <Prose html={post.body} className="mt-12 max-w-[72ch]" />
+      </>
+    )
+  );
+  const shareTop = !preview && blog.share.position === 'top' && <PostShare blog={blog} t={t} />;
+  const shareBottom = !preview && blog.share.position === 'bottom' && <PostShare blog={blog} t={t} />;
   const title = (
     <Heading level={titleLevel} className={cn('max-w-[20ch]', onCover && 'text-white')}>
       {post.title}
@@ -136,16 +186,24 @@ export async function PostArticle({
           <header className="he-post-hero he-bleed-top">
             <SiteImg src={post.coverUrl!} alt="" className="he-post-hero__img" priority />
             <div className="shell he-post-hero__text">
+              {back}
               {eyebrow}
               {title}
               {excerpt}
             </div>
           </header>
         )}
+        {layout === 'coverThenTitle' && (
+          // 2.18 — the cover at its own shape, full width; the title follows in a card.
+          <div className="he-post-ctt he-bleed-top">
+            <SiteImg src={post.coverUrl!} alt="" className="he-post-ctt__img" priority />
+          </div>
+        )}
         <Section size="lg">
           {layout === 'split' ? (
             <div className="he-post-split">
               <div>
+                {back}
                 {eyebrow}
                 {title}
                 {excerpt}
@@ -155,8 +213,17 @@ export async function PostArticle({
             </div>
           ) : layout === 'fullscreen' ? (
             meta
+          ) : layout === 'coverThenTitle' ? (
+            <div className="he-post-ctt__card">
+              {back}
+              {eyebrow}
+              {title}
+              {excerpt}
+              {meta}
+            </div>
           ) : (
             <>
+              {back}
               {eyebrow}
               {title}
               {excerpt}
@@ -165,30 +232,17 @@ export async function PostArticle({
             </>
           )}
 
-          {showBody && <Prose html={post.body} className="mt-12 max-w-[72ch]" />}
+          {shareTop}
+          {body}
+          {shareBottom}
         </Section>
         {!blocksFirst && postBlocks}
       </article>
 
-      {related.length > 0 && (
-        <Section tone="raised" size="lg">
-          <Heading level={2} className="mb-8">
-            {t('blog.keepReading')}
-          </Heading>
-          <CardGrid cols={3}>
-            {related.map((p) => (
-              <Card
-                key={p.id}
-                eyebrow={p.kind === 'research' ? t('blog.research') : (p.categoryName ?? t('blog.article'))}
-                title={p.title}
-                href={postUrl(permalinks, p)}
-              >
-                {p.excerpt}
-              </Card>
-            ))}
-          </CardGrid>
-        </Section>
-      )}
+      {!preview && blog.share.position === 'side' && <PostShare blog={blog} t={t} side />}
+      {!preview && blog.authorBox && <AuthorBox post={post} t={t} />}
+      {!preview && blog.prevNext !== 'off' && <PrevNext blog={blog} previous={adjacent.previous} next={adjacent.next} permalinks={permalinks} t={t} />}
+      <RelatedPosts blog={blog} posts={related} permalinks={permalinks} t={t} />
 
       {!preview && (
         <JsonLd
@@ -214,6 +268,7 @@ export async function PostArticle({
             }),
             crumbs,
             faqFromBlocks(await expandSavedBlocks(blocks, locale), path),
+            ...customNodes((post.seo as { jsonLd?: unknown } | null)?.jsonLd),
           ])}
         />
       )}

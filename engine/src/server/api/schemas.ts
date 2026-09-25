@@ -7,6 +7,7 @@ export const statusEnum = z.enum(['draft', 'published', 'archived']);
 
 export const seoSchema = z.object({
   title: z.string().max(300).optional(),
+  exactTitle: z.boolean().optional(),
   description: z.string().max(1000).optional(),
   canonicalUrl: z.string().max(500).optional(),
   robots: z.string().max(120).optional(),
@@ -14,7 +15,8 @@ export const seoSchema = z.object({
   ogDescription: z.string().max(1000).optional(),
   ogImageId: z.string().max(64).optional(),
   twitterCard: z.enum(['summary', 'summary_large_image']).optional(),
-  jsonLd: z.array(z.unknown()).max(20).optional(),
+  /** Objects only, each a schema.org node; rendered into the page's graph (2.18). */
+  jsonLd: z.array(z.record(z.string(), z.unknown())).max(20).optional(),
   extraMeta: z
     .array(z.object({ name: z.string().optional(), property: z.string().optional(), content: z.string() }))
     .max(40)

@@ -18,6 +18,12 @@ export const SITE_SETTING_KEYS = [
   'site.timeZone',
   'seo.discourageSearchEngines',
   'seo.defaultRobots',
+  'seo.titleSeparator',
+  'seo.titleFormat',
+  'seo.ogImageUrl',
+  'pages.notFoundPageId',
+  'pages.notFoundLinkLabel',
+  'pages.notFoundLinkHref',
 ] as const;
 
 const KEY_TO_FIELD: Record<string, keyof SiteSettings> = {
@@ -29,6 +35,12 @@ const KEY_TO_FIELD: Record<string, keyof SiteSettings> = {
   'site.timeZone': 'timeZone',
   'seo.discourageSearchEngines': 'discourageSearchEngines',
   'seo.defaultRobots': 'defaultRobots',
+  'seo.titleSeparator': 'titleSeparator',
+  'seo.titleFormat': 'titleFormat',
+  'seo.ogImageUrl': 'ogImageUrl',
+  'pages.notFoundPageId': 'notFoundPageId',
+  'pages.notFoundLinkLabel': 'notFoundLinkLabel',
+  'pages.notFoundLinkHref': 'notFoundLinkHref',
 };
 
 export type ResolvedSiteSettings = Required<Pick<SiteSettings, 'name' | 'tagline' | 'description' | 'contactEmail'>> &

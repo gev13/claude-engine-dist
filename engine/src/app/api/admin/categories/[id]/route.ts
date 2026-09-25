@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { imageUrl } from '@/lib/navigation';
 import { eq, sql } from 'drizzle-orm';
 import { toSlug } from '@/lib/slug';
 import { seoSchema } from '@/server/api/schemas';
@@ -19,6 +20,8 @@ const updateSchema = z.object({
   slug: z.string().min(1).max(180).optional(),
   name: z.string().min(1).max(200).optional(),
   description: z.string().max(2000).optional(),
+  /** 2.18 — the picture its archive can open with. */
+  imageUrl: imageUrl.nullable().optional(),
   seo: seoSchema.optional(),
   parentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(-10_000).max(10_000).optional(),
@@ -69,6 +72,7 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(input.slug !== undefined ? { slug: input.slug } : {}),
         ...(input.name !== undefined ? { name: input.name } : {}),
         ...(input.description !== undefined ? { description: input.description } : {}),
+        ...(input.imageUrl !== undefined ? { imageUrl: input.imageUrl } : {}),
         ...(input.seo !== undefined ? { seo: input.seo as SeoFields } : {}),
         ...(input.parentId !== undefined ? { parentId: input.parentId } : {}),
         ...(input.sortOrder !== undefined ? { sortOrder: input.sortOrder } : {}),

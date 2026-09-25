@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { imageUrl } from '@/lib/navigation';
 import { asc, sql } from 'drizzle-orm';
 import { toSlug, uniqueSlug } from '@/lib/slug';
 import { seoSchema } from '@/server/api/schemas';
@@ -19,6 +20,8 @@ const createSchema = z.object({
   slug: z.string().min(1).max(180).optional(),
   name: z.string().min(1).max(200),
   description: z.string().max(2000).optional(),
+  /** 2.18 — the picture its archive can open with. */
+  imageUrl: imageUrl.nullable().optional(),
   seo: seoSchema.optional(),
   parentId: z.string().uuid().nullable().optional(),
   sortOrder: z.number().int().min(-10_000).max(10_000).optional(),
@@ -36,6 +39,7 @@ export async function GET(request: Request) {
         slug: categories.slug,
         name: categories.name,
         description: categories.description,
+        imageUrl: categories.imageUrl,
         seo: categories.seo,
         parentId: categories.parentId,
         sortOrder: categories.sortOrder,
@@ -70,6 +74,7 @@ export async function POST(request: Request) {
         slug,
         name: input.name,
         description: input.description ?? '',
+        imageUrl: input.imageUrl ?? null,
         seo: (input.seo ?? {}) as SeoFields,
         parentId: input.parentId ?? null,
         sortOrder: input.sortOrder ?? 0,

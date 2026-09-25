@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { SHARE_NETWORKS, type ShareNetwork } from './share';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Blog layouts (BL1, BL2)
@@ -12,7 +13,8 @@ import { z } from 'zod';
 export const BLOG_INDEX_LAYOUTS = ['grid', 'list', 'minimal', 'overlay', 'compact', 'wide'] as const;
 export type BlogIndexLayout = (typeof BLOG_INDEX_LAYOUTS)[number];
 
-export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split'] as const;
+/** `coverThenTitle` (2.18): the cover full-width at its own shape, then a card with the title and details. */
+export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split', 'coverThenTitle'] as const;
 export type BlogPostLayout = (typeof BLOG_POST_LAYOUTS)[number];
 
 /* ── What a post shows (T3, 2.13) ────────────────────────────────────────
@@ -63,6 +65,17 @@ export const LEGACY_INDEX_PER_PAGE = 24;
 export const LEGACY_ARCHIVE_PER_PAGE = 48;
 export const MAX_ARCHIVE_PER_PAGE = 48;
 
+/* ── A post's extras, and the archives' (2.18) ─────────────────────────── */
+export const POST_SHARE_POSITIONS = ['off', 'top', 'bottom', 'side'] as const;
+export type PostSharePosition = (typeof POST_SHARE_POSITIONS)[number];
+export const POST_TOC_POSITIONS = ['off', 'left', 'right', 'top'] as const;
+export type PostTocPosition = (typeof POST_TOC_POSITIONS)[number];
+export const PREV_NEXT_STYLES = ['off', 'bottom', 'floating'] as const;
+export type PrevNextStyle = (typeof PREV_NEXT_STYLES)[number];
+/** `kind` — posts of the same kind, what "Keep reading" always showed. */
+export const RELATED_SOURCES = ['kind', 'primary', 'any', 'off'] as const;
+export type RelatedSource = (typeof RELATED_SOURCES)[number];
+
 export const blogSchema = z.object({
   index: z.enum(BLOG_INDEX_LAYOUTS).optional(),
   /** A few at a time, in the browser: the layouts other than the card grid. */
@@ -76,9 +89,61 @@ export const blogSchema = z.object({
   archivePager: z.enum(ARCHIVE_PAGERS).optional(),
   /** “Showing 1–12 of 110 results” above an archive. */
   resultCount: z.boolean().optional(),
+
+  /* ── A post (T19, 2.18) — each off, or as before, until chosen ───────── */
+  /** Share buttons: above or below the article, or a bar down the side. */
+  share: z.object({ position: z.enum(POST_SHARE_POSITIONS).default('off'), networks: z.array(z.enum(SHARE_NETWORKS)).min(1).max(10).optional() }).optional(),
+  /** Contents: a sticky column beside the article, or a list above it. */
+  toc: z.object({ position: z.enum(POST_TOC_POSITIONS).default('off'), levels: z.enum(['h2', 'h2h3']).default('h2h3'), title: z.string().trim().max(80).optional() }).optional(),
+  /** The previous and next posts: under the article, or a card in the corner. */
+  prevNext: z.enum(PREV_NEXT_STYLES).optional(),
+  /** "Keep reading": which posts, how many, and how. `kind` is what it always showed. */
+  related: z
+    .object({
+      source: z.enum(RELATED_SOURCES).default('kind'),
+      count: z.number().int().min(2).max(6).default(3),
+      layout: z.enum(['grid', 'carousel']).default('grid'),
+      title: z.string().trim().max(80).optional(),
+    })
+    .optional(),
+  /** The author's picture, name, bio and links under the article (Profile). */
+  authorBox: z.boolean().optional(),
+  /** "← Back to the blog" above the title. */
+  backLink: z.boolean().optional(),
+  /** The line above the title; `{category}`, `{date}` and `{minutes}` are filled in. Empty is what it always said. */
+  eyebrow: z.string().trim().max(80).optional(),
+
+  /* ── The blog's archives (T20, 2.18) ─────────────────────────────────── */
+  /** The "All" chip. */
+  chipAll: z.boolean().optional(),
+  /** The "Research" chip: only when there is research (`auto`), always, or never. */
+  chipResearch: z.enum(['auto', 'show', 'hide']).optional(),
+  /** Categories as chips, or one "Categories" menu. */
+  filterStyle: z.enum(['chips', 'dropdown']).optional(),
+  /** Home › Blog › Category above an archive's title. */
+  archiveBreadcrumbs: z.boolean().optional(),
+  /** What each card in an archive shows. Unset is what it always showed. */
+  card: z
+    .object({
+      date: z.boolean().optional(),
+      readingTime: z.boolean().optional(),
+      category: z.boolean().optional(),
+      readMore: z.boolean().optional(),
+      ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
+    })
+    .optional(),
+  /** A category's own heading: the name, or the name with its description and picture. */
+  categoryHero: z.enum(['title', 'full']).optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
+
+/**
+ * What a post card shows (2.18). Unset means what that layout always showed —
+ * the card grid a date, the list layouts a category chip and a date — so the
+ * options change a card only once somebody sets one.
+ */
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1' }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';
@@ -89,6 +154,19 @@ export type ResolvedBlog = {
   archivePerPage?: number;
   archivePager: ArchivePager;
   resultCount: boolean;
+  share: { position: PostSharePosition; networks: ShareNetwork[] };
+  toc: { position: PostTocPosition; levels: 'h2' | 'h2h3'; title?: string };
+  prevNext: PrevNextStyle;
+  related: { source: RelatedSource; count: number; layout: 'grid' | 'carousel'; title?: string };
+  authorBox: boolean;
+  backLink: boolean;
+  eyebrow?: string;
+  chipAll: boolean;
+  chipResearch: 'auto' | 'show' | 'hide';
+  filterStyle: 'chips' | 'dropdown';
+  archiveBreadcrumbs: boolean;
+  card: PostCardOptions;
+  categoryHero: 'title' | 'full';
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -101,7 +179,31 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     archivePerPage: blog?.archivePerPage,
     archivePager: blog?.archivePager ?? 'numbers',
     resultCount: blog?.resultCount ?? false,
+    share: { position: blog?.share?.position ?? 'off', networks: blog?.share?.networks ?? ['facebook', 'x', 'pinterest', 'linkedin'] },
+    toc: { position: blog?.toc?.position ?? 'off', levels: blog?.toc?.levels ?? 'h2h3', title: blog?.toc?.title },
+    prevNext: blog?.prevNext ?? 'off',
+    related: { source: blog?.related?.source ?? 'kind', count: blog?.related?.count ?? 3, layout: blog?.related?.layout ?? 'grid', title: blog?.related?.title },
+    authorBox: blog?.authorBox ?? false,
+    backLink: blog?.backLink ?? false,
+    eyebrow: blog?.eyebrow || undefined,
+    chipAll: blog?.chipAll ?? true,
+    chipResearch: blog?.chipResearch ?? 'auto',
+    filterStyle: blog?.filterStyle ?? 'chips',
+    archiveBreadcrumbs: blog?.archiveBreadcrumbs ?? false,
+    card: blog?.card ?? {},
+    categoryHero: blog?.categoryHero ?? 'title',
   };
+}
+
+/** `{category} · {minutes} min read` → the line above a post's title (2.18). */
+export function fillEyebrow(template: string, values: { category: string; date: string; minutes: number; minRead: string }): string {
+  return template
+    .replace(/\{category\}/g, values.category)
+    .replace(/\{date\}/g, values.date)
+    .replace(/\{minutes\}/g, String(values.minutes))
+    .replace(/\{minRead\}/g, values.minRead)
+    .replace(/\s*[·—|-]\s*$/u, '')
+    .trim();
 }
 
 /** Posts per page on one archive: the setting, or what that archive showed before it existed. */
@@ -119,8 +221,28 @@ export const BLOG_INDEX_LABELS: Record<BlogIndexLayout, { label: string; hint: s
 };
 
 export const BLOG_POST_LABELS: Record<BlogPostLayout, { label: string; hint: string }> = {
+  coverThenTitle: { label: 'Cover, then a title card', hint: 'The cover full-width at its own shape, then a rounded card with the title and details' },
   standard: { label: 'Standard', hint: 'Title, excerpt and the article' },
   cover: { label: 'Cover image', hint: 'A wide cover image under the title' },
   fullscreen: { label: 'Full-screen cover', hint: 'The title over a full-width cover image' },
   split: { label: 'Title beside the cover', hint: 'Title and details on the left, cover on the right' },
 };
+
+/* ── Category pages (T20, 2.18) ───────────────────────────────────────────
+   Blocks above and below the list on every category archive — an intro
+   band, a newsletter sign-up, a call to action. One `blogArchive` settings
+   row per language, like the project template. Empty is what an archive
+   always was. */
+export const BLOG_ARCHIVE_SETTING_KEY = 'blogArchive';
+
+export const blogArchiveSchema = z.object({
+  before: z.array(z.unknown()).max(12).default([]),
+  after: z.array(z.unknown()).max(12).default([]),
+});
+
+export type BlogArchiveTemplate = { before: unknown[]; after: unknown[] };
+
+export function resolveBlogArchive(stored: unknown): BlogArchiveTemplate {
+  const parsed = blogArchiveSchema.safeParse(stored ?? {});
+  return parsed.success ? parsed.data : { before: [], after: [] };
+}

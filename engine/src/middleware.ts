@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { localeConfig, splitLocale } from '@/lib/locales';
-import { withSlash } from '@/lib/permalinks';
+import { withSlash, feedTarget } from '@/lib/permalinks';
 import { pickRule } from '@/lib/redirectRules';
 import { routingConfig } from '@/server/routing/config';
 import { countHit } from '@/server/routing/hits';
@@ -163,11 +163,19 @@ export async function middleware(request: NextRequest) {
        under the blog index is resolved by the catch-all route and cached; a
        query goes to a route of its own, so reading it does not make every
        article dynamic. */
-    const target =
-      rest === routing.permalinks.blogIndex && request.nextUrl.searchParams.has('q') ? '/_search' : rest;
+    // A feed (2.18) goes to the one feed route, a category's with its slug as the last segment.
+    const feed = feedTarget(routing.permalinks, rest);
+    const target = feed
+      ? feed.category
+        ? `/_feed/${feed.category}`
+        : '/_feed'
+      : rest === routing.permalinks.blogIndex && request.nextUrl.searchParams.has('q')
+        ? '/_search'
+        : rest;
+    const query = feed ? '' : search;
 
     const internal = target === '/' ? `/${locale}` : `/${locale}${target}`;
-    const rewritten = NextResponse.rewrite(new URL(`${internal}${search}`, request.url), {
+    const rewritten = NextResponse.rewrite(new URL(`${internal}${query}`, request.url), {
       request: { headers: requestHeaders },
     });
     rewritten.headers.set('cache-control', PAGE_CACHE);
