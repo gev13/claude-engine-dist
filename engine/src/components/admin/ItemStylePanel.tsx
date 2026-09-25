@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { BOX_SIDES, type SpacingBox } from '@/lib/blockStyle';
 import { isEmptyItemStyle, type ItemStyle } from '@/lib/itemStyle';
 import { ChoiceField, ColorField, LengthField } from './styleFields';
+import { CornerShapeFields } from './CornerShapeFields';
 import { Field, Input } from './ui';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -104,6 +105,8 @@ export function ItemStylePanel({
             <ColorField label="Border colour" value={style.borderColor} placeholder="none" onChange={set('borderColor')} />
             <LengthField label="Corner radius" value={style.radius} emptyLabel="none" onChange={set('radius')} />
           </div>
+
+          <CornerShapeFields label="Corners" value={style.corners} fallbackSize={20} roundedLabel="As the site’s cards are" onChange={set('corners')} />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <ChoiceField

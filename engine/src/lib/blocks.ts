@@ -638,7 +638,7 @@ export const blockSchemas = {
     captionLead: text(120),
     rounded: z.boolean().optional(),
     /** P3-B2 — the shape the picture is cut to. */
-    mask: z.enum(['none', 'circle', 'arch', 'blob', 'leaf', 'hexagon', 'diamond']).default('none'),
+    mask: z.enum(['none', 'circle', 'arch', 'blob', 'leaf', 'hexagon', 'diamond', 'cut']).default('none'),
     /** How wide the picture may grow, and where a narrower one sits. */
     size: z.enum(['full', 'large', 'medium', 'small']).default('full'),
     align: z.enum(['left', 'center']).default('left'),
@@ -844,6 +844,20 @@ export const blockSchemas = {
     overlay: z.enum(['none', 'light', 'medium', 'strong', 'gradient']).default('medium'),
     parallax: z.enum(['none', 'vertical', 'horizontal']).default('none'),
     strength: z.enum(['subtle', 'medium', 'strong']).default('medium'),
+    /**
+     * 2.21 — a colour fading across the band from one side, over the picture:
+     * solid up to `solid`% of the width, clear from `clear`%. The text can
+     * turn dark for a light colour, and the buttons with it.
+     */
+    fade: z
+      .object({
+        side: z.enum(['left', 'right']).default('left'),
+        color: z.string().trim().refine(isColor, 'Not a valid colour'),
+        solid: z.number().int().min(0).max(100).default(42),
+        clear: z.number().int().min(0).max(100).default(72),
+        text: z.enum(['light', 'dark']).default('light'),
+      })
+      .optional(),
     eyebrow: text(80),
     title: z.string().max(200).default(''),
     titleAs: textTagSchema.optional(),

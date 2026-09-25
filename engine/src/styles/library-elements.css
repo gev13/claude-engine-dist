@@ -54,7 +54,7 @@
     padding: var(--he-btn-py) var(--he-btn-px);
     border: 2px solid transparent;
     border-radius: var(--he-btn-radius);
-    font-family: var(--font-mono);
+    font-family: var(--he-btn-font, var(--font-mono));
     font-size: var(--he-btn-size);
     line-height: 1;
     letter-spacing: var(--he-btn-tracking);
@@ -239,7 +239,7 @@
 
   .he-team__grid { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--he-gap, 40px 24px); margin: 40px 0 0; padding: 0; list-style: none; }
   .he-team__member { position: relative; }
-  .he-team__photo { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-team__photo { position: relative; aspect-ratio: 4 / 5; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-team__photo .he-fill, .he-team__face .he-fill { transition: transform calc(600ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1), filter calc(400ms * var(--he-motion, 1)); }
   .is-hover-scale .he-team__member:hover .he-fill { transform: scale(1.05); }
   .is-hover-greyscale .he-fill { filter: grayscale(1); }

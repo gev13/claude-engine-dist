@@ -71,7 +71,7 @@ export function Card({
   const body = (
     <div
       className={cn(
-        'group flex h-full flex-col bg-surface px-6 py-7 transition-colors duration-150',
+        'he-ucard group flex h-full flex-col bg-surface px-6 py-7 transition-colors duration-150',
         interactive && href && 'hover:bg-surface-2',
         badge && 'relative',
         !href && moves.className,

@@ -1,4 +1,5 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
+import { cutLegs, cutPolygon } from './shape';
 import { type BlockStyle, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -245,7 +246,22 @@ export function blockStyleToCss(
     own.push(['--he-motion', String(style.motion)]);
   }
 
-  parts.push(block(root, [...boxDecls(style.spacing?.base), ...own, ...background, ...border]));
+  /* 2.21 — a panel first, so anything set by hand below (margins, a colour,
+     corners) still wins inside the same rule. The inset shrinks with the
+     screen by itself, so a phone keeps its width. */
+  const panel: Decl[] = style.panel
+    ? [
+        ['margin-inline', 'min(var(--he-panel-inset,24px),3vw)'],
+        ['margin-block', 'min(var(--he-panel-gap,24px),3vw)'],
+        ['background-color', 'var(--he-panel-bg,var(--color-surface))'],
+        ['clip-path', 'var(--he-panel-clip,none)'],
+      ]
+    : [];
+  const legs = cutLegs(style.corners, 28);
+  const shape: Decl[] = legs ? [['clip-path', cutPolygon(legs)]] : [];
+  if (style.clip && !legs) shape.push(['overflow', 'hidden']);
+
+  parts.push(block(root, [...panel, ...boxDecls(style.spacing?.base), ...own, ...background, ...border, ...shape]));
 
   if (ownsBand) {
     parts.push(neutralisePadding(root, style.spacing?.base));
@@ -262,9 +278,11 @@ export function blockStyleToCss(
      steps aside so the choice is actually seen — unlayered, so it beats the
      band's own utility or component rule. */
   const video = Boolean(style.background?.videoUrl && SECTION_VIDEO.test(style.background.videoUrl));
-  if (video || background.some(([property]) => property === 'background-color' || property === 'background-image')) {
+  if (video || style.panel || background.some(([property]) => property === 'background-color' || property === 'background-image')) {
     parts.push(`${root}>*{background:transparent}`);
   }
+  // A panel is its own edge: the band's hairline rule underneath it goes.
+  if (style.panel && ownsBand) parts.push(`${root}>*{border-bottom-width:0}`);
   if (style.background?.gradient?.animate && background.some(([property]) => property === 'animation')) {
     parts.push(`@media (prefers-reduced-motion:reduce){${root}{animation:none}}.he-reduce-motion ${root}{animation:none}`);
   }

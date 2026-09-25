@@ -24,7 +24,7 @@
  * established is skipped rather than shipped.
  */
 
-import { mkdir, readdir, rm, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 
 /* A browser user agent, because the API serves .ttf to anything it does not
@@ -57,7 +57,7 @@ const SUBSETS = new Set(['latin', 'latin-ext', 'cyrillic', 'greek', 'armenian'])
 const FAMILIES = [
   ['Roboto', 'sans'], ['Open Sans', 'sans'], ['Noto Sans', 'sans'], ['Montserrat', 'sans'],
   ['Lato', 'sans'], ['Poppins', 'sans'], ['Inter', 'sans'], ['Roboto Condensed', 'sans'],
-  ['Oswald', 'display'], ['Raleway', 'sans'], ['Nunito Sans', 'sans'], ['Nunito', 'sans'],
+  ['Oswald', 'display'], ['Chakra Petch', 'display'], ['Raleway', 'sans'], ['Nunito Sans', 'sans'], ['Nunito', 'sans'],
   ['Ubuntu', 'sans'], ['Rubik', 'sans'], ['Work Sans', 'sans'], ['Fira Sans', 'sans'],
   ['Mulish', 'sans'], ['Barlow', 'sans'], ['Quicksand', 'sans'], ['Titillium Web', 'sans'],
   ['Heebo', 'sans'], ['Josefin Sans', 'display'], ['DM Sans', 'sans'], ['Karla', 'sans'],
@@ -137,6 +137,8 @@ async function fetchFamily(family) {
   const attempts = [
     `${name}:ital,wght@0,100..900;1,100..900`,
     `${name}:wght@100..900`,
+    // A static family with the in-between weights a design asks for (2.21: Chakra Petch's 500 and 600).
+    `${name}:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400;1,700`,
     `${name}:ital,wght@0,400;0,700;1,400;1,700`,
     `${name}:wght@400;700`,
     name,
@@ -182,6 +184,18 @@ function scriptsOf(subsets) {
   return [...scripts];
 }
 
+/** The catalogue as last written, for a run that adds to it rather than replacing it. */
+async function existingCatalogue() {
+  const text = await readFile(path.join(ROOT, 'src/lib/fontCatalogue.ts'), 'utf8').catch(() => '');
+  const json = text.match(/FONT_CATALOGUE: readonly CatalogueEntry\[\] = (\[[\s\S]*\]);/)?.[1];
+  if (!json) return [];
+  try {
+    return JSON.parse(json);
+  } catch {
+    return [];
+  }
+}
+
 async function main() {
   const only = process.argv.slice(2).filter((a) => !a.startsWith('-'));
   const wanted = only.length ? FAMILIES.filter(([f]) => only.includes(f)) : FAMILIES;
@@ -204,6 +218,31 @@ async function main() {
   const licences = [];
   let bytes = 0;
   let skipped = 0;
+
+  /* A run for one family keeps every other one. It used to write the three
+     outputs from the families it fetched alone, so adding one face emptied
+     the catalogue of the other fifty-odd. */
+  if (only.length) {
+    const refetched = new Set(wanted.map(([family]) => family));
+    const kept = await existingCatalogue();
+    for (const entry of kept) {
+      if (refetched.has(entry.family)) continue;
+      catalogue.push(entry);
+      licences.push({ family: entry.family, licence: entry.licence });
+    }
+    const css = await readFile(path.join(ROOT, 'src/styles/fonts-google.css'), 'utf8').catch(() => '');
+    for (const block of css.match(/@font-face \{[^}]*\}/g) ?? []) {
+      const family = block.match(/font-family: '([^']+)'/)?.[1];
+      if (family && !refetched.has(family)) cssBlocks.push(block);
+    }
+    // The refetched families' old files go; their new ones are written below.
+    for (const [family] of wanted) {
+      const slug = family.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      for (const name of await readdir(OUT_DIR).catch(() => [])) {
+        if (name.startsWith(`${slug}-normal-`) || name.startsWith(`${slug}-italic-`)) await rm(path.join(OUT_DIR, name), { force: true });
+      }
+    }
+  }
 
   for (const [family, role] of wanted) {
     process.stdout.write(`${family} … `);

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { Field, Input, Select } from '@/components/admin/ui';
 import { MediaPicker } from '@/components/admin/MediaPicker';
+import { CornerShapeFields } from '@/components/admin/CornerShapeFields';
 import { ChoiceField, ColorField, LengthField } from '@/components/admin/styleFields';
 import {
   BOX_SIDES,
@@ -436,6 +437,32 @@ export function BlockDesignPanel({
             onChange={set(['border', 'style'])}
           />
           <LengthField label="Radius" value={get(['border', 'radius'])} inherited={band.box.radius} emptyLabel="none" onChange={set(['border', 'radius'])} />
+        </div>
+      </section>
+      )}
+
+      {/* ── 2.21: shape and panel ──────────────────────────────────────── */}
+      {!outerOnly && (
+      <section>
+        <PanelTitle>Shape</PanelTitle>
+        <div className="flex flex-col gap-3">
+          <label className="flex items-center gap-2 text-[13px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.panel === true} onChange={(e) => set(['panel'])(e.target.checked || undefined)} />
+            Panel — inset from the page’s edges, in the panel colour and corners (Appearance → Shape)
+          </label>
+          <CornerShapeFields
+            label="Corners"
+            value={current.corners}
+            fallbackSize={28}
+            roundedLabel={current.panel ? 'As the panels are' : 'Square, or the radius above'}
+            onChange={(corners) => set(['corners'])(corners)}
+          />
+          {current.corners?.style !== 'cut' && (
+            <label className="flex items-center gap-2 text-[13px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.clip === true} onChange={(e) => set(['clip'])(e.target.checked || undefined)} />
+              Clip pictures and films inside to the rounded corners
+            </label>
+          )}
         </div>
       </section>
       )}

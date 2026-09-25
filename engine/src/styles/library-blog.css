@@ -6,7 +6,7 @@
    ══════════════════════════════════════════════════════════════════════════ */
 
 @layer components {
-  .he-post__cover { margin-top: 40px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-post__cover { margin-top: 40px; aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-post__cover img { display: block; width: 100%; height: 100%; object-fit: cover; }
 
   .he-post-hero {

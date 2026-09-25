@@ -129,6 +129,12 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
             <NumberField label="Tint" hint="% of the page colour laid over the blur" min={0} max={100} placeholder="60" value={header?.glassOpacity} onChange={set(at('glassOpacity'))} />
           </div>
         )}
+        {header?.variant === 'notch' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <NumberField label="Curve of the notch" hint="px" min={0} max={64} placeholder="32" value={header?.notchRadius} onChange={set(at('notchRadius'))} />
+            <ColorField label="Notch colour" placeholder="the page colour" value={header?.notchBackground} onChange={(value) => set(at('notchBackground'))(value || undefined)} />
+          </div>
+        )}
         {header?.variant === 'menuButtonInline' && (
           <ChoiceField
             label="Menu button sits"

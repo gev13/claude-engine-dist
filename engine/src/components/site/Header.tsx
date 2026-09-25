@@ -326,9 +326,11 @@ export function Header(props: HeaderProps) {
      schema; nothing is set when nothing was chosen. */
   const heights = h.height;
   const hasHeight = Boolean(heights.base || heights.laptop || heights.tablet || heights.mobile);
+  const notch = h.variant === 'notch';
   const headerStyle =
-    h.background === 'glass' || hasHeight
+    h.background === 'glass' || hasHeight || notch
       ? ({
+          ...(notch ? { '--he-notch-r': `${Math.max(0, Math.min(64, h.notchRadius))}px`, ...(h.notchBackground ? { '--he-notch-bg': h.notchBackground } : {}) } : {}),
           ...(h.background === 'glass' ? { '--he-glass-blur': `${h.glassBlur}px`, '--he-glass-tint': `${h.glassOpacity}%` } : {}),
           ...(heights.base ? { '--hh-base': `${heights.base}px` } : {}),
           ...(heights.laptop ? { '--hh-laptop': `${heights.laptop}px` } : {}),

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { FONT_STACKS, isColor, isLength, normaliseLength } from './theme';
+import { cornerShapeSchema } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-section style
@@ -97,7 +98,11 @@ const dividerShape = z.object({
 
 /** A section-level typography override — the same shape the theme uses. */
 const typeOverride = z.object({
-  family: z.enum(['display', 'sans', 'mono', 'system', 'serif']).optional(),
+  /** One of the site's own faces, or (2.21) any face in the catalogue. */
+  family: z
+    .string()
+    .refine((value) => ['display', 'sans', 'mono', 'system', 'serif'].includes(value) || value in FONT_STACKS, 'Not a font this site has')
+    .optional(),
   size: length.optional(),
   weight: z.enum(['100', '200', '300', '400', '500', '600', '700', '800', '900']).optional(),
   color: color.optional(),
@@ -233,6 +238,13 @@ export const blockStyleSchema = z.object({
       radius: length.optional(),
     })
     .optional(),
+
+  /** 2.21 — the block's corners cut on the diagonal (see lib/shape.ts). */
+  corners: cornerShapeSchema.optional(),
+  /** 2.21 — clip what the block holds (a picture, a film) to its rounded or cut corners. */
+  clip: z.boolean().optional(),
+  /** 2.21 — the block as a panel: inset from the page's edges, in the panel colour and corners set in Appearance. */
+  panel: z.boolean().optional(),
 
   typography: z
     .object({

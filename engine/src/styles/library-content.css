@@ -15,7 +15,7 @@
   /* ── Shared ──────────────────────────────────────────────────────────── */
 
   .he-fill { display: block; width: 100%; height: 100%; object-fit: cover; }
-  .he-rounded { border-radius: var(--he-card-radius); }
+  .he-rounded { border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); }
   .he-actions { display: flex; flex-wrap: wrap; gap: var(--he-gap, 12px); margin-top: 28px; }
   .he-lbody { margin: 16px 0 0; max-width: 60ch; font-size: 17px; color: var(--color-ash); white-space: pre-line; }
   .he-textlink { display: inline-flex; gap: 6px; font-size: 15px; color: var(--he-link); }
@@ -50,7 +50,7 @@
   .he-split__media.is-portrait { aspect-ratio: 4 / 5; }
   .he-split__media.is-square { aspect-ratio: 1; }
   .he-split__media.is-landscape { aspect-ratio: 4 / 3; }
-  .he-split__media.is-rounded { border-radius: var(--he-card-radius); }
+  .he-split__media.is-rounded { border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); }
   .he-split__media.is-organic { border-radius: 20px 20px 20px clamp(80px, 12vw, 200px); }
   .he-split.is-media-right .he-split__media.is-organic { border-radius: 20px 20px clamp(80px, 12vw, 200px) 20px; }
   .he-split__text { max-width: 580px; }
@@ -64,7 +64,7 @@
     max-width: 760px;
     margin: -150px auto 0;
     padding: 44px 48px;
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
     box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
   }
@@ -191,7 +191,7 @@
     aspect-ratio: 4 / 3;
     margin-bottom: 18px;
     overflow: hidden;
-    border-radius: var(--he-card-radius) var(--he-card-radius) var(--he-card-radius) 56px;
+    border-radius: var(--he-card-radius) var(--he-card-radius) var(--he-card-radius) 56px; clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
   }
   .he-icard__media .he-fill { transition: transform calc(600ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
@@ -362,7 +362,7 @@
 
   .he-quote__grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--he-gap, 72px); align-items: center; }
   .he-quote.is-solo .he-quote__grid { grid-template-columns: minmax(0, 1fr); max-width: 920px; text-align: center; }
-  .he-qmedia { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-qmedia { position: relative; aspect-ratio: 4 / 3; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-qmedia__play {
     position: absolute;
     left: 20px;
@@ -418,7 +418,7 @@
     flex-direction: column;
     height: 100%;
     overflow: hidden;
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
     color: inherit;
     transition: transform calc(250ms * var(--he-motion, 1));
@@ -456,7 +456,7 @@
 
   /* ── CT14: collage ───────────────────────────────────────────────────── */
 
-  .he-collage__large { aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-collage__large { aspect-ratio: 16 / 9; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-collage__row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: var(--he-gap, 72px); align-items: start; margin-top: 56px; }
   .he-collage.is-text-right .he-collage__text { order: 2; }
   .he-collage__text { max-width: 540px; padding-top: 12px; }
@@ -468,7 +468,7 @@
     margin-top: -180px;
     aspect-ratio: 4 / 5;
     overflow: hidden;
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface-2);
     box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
   }

@@ -85,7 +85,7 @@
   .he-hdr__img { display: block; height: var(--he-logo-height); width: auto; }
 
   .he-hdr__nav { justify-self: center; min-width: 0; }
-  .he-hdr__nav > ul { display: flex; align-items: center; gap: 2px; margin: 0; padding: 0; list-style: none; }
+  .he-hdr__nav > ul { display: flex; align-items: center; gap: var(--he-nav-gap, 2px); margin: 0; padding: 0; list-style: none; }
   .he-hdr__item { position: relative; }
 
   .he-hdr__link {
@@ -95,7 +95,7 @@
     padding: 12px 12px;
     border: 0;
     background: none;
-    color: inherit;
+    color: var(--he-nav-color, inherit);
     cursor: pointer;
     white-space: nowrap;
     font-family: var(--he-nav-family);
@@ -107,7 +107,7 @@
   }
   .he-hdr__link:hover,
   .he-hdr__link.is-active,
-  .he-hdr__link.is-open { color: var(--color-flare-soft); }
+  .he-hdr__link.is-open { color: var(--he-nav-active, var(--color-flare-soft)); }
   .he-hdr__chev { transition: transform calc(0.2s * var(--he-motion, 1)); }
   .he-hdr__link[aria-expanded='true'] .he-hdr__chev { transform: rotate(180deg); }
 
@@ -661,7 +661,7 @@
     max-width: calc(var(--container-shell) + 96px);
     margin-inline: auto;
     padding: 44px 24px 0;
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
   }
   @media (width >= 64rem) { .he-ftr__card { padding: 56px 48px 0; } }

@@ -47,7 +47,7 @@
     gap: var(--he-gap, 28px);
     padding: 28px 32px;
     border: 1px solid var(--color-hairline);
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
     transition: transform calc(250ms * var(--he-motion, 1)), box-shadow calc(250ms * var(--he-motion, 1)), border-color calc(250ms * var(--he-motion, 1));
   }
@@ -70,7 +70,7 @@
   .he-ocard {
     min-height: 380px;
     overflow: hidden;
-    border-radius: var(--he-card-radius);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none);
     background: var(--color-surface);
     color: #fff;
     justify-content: flex-end;
@@ -116,7 +116,7 @@
   .he-fgrid.is-pos-left .he-feat__icon { grid-row: 1 / span 5; margin-bottom: 0; }
   .he-fgrid.is-pos-left .he-fgrid__item > :not(.he-feat__icon) { grid-column: 2; }
   .he-fgrid.is-pos-floating { row-gap: 64px; padding-top: 30px; }
-  .he-fgrid.is-pos-floating .he-fgrid__item { padding: 48px 28px 30px; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-fgrid.is-pos-floating .he-fgrid__item { padding: 48px 28px 30px; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .is-raised .he-fgrid.is-pos-floating .he-fgrid__item { background: var(--color-ink); }
   .he-fgrid.is-pos-floating .he-feat__icon { position: absolute; top: -28px; left: 28px; width: 56px; height: 56px; margin: 0; box-shadow: 0 12px 24px -12px rgb(0 0 0 / 0.6); }
   .he-fgrid.is-pos-floating.is-icon-plain .he-feat__icon,
@@ -208,6 +208,17 @@
   /* Media band: the heights, shade and position the parallax image brought, and the drift. */
   .he-band.is-h-short { min-height: clamp(240px, 40vh, 420px); }
   .he-band.is-ov-gradient::after { background: linear-gradient(to top, rgb(0 0 0 / 0.78), rgb(0 0 0 / 0.05) 72%); }
+  /* 2.21 — a colour fading in from one side, over the picture; the text and buttons can turn dark on it. */
+  .he-band.has-fade::after { background: linear-gradient(to right, var(--he-fade-color) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
+  .he-band.has-fade.is-fade-right::after { background: linear-gradient(to left, var(--he-fade-color) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
+  .he-band.has-fade { background: var(--he-fade-color); }
+  .he-band.is-text-dark :is(h1, h2, h3, h4, .he-lbody, .type-eyebrow) { color: var(--color-ink); }
+  .he-band.is-text-dark {
+    --he-btn-primary-bg: var(--color-ink); --he-btn-primary-text: var(--color-bone); --he-btn-primary-border: var(--color-ink);
+    --he-btn-primary-hover-bg: var(--color-surface); --he-btn-primary-hover-text: var(--color-bone); --he-btn-primary-hover-border: var(--color-surface);
+    --he-btn-outline-bg: var(--color-ink); --he-btn-outline-text: var(--color-bone); --he-btn-outline-border: var(--color-ink);
+    --he-btn-outline-hover-bg: var(--color-surface); --he-btn-outline-hover-text: var(--color-bone); --he-btn-outline-hover-border: var(--color-surface);
+  }
   .he-band.is-left .he-band__inner { align-items: center; }
   .he-band.has-parallax { --amp: 8%; --inset: -12%; }
   .he-band.has-parallax.is-plx-subtle { --amp: 4%; --inset: -6%; }

@@ -1547,6 +1547,49 @@ function AddSeveral({ onAdd, label = 'Add several from the library' }: { onAdd: 
   );
 }
 
+type BandFade = { side: 'left' | 'right'; color: string; solid: number; clear: number; text: 'light' | 'dark' };
+
+/** 2.21 — the media band's colour fading in from one side, over the picture. */
+function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
+  const fade = props.fade as BandFade | undefined;
+  const update = (patch: Partial<BandFade>) => set({ ...props, fade: { side: 'left', color: '#17bde7', solid: 42, clear: 72, text: 'light', ...fade, ...patch } });
+  const percent = (raw: string, fallback: number) => (raw === '' ? fallback : Math.min(100, Math.max(0, Math.round(Number(raw) || 0))));
+  return (
+    <details className="border-2 border-hairline bg-ink px-3 py-2" open={Boolean(fade)}>
+      <summary className="cursor-pointer py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke hover:text-bone">A colour fading in from one side</summary>
+      <div className="flex flex-col gap-3 pt-3 pb-1">
+        <label className="flex items-center gap-2 text-[13px] text-ash">
+          <input type="checkbox" className="h-4 w-4 accent-flare" checked={Boolean(fade)} onChange={(e) => (e.target.checked ? update({}) : set(withOpt(props, 'fade', undefined)))} />
+          Fade a colour across the band — the picture shows on the other side
+        </label>
+        {fade && (
+          <div className="grid gap-3 sm:grid-cols-3">
+            <ColorField label="Colour" value={fade.color} onChange={(color) => color && update({ color })} />
+            <Field label="From">
+              <Select value={fade.side} onChange={(e) => update({ side: e.target.value as BandFade['side'] })}>
+                <option value="left">The left</option>
+                <option value="right">The right</option>
+              </Select>
+            </Field>
+            <Field label="Text and buttons">
+              <Select value={fade.text} onChange={(e) => update({ text: e.target.value as BandFade['text'] })}>
+                <option value="light">Light, for a dark colour</option>
+                <option value="dark">Dark, for a light colour</option>
+              </Select>
+            </Field>
+            <Field label="Solid up to" hint="% of the width">
+              <Input type="number" min={0} max={100} value={fade.solid} onChange={(e) => update({ solid: percent(e.target.value, 42) })} />
+            </Field>
+            <Field label="Clear from" hint="% of the width">
+              <Input type="number" min={0} max={100} value={fade.clear} onChange={(e) => update({ clear: percent(e.target.value, 72) })} />
+            </Field>
+          </div>
+        )}
+      </div>
+    </details>
+  );
+}
+
 type AnyBlockLike = { id: string; type: string; props: Record<string, unknown>; style?: BlockStyle };
 
 const readColumns = (props: Props): Column[] => (Array.isArray(props.columns) ? (props.columns as Column[]) : []);
@@ -3926,6 +3969,7 @@ function TypeFields({
               <PropSelect label="Drift strength" k="strength" fallback="medium" options={[['subtle', 'Subtle'], ['medium', 'Medium'], ['strong', 'Strong']]} props={props} set={set} />
             )}
           </div>
+          <BandFadeFields props={props} set={set} />
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Text" k="body" props={props} set={set} rows={2} />
@@ -4791,7 +4835,7 @@ function TypeFields({
               label="Shape"
               k="mask"
               fallback="none"
-              options={[['none', 'As it is'], ['circle', 'Circle'], ['arch', 'Arch'], ['blob', 'Blob'], ['leaf', 'Leaf'], ['hexagon', 'Hexagon'], ['diamond', 'Diamond']]}
+              options={[['none', 'As it is'], ['circle', 'Circle'], ['arch', 'Arch'], ['blob', 'Blob'], ['leaf', 'Leaf'], ['hexagon', 'Hexagon'], ['diamond', 'Diamond'], ['cut', 'Cut corners (Appearance → Shape)']]}
               props={props}
               set={set}
             />

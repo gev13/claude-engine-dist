@@ -261,3 +261,66 @@
 @media (prefers-reduced-motion: reduce) {
   .he-hdr, .he-hdr .he-hdr__inner { transition: none; }
 }
+
+/* 2.21 — the plain content card (components/ui/Card) takes the card corners too. */
+.he-ucard { clip-path: var(--he-card-clip, none); }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   2.21 — the notch header: logo and links in a tab cut into the top-left of
+   the first section, the page colour showing through, with curved inner
+   corners beside and below it. Pair it with a first section marked Panel;
+   the tab sits exactly on that panel's inset. Unlayered, over the base bar.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.he-hdr--notch {
+  position: absolute;
+  /* Exactly where the first panel starts: its top margin and its inset. */
+  top: min(var(--he-panel-gap, 24px), 3vw);
+  left: min(var(--he-panel-inset, 24px), 3vw);
+  right: auto;
+  z-index: 60;
+  max-width: calc(100% - 2 * min(var(--he-panel-inset, 24px), 3vw));
+}
+.he-hdr--notch .he-hdr__bar {
+  position: relative;
+  background: var(--he-notch-bg, var(--color-ink));
+  border: 0;
+  border-bottom-right-radius: var(--he-notch-r, 32px);
+  backdrop-filter: none;
+}
+.he-hdr--notch .he-hdr__inner {
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 3vw, 56px);
+  width: auto;
+  max-width: none;
+  min-height: 80px;
+  margin: 0;
+  padding: 0 40px 0 clamp(20px, 3.3vw, 48px);
+}
+/* The two curved inner corners: the page colour, less a quarter circle. */
+.he-hdr--notch .he-hdr__bar::before,
+.he-hdr--notch .he-hdr__bar::after {
+  content: '';
+  position: absolute;
+  width: var(--he-notch-r, 32px);
+  height: var(--he-notch-r, 32px);
+  background: radial-gradient(circle at 100% 100%, transparent calc(var(--he-notch-r, 32px) - 0.5px), var(--he-notch-bg, var(--color-ink)) var(--he-notch-r, 32px));
+  pointer-events: none;
+}
+.he-hdr--notch .he-hdr__bar::before { top: 0; left: 100%; }
+.he-hdr--notch .he-hdr__bar::after { top: 100%; left: 0; }
+/* The tab's curve can reach past a phone's edge: clip it (clip, not hidden,
+   so nothing becomes a scroll container). And the first panel's top margin
+   stays inside main, where the tab is measured from, instead of collapsing
+   through to the page. */
+.he-site[data-header='notch'] { position: relative; overflow-x: clip; }
+.he-site[data-header='notch'] #main { display: flow-root; }
+@media (width <= 768px) {
+  .he-hdr--notch .he-hdr__inner { min-height: 64px; padding-right: 16px; }
+}
+/* The first section starts below the tab, so the tab never sits on its content. */
+.he-site[data-header='notch'] #main > :first-child { padding-top: 80px; }
+@media (width <= 768px) {
+  .he-site[data-header='notch'] #main > :first-child { padding-top: 64px; }
+}

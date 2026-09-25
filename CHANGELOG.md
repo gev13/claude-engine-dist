@@ -9,6 +9,32 @@ told about before taking it.
 
 ---
 
+## 2.21.0 — 2026-09-25
+
+**Cut corners.** Cards, buttons, form fields, chips and pictures can have
+their corners cut on the diagonal instead of rounded — the length and which
+corners, per kind of element, under Appearance → Shape. A section's corners
+and a single card's are set in its own style. Buttons keep their glow and
+border along the cut; chips and fields keep a line along it.
+
+**Panels.** Tick *Panel* in a section's Design tab and it sits on the page
+as an inset panel in the panel colour and corners, set once in Appearance.
+A section with rounded corners can clip the pictures inside it.
+
+**The notch header.** A new layout: the logo and links in a tab cut into the
+top of the first panel, with curved inner corners. Header links gain their
+own font, size, weight, case, spacing and colours.
+
+**Buttons** gain a font of their own, a glow, and an arrow in a compartment
+of its own. **Section labels** can open with a dot instead of a line, or
+nothing. The **media band** can fade a colour in from one side, with dark
+text and buttons for a light colour.
+
+**Fonts.** Chakra Petch joins the catalogue. A section's own typography can
+use any catalogue face — choosing one there failed to save before.
+
+---
+
 ## 2.20.0 — 2026-09-25
 
 **Imports are checked.** Every row of a content archive now passes the

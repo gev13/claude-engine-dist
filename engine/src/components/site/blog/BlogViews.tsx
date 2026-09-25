@@ -135,7 +135,7 @@ async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; pe
           <Link
             href={blogIndexPath(permalinks)}
             aria-current="page"
-            className="border-2 border-flare bg-flare px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-bone"
+            className="he-chip border-2 border-flare bg-flare px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-bone"
           >
             {t('blog.all')}
           </Link>
@@ -143,7 +143,7 @@ async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; pe
         {research && (
           <Link
             href={researchPath(permalinks)}
-            className="border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
+            className="he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
           >
             {t('blog.research')}
           </Link>
@@ -152,7 +152,7 @@ async function CategoryBar({ locale, permalinks, t, blog }: { locale: Locale; pe
           <Link
             key={c.slug}
             href={categoryPath(permalinks, c.slug)}
-            className="border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
+            className="he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
           >
             {c.name}
           </Link>

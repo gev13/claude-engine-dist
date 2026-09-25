@@ -448,7 +448,7 @@
   justify-content: center;
   gap: 10px;
   padding: var(--he-btn-py) var(--he-btn-px);
-  font-family: var(--font-mono);
+  font-family: var(--he-btn-font, var(--font-mono));
   font-size: var(--he-btn-size);
   line-height: 1;
   text-transform: var(--he-btn-transform);

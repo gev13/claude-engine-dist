@@ -1,6 +1,14 @@
 {
-  "latest": "2.20.0",
+  "latest": "2.21.0",
   "releases": [
+    {
+      "version": "2.21.0",
+      "date": "2026-09-25",
+      "summary": "Cut corners for cards, buttons, fields, chips, pictures and sections; sections as inset panels; a notch header with its own link typography; button glow, font and arrow compartment; a dot marker for section labels; a side-fading media band; Chakra Petch.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.20.0",
       "date": "2026-09-25",

@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { blogSchema } from './blog';
 import { chromeSchema } from './chrome';
+import { cornerShapeSchema } from './shape';
 import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -418,6 +419,62 @@ export const themeSchema = z.object({
       primary: buttonStyle.optional(),
       outline: buttonStyle.optional(),
       ghost: buttonStyle.optional(),
+      /** 2.21 — the buttons' own face; unset is the label face. */
+      font: fontKey.optional(),
+      /** 2.21 — a soft light round the primary button, in its own colour and size. */
+      glow: z.object({ color: color.optional(), size: z.number().int().min(0).max(60).optional() }).optional(),
+      /** 2.21 — a button's arrow inline (as before), or in a compartment of its own behind a thin divider. */
+      icon: z.enum(['inline', 'cell']).optional(),
+    })
+    .optional(),
+
+  /**
+   * 2.21 — corners, per kind of element: rounded (as before) or cut on the
+   * diagonal. See lib/shape.ts.
+   */
+  shape: z
+    .object({
+      cards: cornerShapeSchema.optional(),
+      buttons: cornerShapeSchema.optional(),
+      inputs: cornerShapeSchema.optional(),
+      chips: cornerShapeSchema.optional(),
+      images: cornerShapeSchema.optional(),
+    })
+    .optional(),
+
+  /**
+   * 2.21 — what a section marked *Panel* in its Design tab looks like: inset
+   * from the page's edges, its own colour, its own corners. The page around
+   * the panels is the page colour.
+   */
+  panel: z
+    .object({
+      inset: length.optional(),
+      gap: length.optional(),
+      background: color.optional(),
+      shape: cornerShapeSchema.optional(),
+    })
+    .optional(),
+
+  /** 2.21 — the small line that opens a section: its marker and the marker's colour. */
+  eyebrow: z
+    .object({
+      marker: z.enum(['rule', 'dot', 'none']).optional(),
+      markerColor: color.optional(),
+    })
+    .optional(),
+
+  /** 2.21 — the header's links. Unset is mono, 11px, capitals, as before. */
+  nav: z
+    .object({
+      font: fontKey.optional(),
+      size: length.optional(),
+      weight: z.enum(['300', '400', '500', '600', '700']).optional(),
+      transform: z.enum(['none', 'uppercase', 'lowercase', 'capitalize']).optional(),
+      letterSpacing: length.optional(),
+      gap: length.optional(),
+      color: color.optional(),
+      activeColor: color.optional(),
     })
     .optional(),
 

@@ -19,6 +19,7 @@ Sources and full texts: https://github.com/google/fonts
 | Barlow | OFL-1.1 |
 | Bitter | OFL-1.1 |
 | Cabin | OFL-1.1 |
+| Chakra Petch | OFL-1.1 |
 | Commissioner | OFL-1.1 |
 | DM Sans | OFL-1.1 |
 | Dosis | OFL-1.1 |

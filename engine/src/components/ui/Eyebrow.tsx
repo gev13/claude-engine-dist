@@ -11,10 +11,10 @@ export function Eyebrow({
   tone?: 'default' | 'onFlare';
 }) {
   return (
-    <div className={cn('mb-6 flex items-center gap-3.5 md:mb-7', className)}>
+    <div className={cn('he-eyebrow mb-6 flex items-center gap-3.5 md:mb-7', className)}>
       <span
         className={cn(
-          'h-0.5 w-10 shrink-0 origin-left animate-rule',
+          'he-eyebrow__rule h-0.5 w-10 shrink-0 origin-left animate-rule',
           tone === 'onFlare' ? 'bg-ink' : 'bg-flare',
         )}
       />

@@ -41,6 +41,7 @@ import {
 import { isSafeHref } from '@/lib/navigation';
 import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
 import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel } from './ChromeExtrasPanels';
+import { ButtonExtrasPanel, EyebrowMarkerPanel, NavTypePanel, PanelSettingsPanel, ShapePanel } from './ShapePanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
 import {
@@ -55,7 +56,7 @@ import {
 
 type ThemeResponse = { theme: Theme };
 
-const TABS = ['Colours', 'Typography', 'Buttons', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Motion', 'Site-wide'] as const;
+const TABS = ['Colours', 'Typography', 'Buttons', 'Shape', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Motion', 'Site-wide'] as const;
 
 /** A row of choice cards: the variant pickers for header, menus and footer. */
 function VariantPicker<T extends string>({
@@ -446,6 +447,8 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
+              <EyebrowMarkerPanel theme={theme} set={set} />
+
               <LocaleFonts set={set} get={get} />
             </>
           )}
@@ -476,6 +479,15 @@ function AppearanceScreenInner() {
                   </div>
                 </Panel>
               ))}
+
+              <ButtonExtrasPanel theme={theme} set={set} />
+            </>
+          )}
+
+          {tab === 'Shape' && (
+            <>
+              <ShapePanel theme={theme} set={set} />
+              <PanelSettingsPanel theme={theme} set={set} />
             </>
           )}
 
@@ -631,6 +643,8 @@ function AppearanceScreenInner() {
               </Panel>
 
               <HeaderExtrasPanel chrome={theme.chrome} set={set} />
+
+              <NavTypePanel theme={theme} set={set} />
 
               <Panel title="Desktop dropdowns">
                 <VariantPicker<MegaVariant>

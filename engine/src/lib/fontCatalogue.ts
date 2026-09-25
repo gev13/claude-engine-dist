@@ -84,6 +84,15 @@ export const FONT_CATALOGUE: readonly CatalogueEntry[] = [
     "licence": "OFL-1.1"
   },
   {
+    "key": "chakraPetch",
+    "family": "Chakra Petch",
+    "role": "display",
+    "scripts": [
+      "latin"
+    ],
+    "licence": "OFL-1.1"
+  },
+  {
     "key": "commissioner",
     "family": "Commissioner",
     "role": "sans",

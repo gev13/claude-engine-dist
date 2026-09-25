@@ -3,6 +3,7 @@ import type { z } from 'zod';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
+import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { itemClass } from '@/lib/itemStyle';
 import { BlockHead, BlockTitle } from '../parts';
@@ -86,6 +87,8 @@ export function OverlayCard(p: P<'overlayCard'>) {
 export function MediaBand(p: P<'mediaBand'>) {
   const media = <MediaFill imageUrl={p.imageUrl} videoUrl={p.videoUrl} alt={p.alt} className="he-band__bg" />;
   const hasText = Boolean(p.eyebrow || p.title || p.body || p.links.length);
+  // Checked again: the colour lands in a style attribute.
+  const fade = p.fade && isColor(p.fade.color) ? p.fade : undefined;
   return (
     <section
       className={cn(
@@ -94,7 +97,9 @@ export function MediaBand(p: P<'mediaBand'>) {
         `is-h-${p.height}`,
         `is-ov-${p.overlay}`,
         p.parallax !== 'none' && `has-parallax is-plx-${p.parallax} is-plx-${p.strength}`,
+        fade && `has-fade is-fade-${fade.side} is-text-${fade.text}`,
       )}
+      style={fade ? ({ '--he-fade-color': fade.color, '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
     >
       {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
       {hasText && (

@@ -15,7 +15,7 @@
   .he-plst.is-compact { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 20px 40px); }
   .he-plst__item { min-width: 0; }
   .he-plst__link { display: flex; flex-direction: column; gap: 16px; height: 100%; color: inherit; text-decoration: none; }
-  .he-plst__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: var(--he-card-radius); background: var(--color-surface); }
+  .he-plst__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-plst__media .he-fill { transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-plst__link:hover .he-plst__media .he-fill { transform: scale(1.04); }
   .he-plst__text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
@@ -40,7 +40,7 @@
   .he-plst__arrow { font-size: 22px; color: var(--color-smoke); transition: transform calc(250ms * var(--he-motion, 1)), color calc(250ms * var(--he-motion, 1)); }
   .he-plst.is-minimal .he-plst__link:hover .he-plst__arrow { color: var(--color-flare); transform: translateX(6px); }
 
-  .he-plst.is-overlay .he-plst__link { position: relative; justify-content: flex-end; min-height: 380px; padding: 26px; overflow: hidden; border-radius: var(--he-card-radius); color: #fff; isolation: isolate; }
+  .he-plst.is-overlay .he-plst__link { position: relative; justify-content: flex-end; min-height: 380px; padding: 26px; overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); color: #fff; isolation: isolate; }
   .he-plst.is-overlay .he-plst__media { position: absolute; inset: 0; z-index: -2; aspect-ratio: auto; border-radius: 0; }
   .he-plst.is-overlay .he-plst__link::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgb(0 0 0 / 0.82), rgb(0 0 0 / 0.05) 66%); }
   .he-plst.is-overlay .he-plst__chip { color: rgb(255 255 255 / 0.8); }

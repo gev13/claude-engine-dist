@@ -401,6 +401,7 @@ export const HEADER_WIREFRAMES: Record<HeaderVariant, Wire> = {
   rail: { shapes: [['img', 12, 0, 148, 100], ['panel', 0, 0, 12, 100], ['ink', 3, 4, 6, 4], ['burger', 3, 46], ['circ', 6, 88, 1.5], ['circ', 6, 94, 1.5]] },
   // 2.19 — a round menu button, the logo, links and an outline button.
   menuButtonInline: { shapes: [['img', 0, 12, 160, 88], ['panel', 0, 0, 160, 12], ['circ', 9, 6, 3.4], ['ink', 16, 4.5, 16, 3.2], ['txt', 72, 6, 9], ['txt', 85, 6, 9], ['txt', 98, 6, 9], ['txt', 111, 6, 9], ['btn', 133, 3.5, 21]] },
+  notch: { shapes: [['dark', 0, 0, 160, 100], ['img', 4, 4, 152, 92, 3], ['panel', 4, 4, 78, 13, 3], ['ink', 9, 8.5, 14, 3.2], ['txt', 30, 10, 9], ['txt', 43, 10, 9], ['txt', 56, 10, 9], ['txt', 69, 10, 8]] },
 };
 
 export const MEGA_WIREFRAMES: Record<MegaVariant, Wire> = {

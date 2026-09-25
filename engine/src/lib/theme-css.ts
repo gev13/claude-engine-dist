@@ -10,6 +10,7 @@ import {
   isUsableLength as isLength,
   isLineHeight,
 } from './theme';
+import { CUT_BUTTON_BACKGROUND, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme → CSS
@@ -229,6 +230,134 @@ function localeFontCss(theme: Theme, selector: string): string {
   return parts.join('');
 }
 
+/* ── 2.21: corners, panels, button extras, eyebrow marker, header links ──── */
+
+/** The fallback cut, per kind of element, when a size is not given — the pattern book's sizes. */
+export const CUT_SIZES = { cards: 20, buttons: 10, inputs: 8, chips: 6, images: 24, panel: 28 } as const;
+
+/** Classes that wear the input shape: every text field the site draws. */
+const INPUT_SELECTOR = ':is(input.he-fb__input:not([type=file]),textarea.he-fb__input,.he-nl__input,.he-srch__input)';
+/** …and the chip shape: choices, filters and category chips. */
+const CHIP_SELECTOR = ':is(.he-fb__choice>span,.he-proj__chip,.he-chip)';
+const BUTTON_SELECTOR = ':is(.he-btn,.he-cbtn:not(.is-text))';
+
+/** The cut lines as background longhands, so the element's own background colour stays. */
+function lineDecls(lines: ReturnType<typeof cutLines>): Decl[] {
+  if (!lines) return [];
+  return [
+    ['background-image', lines.image],
+    ['background-position', lines.position],
+    ['background-size', lines.size],
+    ['background-repeat', 'no-repeat'],
+  ];
+}
+
+function shapeCss(theme: Theme, scope: string): string {
+  const parts: string[] = [];
+  const shape = theme.shape ?? {};
+  const at = (selector: string) => `${scope}${selector}`;
+
+  // Cards clip through a variable every card rule already carries (`clip-path: var(--he-card-clip, none)`).
+  const card = cutLegs(shape.cards, CUT_SIZES.cards);
+  if (card) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', '0px'], ['--he-card-clip', cutPolygon(card)]]));
+
+  const image = cutLegs(shape.images, CUT_SIZES.images);
+  if (image) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', cutPolygon(image)]]));
+
+  const input = cutLegs(shape.inputs, CUT_SIZES.inputs);
+  if (input) {
+    const lines = cutLines(input);
+    parts.push(block(at(INPUT_SELECTOR), [['clip-path', cutPolygon(input)], ['border-radius', '0'], ['--he-cut-line', 'color-mix(in srgb,currentColor 30%,transparent)'], ...lineDecls(lines)]));
+  }
+
+  const chip = cutLegs(shape.chips, CUT_SIZES.chips);
+  if (chip) {
+    const lines = cutLines(chip);
+    parts.push(block(at(CHIP_SELECTOR), [['clip-path', cutPolygon(chip)], ['border-radius', '0'], ['--he-cut-line', 'color-mix(in srgb,currentColor 30%,transparent)'], ...lineDecls(lines)]));
+    // The focus ring sat outside the chip, where the clip now cuts it off: draw it inside.
+    parts.push(block(at('.he-fb__choice input:focus-visible+span'), [['outline-offset', '-4px']]));
+  }
+
+  // Buttons are painted, so the glow below follows the cut instead of being clipped by it.
+  const button = cutLegs(shape.buttons, CUT_SIZES.buttons);
+  if (button) {
+    parts.push(block(at(BUTTON_SELECTOR), [...cutVars(button), ['background', CUT_BUTTON_BACKGROUND], ['border-color', 'transparent'], ['border-radius', '0']]));
+    for (const [variant, classes] of [
+      ['primary', ['.he-btn-primary', '.he-cbtn.is-primary']],
+      ['outline', ['.he-btn-outline', '.he-cbtn.is-outline']],
+      ['ghost', ['.he-btn-ghost']],
+    ] as const) {
+      const list = (suffix = '') => classes.map((c) => at(`${c}${suffix}`)).join(',');
+      parts.push(
+        block(list(), [
+          ['--he-bf', `var(--he-btn-${variant}-bg)`],
+          ['--he-bl', `var(--he-btn-${variant}-border)`],
+          ['--he-bw', variant === 'outline' ? `var(--he-btn-outline-border-width,2px)` : `var(--he-btn-${variant}-border-width,0px)`],
+        ]),
+      );
+      parts.push(block(list(':hover'), [['--he-bf', `var(--he-btn-${variant}-hover-bg)`], ['--he-bl', `var(--he-btn-${variant}-hover-border)`]]));
+    }
+    parts.push(block(at('.he-cbtn.is-soft'), [['--he-bf', 'color-mix(in srgb,currentColor 12%,transparent)'], ['--he-bl', 'transparent'], ['--he-bw', '0px']]));
+    parts.push(block(at('.he-cbtn.is-soft:hover'), [['--he-bf', 'color-mix(in srgb,currentColor 22%,transparent)']]));
+    // The contextual button on a flare band keeps its own colours.
+    parts.push(block(at('.he-btn.bg-ink'), [['--he-bf', 'var(--color-ink)'], ['--he-bl', 'transparent']]));
+    parts.push(block(at('.he-btn.bg-ink:hover'), [['--he-bf', 'var(--color-surface)']]));
+  }
+
+  const buttons = theme.buttons ?? {};
+  const glow = buttons.glow;
+  if (glow && (glow.size ?? 0) > 0) {
+    const size = Math.max(0, Math.min(60, Math.round(glow.size ?? 0)));
+    const colour = glow.color && isColor(glow.color) ? glow.color : 'color-mix(in srgb,var(--he-btn-primary-bg) 55%,transparent)';
+    parts.push(block(at(':is(.he-btn-primary,.he-cbtn.is-primary)'), [['filter', `drop-shadow(0 0 ${size}px ${colour})`]]));
+  }
+  if (buttons.font && buttons.font in FONT_STACKS) parts.push(block(scope ? scope.trim() : ':root', [['--he-btn-font', FONT_STACKS[buttons.font]!]]));
+  if (buttons.icon === 'cell') {
+    // The arrow in a compartment of its own: full height, a thin divider before it.
+    parts.push(
+      // `.he-btn`'s label is a text node, so its arrow is its only element; a library button's label is a span.
+      block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)')}`, [
+        ['box-sizing', 'content-box'],
+        ['padding', 'var(--he-btn-py) 15px'],
+        ['margin', 'calc(-1 * var(--he-btn-py)) calc(-1 * var(--he-btn-px)) calc(-1 * var(--he-btn-py)) 6px'],
+        ['border-left', '1px solid color-mix(in srgb,currentColor 32%,transparent)'],
+      ]),
+    );
+  }
+
+  const eyebrow = theme.eyebrow ?? {};
+  if (eyebrow.marker === 'none') parts.push(block(at('.he-eyebrow__rule'), [['display', 'none']]));
+  if (eyebrow.marker === 'dot') {
+    parts.push(block(at('.he-eyebrow__rule'), [['width', '6px'], ['height', '6px'], ['border-radius', '50%'], ['animation', 'none']]));
+    parts.push(block(at('.he-eyebrow'), [['gap', '10px']]));
+  }
+  if (eyebrow.markerColor && isColor(eyebrow.markerColor)) parts.push(block(at('.he-eyebrow__rule'), [['background-color', eyebrow.markerColor]]));
+
+  const panel = theme.panel ?? {};
+  const panelDecls: Decl[] = [];
+  push(panelDecls, '--he-panel-inset', panel.inset, isLength);
+  push(panelDecls, '--he-panel-gap', panel.gap, isLength);
+  push(panelDecls, '--he-panel-bg', panel.background, isColor);
+  const panelCut = cutLegs(panel.shape, CUT_SIZES.panel);
+  if (panelCut) panelDecls.push(['--he-panel-clip', cutPolygon(panelCut)]);
+  if (panelDecls.length) parts.push(block(scope ? scope.trim() : ':root', panelDecls));
+
+  const nav = theme.nav ?? {};
+  const navDecls: Decl[] = [];
+  if (nav.font && nav.font in FONT_STACKS) navDecls.push(['--he-nav-family', FONT_STACKS[nav.font]!]);
+  push(navDecls, '--he-nav-size', nav.size, isLength);
+  push(navDecls, '--he-nav-weight', nav.weight, isKeyword(['300', '400', '500', '600', '700']));
+  push(navDecls, '--he-nav-transform', nav.transform, isKeyword(TRANSFORMS));
+  push(navDecls, '--he-nav-tracking', nav.letterSpacing, isLength);
+  push(navDecls, '--he-nav-gap', nav.gap, isLength);
+  push(navDecls, '--he-nav-color', nav.color, isColor);
+  push(navDecls, '--he-nav-active', nav.activeColor, isColor);
+  // Unlayered, after the stylesheet's own defaults, which live in the components layer.
+  if (navDecls.length) parts.push(block(scope ? scope.trim() : ':root', navDecls));
+
+  return parts.join('');
+}
+
 function brandDecls(theme: Theme): Decl[] {
   const out: Decl[] = [];
   push(out, '--he-logo-height', theme.brand?.logoHeight, isLength);
@@ -303,6 +432,7 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   }
 
   parts.push(localeFontCss(theme, safeSelector));
+  parts.push(shapeCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
 
   // Link underline is a rule rather than a variable: there is no sensible
   // "unset" value for text-decoration that inherits correctly.

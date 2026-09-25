@@ -27,7 +27,7 @@ const href = z.string().trim().min(1).max(500).refine(isSafeHref, 'Use a path li
  * HD5 logo between split links · HD6 logo row over a links row · HD7 floating rounded box ·
  * HD8 wide left sidebar · HD9 narrow left rail. The last two sit beside the page from 1024px up.
  */
-export const HEADER_VARIANTS = ['classic', 'centered', 'slim', 'pill', 'splitLogo', 'stacked', 'boxed', 'sidebar', 'rail', 'menuButtonInline'] as const;
+export const HEADER_VARIANTS = ['classic', 'centered', 'slim', 'pill', 'splitLogo', 'stacked', 'boxed', 'sidebar', 'rail', 'menuButtonInline', 'notch'] as const;
 export type HeaderVariant = (typeof HEADER_VARIANTS)[number];
 
 /** MM1 compact panel · MM2 full-width sheet · MM3 links + image cards · MM4 full-screen three-level. */
@@ -74,6 +74,9 @@ export const chromeSchema = z.object({
       /* ── 2.18/2.19 (T25) ─────────────────────────────────────────────── */
       /** menuButtonInline — which end the round menu button sits at. */
       menuSide: z.enum(['left', 'right']).optional(),
+      /** 2.21 notch — the tab's colour (unset: the page colour) and the radius of its curved corners, px. */
+      notchBackground: z.string().trim().regex(HEX, 'A hex colour such as #000000').optional(),
+      notchRadius: z.number().int().min(0).max(64).optional(),
       /** The bar's own background: solid (as before), none, or frosted glass over the page. */
       background: z.enum(['solid', 'transparent', 'glass']).optional(),
       /** Glass: how much the page behind is blurred, in px. */
@@ -226,6 +229,8 @@ export type ResolvedChrome = {
     menuLabel: string;
     railButton: 'top' | 'center';
     menuSide: 'left' | 'right';
+    notchBackground?: string;
+    notchRadius: number;
     background: 'solid' | 'transparent' | 'glass';
     glassBlur: number;
     glassOpacity: number;
@@ -283,18 +288,22 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
   /* A header down the side of the page has no hero to lie over, and its
      dropdowns open beside it, so the wide panels cannot apply. */
   const beside = variant === 'sidebar' || variant === 'rail';
+  /* 2.21 — the notch is cut into the first section; it neither sticks nor lies over a hero. */
+  const notch = variant === 'notch';
 
   return {
     header: {
       variant,
-      sticky: c.header?.sticky ?? true,
-      overlay: beside ? false : (c.header?.overlay ?? false),
+      sticky: notch ? false : (c.header?.sticky ?? true),
+      overlay: beside || notch ? false : (c.header?.overlay ?? false),
       collapseAt: c.header?.collapseAt ?? 'tablet',
       search: c.header?.search ?? false,
       ctaOnMobile: c.header?.ctaOnMobile ?? false,
       menuLabel: c.header?.menuLabel || 'Menu',
       railButton: c.header?.railButton ?? 'top',
       menuSide: c.header?.menuSide ?? 'left',
+      notchBackground: c.header?.notchBackground && HEX.test(c.header.notchBackground) ? c.header.notchBackground : undefined,
+      notchRadius: c.header?.notchRadius ?? 32,
       background: c.header?.background ?? 'solid',
       glassBlur: c.header?.glassBlur ?? 14,
       glassOpacity: c.header?.glassOpacity ?? 60,
@@ -373,6 +382,7 @@ export const HEADER_VARIANT_LABELS: Record<HeaderVariant, { label: string; hint:
   sidebar: { label: 'Sidebar', hint: 'The full menu in a column down the left, from 1024px up' },
   rail: { label: 'Narrow rail', hint: 'A slim strip down the left with the menu button, from 1024px up' },
   menuButtonInline: { label: 'Menu button and links', hint: 'A round menu button, the logo, links and a button; the menu button opens the full-screen menu everywhere' },
+  notch: { label: 'Notch', hint: 'Logo and links in a tab cut into the top of the first section — make that section a Panel' },
 };
 
 export const MEGA_VARIANT_LABELS: Record<MegaVariant, { label: string; hint: string }> = {

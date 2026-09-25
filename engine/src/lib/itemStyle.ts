@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { cornerShapeSchema, cutLegs, cutPolygon } from './shape';
 import { BORDER_STYLES, box, color, length, type SpacingBox } from './blockStyle';
 import { isColor, isLength } from './theme';
 
@@ -32,6 +33,8 @@ export const itemStyleSchema = z.object({
   borderStyle: z.enum(BORDER_STYLES).optional(),
   borderColor: color.optional(),
   radius: length.optional(),
+  /** 2.21 — this card's corners cut on the diagonal, whatever the site's cards do. */
+  corners: cornerShapeSchema.optional(),
   align: z.enum(['left', 'center', 'right']).optional(),
   /**
    * A name to aim your own CSS at, the same escape hatch a block has.
@@ -86,6 +89,8 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
 
   if (style.background && isColor(style.background)) decls.push(['background', style.background]);
   if (style.radius && isLength(style.radius)) decls.push(['border-radius', style.radius]);
+  const legs = cutLegs(style.corners, 20);
+  if (legs) decls.push(['clip-path', cutPolygon(legs)]);
   if (style.align) decls.push(['text-align', style.align]);
 
   /* A width with no style draws nothing, which reads as the field being
