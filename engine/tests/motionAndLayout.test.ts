@@ -25,6 +25,13 @@ describe('the site chrome', () => {
     expect(chrome.rails).toBeNull();
   });
 
+  it('can stop motion for everyone, which retires the visitor’s switch', () => {
+    expect(resolveChrome(undefined).reduceMotion).toBe(false);
+    const off = resolveChrome(chromeSchema.parse({ reduceMotion: true, motionToggle: true }));
+    expect(off.reduceMotion).toBe(true);
+    expect(off.motionToggle).toBe(false);
+  });
+
   it('fills the rails in once they are switched on', () => {
     const rails = resolveChrome(chromeSchema.parse({ rails: { enabled: true } })).rails;
     expect(rails).toMatchObject({ scrollSide: 'left', socialSide: 'right', minWidth: 1181 });

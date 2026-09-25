@@ -47,7 +47,7 @@ export function CustomCursor({ style, mediaLabel }: { style: Style; mediaLabel?:
     let visible = false;
 
     const loop = () => {
-      // The ring follows a tenth of the way each frame: the lag BetBoyz uses.
+      // The ring closes 18% of the gap each frame — a soft lag behind the dot.
       rx += (x - rx) * 0.18;
       ry += (y - ry) * 0.18;
       if (dot.current) dot.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;

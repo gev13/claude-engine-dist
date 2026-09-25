@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "2.19.0",
+  "version": "2.20.0",
   "private": true,
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
@@ -19,6 +19,7 @@
     "db:seed": "NODE_OPTIONS=--conditions=react-server tsx src/server/db/seed.ts",
     "setup": "drizzle-kit push --force && npm run db:sql",
     "search:index": "NODE_OPTIONS=--conditions=react-server tsx scripts/reindex.ts",
+    "transfer:schema": "tsx scripts/transfer-schema.ts",
     "retention:sweep": "NODE_OPTIONS=--conditions=react-server tsx scripts/sweep-retention.ts",
     "fonts:fetch": "node scripts/fetch-fonts.mjs",
     "test": "vitest run",

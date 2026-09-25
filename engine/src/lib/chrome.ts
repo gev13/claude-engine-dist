@@ -206,6 +206,8 @@ export const chromeSchema = z.object({
   backToTop: z.boolean().optional(),
   /** GL3 — a footer switch that stops animation for this visitor. */
   motionToggle: z.boolean().optional(),
+  /** 2.20 — stops animation for every visitor: the site-wide answer to the switch above. */
+  reduceMotion: z.boolean().optional(),
   /** GL6 — lets visitors choose light or dark; needs the dark palette. */
   themeToggle: z.boolean().optional(),
 });
@@ -263,6 +265,7 @@ export type ResolvedChrome = {
   regionBar: { message: string; buttonLabel: string; options: { label: string; href: string }[] } | null;
   backToTop: boolean;
   motionToggle: boolean;
+  reduceMotion: boolean;
   themeToggle: boolean;
 };
 
@@ -351,7 +354,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
         }
       : null,
     backToTop: c.backToTop ?? false,
-    motionToggle: c.motionToggle ?? false,
+    // With motion off for everyone, a switch to turn it off is a switch that does nothing.
+    motionToggle: (c.motionToggle ?? false) && !c.reduceMotion,
+    reduceMotion: c.reduceMotion ?? false,
     themeToggle: c.themeToggle ?? false,
   };
 }

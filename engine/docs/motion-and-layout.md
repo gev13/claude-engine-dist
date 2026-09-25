@@ -26,14 +26,20 @@ setting or the site's own switch.
   **phone** number beside the email.
 - Focus stays inside the open menu, and Escape closes it.
 
-## The footer — Appearance → Footer
+## The footer
 
-- **Reveal** — the page lifts off the footer, which waits underneath. Off on
-  phones unless you ask; a footer taller than most of the screen scrolls
-  normally.
-- **Its own background** colour.
+- **Reveal** (Appearance → Motion) — the page lifts off the footer, which
+  waits underneath. Off on phones unless you ask; a footer taller than most
+  of the screen scrolls normally.
+- **Its own background** colour (Appearance → Footer).
 
-## Site-wide — Appearance → Site-wide
+## Motion — Appearance → Motion
+
+Since 2.20 everything that moves is on one screen.
+
+- **Reduce motion for everyone** — stops every animation for every visitor,
+  as if each had asked for less motion; the footer's reduce-motion switch is
+  left out while it is on.
 
 - **Pointer** — a dot, a ring, both, or a disc that inverts what is under
   it, with an optional word over pictures ("View"). A mouse only; the text

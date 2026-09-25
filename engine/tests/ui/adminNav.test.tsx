@@ -58,6 +58,7 @@ const GATE: Record<string, keyof typeof PERMISSIONS> = {
   '/admin/updates': 'updates:read',
   '/admin/backups': 'backups:read',
   '/admin/transfer': 'transfer:read',
+  '/admin/import/wordpress': 'transfer:write',
   '/admin/audit': 'audit:read',
   '/admin/languages': 'settings:write',
   '/admin/translations': 'settings:write',

@@ -9,6 +9,37 @@ told about before taking it.
 
 ---
 
+## 2.20.0 — 2026-09-25
+
+**Imports are checked.** Every row of a content archive now passes the
+checks the editor's own save applies — blocks no page could draw, HTML,
+slugs and paths, redirects, settings, and every reference — before anything
+is written. The screen lists each refused row with its reason; stop, or
+import the rest without them. Reading times are recounted, the search index
+rebuilt when Meilisearch is on, and the caches cleared. The report — created,
+updated, skipped, refused — downloads as a CSV.
+
+**Merge.** An import can now add and update instead of replacing: a row
+updates the one here with the same id, or the same address in the same
+language; nothing is deleted; a media file already here (same bytes) is not
+copied again. Content can arrive in batches, and new projects later. The
+archive format is documented, with a JSON Schema for every table, for tools
+that write archives (`docs/transfer-format.md`).
+
+**Import from WordPress** (Administration). Read an export file or a live
+site's REST API, map each content type and taxonomy — posts, pages, a
+portfolio type into Projects — and check what that would do before doing
+it. Page builders' shortcodes become clean HTML, accordions become an FAQ
+block, Yoast titles and descriptions become the SEO fields, featured images
+and the files the content uses are downloaded and pointed at, and every
+address that changes gets a 301. Running it again updates what the first
+run made.
+
+**Appearance → Motion.** The pointer, page changes, the reveal footer and
+the side rails in one place, with a new *Reduce motion for everyone*.
+
+---
+
 ## 2.19.0 — 2026-09-25
 
 **The header.** A new layout — a round menu button, the logo, links and a

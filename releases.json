@@ -1,6 +1,14 @@
 {
-  "latest": "2.19.0",
+  "latest": "2.20.0",
   "releases": [
+    {
+      "version": "2.20.0",
+      "date": "2026-09-25",
+      "summary": "Content imports are checked row by row like the editor's saves, can merge instead of replacing, and report what they did as a CSV; the archive format is documented with a JSON Schema. A WordPress importer reads an export file or a live site, maps types and taxonomies, cleans page-builder shortcodes, downloads media and adds redirects. Appearance gains a Motion screen with a reduce-motion switch for everyone.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.19.0",
       "date": "2026-09-25",

@@ -367,6 +367,7 @@ async function main() {
     '/api/admin/updates',
     '/api/admin/backups',
     '/api/admin/transfer',
+    '/api/admin/import/wordpress',
     '/api/admin/languages',
     '/api/admin/translations',
     '/api/admin/site-translations',

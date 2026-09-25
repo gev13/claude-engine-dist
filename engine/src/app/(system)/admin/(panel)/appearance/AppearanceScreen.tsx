@@ -55,7 +55,7 @@ import {
 
 type ThemeResponse = { theme: Theme };
 
-const TABS = ['Colours', 'Typography', 'Buttons', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Site-wide'] as const;
+const TABS = ['Colours', 'Typography', 'Buttons', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Motion', 'Site-wide'] as const;
 
 /** A row of choice cards: the variant pickers for header, menus and footer. */
 function VariantPicker<T extends string>({
@@ -869,9 +869,10 @@ function AppearanceScreenInner() {
             </>
           )}
 
+          {tab === 'Motion' && <MotionExtrasPanel chrome={theme.chrome} set={set} />}
+
           {tab === 'Site-wide' && (
             <>
-              <MotionExtrasPanel chrome={theme.chrome} set={set} />
               <Panel title="Visitor controls">
                 <div className="space-y-3">
                   <Toggle label="Back-to-top button" value={theme.chrome?.backToTop} onChange={set(['chrome', 'backToTop'])} />

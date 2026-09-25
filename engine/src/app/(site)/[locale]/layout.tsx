@@ -158,6 +158,9 @@ export default async function SiteLayout({
       dir={localeDir(locale)}
       data-slash={permalinks.trailingSlash === 'always' ? 'always' : undefined}
       data-img={responsiveImages() ? 'responsive' : undefined}
+      /* 2.20 — motion off for everyone: the class every animation already
+         answers to, written by the server rather than the visitor's switch. */
+      className={chrome.reduceMotion ? 'he-reduce-motion' : undefined}
       suppressHydrationWarning
     >
       <head>
@@ -260,9 +263,9 @@ export default async function SiteLayout({
           {/* 2.19 — motion and chrome extras, each only when switched on. */}
           {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
-          {chrome.cursor.style !== 'off' && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
-          {chrome.transition.style !== 'off' && <PageTransition style={chrome.transition.style} />}
-          {chrome.transition.preloader && (
+          {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
+          {chrome.transition.style !== 'off' && !chrome.reduceMotion && <PageTransition style={chrome.transition.style} />}
+          {chrome.transition.preloader && !chrome.reduceMotion && (
             <Preloader>
               {theme.brand?.logoUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element

@@ -1,0 +1,1493 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Engine content archive, format 1",
+  "description": "A .tar.gz holding manifest.json, tables/<table>.json (one JSON array per table) and, optionally, media/<filename>. Keys are the camelCase names below. See docs/transfer-format.md.",
+  "type": "object",
+  "properties": {
+    "manifest": {
+      "type": "object",
+      "properties": {
+        "format": {
+          "const": 1
+        },
+        "kind": {
+          "const": "content"
+        },
+        "engineVersion": {
+          "type": "string"
+        },
+        "takenAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "siteName": {
+          "type": "string"
+        },
+        "includesMedia": {
+          "type": "boolean"
+        },
+        "includesSettings": {
+          "type": "boolean"
+        },
+        "tables": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "digests": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "description": "sha256 hex of tables/<name>.json, byte for byte. Optional per table."
+          }
+        }
+      },
+      "required": [
+        "format",
+        "kind",
+        "engineVersion",
+        "takenAt",
+        "includesMedia",
+        "includesSettings",
+        "tables",
+        "digests"
+      ]
+    },
+    "tables": {
+      "type": "object",
+      "properties": {
+        "media": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "filename": {
+                "type": "string",
+                "maxLength": 300,
+                "description": "Relative to the media folder, e.g. 2026/09/abc.webp; the file itself travels under media/ in the archive."
+              },
+              "originalName": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "mimeType": {
+                "type": "string",
+                "maxLength": 100
+              },
+              "extension": {
+                "type": "string",
+                "maxLength": 10
+              },
+              "byteSize": {
+                "type": "integer"
+              },
+              "width": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "height": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "url": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Derived: /media/<filename>."
+              },
+              "altText": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "caption": {
+                "type": "string"
+              },
+              "checksum": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 64,
+                "description": "sha256 of the file, hex. A merge skips a file this site already has with the same checksum."
+              },
+              "durationMs": {
+                "type": [
+                  "integer",
+                  "null"
+                ]
+              },
+              "variants": {},
+              "uploadedById": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "filename",
+              "originalName",
+              "mimeType",
+              "extension",
+              "byteSize"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string"
+              },
+              "imageUrl": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 500
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "sortOrder": {
+                "type": "integer"
+              },
+              "isSystem": {
+                "type": "boolean"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "slug",
+              "name"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "pages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "path": {
+                "type": "string",
+                "maxLength": 300,
+                "description": "A site path in its written form: a leading slash, no trailing slash, \"/\" for the home page."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "navLabel": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 120
+              },
+              "summary": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "blocks": {
+                "description": "A list of blocks, each { id, type, props, style? } — checked against the block vocabulary (src/lib/blocks.ts); a block that fails refuses the row."
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "customCss": {
+                "type": "string",
+                "description": "CSS; @import, url() to other sites and </style are removed."
+              },
+              "appearance": {
+                "type": "object",
+                "properties": {
+                  "background": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "scheme": {
+                    "type": "string",
+                    "enum": [
+                      "inherit",
+                      "alt"
+                    ]
+                  }
+                }
+              },
+              "parentId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "sortOrder": {
+                "type": "integer"
+              },
+              "template": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "priorityTier": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 20
+              },
+              "deletedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "isSystem": {
+                "type": "boolean"
+              },
+              "publishedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "authorId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "slug",
+              "path",
+              "title"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "posts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "body": {
+                "type": "string",
+                "description": "HTML. Sanitised on import as the editor’s save would; reading time is counted from what is kept."
+              },
+              "blocks": {
+                "description": "A list of blocks, each { id, type, props, style? } — checked against the block vocabulary (src/lib/blocks.ts); a block that fails refuses the row."
+              },
+              "layout": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "article",
+                  "research"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "customCss": {
+                "type": "string",
+                "description": "CSS; @import, url() to other sites and </style are removed."
+              },
+              "appearance": {
+                "type": "object",
+                "properties": {
+                  "background": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "scheme": {
+                    "type": "string",
+                    "enum": [
+                      "inherit",
+                      "alt"
+                    ]
+                  }
+                }
+              },
+              "coverMediaId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "primaryCategoryId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "readingMinutes": {
+                "type": "integer",
+                "description": "Derived from the body on import."
+              },
+              "viewCount": {
+                "type": "integer"
+              },
+              "deletedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "authorId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "publishedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "slug",
+              "title"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "post_categories": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "postId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "categoryId": {
+                "type": "string",
+                "format": "uuid"
+              }
+            },
+            "required": [
+              "postId",
+              "categoryId"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "projects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "summary": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "intro": {
+                "type": "string",
+                "description": "HTML, sanitised on import."
+              },
+              "coverMediaId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "hoverMediaId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "heroMediaId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "client": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "year": {
+                "type": "string",
+                "maxLength": 20
+              },
+              "url": {
+                "type": "string",
+                "maxLength": 500,
+                "description": "Derived: /media/<filename>."
+              },
+              "blocks": {
+                "description": "A list of blocks, each { id, type, props, style? } — checked against the block vocabulary (src/lib/blocks.ts); a block that fails refuses the row."
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "customCss": {
+                "type": "string",
+                "description": "CSS; @import, url() to other sites and </style are removed."
+              },
+              "options": {
+                "type": "object",
+                "properties": {
+                  "hideMore": {
+                    "type": "boolean"
+                  },
+                  "background": {
+                    "type": "string",
+                    "maxLength": 60
+                  },
+                  "scheme": {
+                    "type": "string",
+                    "enum": [
+                      "inherit",
+                      "alt"
+                    ]
+                  }
+                }
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "publishedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "sortOrder": {
+                "type": "integer"
+              },
+              "featured": {
+                "type": "boolean"
+              },
+              "authorId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "deletedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "slug",
+              "title"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "project_terms": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "taxonomy": {
+                "type": "string",
+                "maxLength": 10
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "description": {
+                "type": "string"
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "sortOrder": {
+                "type": "integer"
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "taxonomy",
+              "slug",
+              "name"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "project_term_links": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "projectId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "termId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "isPrimary": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "projectId",
+              "termId"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "saved_blocks": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "description": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "category": {
+                "type": "string",
+                "maxLength": 60
+              },
+              "mode": {
+                "type": "string",
+                "maxLength": 10
+              },
+              "tree": {
+                "description": "A list of blocks, as `blocks`."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "createdById": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "updatedById": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "deletedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "name"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "slug": {
+                "type": "string",
+                "maxLength": 200,
+                "description": "Lower case letters, digits and single hyphens."
+              },
+              "locale": {
+                "type": "string",
+                "maxLength": 5
+              },
+              "translationGroupId": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "title": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "excerpt": {
+                "type": "string"
+              },
+              "location": {
+                "type": "string",
+                "maxLength": 160
+              },
+              "contractType": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "workingTime": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "seniority": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "workweek": {
+                "type": "string",
+                "maxLength": 120
+              },
+              "department": {
+                "type": "string",
+                "maxLength": 160
+              },
+              "description": {
+                "type": "string",
+                "description": "HTML where the table is `jobs` (sanitised on import); plain text elsewhere."
+              },
+              "responsibilities": {
+                "type": "string",
+                "description": "HTML, sanitised on import."
+              },
+              "benefits": {
+                "type": "string",
+                "description": "HTML, sanitised on import."
+              },
+              "coverMediaId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid"
+              },
+              "seo": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "exactTitle": {
+                    "type": "boolean"
+                  },
+                  "description": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "canonicalUrl": {
+                    "type": "string",
+                    "maxLength": 500
+                  },
+                  "robots": {
+                    "type": "string",
+                    "maxLength": 120
+                  },
+                  "ogTitle": {
+                    "type": "string",
+                    "maxLength": 300
+                  },
+                  "ogDescription": {
+                    "type": "string",
+                    "maxLength": 1000
+                  },
+                  "ogImageId": {
+                    "type": "string",
+                    "maxLength": 64
+                  },
+                  "twitterCard": {
+                    "type": "string",
+                    "enum": [
+                      "summary",
+                      "summary_large_image"
+                    ]
+                  },
+                  "jsonLd": {
+                    "maxItems": 20,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    }
+                  },
+                  "extraMeta": {
+                    "maxItems": 40,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "name": {
+                          "type": "string"
+                        },
+                        "property": {
+                          "type": "string"
+                        },
+                        "content": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "content"
+                      ]
+                    }
+                  }
+                }
+              },
+              "postedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "deadline": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "isOpen": {
+                "type": "boolean"
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "draft",
+                  "published",
+                  "archived"
+                ]
+              },
+              "sortOrder": {
+                "type": "integer"
+              },
+              "authorId": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "deletedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "publishedAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "slug",
+              "title"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "redirects": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "fromPath": {
+                "type": "string",
+                "maxLength": 400
+              },
+              "matchType": {
+                "type": "string",
+                "maxLength": 10
+              },
+              "matchQuery": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "keepRest": {
+                "type": "boolean"
+              },
+              "toPath": {
+                "type": "string",
+                "maxLength": 500
+              },
+              "status": {
+                "type": "integer"
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 300
+              },
+              "hits": {
+                "type": "integer"
+              },
+              "lastHitAt": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "date-time"
+              },
+              "createdById": {
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "format": "uuid",
+                "description": "Ignored: re-pointed at whoever imports."
+              },
+              "createdAt": {
+                "type": "string",
+                "format": "date-time"
+              },
+              "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+              }
+            },
+            "required": [
+              "fromPath",
+              "toPath"
+            ],
+            "additionalProperties": true
+          }
+        },
+        "settings": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "key": {
+                "type": "string",
+                "description": "theme, navigation, popups, permalinks, projects, cookies, integrations, or site.* (with an optional :locale)."
+              },
+              "value": {
+                "description": "Checked against the schema its own admin screen saves with."
+              }
+            },
+            "required": [
+              "key",
+              "value"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

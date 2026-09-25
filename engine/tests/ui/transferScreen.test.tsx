@@ -28,7 +28,22 @@ const store = vi.hoisted(() => ({
 }));
 
 vi.mock('swr', () => ({ default: () => ({ data: store.loaded, isLoading: false, mutate: vi.fn() }) }));
-vi.mock('@/lib/admin/client', () => ({ api: store.api, fetcher: vi.fn() }));
+vi.mock('@/lib/admin/client', () => ({
+  api: store.api,
+  fetcher: vi.fn(),
+  ApiError: class ApiError extends Error {
+    constructor(
+      message: string,
+      readonly status: number,
+      readonly details?: unknown,
+    ) {
+      super(message);
+    }
+  },
+}));
+
+const table = (total: number, extra: Record<string, number> = {}) => ({ total, create: total, update: 0, skip: 0, failed: 0, ignoredColumns: [], ...extra });
+const cleanReport = { strategy: 'replace', tables: { pages: table(12), posts: table(4), media: table(50) }, rejected: [], notes: [] };
 
 const { TransferScreen } = await import('../../src/app/(system)/admin/(panel)/transfer/TransferScreen');
 
@@ -103,6 +118,7 @@ describe('the export & import screen', () => {
         includesSettings: true,
         tables: { pages: 12, posts: 4, media: 50 },
       },
+      report: cleanReport,
     });
 
     const { container } = render(<TransferScreen canWrite />);
@@ -119,7 +135,8 @@ describe('the export & import screen', () => {
     const text = container.textContent ?? '';
     expect(text).toContain('pages: 12');
     expect(text).toContain('Includes the media files.');
-    expect(text).toMatch(/replaces every page, post, category, redirect and media record/i);
+    expect(text).toMatch(/replaces every page, post, project, category, redirect and media record the archive carries/i);
+    expect(text).toContain('What this import would do');
     expect(text).toMatch(/accounts, enquiries, sign-ups and form answers are left alone/i);
 
     // And now the gate.
@@ -133,6 +150,50 @@ describe('the export & import screen', () => {
     expect(buttonNamed(container, 'Replace this site’s content')?.disabled).toBe(false);
   });
 
+  it('lists refused rows, and imports nothing past them until told to leave them out', async () => {
+    store.api.mockResolvedValueOnce({
+      manifest: { engineVersion: '2.20.0', takenAt: '2026-09-15T09:00:00.000Z', siteName: 'Old WP', includesMedia: true, includesSettings: false, tables: { posts: 3 } },
+      report: {
+        strategy: 'replace',
+        tables: { posts: table(3, { create: 2, failed: 1 }) },
+        rejected: [{ table: 'posts', row: 2, key: 'hello-world', reason: 'title is required.' }],
+        notes: [],
+      },
+    });
+    const { container } = render(<TransferScreen canWrite />);
+    fireEvent.change(container.querySelector<HTMLInputElement>('input[type="file"]')!, { target: { files: [new File(['x'], 'c.tar.gz')] } });
+    await waitFor(() => expect(container.textContent).toContain('hello-world'));
+    expect(container.textContent).toContain('title is required.');
+    expect(buttonNamed(container, 'Download the report (CSV)')).toBeTruthy();
+
+    fireEvent.change(container.querySelector<HTMLInputElement>('input[aria-label="Confirmation"]')!, { target: { value: 'replace all content' } });
+    expect(buttonNamed(container, 'Replace this site’s content')?.disabled).toBe(true);
+    fireEvent.click(container.querySelector<HTMLInputElement>('input[name="onInvalid"]:not(:checked)')!);
+    expect(buttonNamed(container, 'Replace this site’s content')?.disabled).toBe(false);
+  });
+
+  it('checks again for a merge, which needs no typed words and sends its choice', async () => {
+    const manifest = { engineVersion: '2.20.0', takenAt: '2026-09-15T09:00:00.000Z', siteName: 'Batch 2', includesMedia: false, includesSettings: false, tables: { projects: 2 } };
+    store.api
+      .mockResolvedValueOnce({ manifest, report: cleanReport })
+      .mockResolvedValueOnce({ manifest, report: { ...cleanReport, strategy: 'merge', tables: { projects: table(2, { create: 1, update: 1 }) } } })
+      .mockResolvedValueOnce({ applied: { projects: 2 }, report: { ...cleanReport, strategy: 'merge', tables: { projects: table(2, { create: 1, update: 1 }) } }, backupTaken: 'b.tar.gz', search: null });
+    const { container } = render(<TransferScreen canWrite />);
+    fireEvent.change(container.querySelector<HTMLInputElement>('input[type="file"]')!, { target: { files: [new File(['x'], 'c.tar.gz')] } });
+    await waitFor(() => expect(container.textContent).toContain('Batch 2'));
+
+    fireEvent.click(container.querySelector<HTMLInputElement>('input[name="strategy"]:not(:checked)')!);
+    await waitFor(() => expect(buttonNamed(container, 'Merge into this site')).toBeTruthy());
+    expect((store.api.mock.calls[1]![1].json as FormData).get('strategy')).toBe('merge');
+    expect(container.querySelector('input[aria-label="Confirmation"]')).toBeNull();
+
+    fireEvent.click(buttonNamed(container, 'Merge into this site')!);
+    await waitFor(() => expect(store.api).toHaveBeenCalledTimes(3));
+    const sent = store.api.mock.calls[2]![1].json as FormData;
+    expect([sent.get('mode'), sent.get('strategy'), sent.get('confirm')]).toEqual(['import', 'merge', null]);
+    await waitFor(() => expect(container.textContent).toContain('Imported'));
+  });
+
   it('says when an archive carries no media, rather than letting it surprise somebody', async () => {
     store.api.mockResolvedValueOnce({
       manifest: {
@@ -143,6 +204,7 @@ describe('the export & import screen', () => {
         includesSettings: false,
         tables: { pages: 3 },
       },
+      report: cleanReport,
     });
 
     const { container } = render(<TransferScreen canWrite />);

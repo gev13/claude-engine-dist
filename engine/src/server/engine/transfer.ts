@@ -1,18 +1,31 @@
 import 'server-only';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { createWriteStream } from 'node:fs';
+import { createWriteStream, existsSync } from 'node:fs';
 import { cp, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import { promisify } from 'node:util';
-import { getTableColumns, inArray } from 'drizzle-orm';
+import { type AnyColumn, eq, inArray } from 'drizzle-orm';
+import type { PgTable } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { env } from '@/lib/env';
 import { ENGINE_VERSION } from '@/lib/version';
 import { db, schema } from '@/server/db';
 import { backupDir, createBackup } from './backup';
+import {
+  type CheckReport,
+  type CheckResult,
+  type ExistingSnapshot,
+  type ImportStrategy,
+  NATURAL_KEYS,
+  type PreparedRow,
+  type TableReport,
+  checkArchive,
+  checkSetting,
+  tableColumns,
+} from './importCheck';
 
 const run = promisify(execFile);
 
@@ -328,30 +341,8 @@ export function unsafeEntries(listing: string): string[] {
 /* ── Import ───────────────────────────────────────────────────────────────── */
 
 export type ImportOutcome =
-  | { ok: true; applied: Record<string, number>; backupTaken: string; attributedTo: string }
-  | { ok: false; error: string };
-
-/** JSON has no date type; the schema says which columns must become Dates again. */
-function reviveRows(table: unknown, rows: unknown[]): unknown[] {
-  const columns = getTableColumns(table as Parameters<typeof getTableColumns>[0]);
-  const dateKeys = Object.entries(columns)
-    .filter(([, column]) => (column as { dataType?: string }).dataType === 'date')
-    .map(([key]) => key);
-  if (dateKeys.length === 0) return rows;
-
-  return rows.map((row) => {
-    if (!row || typeof row !== 'object') return row;
-    const copy = { ...(row as Record<string, unknown>) };
-    for (const key of dateKeys) {
-      const value = copy[key];
-      if (typeof value === 'string' && value !== '') {
-        const date = new Date(value);
-        if (!Number.isNaN(date.getTime())) copy[key] = date;
-      }
-    }
-    return copy;
-  });
-}
+  | { ok: true; applied: Record<string, number>; report: CheckReport; backupTaken: string; attributedTo: string }
+  | { ok: false; error: string; report?: CheckReport };
 
 /** Re-point every column naming a person at the administrator doing the import. */
 export function reattribute(rows: unknown[], columns: string[] | undefined, userId: string): unknown[] {
@@ -366,25 +357,151 @@ export function reattribute(rows: unknown[], columns: string[] | undefined, user
   });
 }
 
+/* ── Reading and checking an archive (2.20) ───────────────────────────────── */
+
+type ReadArchive =
+  | { ok: true; manifest: ContentManifest; documents: Record<string, unknown[]>; mediaFiles: Set<string>; mediaPrefix: string }
+  | { ok: false; error: string };
+
 /**
- * Read an archive's manifest without applying anything, so the screen can say
- * what is in it before somebody commits to replacing their site with it.
+ * List, judge and read an archive's manifest and table documents — never its
+ * media, which can be gigabytes and is not needed to decide anything. The
+ * listing says which files it carries.
  */
-export async function inspectArchive(archive: string): Promise<{ ok: true; manifest: ContentManifest } | { ok: false; error: string }> {
+async function readArchive(archive: string, staging: string): Promise<ReadArchive> {
+  const listing = await run('tar', ['-tzf', archive], { timeout: 60_000, maxBuffer: 64 * 1024 * 1024 });
+  const bad = unsafeEntries(listing.stdout);
+  if (bad.length > 0) return { ok: false, error: `That archive contains unsafe paths (${bad[0]}).` };
+
+  const entries = listing.stdout.split('\n').map((line) => line.trim().replace(/^\.\//, '')).filter(Boolean);
+  const mediaFiles = new Set(entries.filter((e) => e.startsWith('media/') && !e.endsWith('/')).map((e) => e.slice('media/'.length)));
+  const tableEntries = entries.filter((e) => /^tables\/[a-z_]+\.json$/.test(e));
+
+  await mkdir(staging, { recursive: true });
+  const wanted = ['manifest.json', ...tableEntries].filter((e) => entries.includes(e));
+  if (!wanted.includes('manifest.json')) return { ok: false, error: 'That archive has no manifest.' };
+  // Entries as the archive names them — with or without the leading "./".
+  const named = wanted.map((e) => (listing.stdout.includes(`./${e}`) ? `./${e}` : e));
+  await run('tar', ['-xzf', archive, '-C', staging, ...named], { timeout: 10 * 60_000, maxBuffer: 1024 * 1024 });
+
+  const parsed = contentManifestSchema.safeParse(JSON.parse(await readFile(path.join(staging, 'manifest.json'), 'utf8')));
+  if (!parsed.success) {
+    return { ok: false, error: 'That is not a content export this engine can read. A full backup is restored from the Backups screen instead.' };
+  }
+
+  const documents: Record<string, unknown[]> = {};
+  for (const table of [...CONTENT_TABLES, 'settings']) {
+    const text = await readFile(path.join(staging, 'tables', `${table}.json`), 'utf8').catch(() => null);
+    if (text === null) continue;
+    const expected = parsed.data.digests[table];
+    if (expected && digest(text) !== expected) return { ok: false, error: `The archive has been altered since it was written (${table}).` };
+    let rows: unknown;
+    try {
+      rows = JSON.parse(text);
+    } catch {
+      return { ok: false, error: `The archive's ${table} document is not JSON.` };
+    }
+    if (!Array.isArray(rows)) return { ok: false, error: `The archive's ${table} document is not a list of rows.` };
+    documents[table] = rows;
+  }
+  return { ok: true, manifest: parsed.data, documents, mediaFiles, mediaPrefix: listing.stdout.includes('./media/') ? './media' : 'media' };
+}
+
+/** What a merge needs to know about the rows already here: ids, addresses, checksums, trees. */
+async function snapshotExisting(): Promise<ExistingSnapshot> {
+  const out: ExistingSnapshot = {};
+  for (const table of CONTENT_TABLES) {
+    const columns = tableColumns(TABLE_OBJECTS[table] as PgTable);
+    const wanted = new Set(['id', 'url', 'checksum', 'tree', ...(NATURAL_KEYS[table] ?? [])]);
+    const pick = Object.fromEntries(Object.entries(columns).filter(([key]) => wanted.has(key)));
+    out[table] = (await db.select(pick as never).from(TABLE_OBJECTS[table] as never)) as Record<string, unknown>[];
+  }
+  return out;
+}
+
+type Plan = { check: CheckResult; settings: PreparedRow[] };
+
+type PlanOptions = {
+  strategy: ImportStrategy;
+  allowRegex: boolean;
+  attributeTo: string;
+  hasFile: (filename: string) => boolean;
+  whenAddressMatches?: 'update' | 'skip';
+};
+
+/** Every row checked against this site, as the chosen import would apply it. */
+async function planDocuments(given: Record<string, unknown[]>, options: PlanOptions): Promise<Plan> {
+  const documents: Record<string, unknown[]> = {};
+  for (const table of CONTENT_TABLES) {
+    if (given[table]) documents[table] = reattribute(given[table]!, USER_COLUMNS[table], options.attributeTo);
+  }
+  const existing = await snapshotExisting();
+  const check = checkArchive({
+    strategy: options.strategy,
+    tables: CONTENT_TABLES.map((name) => ({ name, table: TABLE_OBJECTS[name] as PgTable })),
+    documents,
+    existing,
+    hasFile: options.hasFile,
+    allowRegex: options.allowRegex,
+    whenAddressMatches: options.whenAddressMatches,
+  });
+
+  // Settings: only keys that travel, each against its own screen's schema.
+  const settings: PreparedRow[] = [];
+  const settingRows = given.settings;
+  if (settingRows) {
+    const here = new Set((await db.select({ key: schema.settings.key }).from(schema.settings)).map((row) => row.key));
+    const report: TableReport = { total: settingRows.length, create: 0, update: 0, skip: 0, failed: 0, ignoredColumns: [] };
+    check.report.tables.settings = report;
+    settingRows.forEach((raw, i) => {
+      const row = (raw ?? {}) as Record<string, unknown>;
+      const key = typeof row.key === 'string' ? row.key : `row ${i + 1}`;
+      const refuse = (reason: string) => {
+        check.report.rejected.push({ table: 'settings', row: i + 1, key, reason });
+        report.failed++;
+      };
+      if (typeof row.key !== 'string' || !isPortableSettingKey(row.key)) return refuse('not a setting that travels between sites.');
+      const checked = checkSetting(row.key, row.value);
+      if (!checked.ok) return refuse(checked.reason);
+      const action = here.has(row.key) ? 'update' : 'create';
+      report[action]++;
+      settings.push({ row: i + 1, key: row.key, action, values: { key: row.key, value: checked.value, updatedById: options.attributeTo }, notes: [] });
+    });
+  }
+  return { check, settings };
+}
+
+const archiveFiles = (read: Extract<ReadArchive, { ok: true }>) => {
+  const onDisk = mediaDir();
+  return (filename: string) => read.mediaFiles.has(filename) || existsSync(path.join(onDisk, filename));
+};
+
+/** Check table documents from anywhere — an archive, or the WordPress importer — without writing. */
+export async function checkDocuments(documents: Record<string, unknown[]>, options: PlanOptions): Promise<CheckReport> {
+  return (await planDocuments(documents, options)).check.report;
+}
+
+/**
+ * Read an archive and check every row against this site without applying
+ * anything, so the screen can say what an import would do — and what it would
+ * refuse, and why — before anybody commits to it.
+ */
+export async function inspectArchive(
+  archive: string,
+  options: { strategy?: ImportStrategy; allowRegex?: boolean; attributeTo?: string } = {},
+): Promise<{ ok: true; manifest: ContentManifest; report: CheckReport } | { ok: false; error: string }> {
   const staging = path.join(backupDir(), `.inspect-${digest(archive).slice(0, 12)}`);
   try {
-    await mkdir(staging, { recursive: true });
-    const listing = await run('tar', ['-tzf', archive], { timeout: 60_000, maxBuffer: 8 * 1024 * 1024 });
-    const bad = unsafeEntries(listing.stdout);
-    if (bad.length > 0) return { ok: false, error: `That archive contains unsafe paths (${bad[0]}).` };
-
-    await run('tar', ['-xzf', archive, '-C', staging, './manifest.json'], { timeout: 60_000, maxBuffer: 1024 * 1024 });
-    const text = await readFile(path.join(staging, 'manifest.json'), 'utf8');
-    const parsed = contentManifestSchema.safeParse(JSON.parse(text));
-    if (!parsed.success) {
-      return { ok: false, error: 'That is not a content export this engine can read. A full backup is restored from the Backups screen instead.' };
-    }
-    return { ok: true, manifest: parsed.data };
+    const read = await readArchive(archive, staging);
+    if (!read.ok) return read;
+    const plan = await planDocuments(read.documents, {
+      strategy: options.strategy ?? 'replace',
+      allowRegex: options.allowRegex ?? false,
+      // Checking needs somebody to credit; nothing is written, so any id will do.
+      attributeTo: options.attributeTo ?? '00000000-0000-0000-0000-000000000000',
+      hasFile: archiveFiles(read),
+    });
+    return { ok: true, manifest: read.manifest, report: plan.check.report };
   } catch {
     return { ok: false, error: 'That file is not a readable archive.' };
   } finally {
@@ -392,113 +509,135 @@ export async function inspectArchive(archive: string): Promise<{ ok: true; manif
   }
 }
 
+export type ImportOptions = {
+  attributeTo: string;
+  createdById?: string | null;
+  /** `replace` (as before 2.20) or `merge`: add and update, never delete. */
+  strategy?: ImportStrategy;
+  /** With rows the checks refuse: stop before writing anything, or import the rest. */
+  onInvalid?: 'abort' | 'skip';
+  allowRegex?: boolean;
+};
+
 /**
- * Replace this site's content with an archive's.
+ * Apply an archive to this site.
  *
- * Same order of operations as a restore, for the same reason: verify, take a
- * safety copy, then replace inside one transaction so a failure halfway leaves
- * the site as it was.
+ * Same order of operations as a restore, for the same reason: read and check
+ * everything, take a safety copy, then write inside one transaction so a
+ * failure halfway leaves the site as it was.
+ *
+ * `replace` empties each table the archive carries and fills it from the
+ * archive — revisions are cleared, since they describe content that no longer
+ * exists. `merge` never deletes: a row whose id, or whose address, is already
+ * here updates that row; anything else is added; everything else is left
+ * alone, revisions included. Batches import this way, one after another.
  *
  * Settings are handled differently from every other table. The archive holds
- * only the portable keys, and only those are removed before they are written
- * back — deleting the whole table would take `install.completed` and the mail
- * configuration with it, which would leave a working site looking uninstalled
- * and unable to send.
+ * only the portable keys, and only those are written — deleting the whole
+ * table would take `install.completed` and the mail configuration with it,
+ * which would leave a working site looking uninstalled and unable to send.
  */
-export async function importContent(archive: string, options: { attributeTo: string; createdById?: string | null }): Promise<ImportOutcome> {
+export async function importContent(archive: string, options: ImportOptions): Promise<ImportOutcome> {
   const staging = path.join(backupDir(), `.import-${digest(archive).slice(0, 12)}`);
+  const strategy = options.strategy ?? 'replace';
 
   try {
-    const listing = await run('tar', ['-tzf', archive], { timeout: 60_000, maxBuffer: 8 * 1024 * 1024 });
-    const bad = unsafeEntries(listing.stdout);
-    if (bad.length > 0) return { ok: false, error: `That archive contains unsafe paths (${bad[0]}).` };
-
-    await mkdir(staging, { recursive: true });
-    await run('tar', ['-xzf', archive, '-C', staging], { timeout: 10 * 60_000, maxBuffer: 1024 * 1024 });
-
-    const manifestText = await readFile(path.join(staging, 'manifest.json'), 'utf8').catch(() => null);
-    if (manifestText === null) return { ok: false, error: 'That archive has no manifest.' };
-
-    const parsed = contentManifestSchema.safeParse(JSON.parse(manifestText));
-    if (!parsed.success) {
-      return { ok: false, error: 'That is not a content export. A full backup is restored from the Backups screen.' };
-    }
-
-    // Read and verify everything before a single row is written.
-    const documents: Record<string, unknown[]> = {};
-    for (const table of [...CONTENT_TABLES, 'settings']) {
-      const file = path.join(staging, 'tables', `${table}.json`);
-      const text = await readFile(file, 'utf8').catch(() => null);
-      if (text === null) continue;
-
-      const expected = parsed.data.digests[table];
-      if (expected && digest(text) !== expected) {
-        return { ok: false, error: `The archive has been altered since it was written (${table}).` };
-      }
-      const rows: unknown = JSON.parse(text);
-      if (!Array.isArray(rows)) return { ok: false, error: `The archive's ${table} document is not a list of rows.` };
-      documents[table] = rows;
-    }
-
-    const safety = await createBackup({ reason: 'before importing content', createdById: options.createdById ?? null });
-    if (safety.status !== 'ready') {
-      return { ok: false, error: 'A backup of the current site could not be taken, so nothing was imported.' };
-    }
-
-    const applied: Record<string, number> = {};
-
-    await db.transaction(async (tx) => {
-      // Revisions describe content that is about to stop existing, written by
-      // people this site does not have.
-      await tx.delete(schema.contentRevisions);
-
-      for (const table of [...CONTENT_TABLES].reverse()) {
-        if (!documents[table]) continue;
-        await tx.delete(TABLE_OBJECTS[table] as never);
-      }
-
-      for (const table of CONTENT_TABLES) {
-        const rows = documents[table];
-        if (!rows || rows.length === 0) {
-          applied[table] = 0;
-          continue;
-        }
-        const prepared = reviveRows(TABLE_OBJECTS[table], reattribute(rows, USER_COLUMNS[table], options.attributeTo));
-        for (let i = 0; i < prepared.length; i += 200) {
-          await tx.insert(TABLE_OBJECTS[table] as never).values(prepared.slice(i, i + 200) as never);
-        }
-        applied[table] = prepared.length;
-      }
-
-      // Only the keys the archive actually carries, and only if they are ones
-      // we would have exported — an edited archive cannot smuggle in `mail`.
-      const settingsRows = (documents.settings ?? []).filter(
-        (row): row is Record<string, unknown> =>
-          Boolean(row) && typeof row === 'object' && typeof (row as { key?: unknown }).key === 'string' && isPortableSettingKey((row as { key: string }).key),
-      );
-      if (settingsRows.length > 0) {
-        const keys = settingsRows.map((row) => row.key as string);
-        await tx.delete(schema.settings).where(inArray(schema.settings.key, keys));
-        const prepared = reviveRows(schema.settings, reattribute(settingsRows, USER_COLUMNS.settings, options.attributeTo));
-        await tx.insert(schema.settings).values(prepared as never);
-      }
-      applied.settings = settingsRows.length;
-    });
+    const read = await readArchive(archive, staging);
+    if (!read.ok) return read;
+    const outcome = await importDocuments(read.documents, { ...options, strategy, hasFile: archiveFiles(read) });
+    if (!outcome.ok) return outcome;
 
     // Files last, and merged rather than replaced: a file the archive does not
     // carry may still belong to this site, and the rows decide what is shown.
-    const incoming = path.join(staging, 'media');
-    const hasMedia = await stat(incoming).then(
-      (s) => s.isDirectory(),
-      () => false,
-    );
-    if (hasMedia) await cp(incoming, mediaDir(), { recursive: true, force: true });
-
-    return { ok: true, applied, backupTaken: safety.filename, attributedTo: options.attributeTo };
+    // A merge leaves out a file this site already has under another name.
+    if (read.mediaFiles.size > 0) {
+      const staged = path.join(staging, 'media');
+      await mkdir(staged, { recursive: true });
+      await run('tar', ['-xzf', archive, '-C', staging, read.mediaPrefix], { timeout: 30 * 60_000, maxBuffer: 1024 * 1024 });
+      const skipped = outcome.skippedMedia.map((file) => file.replace(/\.[^./]+$/, ''));
+      await cp(staged, mediaDir(), {
+        recursive: true,
+        force: true,
+        filter: (source) => {
+          const relative = path.relative(staged, source);
+          return !skipped.some((stem) => relative === stem || relative.startsWith(`${stem}.`));
+        },
+      });
+    }
+    return outcome;
   } catch (error) {
     return { ok: false, error: error instanceof Error ? error.message.slice(0, 400) : 'The import failed.' };
   } finally {
     await rm(staging, { recursive: true, force: true });
     await rm(archive, { force: true });
   }
+}
+
+/**
+ * The import itself, for table documents from anywhere: check, stop on
+ * refusals unless told to leave them out, take a backup, and write inside
+ * one transaction. Media files are the caller's — an archive copies its own,
+ * the WordPress importer has already stored what it fetched.
+ */
+export async function importDocuments(
+  documents: Record<string, unknown[]>,
+  options: ImportOptions & { hasFile: (filename: string) => boolean; whenAddressMatches?: 'update' | 'skip' },
+): Promise<(Extract<ImportOutcome, { ok: true }> & { skippedMedia: string[] }) | Extract<ImportOutcome, { ok: false }>> {
+  const strategy = options.strategy ?? 'replace';
+  const { check, settings } = await planDocuments(documents, {
+    strategy,
+    allowRegex: options.allowRegex ?? false,
+    attributeTo: options.attributeTo,
+    hasFile: options.hasFile,
+    whenAddressMatches: options.whenAddressMatches,
+  });
+
+  if (check.report.rejected.length > 0 && (options.onInvalid ?? 'abort') === 'abort') {
+    return { ok: false, error: `${check.report.rejected.length} row(s) did not pass the checks, so nothing was imported.`, report: check.report };
+  }
+
+  const safety = await createBackup({ reason: 'before importing content', createdById: options.createdById ?? null });
+  if (safety.status !== 'ready') {
+    return { ok: false, error: 'A backup of the current site could not be taken, so nothing was imported.' };
+  }
+
+  const applied: Record<string, number> = {};
+
+  await db.transaction(async (tx) => {
+    if (strategy === 'replace') {
+      // Revisions describe content that is about to stop existing, written by
+      // people this site does not have.
+      await tx.delete(schema.contentRevisions);
+      for (const table of [...CONTENT_TABLES].reverse()) {
+        if (!documents[table]) continue;
+        await tx.delete(TABLE_OBJECTS[table] as never);
+      }
+    }
+
+    for (const table of CONTENT_TABLES) {
+      const rows = check.prepared[table] ?? [];
+      const object = TABLE_OBJECTS[table] as PgTable & { id?: AnyColumn };
+      const inserts = rows.filter((row) => row.action === 'create').map((row) => row.values);
+      for (let i = 0; i < inserts.length; i += 200) {
+        await tx.insert(object as never).values(inserts.slice(i, i + 200) as never);
+      }
+      for (const row of rows.filter((r) => r.action === 'update')) {
+        const { id, ...values } = row.values;
+        if (!object.id) continue;
+        await tx.update(object as never).set(values as never).where(eq(object.id, id as string));
+      }
+      applied[table] = rows.filter((row) => row.action !== 'skip').length;
+    }
+
+    for (const row of settings) {
+      const { key, value, updatedById } = row.values as { key: string; value: unknown; updatedById: string };
+      await tx
+        .insert(schema.settings)
+        .values({ key, value, updatedById } as never)
+        .onConflictDoUpdate({ target: schema.settings.key, set: { value, updatedById, updatedAt: new Date() } as never });
+    }
+    applied.settings = settings.length;
+  });
+
+  return { ok: true, applied, report: check.report, backupTaken: safety.filename, attributedTo: options.attributeTo, skippedMedia: check.skippedMedia };
 }

@@ -1,7 +1,7 @@
 'use client';
 
 import { useId } from 'react';
-import { Field, Input, Panel } from '@/components/admin/ui';
+import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
 import type { Chrome } from '@/lib/chrome';
 
@@ -222,33 +222,45 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
   );
 }
 
-/** T29 — the footer waiting under the page, and its own background. */
+/** The footer's own background (2.19). Its reveal lives with the rest of the motion. */
 export function FooterExtrasPanel({ chrome, set }: Props) {
-  const footer = chrome?.footer;
-  const at = (key: string) => ['chrome', 'footer', key] as const;
   return (
-    <Panel title="Footer — reveal and background">
-      <div className="space-y-4">
-        <Check label="The page lifts off the footer, which waits underneath" value={footer?.reveal} onChange={set(at('reveal'))} />
-        {footer?.reveal && <Check label="On phones too" value={footer?.revealOnMobile} onChange={set(at('revealOnMobile'))} />}
-        <div className="max-w-[320px]">
-          <ColorField label="Background" placeholder="the page’s" value={footer?.background} onChange={(value) => set(at('background'))(value || undefined)} />
-        </div>
-        <p className="m-0 text-[12px] text-smoke">
-          A footer taller than most of the screen scrolls normally instead, so nothing in it is ever out of reach.
-        </p>
+    <Panel title="Footer background">
+      <div className="max-w-[320px]">
+        <ColorField label="Background" placeholder="the page’s" value={chrome?.footer?.background} onChange={(value) => set(['chrome', 'footer', 'background'])(value || undefined)} />
       </div>
     </Panel>
   );
 }
 
-/** T27, T28, T30 — the pointer, page changes and the side rails. */
+/**
+ * Appearance → Motion (2.20): everything that moves, in one place — the
+ * override for everyone first, then the pointer, page changes, the reveal
+ * footer and the side rails. Card tilt is per list, where the cards are.
+ */
 export function MotionExtrasPanel({ chrome, set }: Props) {
   const railsId = useId();
   const rails = chrome?.rails;
   const railsAt = (key: string) => ['chrome', 'rails', key] as const;
+  const footer = chrome?.footer;
+  const off = chrome?.reduceMotion === true;
   return (
     <>
+      <Panel title="For everyone">
+        <div className="space-y-3">
+          <Check label="Reduce motion for everyone" value={chrome?.reduceMotion} onChange={set(['chrome', 'reduceMotion'])} />
+          <p className="m-0 text-[12px] text-smoke">
+            Stops every animation on the site for every visitor — sliders, reveals, the pointer, page changes, the
+            preloader and card tilt — as if each had asked for less motion. Visitors who ask for less motion get it
+            either way; the footer switch lets one visitor choose it, and is left out while this is on.
+          </p>
+        </div>
+      </Panel>
+
+      {off && (
+        <Alert tone="info">Motion is off for everyone, so the options below are saved but not shown to visitors.</Alert>
+      )}
+
       <Panel title="Pointer">
         <div className="grid gap-4 sm:grid-cols-2">
           <ChoiceField
@@ -288,6 +300,16 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
           <p className="m-0 text-[12px] text-smoke">
             Links to other sites, new tabs, downloads and the back button are left alone. The logo shows for a second and a
             half at most, once a visit.
+          </p>
+        </div>
+      </Panel>
+
+      <Panel title="Reveal footer">
+        <div className="space-y-4">
+          <Check label="The page lifts off the footer, which waits underneath" value={footer?.reveal} onChange={set(['chrome', 'footer', 'reveal'])} />
+          {footer?.reveal && <Check label="On phones too" value={footer?.revealOnMobile} onChange={set(['chrome', 'footer', 'revealOnMobile'])} />}
+          <p className="m-0 text-[12px] text-smoke">
+            A footer taller than most of the screen scrolls normally instead, so nothing in it is ever out of reach.
           </p>
         </div>
       </Panel>

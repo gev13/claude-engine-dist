@@ -5,7 +5,9 @@ import useSWR from 'swr';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, EmptyState, Field, Input, Panel, Spinner, Table, Td, Th } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
-import { api, fetcher } from '@/lib/admin/client';
+import { ApiError, api, fetcher } from '@/lib/admin/client';
+import { type CheckReport, type ImportStrategy, reportTotals } from '@/lib/importReport';
+import { ImportReportView as ReportView } from '@/components/admin/ImportReportView';
 import { errorMessage } from '../_shared';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -65,6 +67,11 @@ function TransferScreenInner({ canWrite }: { canWrite: boolean }) {
   const [chosen, setChosen] = useState<File | null>(null);
   const [manifest, setManifest] = useState<Manifest | null>(null);
   const [typed, setTyped] = useState('');
+  // 2.20 — replace or merge, what the checks found, and what to do with refused rows.
+  const [strategy, setStrategy] = useState<ImportStrategy>('replace');
+  const [report, setReport] = useState<CheckReport | null>(null);
+  const [onInvalid, setOnInvalid] = useState<'abort' | 'skip'>('abort');
+  const [done, setDone] = useState<CheckReport | null>(null);
 
   async function createExport() {
     setBusy('export');
@@ -95,16 +102,20 @@ function TransferScreenInner({ canWrite }: { canWrite: boolean }) {
     }
   }
 
-  /** Read the manifest without applying anything, so nobody imports blind. */
-  async function inspect(file: File) {
+  /** Read and check every row without applying anything, so nobody imports blind. */
+  async function inspect(file: File, how: ImportStrategy = strategy) {
     setBusy('inspect');
     setManifest(null);
+    setReport(null);
+    setDone(null);
     try {
       const form = new FormData();
       form.set('file', file);
       form.set('mode', 'inspect');
-      const result = await api<{ manifest: Manifest }>('/api/admin/transfer', { method: 'POST', json: form });
+      form.set('strategy', how);
+      const result = await api<{ manifest: Manifest; report: CheckReport }>('/api/admin/transfer', { method: 'POST', json: form });
       setManifest(result.manifest);
+      setReport(result.report);
     } catch (error) {
       setChosen(null);
       if (fileInput.current) fileInput.current.value = '';
@@ -121,19 +132,30 @@ function TransferScreenInner({ canWrite }: { canWrite: boolean }) {
       const form = new FormData();
       form.set('file', chosen);
       form.set('mode', 'import');
-      form.set('confirm', IMPORT_CONFIRM);
-      const result = await api<{ applied: Record<string, number>; backupTaken: string }>('/api/admin/transfer', {
-        method: 'POST',
-        json: form,
-      });
-      const total = Object.values(result.applied).reduce((sum, n) => sum + n, 0);
-      toast(`Imported ${total} rows. The site as it was is kept as ${result.backupTaken}.`, 'success');
+      form.set('strategy', strategy);
+      form.set('onInvalid', onInvalid);
+      if (strategy === 'replace') form.set('confirm', IMPORT_CONFIRM);
+      const result = await api<{ applied: Record<string, number>; report: CheckReport; backupTaken: string; search: string | null }>(
+        '/api/admin/transfer',
+        { method: 'POST', json: form },
+      );
+      const sum = reportTotals(result.report);
+      toast(
+        `Imported: ${sum.create} created, ${sum.update} updated, ${sum.skip} skipped${sum.failed ? `, ${sum.failed} left out` : ''}. The site as it was is kept as ${result.backupTaken}.`,
+        'success',
+      );
+      if (result.search) toast(result.search, 'error');
+      setDone(result.report);
       setChosen(null);
       setManifest(null);
+      setReport(null);
       setTyped('');
       if (fileInput.current) fileInput.current.value = '';
       await mutate();
     } catch (error) {
+      // Stopped by the checks: the report says which rows, and why.
+      const details = error instanceof ApiError ? (error.details as { report?: CheckReport } | undefined) : undefined;
+      if (details?.report) setReport(details.report);
       toast(errorMessage(error, 'The import failed.'), 'error');
     } finally {
       setBusy('');
@@ -291,34 +313,99 @@ function TransferScreenInner({ canWrite }: { canWrite: boolean }) {
                 </div>
               )}
 
-              {manifest && (
-                <div className="mt-4 border-t-2 border-hairline pt-4">
-                  <Alert>
-                    This replaces every page, post, category, redirect and media record on this site, and clears their
-                    revision history. Your accounts, enquiries, sign-ups and form answers are left alone. A backup of
-                    the site as it stands is taken first, and everything imported is credited to you.
-                  </Alert>
+              {chosen && (
+                <fieldset className="m-0 mt-4 flex flex-col gap-2 border-0 p-0">
+                  <legend className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">How to import</legend>
+                  {(
+                    [
+                      ['replace', 'Replace', 'Empty what the archive carries and fill it from the archive.'],
+                      ['merge', 'Merge', 'Add what is new and update what matches — by id, or by address in the same language. Nothing is deleted.'],
+                    ] as const
+                  ).map(([value, label, hint]) => (
+                    <label key={value} className="flex items-start gap-2 text-[14px] text-ash">
+                      <input
+                        type="radio"
+                        name="strategy"
+                        className="mt-1 h-4 w-4 accent-flare"
+                        checked={strategy === value}
+                        disabled={busy !== ''}
+                        onChange={() => {
+                          setStrategy(value);
+                          void inspect(chosen, value);
+                        }}
+                      />
+                      <span>
+                        <strong className="text-bone">{label}</strong> — {hint}
+                      </span>
+                    </label>
+                  ))}
+                </fieldset>
+              )}
 
-                  <p className="m-0 mt-4 text-[13px] text-smoke">
-                    Type <strong className="text-bone">{IMPORT_CONFIRM}</strong> to continue.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-2">
-                    <Input
-                      value={typed}
-                      onChange={(event) => setTyped(event.target.value)}
-                      className="w-[260px]"
-                      aria-label="Confirmation"
-                    />
-                    <AdminButton
-                      type="button"
-                      disabled={typed !== IMPORT_CONFIRM || busy === 'import'}
-                      onClick={() => void runImport()}
-                    >
-                      {busy === 'import' ? 'Importing…' : 'Replace this site’s content'}
-                    </AdminButton>
-                  </div>
+              {report && <ReportView report={report} title="What this import would do" />}
+
+              {manifest && report && (
+                <div className="mt-4 border-t-2 border-hairline pt-4">
+                  {report.rejected.length > 0 && (
+                    <fieldset className="m-0 mb-4 flex flex-col gap-2 border-0 p-0">
+                      <legend className="mb-2 text-[14px] text-bone">
+                        {report.rejected.length} row(s) did not pass the checks the editor applies.
+                      </legend>
+                      <label className="flex items-center gap-2 text-[14px] text-ash">
+                        <input type="radio" name="onInvalid" className="h-4 w-4 accent-flare" checked={onInvalid === 'abort'} onChange={() => setOnInvalid('abort')} />
+                        Stop — import nothing, and fix the archive
+                      </label>
+                      <label className="flex items-center gap-2 text-[14px] text-ash">
+                        <input type="radio" name="onInvalid" className="h-4 w-4 accent-flare" checked={onInvalid === 'skip'} onChange={() => setOnInvalid('skip')} />
+                        Import the rest, and leave those rows out
+                      </label>
+                    </fieldset>
+                  )}
+
+                  {strategy === 'replace' ? (
+                    <>
+                      <Alert>
+                        This replaces every page, post, project, category, redirect and media record the archive
+                        carries, and clears their revision history. Your accounts, enquiries, sign-ups and form answers
+                        are left alone. A backup of the site as it stands is taken first, and everything imported is
+                        credited to you.
+                      </Alert>
+                      <p className="m-0 mt-4 text-[13px] text-smoke">
+                        Type <strong className="text-bone">{IMPORT_CONFIRM}</strong> to continue.
+                      </p>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Input value={typed} onChange={(event) => setTyped(event.target.value)} className="w-[260px]" aria-label="Confirmation" />
+                        <AdminButton
+                          type="button"
+                          disabled={typed !== IMPORT_CONFIRM || busy === 'import' || (report.rejected.length > 0 && onInvalid === 'abort')}
+                          onClick={() => void runImport()}
+                        >
+                          {busy === 'import' ? 'Importing…' : 'Replace this site’s content'}
+                        </AdminButton>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <Alert tone="info">
+                        Nothing on this site is deleted. Matching rows are updated from the archive, and a media file
+                        this site already has — the same bytes under any name — is not copied again. A backup is taken
+                        first, and everything imported is credited to you.
+                      </Alert>
+                      <div className="mt-3">
+                        <AdminButton
+                          type="button"
+                          disabled={busy === 'import' || (report.rejected.length > 0 && onInvalid === 'abort')}
+                          onClick={() => void runImport()}
+                        >
+                          {busy === 'import' ? 'Importing…' : 'Merge into this site'}
+                        </AdminButton>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
+
+              {done && <ReportView report={done} title="Imported" />}
             </Panel>
           )}
         </div>
@@ -326,8 +413,8 @@ function TransferScreenInner({ canWrite }: { canWrite: boolean }) {
         <aside className="flex flex-col gap-6 lg:sticky lg:top-10">
           <Panel title="What travels">
             <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[13px] leading-relaxed text-ash">
-              <li>Pages, posts and categories</li>
-              <li>Redirects</li>
+              <li>Pages, posts, projects and their categories</li>
+              <li>Saved blocks, job adverts and redirects</li>
               <li>The media library, files included</li>
               <li>The design, menus, popups and the site&rsquo;s name</li>
             </ul>

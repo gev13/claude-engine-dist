@@ -6,8 +6,8 @@ import { colorDecls } from './theme-css';
 /* ═══════════════════════════════════════════════════════════════════════════
    One page's own colours (T31, 2.19)
    ───────────────────────────────────────────────────────────────────────────
-   A page, a post or a project can take its own background — BetBoyz's
-   project pages are black on a charcoal site — and the site's alternate
+   A page, a post or a project can take its own background — black
+   project pages on a charcoal site, say — and the site's alternate
    palette (Appearance → Colours), which moves every token, so the header,
    the rails and the cursor follow. Stored as `appearance` on the row and
    written into one `<style>` after the page's blocks, like a project's

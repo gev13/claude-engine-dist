@@ -44,10 +44,21 @@ describe('the header panel', () => {
 describe('the footer and motion panels', () => {
   it('offers the phone reveal only once the reveal is on', () => {
     const { calls, set } = recorder();
-    render(<FooterExtrasPanel chrome={undefined} set={set} />);
+    render(<MotionExtrasPanel chrome={undefined} set={set} />);
     expect(screen.queryByText('On phones too')).toBeNull();
     fireEvent.click(screen.getByLabelText('The page lifts off the footer, which waits underneath'));
     expect(calls).toEqual([[['chrome', 'footer', 'reveal'], true]]);
+    cleanup();
+    render(<FooterExtrasPanel chrome={undefined} set={set} />);
+    expect(screen.getByText('Footer background')).toBeTruthy();
+  });
+
+  it('says when motion is off for everyone', () => {
+    const { calls, set } = recorder();
+    render(<MotionExtrasPanel chrome={{ reduceMotion: true }} set={set} />);
+    expect(screen.getByRole('status').textContent).toMatch(/off for everyone/);
+    fireEvent.click(screen.getByLabelText('Reduce motion for everyone'));
+    expect(calls).toEqual([[['chrome', 'reduceMotion'], undefined]]);
   });
 
   it('shows the rail options only when the rails are on', () => {

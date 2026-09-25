@@ -10,6 +10,9 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateEverything } from '@/server/content/revalidate';
 import { invalidateRouting } from '@/server/routing/config';
 import { rebuildUsageIndex } from '@/server/content/savedBlocks';
+import { can } from '@/server/auth/rbac';
+import { reportTotals } from '@/lib/importReport';
+import { reindexPosts } from '@/server/search/reindex';
 import {
   MAX_IMPORT_BYTES,
   contentArchivePath,
@@ -105,18 +108,23 @@ export async function POST(request: Request) {
       if (!(file instanceof File)) return badRequest('Choose an export file first.');
 
       const mode = String(form.get('mode') ?? 'inspect');
+      // 2.20 — replace (as before) or merge, and what to do with rows the checks refuse.
+      const strategy = form.get('strategy') === 'merge' ? 'merge' : 'replace';
+      const onInvalid = form.get('onInvalid') === 'skip' ? 'skip' : 'abort';
+      const allowRegex = can(guard.user, 'redirects:regex');
       const received = await receiveArchive(file);
       if (!received.ok) return badRequest(received.error);
 
-      // Looking, not applying: read the manifest and throw the upload away.
+      // Looking, not applying: check every row against this site and throw the upload away.
       if (mode !== 'import') {
-        const inspected = await inspectArchive(received.path);
+        const inspected = await inspectArchive(received.path, { strategy, allowRegex, attributeTo: guard.user.id });
         await rm(received.path, { force: true });
         if (!inspected.ok) return badRequest(inspected.error);
-        return ok({ manifest: inspected.manifest });
+        return ok({ manifest: inspected.manifest, report: inspected.report });
       }
 
-      if (String(form.get('confirm') ?? '') !== IMPORT_CONFIRM) {
+      // Replacing is typed out; a merge deletes nothing, and the safety backup is taken either way.
+      if (strategy === 'replace' && String(form.get('confirm') ?? '') !== IMPORT_CONFIRM) {
         await rm(received.path, { force: true });
         return badRequest(`Type "${IMPORT_CONFIRM}" to confirm.`);
       }
@@ -129,14 +137,18 @@ export async function POST(request: Request) {
         action: 'content.import.started',
         targetType: 'content',
         targetId: file.name.slice(0, 200),
-        summary: `Started importing content from ${file.name.slice(0, 120)}`,
+        summary: `Started importing content (${strategy}) from ${file.name.slice(0, 120)}`,
         ip,
       });
 
       const outcome = await importContent(received.path, {
         attributeTo: guard.user.id,
         createdById: guard.user.id,
+        strategy,
+        onInvalid,
+        allowRegex,
       });
+      const counts = outcome.report ? reportTotals(outcome.report) : null;
 
       await audit({
         actorId: guard.user.id,
@@ -145,19 +157,26 @@ export async function POST(request: Request) {
         targetType: 'content',
         targetId: file.name.slice(0, 200),
         summary: outcome.ok
-          ? `Imported content; the site before it is kept as ${outcome.backupTaken}`
+          ? `Imported content (${strategy}: ${counts?.create ?? 0} created, ${counts?.update ?? 0} updated, ${counts?.skip ?? 0} skipped, ${counts?.failed ?? 0} refused); the site before it is kept as ${outcome.backupTaken}`
           : `Importing content failed: ${outcome.error}`,
         ip,
       });
 
-      if (!outcome.ok) return badRequest(outcome.error);
+      if (!outcome.ok) return badRequest(outcome.error, outcome.report ? { report: outcome.report } : undefined);
       /* Every page, post and setting may have changed underneath the cache,
-         and the permalinks and redirect rules with them. */
+         and the permalinks and redirect rules with them. The usage index and
+         the search index are derived from the content, so they follow it. */
       invalidateRouting();
       await rebuildUsageIndex();
+      const search = await reindexPosts().catch(() => ({ error: 'The search index could not be rebuilt.' }));
       revalidateEverything();
 
-      return ok({ applied: outcome.applied, backupTaken: outcome.backupTaken });
+      return ok({
+        applied: outcome.applied,
+        report: outcome.report,
+        backupTaken: outcome.backupTaken,
+        search: search && 'error' in search ? search.error : null,
+      });
     }
 
     /* ── Making one, or tidying up ───────────────────────────────────────── */

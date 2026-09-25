@@ -66,6 +66,7 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Updates', href: '/admin/updates', roles: ['admin'] },
       { label: 'Backups', href: '/admin/backups', roles: ['admin'] },
       { label: 'Export & import', href: '/admin/transfer', roles: ['admin'] },
+      { label: 'Import from WordPress', href: '/admin/import/wordpress', roles: ['admin'] },
       { label: 'Audit log', href: '/admin/audit', roles: ['admin'] },
       { label: 'Languages', href: '/admin/languages', roles: ['admin'] },
       { label: 'Site translations', href: '/admin/translations', roles: ['admin'] },
