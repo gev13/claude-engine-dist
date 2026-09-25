@@ -1,10 +1,12 @@
 import 'server-only';
 import { getPermalinks } from '@/server/routing/config';
 import { postPathById } from './posts';
+import { forgetUsage, recordUsage, type UsageKind } from './savedBlocks';
+import type { AnyBlock } from '@/lib/blocks';
 import { projectPathById } from './projects';
 import { and, desc, eq, inArray, lt, sql } from 'drizzle-orm';
 import { db } from '@/server/db';
-import { contentRevisions, pages, posts, projects, users } from '@/server/db/schema';
+import { contentRevisions, pages, posts, projects, savedBlocks, users } from '@/server/db/schema';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Content history
@@ -18,7 +20,10 @@ import { contentRevisions, pages, posts, projects, users } from '@/server/db/sch
    editor's work, and the same reasoning governs `revalidateContent`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export type RevisionEntity = 'page' | 'post' | 'project';
+export type RevisionEntity = 'page' | 'post' | 'project' | 'saved_block';
+
+/** What the saved-block usage index calls each kind of content. */
+const USAGE_KIND: Record<RevisionEntity, UsageKind> = { page: 'page', post: 'post', project: 'project', saved_block: 'savedBlock' };
 
 /** Kept per entity. Older revisions are pruned as new ones arrive. */
 export const REVISION_LIMIT = 30;
@@ -46,7 +51,11 @@ const PROJECT_FIELDS = [
   'coverMediaId', 'hoverMediaId', 'heroMediaId', 'client', 'year', 'url', 'sortOrder', 'featured',
 ] as const;
 
+/** A saved block's content (2.15). Its mode is not versioned — changing it is a decision, not an edit. */
+const SAVED_BLOCK_FIELDS = ['name', 'description', 'category', 'tree'] as const;
+
 export function snapshotFields(entityType: RevisionEntity): readonly string[] {
+  if (entityType === 'saved_block') return SAVED_BLOCK_FIELDS;
   return entityType === 'page' ? PAGE_FIELDS : entityType === 'project' ? PROJECT_FIELDS : POST_FIELDS;
 }
 
@@ -75,6 +84,12 @@ export type CaptureInput = {
  * saving an unchanged form does not bury the real history under duplicates.
  */
 export async function captureRevision(input: CaptureInput): Promise<void> {
+  /* Every content write passes through here, which makes it the one place
+     the saved-block usage index can be kept current without a save route
+     forgetting to (2.15). It never throws, like the capture itself. */
+  const blocks = (input.row.blocks ?? input.row.tree) as AnyBlock[] | undefined;
+  if (Array.isArray(blocks)) await recordUsage(USAGE_KIND[input.entityType], input.entityId, blocks);
+
   try {
     const snapshot = toSnapshot(input.entityType, input.row);
 
@@ -272,6 +287,25 @@ export async function restoreRevision(
     };
   }
 
+  if (revision.entityType === 'saved_block') {
+    const [existing] = await db.select().from(savedBlocks).where(eq(savedBlocks.id, revision.entityId)).limit(1);
+    if (!existing) return { ok: false, reason: 'entity_missing' };
+    const [updated] = await db
+      .update(savedBlocks)
+      .set(restorableSet('saved_block', snapshot))
+      .where(eq(savedBlocks.id, revision.entityId))
+      .returning();
+    await captureRevision({
+      entityType: 'saved_block',
+      entityId: revision.entityId,
+      row: updated as unknown as Record<string, unknown>,
+      reason: 'restore',
+      actorId: actor.id,
+      actorEmail: actor.email,
+    });
+    return { ok: true, entityType: 'saved_block', entityId: revision.entityId, revisionNumber: revision.revisionNumber, path: null };
+  }
+
   if (revision.entityType === 'project') {
     const [existing] = await db.select().from(projects).where(eq(projects.id, revision.entityId)).limit(1);
     if (!existing) return { ok: false, reason: 'entity_missing' };
@@ -327,6 +361,8 @@ export async function restoreRevision(
 /** History goes with the content it describes. */
 export async function deleteRevisionsFor(entityType: RevisionEntity, entityIds: string[]) {
   if (entityIds.length === 0) return;
+  // Deleted content uses nothing any more.
+  await forgetUsage(USAGE_KIND[entityType], entityIds);
   await db
     .delete(contentRevisions)
     .where(

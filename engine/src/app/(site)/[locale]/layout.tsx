@@ -213,7 +213,7 @@ export default async function SiteLayout({
             />
           </div>
           {chrome.backToTop && <BackToTop />}
-          <Popups popups={popups} />
+          <Popups popups={popups} locale={locale} />
           {/* Last, and above the popups: it is the one thing a visitor is being
               asked to answer before carrying on. */}
           <CookieNotice notice={cookies} />

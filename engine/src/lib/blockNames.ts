@@ -338,6 +338,7 @@ const VARIANTS: Partial<Record<BlockType, VariantInfo>> = {
 
 /** Blocks that are one pattern whatever their options. */
 const FIXED_PATTERNS: Partial<Record<BlockType, string>> = {
+  savedBlock: 'T8',
   stackedPanels: 'HR7',
   logoWall: 'CT9',
   quote: 'CT10',

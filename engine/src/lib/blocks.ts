@@ -1477,6 +1477,17 @@ export const blockSchemas = {
     successText: text(400),
   }),
 
+  /**
+   * T8 (2.15) — a synced saved block, placed by reference. The block holds
+   * only which saved block it shows; editing that saved block changes every
+   * page that uses it. `name` is a copy for the builder's card, never read by
+   * the page. The instance's own `style` is its outer spacing and visibility.
+   */
+  savedBlock: z.object({
+    savedBlockId: z.string().uuid(),
+    name: z.string().trim().max(120).optional(),
+  }),
+
   /** P3-F — a Lottie animation from the media library, played on a loop, once, on hover or with the scroll. */
   lottie: z.object({
     ...showcaseHead,
@@ -1590,6 +1601,7 @@ export const blockLabels: Record<BlockType, string> = {
   search: 'Search box',
   form: 'Form',
   lottie: 'Lottie animation',
+  savedBlock: 'Saved block',
 };
 
 export function isBlockType(t: string): t is BlockType {

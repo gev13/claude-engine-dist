@@ -8,14 +8,14 @@ import { PopupShell } from './PopupShell';
  * the browser neither shows nor reads out until it opens. Only the settings
  * go to the client component; the content stays server-rendered blocks.
  */
-export function Popups({ popups }: { popups: Popup[] }) {
+export function Popups({ popups, locale }: { popups: Popup[]; locale?: string }) {
   const live = popups.filter((p) => p.enabled && p.blocks.length > 0);
   if (live.length === 0) return null;
   return (
     <>
       {live.map(({ blocks, ...settings }) => (
         <PopupShell key={settings.id} popup={settings}>
-          <BlockRenderer blocks={blocks as unknown as AnyBlock[]} />
+          <BlockRenderer blocks={blocks as unknown as AnyBlock[]} locale={locale} />
         </PopupShell>
       ))}
     </>

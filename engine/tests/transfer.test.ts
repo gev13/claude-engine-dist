@@ -151,6 +151,7 @@ describe('the tables that travel', () => {
       'projects',
       'project_terms',
       'project_term_links',
+      'saved_blocks',
       'jobs',
       'redirects',
     ]);

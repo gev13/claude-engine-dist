@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { handle, notFound, ok } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
-import { ownsOrAdmin } from '@/server/auth/rbac';
+import { can, ownsOrAdmin } from '@/server/auth/rbac';
 import { getRevision } from '@/server/content/revisions';
 import { db } from '@/server/db';
 import { pages, posts, projects } from '@/server/db/schema';
@@ -26,11 +26,16 @@ export async function GET(request: Request, ctx: Context) {
     const authorId =
       revision.entityType === 'page'
         ? (await db.select({ a: pages.authorId }).from(pages).where(eq(pages.id, revision.entityId)).limit(1))[0]?.a
-        : revision.entityType === 'project'
+        : revision.entityType === 'saved_block'
+          ? null
+          : revision.entityType === 'project'
           ? (await db.select({ a: projects.authorId }).from(projects).where(eq(projects.id, revision.entityId)).limit(1))[0]?.a
           : (await db.select({ a: posts.authorId }).from(posts).where(eq(posts.id, revision.entityId)).limit(1))[0]?.a;
 
-    if (!ownsOrAdmin(guard.user, authorId)) return notFound('That revision no longer exists.');
+    // A saved block has no author to own it; whoever may read saved blocks may read their history.
+    if (revision.entityType === 'saved_block' ? !can(guard.user, 'savedBlocks:read') : !ownsOrAdmin(guard.user, authorId)) {
+      return notFound('That revision no longer exists.');
+    }
 
     return ok({ revision });
   });

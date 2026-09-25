@@ -1,5 +1,6 @@
 'use client';
 
+import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { BlockBuilder } from '@/components/admin/BlockBuilder';
@@ -267,6 +268,7 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
             {pageId && value.status !== 'published' && (
               <PreviewButton entityType="page" entityId={pageId} disabled={busy} />
             )}
+            {pageId && <DuplicateButton kind="pages" id={pageId} dirty={dirty} />}
             <AdminButton type="button" variant="secondary" disabled={busy} onClick={() => void save()}>
               {busy ? 'Saving…' : 'Save'}
             </AdminButton>

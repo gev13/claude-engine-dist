@@ -44,6 +44,8 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Appearance', href: '/admin/appearance', roles: ['admin', 'manager'] },
       { label: 'Menus', href: '/admin/navigation', roles: ['admin', 'manager'] },
       { label: 'Popups', href: '/admin/popups', roles: ['admin', 'manager'] },
+      // `savedBlocks:write` — a synced block is on every page that uses it.
+      { label: 'My blocks', href: '/admin/saved-blocks', roles: ['admin', 'manager'] },
       { label: 'Cookie notice', href: '/admin/cookies', roles: ['admin', 'manager'] },
       // `settings:*`, not `popups:*` — it loads on every page, like the theme.
       { label: 'Custom code', href: '/admin/code', roles: ['admin'] },

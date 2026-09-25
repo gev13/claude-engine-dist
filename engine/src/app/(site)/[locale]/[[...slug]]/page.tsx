@@ -37,6 +37,7 @@ import { getCategoryTranslations, listCategories } from '@/server/content/catego
 import { resolvePath, type Paging } from '@/server/content/resolve';
 import { getMessages } from '@/server/content/messages';
 import { getPermalinks } from '@/server/routing/config';
+import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { localeConfig } from '@/lib/locales';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { pageTrail } from '@/server/content/trail';
@@ -290,7 +291,7 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
       speakableSelectors: ['h1', 'main p'],
     }),
     crumbs,
-    faqFromBlocks(page.blocks, path),
+    faqFromBlocks(await expandSavedBlocks(page.blocks, locale), path),
   ];
 
   // Service pages describe a Service + Offer; the services index is an ItemList.
@@ -316,6 +317,7 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
         showNames={page.template === 'library'}
         trail={trail}
         paging={list && paging ? { blockId: list.blockId, ...paging } : undefined}
+        locale={locale}
       />
       {/* This page's own CSS: after the theme, after the site-wide rules and
           after the blocks' own, so the narrowest scope wins without anybody

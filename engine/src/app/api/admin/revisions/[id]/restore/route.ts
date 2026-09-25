@@ -1,7 +1,8 @@
 import { eq } from 'drizzle-orm';
 import { conflict, handle, notFound, ok } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
-import { ownsOrAdmin } from '@/server/auth/rbac';
+import { can, ownsOrAdmin } from '@/server/auth/rbac';
+import { revalidateSavedBlockUsers } from '@/server/content/savedBlockWrites';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateContent, revalidateEverything } from '@/server/content/revalidate';
@@ -30,8 +31,15 @@ export async function POST(request: Request, ctx: Context) {
     const revision = await getRevision(id);
     if (!revision) return notFound('That revision no longer exists.');
 
+    // Restoring a saved block changes every page that uses it — the reach `savedBlocks:write` holds.
+    if (revision.entityType === 'saved_block' && !can(guard.user, 'savedBlocks:write')) {
+      return notFound('That revision no longer exists.');
+    }
+
     const target =
-      revision.entityType === 'page'
+      revision.entityType === 'saved_block'
+        ? { authorId: null, template: 'saved_block' }
+        : revision.entityType === 'page'
         ? (await db
             .select({ authorId: pages.authorId, template: pages.template })
             .from(pages)
@@ -50,7 +58,9 @@ export async function POST(request: Request, ctx: Context) {
               .limit(1))[0];
 
     if (!target) return conflict('The content this revision belongs to has been deleted.');
-    if (!ownsOrAdmin(guard.user, target.authorId)) return notFound('That revision no longer exists.');
+    if (revision.entityType !== 'saved_block' && !ownsOrAdmin(guard.user, target.authorId)) {
+      return notFound('That revision no longer exists.');
+    }
 
     const result = await restoreRevision(id, { id: guard.user.id, email: guard.user.email });
     if (!result.ok) {
@@ -73,8 +83,9 @@ export async function POST(request: Request, ctx: Context) {
     if (result.path) revalidateContent([result.path]);
     // A restored service page changes the catalogue, which every listing reads.
     if (revision.entityType === 'page' && target.template === 'service') revalidateEverything();
-    // A project is listed by collections on any page.
+    // A project is listed by collections on any page; a synced block is on any page too.
     if (revision.entityType === 'project') revalidateEverything();
+    if (revision.entityType === 'saved_block') await revalidateSavedBlockUsers(revision.entityId);
 
     return ok({ restored: result });
   });

@@ -1,5 +1,8 @@
 'use client';
 
+import { SAVED_BLOCK_TYPE, freshIds } from '@/lib/blockTree';
+import { MyBlocksPicker, SaveAsDialog, SavedBlockCard, repeatedUniqueParts, savedBlockRef, useClipboard, useSavedBlocks } from './SavedBlocksTools';
+import { useToast as useBuilderToast } from './useToast';
 import {
   DndContext,
   KeyboardSensor,
@@ -77,6 +80,10 @@ function SortableBlock({
   onChange,
   onDuplicate,
   onDelete,
+  onReplace,
+  onCopy,
+  onPaste,
+  onSaveAs,
 }: {
   block: AnyBlock;
   index: number;
@@ -86,9 +93,17 @@ function SortableBlock({
   onChange: (next: AnyBlock) => void;
   onDuplicate: () => void;
   onDelete: () => void;
+  /** Replace this block with others — a synced block detached into its own copy. */
+  onReplace: (next: AnyBlock[]) => void;
+  /** The ⋯ menu's other actions (2.15). */
+  onCopy: () => void;
+  onPaste: ((where: 'above' | 'below') => void) | null;
+  onSaveAs: (() => void) | null;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: block.id });
   const [confirming, setConfirming] = useState(false);
+  const [menu, setMenu] = useState(false);
+  const isSaved = block.type === SAVED_BLOCK_TYPE;
   const [tab, setTab] = useState<'content' | 'design'>('content');
 
   const valid = parseBlock(block) !== null;
@@ -125,7 +140,9 @@ function SortableBlock({
           className="flex min-w-0 flex-1 cursor-pointer items-baseline gap-3 bg-transparent p-0 text-left"
         >
           <span className="shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-flare">{label}</span>
-          <span className="truncate text-[13px] text-ash">{style?.label || summarise(block)}</span>
+          <span className="truncate text-[13px] text-ash">
+            {style?.label || (isSaved ? String((block.props as { name?: string }).name ?? 'Saved block') : summarise(block))}
+          </span>
         </button>
 
         {style?.disabled && (
@@ -146,10 +163,49 @@ function SortableBlock({
           </span>
         )}
 
-        <div className="flex shrink-0 items-center gap-1">
-          <AdminButton variant="ghost" type="button" onClick={onDuplicate} className="px-2 py-1" aria-label="Duplicate block">
-            ⧉
+        <div className="relative flex shrink-0 items-center gap-1">
+          <AdminButton
+            variant="ghost"
+            type="button"
+            onClick={() => setMenu((open) => !open)}
+            className="px-2 py-1"
+            aria-label="More actions"
+            aria-expanded={menu}
+          >
+            ⋯
           </AdminButton>
+          {menu && (
+            <div
+              role="menu"
+              className="absolute right-0 top-full z-20 mt-1 flex min-w-[210px] flex-col border-2 border-hairline bg-ink py-1 shadow-lg"
+              onMouseLeave={() => setMenu(false)}
+            >
+              {[
+                { label: 'Duplicate', run: onDuplicate },
+                { label: block.type === 'row' ? 'Copy row' : 'Copy block', run: onCopy },
+                ...(onPaste
+                  ? [
+                      { label: 'Paste above', run: () => onPaste('above') },
+                      { label: 'Paste below', run: () => onPaste('below') },
+                    ]
+                  : []),
+                ...(onSaveAs && !isSaved ? [{ label: 'Save as a saved block…', run: onSaveAs }] : []),
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => {
+                    setMenu(false);
+                    item.run();
+                  }}
+                  className="cursor-pointer bg-transparent px-3 py-2 text-left text-[13px] text-ash hover:bg-surface hover:text-bone"
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+          )}
           {confirming ? (
             <>
               <AdminButton variant="danger" type="button" onClick={onDelete} className="px-2 py-1">
@@ -208,7 +264,9 @@ function SortableBlock({
             </button>
           </div>
 
-          {tab === 'content' ? (
+          {tab === 'content' && isSaved ? (
+            <SavedBlockCard block={block} onReplace={onReplace} />
+          ) : tab === 'content' ? (
             <BlockFields
               type={block.type as BlockType}
               props={block.props ?? {}}
@@ -217,6 +275,7 @@ function SortableBlock({
           ) : (
             <BlockDesignPanel
               blockType={block.type}
+              outerOnly={isSaved}
               style={style}
               onChange={(next) => {
                 const { style: _drop, ...rest } = block;
@@ -250,18 +309,25 @@ export function BlockBuilder({
   value: stored,
   onChange,
   exclude = [],
+  excludeSavedId,
 }: {
   value: AnyBlock[];
   onChange: (next: AnyBlock[]) => void;
   /** Block types this tree may not add — a post's builder leaves out heroes (2.13). */
   exclude?: readonly string[];
+  /** The saved block being edited, which may not be inserted into itself (2.15). */
+  excludeSavedId?: string;
 }) {
   const offered = (type: BlockType) => !exclude.includes(type);
   // Blocks of a retired type open as the block they became, so they can be edited; saving stores the new type.
   const value = useMemo(() => migrateBlocks(stored), [stored]);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [adding, setAdding] = useState(false);
-  const [addTab, setAddTab] = useState<'blocks' | 'sections'>('blocks');
+  const [addTab, setAddTab] = useState<'blocks' | 'sections' | 'mine'>('blocks');
+  const clipboard = useClipboard();
+  const saved = useSavedBlocks();
+  const [savingAs, setSavingAs] = useState<AnyBlock | null>(null);
+  const { toast } = useBuilderToast();
   /* Sixty-three blocks is too many to scan by eye. */
   const [blockQuery, setBlockQuery] = useState('');
 
@@ -321,6 +387,21 @@ export function BlockBuilder({
   }
 
   const invalid = value.filter((b) => parseBlock(b) === null).length;
+  const repeated = useMemo(() => repeatedUniqueParts(value, saved.byId), [value, saved.byId]);
+
+  /** Paste what is on the clipboard next to block `index`, or at the end. */
+  function paste(index: number | null, where: 'above' | 'below' = 'below') {
+    const blocks = clipboard.take();
+    if (!blocks) {
+      toast('There is nothing on the clipboard to paste, or it is no longer a valid block.');
+      return;
+    }
+    if (index === null) onChange([...value, ...blocks]);
+    else {
+      const at = where === 'above' ? index : index + 1;
+      onChange([...value.slice(0, at), ...blocks, ...value.slice(at)]);
+    }
+  }
 
   return (
     <div>
@@ -343,6 +424,14 @@ export function BlockBuilder({
           </AdminButton>
         </div>
       </div>
+
+      {repeated.length > 0 && (
+        <p className="m-0 mb-3 border-l-2 border-amber-400 pl-3 text-[13px] leading-relaxed text-amber-400">
+          {repeated.join(', ')} {repeated.length === 1 ? 'is' : 'are'} used more than once here and{' '}
+          {repeated.length === 1 ? 'holds' : 'hold'} a form or an anchor — a page can have each only once. Detach one copy, or
+          use a different block.
+        </p>
+      )}
 
       {headingOnes !== 1 && (
         <p className="m-0 mb-3 border-l-2 border-amber-400 pl-3 text-[13px] leading-relaxed text-amber-400">
@@ -370,15 +459,17 @@ export function BlockBuilder({
                 onToggle={() => toggle(block.id)}
                 onChange={(next) => onChange(value.map((b) => (b.id === block.id ? next : b)))}
                 onDuplicate={() => {
-                  const copy: AnyBlock = {
-                    ...block,
-                    id: nanoid(10),
-                    props: structuredClone(block.props ?? {}),
-                    ...(block.style ? { style: structuredClone(block.style) } : {}),
-                  };
-                  onChange([...value.slice(0, i + 1), copy, ...value.slice(i + 1)]);
+                  // A deep copy: a row's columns and everything in them get new ids too.
+                  const [copy] = freshIds([block], () => nanoid(10));
+                  onChange([...value.slice(0, i + 1), copy!, ...value.slice(i + 1)]);
                 }}
                 onDelete={() => onChange(value.filter((b) => b.id !== block.id))}
+                onReplace={(next) => onChange([...value.slice(0, i), ...next, ...value.slice(i + 1)])}
+                onCopy={() => {
+                  if (clipboard.copy([block])) toast('Copied. Paste it into any page, post, project or saved block.');
+                }}
+                onPaste={clipboard.held?.length ? (where) => paste(i, where) : null}
+                onSaveAs={saved.canWrite ? () => setSavingAs(block) : null}
               />
             ))}
           </ul>
@@ -396,7 +487,7 @@ export function BlockBuilder({
           <div className="border-2 border-hairline bg-surface p-4">
             <div className="mb-3 flex items-center justify-between">
               <div className="flex gap-1" role="tablist" aria-label="What to add">
-                {(['blocks', 'sections'] as const).map((tab) => (
+                {(['blocks', 'mine', 'sections'] as const).map((tab) => (
                   <button
                     key={tab}
                     type="button"
@@ -405,7 +496,7 @@ export function BlockBuilder({
                     onClick={() => setAddTab(tab)}
                     className={`cursor-pointer border-2 px-3 py-1.5 font-mono text-[10px] uppercase tracking-[0.12em] ${addTab === tab ? 'border-flare text-bone' : 'border-hairline text-smoke hover:text-bone'}`}
                   >
-                    {tab === 'blocks' ? 'A block' : 'Ready sections'}
+                    {tab === 'blocks' ? 'A block' : tab === 'mine' ? 'My blocks' : 'Ready sections'}
                   </button>
                 ))}
               </div>
@@ -415,6 +506,14 @@ export function BlockBuilder({
             </div>
             {addTab === 'sections' ? (
               <ReadySections onInsert={insert} />
+            ) : addTab === 'mine' ? (
+              <MyBlocksPicker
+                excludeId={excludeSavedId}
+                onInsert={(blocks) => {
+                  onChange([...value, ...blocks]);
+                  setAdding(false);
+                }}
+              />
             ) : (
               <>
             {/* Typing narrows the whole vocabulary to one flat list; empty
@@ -501,11 +600,33 @@ export function BlockBuilder({
             )}
           </div>
         ) : (
-          <AdminButton type="button" onClick={() => setAdding(true)}>
-            + Add block
-          </AdminButton>
+          <div className="flex flex-wrap gap-2">
+            <AdminButton type="button" onClick={() => setAdding(true)}>
+              + Add block
+            </AdminButton>
+            {clipboard.held?.length ? (
+              <AdminButton type="button" variant="secondary" onClick={() => paste(null)}>
+                Paste {clipboard.held.length === 1 ? (blockLabels[clipboard.held[0]!.type as BlockType] ?? 'block').toLowerCase() : `${clipboard.held.length} blocks`}
+              </AdminButton>
+            ) : null}
+          </div>
         )}
       </div>
+
+      {savingAs && (
+        <SaveAsDialog
+          blocks={[savingAs]}
+          onClose={() => setSavingAs(null)}
+          onSaved={(result) => {
+            // A synced block's source becomes a reference to it; a template leaves the page as it was.
+            if (result.mode === 'synced') {
+              onChange(value.map((b) => (b.id === savingAs.id ? savedBlockRef(result) : b)));
+            }
+            toast(`Saved “${result.name}”. Find it under Add block → My blocks.`);
+            setSavingAs(null);
+          }}
+        />
+      )}
     </div>
   );
 }

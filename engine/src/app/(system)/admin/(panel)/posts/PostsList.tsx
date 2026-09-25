@@ -1,5 +1,6 @@
 'use client';
 
+import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import Link from 'next/link';
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -211,6 +212,7 @@ export function PostsList() {
                     <Td className="whitespace-nowrap">{authorName(row)}</Td>
                     <Td className="text-right whitespace-nowrap">
                       <>
+                        {!trashed && <DuplicateButton kind="posts" id={row.id} compact />}
                         {trashed && (
                           <AdminButton
                             variant="ghost"

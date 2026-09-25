@@ -39,6 +39,9 @@ export const BACKUP_TABLES = [
   'projects',
   'project_terms',
   'project_term_links',
+  // 2.15 — saved blocks reference users; their usage index references them.
+  'saved_blocks',
+  'saved_block_usage',
   /* Jobs reference media and users, so they come after both; applications
      reference jobs, so they come after those. */
   'jobs',
@@ -76,6 +79,8 @@ const TABLE_OBJECTS: Record<BackupTable, unknown> = {
   projects: schema.projects,
   project_terms: schema.projectTerms,
   project_term_links: schema.projectTermLinks,
+  saved_blocks: schema.savedBlocks,
+  saved_block_usage: schema.savedBlockUsage,
   jobs: schema.jobs,
   applications: schema.applications,
   settings: schema.settings,

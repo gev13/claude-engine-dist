@@ -59,6 +59,12 @@ export const PERMISSIONS = {
   'projects:publish': ['admin', 'manager', 'editor'],
   'projectTerms:write': ['admin', 'manager', 'editor'],
 
+  // Saved blocks (2.15): anybody who builds pages may insert and detach one;
+  // making, changing and deleting one changes every page that uses it, which
+  // is the site-wide reach managers and administrators hold.
+  'savedBlocks:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],
+  'savedBlocks:write': ['admin', 'manager'],
+
   // A job advert is content, and follows the content rules exactly: an author
   // may write one and may not put it on the careers page.
   'jobs:read': ['admin', 'manager', 'editor', 'author', 'reviewer'],

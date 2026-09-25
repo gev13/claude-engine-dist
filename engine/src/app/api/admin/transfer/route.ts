@@ -9,6 +9,7 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateEverything } from '@/server/content/revalidate';
 import { invalidateRouting } from '@/server/routing/config';
+import { rebuildUsageIndex } from '@/server/content/savedBlocks';
 import {
   MAX_IMPORT_BYTES,
   contentArchivePath,
@@ -153,6 +154,7 @@ export async function POST(request: Request) {
       /* Every page, post and setting may have changed underneath the cache,
          and the permalinks and redirect rules with them. */
       invalidateRouting();
+      await rebuildUsageIndex();
       revalidateEverything();
 
       return ok({ applied: outcome.applied, backupTaken: outcome.backupTaken });

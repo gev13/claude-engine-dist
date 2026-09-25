@@ -506,6 +506,59 @@ export const projectTermLinks = pgTable(
 );
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Saved blocks (2.15) — a block, or a few, designed once and used anywhere
+   ───────────────────────────────────────────────────────────────────────────
+   `synced`: pages hold a reference, and editing the saved block changes
+   every page that uses it. `template`: inserting pastes an independent copy.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+export const savedBlocks = pgTable(
+  'saved_blocks',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    name: varchar('name', { length: 120 }).notNull(),
+    description: varchar('description', { length: 300 }).notNull().default(''),
+    /** A folder name for the picker, free text: "Calls to action", "FAQ". */
+    category: varchar('category', { length: 60 }).notNull().default(''),
+    /** `synced` or `template`. */
+    mode: varchar('mode', { length: 10 }).notNull().default('synced'),
+    /** The blocks themselves — a list, so a saved section can be a few blocks. */
+    tree: jsonb('tree').$type<Block[]>().notNull().default(sql`'[]'::jsonb`),
+    locale: varchar('locale', { length: 5 }).notNull().default('en'),
+    translationGroupId: uuid('translation_group_id').notNull().defaultRandom(),
+    createdById: uuid('created_by_id').references(() => users.id, { onDelete: 'set null' }),
+    updatedById: uuid('updated_by_id').references(() => users.id, { onDelete: 'set null' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (t) => [index('saved_blocks_translation_idx').on(t.translationGroupId)],
+);
+
+/**
+ * Where each saved block is used — rebuilt from the content every time
+ * something that holds blocks is saved. It is what "used on 30 pages" reads,
+ * what refuses deleting a block that is still in use, and what a synced
+ * block's save revalidates.
+ */
+export const savedBlockUsage = pgTable(
+  'saved_block_usage',
+  {
+    savedBlockId: uuid('saved_block_id')
+      .notNull()
+      .references(() => savedBlocks.id, { onDelete: 'cascade' }),
+    /** `page`, `post`, `project`, `popups`, `projectTemplate` or `savedBlock`. */
+    contentType: varchar('content_type', { length: 20 }).notNull(),
+    /** The row's id, or the settings key for content kept in settings. */
+    contentId: varchar('content_id', { length: 120 }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.savedBlockId, t.contentType, t.contentId] }),
+    index('saved_block_usage_content_idx').on(t.contentType, t.contentId),
+  ],
+);
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Settings, enquiries, audit
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -596,7 +649,7 @@ export const formSubmissions = pgTable(
  * Append-only. No UPDATE or DELETE path exists in the application; a database
  * trigger (see drizzle/0001_audit_immutable.sql) enforces it at the engine.
  */
-export const revisionEntity = pgEnum('revision_entity', ['page', 'post', 'project']);
+export const revisionEntity = pgEnum('revision_entity', ['page', 'post', 'project', 'saved_block']);
 
 /**
  * Content history.

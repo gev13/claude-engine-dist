@@ -50,6 +50,9 @@ export const CONTENT_TABLES = [
   'projects',
   'project_terms',
   'project_term_links',
+  /* Saved blocks (2.15). Their usage index is not carried: it is derived from
+     the content and rebuilt after an import (`rebuildUsageIndex`). */
+  'saved_blocks',
   /* Jobs are content — an open role is something a site says. Applications are
      NOT, and are deliberately absent: an applicant sent their CV to one
      company for one job, and carrying that to another site is the same
@@ -69,6 +72,7 @@ const TABLE_OBJECTS: Record<ContentTable, unknown> = {
   projects: schema.projects,
   project_terms: schema.projectTerms,
   project_term_links: schema.projectTermLinks,
+  saved_blocks: schema.savedBlocks,
   jobs: schema.jobs,
   redirects: schema.redirects,
 };
@@ -82,6 +86,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
   pages: ['authorId'],
   posts: ['authorId'],
   projects: ['authorId'],
+  saved_blocks: ['createdById', 'updatedById'],
   jobs: ['authorId'],
   redirects: ['createdById'],
   settings: ['updatedById'],

@@ -119,7 +119,7 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
   return (
     <>
       {page ? (
-        <BlockRenderer blocks={page.blocks} />
+        <BlockRenderer blocks={page.blocks} locale={locale} />
       ) : (
         <Section size="lg">
           <Eyebrow>Careers</Eyebrow>

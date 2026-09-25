@@ -98,11 +98,17 @@ export function BlockDesignPanel({
   style,
   onChange,
   blockType,
+  outerOnly = false,
 }: {
   style: BlockStyle | undefined;
   onChange: (next: BlockStyle | undefined) => void;
   /** Used to measure what this kind of block already pads itself by. */
   blockType?: string;
+  /**
+   * Only the outer spacing and where it shows — a synced saved block's
+   * instance (2.15), whose look is the saved block's own and is changed there.
+   */
+  outerOnly?: boolean;
 }) {
   const band = useBandStyle(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
@@ -144,6 +150,7 @@ export function BlockDesignPanel({
   return (
     <div className="flex flex-col gap-5">
       {/* ── Layout ─────────────────────────────────────────────────────── */}
+      {!outerOnly && (
       <section>
         <PanelTitle>Layout</PanelTitle>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -188,6 +195,7 @@ export function BlockDesignPanel({
           </Field>
         </div>
       </section>
+      )}
 
       {/* ── Spacing ────────────────────────────────────────────────────── */}
       <section>
@@ -265,6 +273,7 @@ export function BlockDesignPanel({
       </section>
 
       {/* ── Background ─────────────────────────────────────────────────── */}
+      {!outerOnly && (
       <section>
         <PanelTitle>Background</PanelTitle>
         <div className="grid gap-4 sm:grid-cols-2">
@@ -369,8 +378,10 @@ export function BlockDesignPanel({
           </div>
         </Field>
       </section>
+      )}
 
       {/* ── Border ─────────────────────────────────────────────────────── */}
+      {!outerOnly && (
       <section>
         <PanelTitle>Border</PanelTitle>
         <div className="grid gap-3 sm:grid-cols-4">
@@ -396,8 +407,10 @@ export function BlockDesignPanel({
           <LengthField label="Radius" value={get(['border', 'radius'])} inherited={band.box.radius} emptyLabel="none" onChange={set(['border', 'radius'])} />
         </div>
       </section>
+      )}
 
       {/* ── Typography ─────────────────────────────────────────────────── */}
+      {!outerOnly && (
       <section>
         <PanelTitle>Typography — this section only</PanelTitle>
         <p className="m-0 mb-3 text-[12px] text-smoke">
@@ -451,8 +464,10 @@ export function BlockDesignPanel({
           </div>
         ))}
       </section>
+      )}
 
       {/* ── Effects ────────────────────────────────────────────────────── */}
+      {!outerOnly && (
       <section>
         <PanelTitle>Effects</PanelTitle>
         <div className="grid gap-4 sm:grid-cols-3">
@@ -513,6 +528,7 @@ export function BlockDesignPanel({
           Nothing moves for visitors who ask for less motion, and hover effects answer a mouse rather than a touch.
         </p>
       </section>
+      )}
 
       <section>
         <PanelTitle>Visibility</PanelTitle>

@@ -1,4 +1,5 @@
 import type { PageDefinition } from '@/content/types';
+import { DEMO_SAVED_BLOCK_ID } from './savedBlocks';
 import type { AnyBlock } from '@/lib/blocks';
 import { demoAnimationUrl as anim } from './animations';
 import { demoImageUrl as img } from './images';
@@ -2248,6 +2249,8 @@ const libraryEffects: PageDefinition = {
         ]),
       })),
     }),
+    // 2.15 — a synced saved block, placed by reference; the demo seed creates it.
+    b('savedBlock', { savedBlockId: DEMO_SAVED_BLOCK_ID, name: 'Demo call to action' }),
     b(
       'cta',
       { eyebrow: 'Shape dividers', title: 'A wave along the top and a curve along the bottom', body: 'Drawn in the neighbouring section’s colour, so the edge between two sections takes a shape.', links: [link('Start a project', '/contact')] },

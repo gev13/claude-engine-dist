@@ -50,6 +50,13 @@
       "when": 1790327521467,
       "tag": "0006_daffy_mongu",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1790328951535,
+      "tag": "0007_careful_radioactive_man",
+      "breakpoints": true
     }
   ]
 }

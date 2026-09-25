@@ -166,7 +166,7 @@ export async function BlogIndexView({
   return (
     <>
       {first ? (
-        <BlockRenderer blocks={[first]} trail={trail} />
+        <BlockRenderer blocks={[first]} trail={trail} locale={locale} />
       ) : (
         <Section size="lg">
           <Heading level={1} className="max-w-[18ch]">
@@ -203,6 +203,7 @@ export async function BlogIndexView({
           blocks={rest}
           trail={trail}
           paging={list ? { blockId: list.blockId, ...paging } : undefined}
+          locale={locale}
         />
       ) : (
         <Section size="lg">

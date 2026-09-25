@@ -3,6 +3,7 @@ import { type AnyBlock, blockSchemas } from '@/lib/blocks';
 import { localeConfig, splitLocale } from '@/lib/locales';
 import { getPopups } from './popups';
 import { resolvePath } from './resolve';
+import { expandSavedBlocks } from './savedBlocks';
 
 type FormProps = ReturnType<(typeof blockSchemas)['form']['parse']>;
 
@@ -45,10 +46,11 @@ export async function findForm(path: string, id: string): Promise<FormProps | nu
         : resolved?.kind === 'blogIndex'
           ? (resolved.page?.blocks ?? [])
           : [];
-  const onPage = findIn(blocks, id);
+  // A form inside a synced saved block is on the page too (2.15).
+  const onPage = findIn(await expandSavedBlocks(blocks, locale), id);
   if (onPage) return onPage;
   for (const popup of await getPopups()) {
-    const hit = findIn(popup.blocks as unknown as AnyBlock[], id);
+    const hit = findIn(await expandSavedBlocks(popup.blocks as unknown as AnyBlock[], locale), id);
     if (hit) return hit;
   }
   return null;

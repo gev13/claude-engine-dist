@@ -367,6 +367,10 @@ export const BLOCK_WIREFRAMES: Record<BlockType, readonly Shape[]> = {
     ['txt', 8, 49, 26], ['soft', 8, 53, 144, 20, 2],
     ['panel', 8, 79, 5, 5, 1], ['txt', 16, 81, 60], ['fbtn', 122, 80, 30],
   ],
+  savedBlock: [
+    ['panel', 16, 16, 128, 68, 4, 'b'], ['acc', 28, 28, 36, 6, 3], ['big', 28, 42, 80, 1], ['txt', 28, 54, 96],
+    ['soft', 28, 66, 40, 8, 4], ['circ', 128, 28, 5, 'acc'],
+  ],
   lottie: [
     ['circ', 80, 44, 28, 'lt'], ['circ', 80, 44, 13, 'acc'], ['circ', 108, 24, 5, 'acc'], ['circ', 52, 66, 4],
     ['soft', 40, 86, 80, 3, 1.5], ['acc', 40, 86, 30, 3, 1.5],

@@ -1,5 +1,6 @@
 'use client';
 
+import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import nextDynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import { useMemo, useRef, useState } from 'react';
@@ -301,6 +302,7 @@ export function ProjectEditor({
               Back to projects
             </AdminLinkButton>
             {projectId && value.status !== 'published' && <PreviewButton entityType="project" entityId={projectId} disabled={busy} />}
+            {projectId && <DuplicateButton kind="projects" id={projectId} dirty={dirty} />}
             <AdminButton type="button" variant="secondary" disabled={busy} onClick={() => void save()}>
               {busy ? 'Saving…' : 'Save'}
             </AdminButton>

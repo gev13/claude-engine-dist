@@ -31,6 +31,7 @@ const GATE: Record<string, keyof typeof PERMISSIONS> = {
   '/admin/posts': 'posts:read',
   '/admin/categories': 'categories:read',
   '/admin/projects': 'projects:read',
+  '/admin/saved-blocks': 'savedBlocks:write',
   '/admin/jobs': 'jobs:read',
   '/admin/media': 'media:read',
   '/admin/enquiries': 'enquiries:read',

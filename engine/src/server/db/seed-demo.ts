@@ -16,7 +16,8 @@ import { sanitizeRichText } from '@/server/content/sanitize';
 import { writeDemoAnimation, writeDemoImage } from '@/server/media/demo';
 import { resolveStoredPath } from '@/server/media/storage';
 import { db } from './index';
-import { categories, media, pages, postCategories, posts, settings } from './schema';
+import { categories, media, pages, postCategories, posts, savedBlocks, settings } from './schema';
+import { DEMO_SAVED_BLOCK_ID, demoSavedBlock } from '@/content/demo/savedBlocks';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Demo content seed — `npm run db:seed:demo`
@@ -217,6 +218,19 @@ async function seedPopups() {
   log('popups', `${existing ? 'replaced' : 'created'}, ${value.length} popups`);
 }
 
+/** 2.15 — the demo's saved block, which the Effects library page references. */
+async function seedSavedBlock() {
+  const [existing] = await db.select({ id: savedBlocks.id }).from(savedBlocks).where(eq(savedBlocks.id, DEMO_SAVED_BLOCK_ID)).limit(1);
+  if (existing && !FORCE) {
+    log('saved block', 'kept the existing demo saved block (use --force to replace it)');
+    return;
+  }
+  const values = { ...demoSavedBlock, tree: parseBlocks(demoSavedBlock.tree) as typeof demoSavedBlock.tree };
+  if (existing) await db.update(savedBlocks).set(values).where(eq(savedBlocks.id, DEMO_SAVED_BLOCK_ID));
+  else await db.insert(savedBlocks).values(values);
+  log('saved block', existing ? 'replaced' : 'created');
+}
+
 async function main() {
   console.log(`\nSeeding the demo site${FORCE ? ' (force)' : ''}…\n`);
   const imageIds = await seedImages();
@@ -225,6 +239,7 @@ async function main() {
   await seedPosts(imageIds);
   await seedNavigation();
   await seedPopups();
+  await seedSavedBlock();
   console.log('\nDone. Restart or redeploy a running production server so cached pages pick this up.');
   console.log('The block library is at /library.\n');
   process.exit(0);

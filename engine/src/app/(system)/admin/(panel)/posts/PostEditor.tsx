@@ -1,5 +1,6 @@
 'use client';
 
+import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import { POST_LAYOUTS, POST_LAYOUT_LABELS, POST_OPENER_BLOCKS, postTakesOpeners, type PostLayout } from '@/lib/blog';
 import nextDynamic from 'next/dynamic';
 import { useRouter } from 'next/navigation';
@@ -317,6 +318,7 @@ export function PostEditor({
             {postId && value.status !== 'published' && (
               <PreviewButton entityType="post" entityId={postId} disabled={busy} />
             )}
+            {postId && <DuplicateButton kind="posts" id={postId} dirty={dirty} />}
             <AdminButton type="button" variant="secondary" disabled={busy} onClick={() => void save()}>
               {busy ? 'Saving…' : 'Save'}
             </AdminButton>

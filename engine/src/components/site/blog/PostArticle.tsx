@@ -20,6 +20,7 @@ import { cn, formatDate, isoDate } from '@/lib/utils';
 import { getMessages } from '@/server/content/messages';
 import { listPosts, postUrl, type PostDetail } from '@/server/content/posts';
 import { getTheme } from '@/server/content/theme';
+import { expandSavedBlocks } from '@/server/content/savedBlocks';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One post, as the public sees it — and as its preview shows it
@@ -121,7 +122,7 @@ export async function PostArticle({
       <img src={post.coverUrl} alt="" />
     </div>
   );
-  const postBlocks = blocks.length > 0 && <BlockRenderer blocks={blocks} trail={trail} />;
+  const postBlocks = blocks.length > 0 && <BlockRenderer blocks={blocks} trail={trail} locale={locale} />;
 
   const crumbs = breadcrumbs(trail);
 
@@ -213,7 +214,7 @@ export async function PostArticle({
               blogPath: indexPath,
             }),
             crumbs,
-            faqFromBlocks(blocks, path),
+            faqFromBlocks(await expandSavedBlocks(blocks, locale), path),
           ])}
         />
       )}

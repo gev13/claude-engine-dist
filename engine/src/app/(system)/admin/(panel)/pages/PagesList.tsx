@@ -1,5 +1,6 @@
 'use client';
 
+import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import Link from 'next/link';
 import { useState } from 'react';
 import useSWR from 'swr';
@@ -175,6 +176,7 @@ export function PagesList() {
                     </Td>
                     <Td className="whitespace-nowrap font-mono text-[12px] text-smoke">{formatDate(row.updatedAt)}</Td>
                     <Td className="text-right whitespace-nowrap">
+                      {!trashed && <DuplicateButton kind="pages" id={row.id} compact />}
                       {trashed && (
                         <AdminButton
                           variant="ghost"

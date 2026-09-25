@@ -1,6 +1,14 @@
 {
-  "latest": "2.14.0",
+  "latest": "2.15.0",
   "releases": [
+    {
+      "version": "2.15.0",
+      "date": "2026-09-25",
+      "summary": "Saved blocks: design a block once and use it anywhere \u2014 synced everywhere, or pasted as a template. Duplicate pages, posts, projects, saved blocks and popups. Copy and paste blocks between pages.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.14.0",
       "date": "2026-09-25",

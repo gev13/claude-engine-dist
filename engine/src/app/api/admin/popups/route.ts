@@ -4,6 +4,7 @@ import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateEverything } from '@/server/content/revalidate';
+import { recordUsage } from '@/server/content/savedBlocks';
 import { POPUPS_SETTING_KEY, getPopups } from '@/server/content/popups';
 import { type AnyBlock, collectInvalidBlocks } from '@/lib/blocks';
 import { popupsSchema } from '@/lib/popups';
@@ -60,6 +61,9 @@ export async function PUT(request: Request) {
       summary: `Updated the popups (${popups.length}, ${popups.filter((p) => p.enabled).length} switched on)`,
       ip: clientIp(request.headers),
     });
+
+    // Which saved blocks the popups use (2.15).
+    await recordUsage('popups', POPUPS_SETTING_KEY, popups.flatMap((popup) => popup.blocks as unknown as AnyBlock[]));
 
     // Popups render in the shared layout, so every page is now stale.
     revalidateEverything();

@@ -59,7 +59,7 @@ export function RevisionPanel({
   entityId,
   onRestored,
 }: {
-  entityType: 'page' | 'post' | 'project';
+  entityType: 'page' | 'post' | 'project' | 'saved_block';
   entityId: string;
   onRestored?: () => void;
 }) {

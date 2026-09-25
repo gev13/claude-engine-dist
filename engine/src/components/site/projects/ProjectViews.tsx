@@ -172,11 +172,11 @@ export async function ProjectArticle({
             heading
           )}
         </Section>
-        <BlockRenderer blocks={project.blocks} trail={trail} currentProjectId={project.id} />
+        <BlockRenderer blocks={project.blocks} trail={trail} currentProjectId={project.id} locale={locale} />
       </article>
 
       {moreBlock?.success && <ProjectsBlock {...moreBlock.data} items={more.map(projectItem)} />}
-      {cta.length > 0 && <BlockRenderer blocks={cta} trail={trail} currentProjectId={project.id} />}
+      {cta.length > 0 && <BlockRenderer blocks={cta} trail={trail} currentProjectId={project.id} locale={locale} />}
 
       {!preview && (
         <JsonLd

@@ -9,6 +9,47 @@ told about before taking it.
 
 ---
 
+## 2.15.0 — 2026-09-25
+
+**Saved blocks.** Design a block once and use it anywhere. Every block's new
+**⋯** menu has *Save as a saved block…* — a whole row, columns and all, too.
+A **synced** block is the same on every page that uses it: edit it once and
+every page changes. A **template** pastes an independent copy each time.
+Both appear under *Add block → My blocks*, with search and folders.
+
+A synced block sits in a page as a locked card with *Edit the original* and
+*Detach*, which turns that one place into its own copy while the others stay
+synced. Its Design tab there sets only its outer spacing and where it shows.
+Design → **My blocks** lists them with how many places use each, and edits
+one in a full builder with its last 30 revisions. One still in use cannot
+simply be deleted — *Detach everywhere, then delete* gives every page its own
+copy first. A saved block cannot contain itself, nests at most three deep,
+follows the page's language, and a form or an FAQ inside one works — the
+form accepts submissions and the FAQ becomes structured data — as if it were
+on the page.
+
+**Duplicate.** Pages, posts, projects, saved blocks and popups can be
+duplicated — from their lists and their editors. The copy is a draft that
+renders exactly like the original, with new ids for every block, forms
+renamed "(copy)" so their submissions are filed apart, the same categories
+and tags, no canonical address, and you as its author. It opens straight
+away; the original is not touched.
+
+**Copy and paste between pages.** *Copy block* or *Copy row* from the ⋯ menu,
+then *Paste above*, *Paste below* or the *Paste* button in any other builder —
+a page, a post, a project, a popup or a saved block. Pasted blocks are checked
+and get new ids.
+
+**Also fixed.** Duplicating a row in the builder gave the copy's columns and
+the blocks inside them the same ids as the original's, so styling one
+restyled both. Every copy — duplicate, paste, template — now gets new ids
+all the way down.
+
+Includes a database migration: two new tables and a new revision type. Take
+the backup the Updates screen offers.
+
+---
+
 ## 2.14.0 — 2026-09-25
 
 **Projects.** A portfolio, as content: each project is a page of its own,

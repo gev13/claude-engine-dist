@@ -51,6 +51,9 @@ import { BreadcrumbsBlock, BusinessHoursBlock, ChartBlock, PriceListBlock, Revie
 import { FlipBoxBlock, HotspotsBlock, ShareBlock, TocBlock } from './library/widgets-client';
 import type { Crumb } from '@/lib/seo/jsonld';
 import type { Paging } from '@/server/content/resolve';
+import type { Locale } from '@/lib/locales';
+import { MAX_SAVED_DEPTH, SAVED_BLOCK_TYPE } from '@/lib/blockTree';
+import { getSavedTree } from '@/server/content/savedBlocks';
 import type { BlockStyle } from '@/lib/blockStyle';
 import { ShapeDividers } from './library/effects';
 import { TiltObserver } from './library/TiltObserver';
@@ -198,7 +201,35 @@ export type RenderContext = {
   paging?: Paging & { blockId: string };
   /** The project whose page this is — a projects block can leave it out (2.14). */
   currentProjectId?: string;
+  /** The page's language — a synced saved block shows its translation (2.15). */
+  locale?: Locale;
+  /** The saved blocks this render is already inside, outermost first — a cycle stops here. */
+  savedPath?: string[];
 };
+
+/**
+ * T8 (2.15) — a synced saved block: its tree, rendered where the reference
+ * sits. A missing or deleted one renders nothing on the site; the builder is
+ * where that is said. A reference inside a saved block that is already being
+ * rendered, or past the depth limit, also renders nothing — the save refuses
+ * both, and this is what keeps an edited database from looping a page.
+ */
+async function SavedBlockRef({ savedBlockId, ctx }: { savedBlockId: string; ctx: RenderContext }) {
+  const path = ctx.savedPath ?? [];
+  if (path.includes(savedBlockId) || path.length >= MAX_SAVED_DEPTH) return null;
+  const saved = await getSavedTree(savedBlockId, ctx.locale);
+  if (!saved || saved.tree.length === 0) return null;
+  return (
+    <BlockRenderer
+      blocks={saved.tree}
+      trail={ctx.trail}
+      paging={ctx.paging}
+      currentProjectId={ctx.currentProjectId}
+      locale={ctx.locale}
+      savedPath={[...path, savedBlockId]}
+    />
+  );
+}
 
 function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
   const props = block.props as ParsedRowProps;
@@ -227,6 +258,14 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
 /** `trail` is the page's own breadcrumb trail; only the breadcrumbs block reads it. */
 function renderBlock(block: ParsedBlock, ctx: RenderContext): React.ReactNode {
   if (block.type === 'row') return <RowBlock key={block.id} block={block} ctx={ctx} />;
+  if (block.type === SAVED_BLOCK_TYPE) {
+    // The instance's own style is its wrapper: outer spacing and visibility.
+    return (
+      <BlockShell key={block.id} block={block}>
+        <SavedBlockRef savedBlockId={(block.props as { savedBlockId: string }).savedBlockId} ctx={ctx} />
+      </BlockShell>
+    );
+  }
 
   const Component = registry[block.type];
   if (!Component) return null;
@@ -294,6 +333,8 @@ export function BlockRenderer({
   trail,
   paging,
   currentProjectId,
+  locale,
+  savedPath,
 }: {
   blocks: AnyBlock[] | null | undefined;
   /** Print each block's name above it — the `library` page template. */
@@ -304,8 +345,12 @@ export function BlockRenderer({
   paging?: Paging & { blockId: string };
   /** On a project's own page, its id (2.14). */
   currentProjectId?: string;
+  /** The page's language, for synced saved blocks (2.15). */
+  locale?: Locale;
+  /** Saved blocks this tree is already inside — set by `SavedBlockRef`, never by a page. */
+  savedPath?: string[];
 }) {
-  const ctx: RenderContext = { trail, paging, currentProjectId };
+  const ctx: RenderContext = { trail, paging, currentProjectId, locale, savedPath };
   const parsed = parseBlocks(blocks).filter(isLive);
   // P3-C5 — a block that asks the page to snap to it turns gentle snapping on for the page.
   const css = collectCss(parsed) + (anyStyle(parsed, (s) => s.snap) ? 'html{scroll-snap-type:y proximity}' : '');

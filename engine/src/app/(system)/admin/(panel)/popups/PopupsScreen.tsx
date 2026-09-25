@@ -1,5 +1,6 @@
 'use client';
 
+import { freshIds } from '@/lib/blockTree';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { nanoid } from 'nanoid';
@@ -93,6 +94,26 @@ function PopupsScreenInner() {
     setSelected(popups.length);
   }
 
+  /** T7 — a switched-off copy with its own name, link name and block ids, saved with the rest. */
+  function duplicate() {
+    if (!current) return;
+    if (popups.length >= 10) return toast('A site can have up to ten popups.', 'error');
+    const taken = popups.map((p) => p.slug);
+    let slug = `${current.slug.slice(0, 32)}-copy`;
+    for (let n = 2; taken.includes(slug); n++) slug = `${current.slug.slice(0, 32)}-copy-${n}`;
+    const copy = {
+      ...structuredClone(current),
+      id: nanoid(10),
+      name: `${current.name} (copy)`.slice(0, 80),
+      slug,
+      enabled: false,
+      blocks: freshIds(current.blocks as unknown as AnyBlock[], () => nanoid(10), { renameForms: true }) as unknown as typeof current.blocks,
+    };
+    setPopups((list) => [...list, copy]);
+    setSelected(popups.length);
+    toast('Copied — switched off until you turn it on. Save to keep it.', 'success');
+  }
+
   function remove() {
     if (!current || !window.confirm(`Delete “${current.name}”? It is removed when you save.`)) return;
     setPopups((list) => list.filter((_, i) => i !== selected));
@@ -162,9 +183,14 @@ function PopupsScreenInner() {
                     <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.enabled} onChange={(e) => update({ enabled: e.target.checked })} />
                     Switched on
                   </label>
-                  <AdminButton variant="ghost" type="button" className="text-flare-soft" onClick={remove}>
-                    Delete this popup
-                  </AdminButton>
+                  <div className="flex gap-2">
+                    <AdminButton variant="ghost" type="button" onClick={duplicate}>
+                      Duplicate
+                    </AdminButton>
+                    <AdminButton variant="ghost" type="button" className="text-flare-soft" onClick={remove}>
+                      Delete this popup
+                    </AdminButton>
+                  </div>
                 </div>
               </Panel>
 

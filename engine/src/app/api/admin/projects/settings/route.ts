@@ -7,6 +7,7 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { getProjectTemplate } from '@/server/content/projectTemplate';
 import { revalidateEverything } from '@/server/content/revalidate';
+import { recordUsage } from '@/server/content/savedBlocks';
 import { db } from '@/server/db';
 import { settings } from '@/server/db/schema';
 
@@ -53,6 +54,7 @@ export async function PUT(request: Request) {
       summary: 'Changed the project page template',
       ip: clientIp(request.headers),
     });
+    await recordUsage('projectTemplate', PROJECTS_SETTING_KEY, value.cta as AnyBlock[]);
     revalidateEverything();
     return ok({ template: value });
   });
