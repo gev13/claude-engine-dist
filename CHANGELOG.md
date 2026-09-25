@@ -9,6 +9,47 @@ told about before taking it.
 
 ---
 
+## 2.17.0 — 2026-09-25
+
+**Video that plays on iPhones.** The site now answers the partial requests
+iOS Safari makes before it plays an MP4 — before, a hero or band video could
+sit there as a still. It also tells browsers when a file has not changed, so
+they stop downloading it again.
+
+**Moving pictures.** The video block has a new way to play: *as a moving
+picture* — an uploaded film, muted and looped, with no player, like an
+animated image. It plays only while it is on screen, never by itself for
+somebody who asked for less motion (they get the poster and a play button),
+and its box takes the film's own shape from the start, so nothing jumps as
+it loads. Add a WebM beside the MP4 and browsers pick the lighter one.
+Gallery pictures can be films too, and open in the viewer with controls.
+Background videos everywhere — heroes, bands, slides — now pause when they
+scroll out of view.
+
+**A film behind any section.** Design → Background → Video, on any block or
+row: a film under the overlay colour and the content, with a lighter file or
+just the poster for phones. Visitors with data saver on get the poster.
+
+**SVG uploads.** Logos, icons, the header logo and the favicon can be SVG.
+Each upload is rebuilt with only its drawing — no scripts, no links out —
+and served so nothing in it can run. Security → SVG uploads decides who may
+upload one (administrators and managers to begin with).
+
+**Picture sizes.** Media → Picture sizes → *Responsive images* makes smaller
+copies of every picture (up to six widths, WebP and optionally AVIF), and
+every image on the site then offers them, so a phone downloads a
+phone-sized picture. It runs in the background for the pictures you already
+have, with progress on the screen. Off until switched on.
+
+Uploading a video now records its size and length, shown in Media.
+
+INSTALL.md has an optional nginx setup for serving media directly.
+
+Includes a database migration: two new columns on media. Take the backup the
+Updates screen offers.
+
+---
+
 ## 2.16.0 — 2026-09-25
 
 **Integrations.** Settings → Integrations switches on tracking and marketing

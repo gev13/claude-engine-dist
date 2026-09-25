@@ -10,6 +10,7 @@ import { CountUp } from './CountUp';
 import { MediaFill } from './media';
 import { ParallaxLayer } from './ParallaxLayer';
 import { QuoteMedia } from './QuoteMedia';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Library content sections (CT1–CT5, CT8–CT10, CT14, CT16)
@@ -136,7 +137,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
           {p.cards.map((c, i) => {
             const inner = (
               <>
-                <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-tile__bg" />
+                <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-tile__bg" sizes="third" />
                 {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className="he-tile__text">
                   {c.eyebrow && <div className="he-tile__eyebrow">{c.eyebrow}</div>}
@@ -172,7 +173,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
               <li key={c.title + i} className={cn('he-rows__item', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
                   <div className="he-rows__icon">
-                    <MediaFill imageUrl={c.imageUrl} alt="" className="he-feat__img" />
+                    <MediaFill imageUrl={c.imageUrl} alt="" className="he-feat__img" sizes="quarter" />
                   </div>
                 )}
                 <div className="he-rows__main">
@@ -231,7 +232,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
             if (overlay) {
               return (
                 <li key={c.title + i} className={cn('he-fgrid__item he-ocard', itemClass(p.blockId, i, c.style))}>
-                  <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-fill he-ocard__bg" />
+                  <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-fill he-ocard__bg" sizes="third" />
                   {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
                     {c.eyebrow && <div className="he-ocard__eyebrow">{c.eyebrow}</div>}
@@ -250,7 +251,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
               <li key={c.title + i} className={cn('he-fgrid__item', itemClass(p.blockId, i, c.style))}>
                 {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className={icons ? 'he-feat__icon' : 'he-icard__media'}>
-                  <MediaFill imageUrl={c.imageUrl} alt={icons ? '' : c.alt} className={icons ? 'he-feat__img' : 'he-fill'} />
+                  <MediaFill imageUrl={c.imageUrl} alt={icons ? '' : c.alt} className={icons ? 'he-feat__img' : 'he-fill'} sizes={icons ? 'thumb' : 'third'} />
                 </div>
                 {c.eyebrow && <div className="he-fgrid__eyebrow">{c.eyebrow}</div>}
                 <h3 className="he-fgrid__title">{title}</h3>
@@ -311,7 +312,7 @@ function StatsCounters(p: P<'stats'>) {
             <li key={s.label + i} className="he-counter">
               {s.iconUrl && (
                 <span className="he-counter__icon">
-                  <MediaFill imageUrl={s.iconUrl} alt="" className="he-feat__img" />
+                  <MediaFill imageUrl={s.iconUrl} alt="" className="he-feat__img" sizes="thumb" />
                 </span>
               )}
               <div className="he-counter__text">
@@ -348,8 +349,7 @@ export function LogoWall(p: P<'logoWall'>) {
             {p.logos.map((logo, i) => {
               const mark = logo.imageUrl ? (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={logo.imageUrl} alt={p.captions ? '' : logo.name} className="he-logos__img" loading="lazy" />
+                  <SiteImg src={logo.imageUrl} alt={p.captions ? '' : logo.name} className="he-logos__img" loading="lazy" sizes="thumb" />
                   {p.captions && <span className="he-logos__cap">{logo.name}</span>}
                 </>
               ) : (
@@ -386,8 +386,7 @@ export function QuoteBlock(p: P<'quote'>) {
         <figure className={cn('he-quote__fig', p.avatarPosition === 'above' && 'is-avatar-above')}>
           {p.avatarPosition === 'above' && p.avatarUrl && (
             <div className="he-quote__top">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.avatarUrl} alt="" className={cn('he-quote__avatar', `is-${p.avatarSize}`)} loading="lazy" />
+              <SiteImg src={p.avatarUrl} alt="" className={cn('he-quote__avatar', `is-${p.avatarSize}`)} loading="lazy" sizes="thumb" />
             </div>
           )}
           {p.eyebrow && <Eyebrow className={!hasMedia ? 'justify-center' : undefined}>{p.eyebrow}</Eyebrow>}
@@ -395,8 +394,7 @@ export function QuoteBlock(p: P<'quote'>) {
           {(p.name || p.role) && (
             <figcaption className="he-quote__cap">
               {p.avatarPosition !== 'above' && p.avatarUrl && (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={p.avatarUrl} alt="" className={cn('he-quote__avatar', `is-${p.avatarSize}`)} loading="lazy" />
+                <SiteImg src={p.avatarUrl} alt="" className={cn('he-quote__avatar', `is-${p.avatarSize}`)} loading="lazy" sizes="thumb" />
               )}
               <span>
                 {p.name && <span className="he-quote__name">{p.name}</span>}
@@ -428,7 +426,7 @@ export function Collage(p: P<'collage'>) {
             {p.link && <Actions links={[p.link]} />}
           </div>
           <div className="he-collage__small">
-            <MediaFill imageUrl={p.smallUrl} alt={p.smallAlt} className="he-fill" />
+            <MediaFill imageUrl={p.smallUrl} alt={p.smallAlt} className="he-fill" sizes="half" />
           </div>
         </div>
       </div>
@@ -460,8 +458,7 @@ export function AppPromo(p: P<'appPromo'>) {
       <div className="shell he-app__grid">
         <div className="he-app__text">
           {p.iconUrl && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={p.iconUrl} alt="" className="he-app__icon" loading="lazy" />
+            <SiteImg src={p.iconUrl} alt="" className="he-app__icon" loading="lazy" sizes="thumb" />
           )}
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
           <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>
@@ -477,8 +474,7 @@ export function AppPromo(p: P<'appPromo'>) {
           <div className={cn('he-app__phones', `is-${p.screens.length}`)}>
             {p.screens.map((s, i) => (
               <div key={s.imageUrl + i} className="he-phone">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={s.imageUrl} alt={s.alt ?? ''} loading="lazy" />
+                <SiteImg src={s.imageUrl} alt={s.alt ?? ''} loading="lazy" />
               </div>
             ))}
           </div>

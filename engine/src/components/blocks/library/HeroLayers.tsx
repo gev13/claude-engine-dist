@@ -3,6 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { cn } from '@/lib/utils';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    P4-A5 — the layered hero's depth
@@ -75,8 +76,7 @@ export function HeroLayers({ layers, pointer, children }: { layers: HeroLayer[];
     <div ref={ref} className={cn('he-hero__layers', pointer && 'is-pointer')}>
       {children}
       {layers.map((layer, i) => (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img key={`${layer.imageUrl}-${i}`} src={layer.imageUrl} alt={layer.alt || ''} className={cn('he-hero__layer', `is-${layer.depth}`)} loading="lazy" />
+        <SiteImg key={`${layer.imageUrl}-${i}`} src={layer.imageUrl} alt={layer.alt || ''} className={cn('he-hero__layer', `is-${layer.depth}`)} loading="lazy" />
       ))}
     </div>
   );

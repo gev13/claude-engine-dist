@@ -13,7 +13,8 @@ import { readingMinutes } from '@/lib/utils';
 import { NAVIGATION_SETTING_KEY } from '@/server/content/navigation';
 import { POPUPS_SETTING_KEY } from '@/server/content/popups';
 import { sanitizeRichText } from '@/server/content/sanitize';
-import { writeDemoAnimation, writeDemoImage } from '@/server/media/demo';
+import { writeDemoAnimation, writeDemoImage, writeDemoVideo } from '@/server/media/demo';
+import { DEMO_VIDEOS, demoVideoFile } from '@/content/demo/videos';
 import { resolveStoredPath } from '@/server/media/storage';
 import { db } from './index';
 import { categories, media, pages, postCategories, posts, savedBlocks, settings } from './schema';
@@ -92,6 +93,24 @@ async function seedAnimations() {
   }
 
   log('animations', `${created} created, ${DEMO_ANIMATIONS.length} total`);
+}
+
+/** Write every demo film (2.17) and add it to the media library. */
+async function seedVideos() {
+  let created = 0;
+  for (const video of DEMO_VIDEOS) {
+    const filename = demoVideoFile(video);
+    if (!resolveStoredPath(filename)) throw new Error(`Unsafe demo video path: ${filename}`);
+    const [existing] = await db.select({ id: media.id }).from(media).where(eq(media.filename, filename)).limit(1);
+    if (existing && !FORCE) continue;
+    const values = await writeDemoVideo(video);
+    if (existing) await db.update(media).set(values).where(eq(media.id, existing.id));
+    else {
+      await db.insert(media).values(values);
+      created += 1;
+    }
+  }
+  log('videos', `${created} created, ${DEMO_VIDEOS.length} total`);
 }
 
 async function seedPages() {
@@ -235,6 +254,7 @@ async function main() {
   console.log(`\nSeeding the demo site${FORCE ? ' (force)' : ''}…\n`);
   const imageIds = await seedImages();
   await seedAnimations();
+  await seedVideos();
   await seedPages();
   await seedPosts(imageIds);
   await seedNavigation();

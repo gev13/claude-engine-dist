@@ -383,6 +383,8 @@ async function main() {
     '/api/admin/captcha',
     '/api/admin/webhooks',
     '/api/admin/webhooks/deliveries',
+    '/api/admin/media/settings',
+    '/api/admin/media/sizes',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

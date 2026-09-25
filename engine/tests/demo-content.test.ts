@@ -91,6 +91,8 @@ describe('demo pages', () => {
       ...['once', 'hover', 'scroll'].map((v) => `lottie · play: ${v}`),
       // Package 4
       'carousel · mode: splitScreen', 'carousel · mode: filmstrip', 'hero · variant: layered',
+      // 2.17
+      'video · display: ambient',
     ];
     for (const key of expected) expect(shown, key).toContain(key);
   });

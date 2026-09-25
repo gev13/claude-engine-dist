@@ -6,6 +6,7 @@ import { eq } from 'drizzle-orm';
 import sharp from 'sharp';
 import { DEMO_ANIMATIONS, type DemoAnimation, demoAnimationFile } from '@/content/demo/animations';
 import { DEMO_IMAGES, type DemoImage, demoImageFile } from '@/content/demo/images';
+import { DEMO_VIDEOS, type DemoVideo, demoVideoFile } from '@/content/demo/videos';
 import { db } from '@/server/db';
 import { media } from '@/server/db/schema';
 import { resolveStoredPath } from './storage';
@@ -13,7 +14,7 @@ import { resolveStoredPath } from './storage';
 /* ═══════════════════════════════════════════════════════════════════════════
    Demo media
    ───────────────────────────────────────────────────────────────────────────
-   The demo pictures and Lottie animations are drawn in code
+   The demo pictures, Lottie animations and films are made in code
    (src/content/demo). The demo seed writes all of them; a page template or
    ready section writes only the ones it uses, when it is used — so a site
    that never ran the demo seed still gets working pictures from a template.
@@ -69,7 +70,28 @@ export async function writeDemoAnimation(animation: DemoAnimation) {
   };
 }
 
-const DEMO_URL = /\/media\/(demo\/[a-z0-9-]+\.(?:webp|png|json))/g;
+/** Write one demo film (2.17) into the media directory; returns the values for its media row. */
+export async function writeDemoVideo(video: DemoVideo) {
+  const filename = demoVideoFile(video);
+  const buffer = Buffer.from(video.base64, 'base64');
+  await store(filename, buffer);
+  return {
+    filename,
+    originalName: `${video.name}.${video.format}`,
+    mimeType: `video/${video.format}`,
+    extension: video.format,
+    byteSize: buffer.byteLength,
+    width: video.width,
+    height: video.height,
+    durationMs: video.durationMs,
+    url: `/media/${filename}`,
+    altText: video.alt,
+    caption: '',
+    checksum: checksum(buffer),
+  };
+}
+
+const DEMO_URL = /\/media\/(demo\/[a-z0-9-]+\.(?:webp|png|json|webm|mp4))/g;
 
 /**
  * Makes sure every demo picture or animation that `tree` points at is in the
@@ -83,7 +105,8 @@ export async function ensureDemoMedia(tree: unknown): Promise<number> {
   for (const filename of wanted) {
     const image = DEMO_IMAGES.find((candidate) => demoImageFile(candidate) === filename);
     const animation = image ? undefined : DEMO_ANIMATIONS.find((candidate) => demoAnimationFile(candidate) === filename);
-    if (!image && !animation) continue;
+    const video = image || animation ? undefined : DEMO_VIDEOS.find((candidate) => demoVideoFile(candidate) === filename);
+    if (!image && !animation && !video) continue;
 
     const absolute = resolveStoredPath(filename);
     if (!absolute) continue;
@@ -94,7 +117,7 @@ export async function ensureDemoMedia(tree: unknown): Promise<number> {
     );
     if (row && onDisk) continue;
 
-    const values = image ? await writeDemoImage(image) : await writeDemoAnimation(animation!);
+    const values = image ? await writeDemoImage(image) : animation ? await writeDemoAnimation(animation) : await writeDemoVideo(video!);
     if (row) await db.update(media).set(values).where(eq(media.id, row.id));
     else await db.insert(media).values(values);
     created += 1;

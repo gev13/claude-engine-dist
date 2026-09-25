@@ -13,6 +13,7 @@ import { Icon, SocialIcon } from './icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './SiteExtras';
 import { useMessages } from './Messages';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Header
@@ -90,8 +91,7 @@ function Brand({ siteName, brand, onClick }: { siteName: string; brand?: Theme['
   return (
     <Link href="/" className="he-hdr__logo" aria-label={`${brand?.wordmark ?? siteName} — home`} onClick={onClick}>
       {brand?.logoType === 'image' && brand.logoUrl ? (
-        /* eslint-disable-next-line @next/next/no-img-element */
-        <img src={brand.logoUrl} alt="" className="he-hdr__img" />
+        <SiteImg src={brand.logoUrl} alt="" className="he-hdr__img" sizes="thumb" />
       ) : (
         <span className="he-hdr__mark">
           <SiteMark />
@@ -472,8 +472,7 @@ function LinkGroups({ groups, onNavigate, leadFirst = false }: { groups: Group[]
 function MegaCard({ card, onNavigate }: { card: NavChild; onNavigate: () => void }) {
   return (
     <Link href={card.href} {...linkAttrs(card)} onClick={onNavigate} className="he-mega__card">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={card.imageUrl} alt="" loading="lazy" />
+      <SiteImg src={card.imageUrl} alt="" loading="lazy" sizes="thumb" />
       <span className="he-mega__cardtitle">{card.label}</span>
       {card.description && <span className="he-mega__carddesc">{card.description}</span>}
     </Link>
@@ -651,8 +650,7 @@ function FullscreenMenu({
         <div className="he-fsmenu__feature">
           {featured ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={featured.imageUrl} alt="" />
+              <SiteImg src={featured.imageUrl} alt="" />
               <div className="he-fsmenu__ftitle">{featured.label}</div>
               {featured.description && <p>{featured.description}</p>}
               <Link href={featured.href} className="he-btn he-btn-outline" onClick={onClose}>

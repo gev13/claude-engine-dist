@@ -7,6 +7,8 @@ import { buildCsp, mergeSources, type CspSources } from '@/lib/csp';
 import { INTEGRATIONS_SETTING_KEY, PRESETS, integrationSources, resolveIntegrations } from '@/lib/integrations';
 import { CAPTCHA_CSP, CAPTCHA_SETTING_KEY, captchaSettingsSchema } from '@/lib/captcha';
 import { ANALYTICS_PATTERN, CODE_SETTING_KEY } from '@/lib/customCode';
+import { MEDIA_SETTING_KEY, resolveMediaSettings } from '@/lib/mediaSettings';
+import { setImageMode } from '@/lib/responsive';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The routing configuration, cached per process
@@ -36,6 +38,8 @@ export type RoutingConfig = {
    * provider. The middleware sends it on every page.
    */
   csp: string;
+  /** Whether engine images carry a `srcset` (2.17, Settings → Media). */
+  responsiveImages: boolean;
 };
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -60,7 +64,7 @@ const RETRY_MS = 3_000;
 type Cache = { value: RoutingConfig; expires: number; pending?: Promise<RoutingConfig> };
 const holder = globalThis as unknown as { __heRouting?: Cache };
 
-const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }) };
+const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }), responsiveImages: false };
 
 async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
   try {
@@ -68,7 +72,7 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       db
         .select({ key: settings.key, value: settings.value })
         .from(settings)
-        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY])),
+        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY, MEDIA_SETTING_KEY])),
       db
         .select({
           id: redirects.id,
@@ -95,6 +99,7 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       ok: true,
       value: {
         csp: publicCsp(byKey),
+        responsiveImages: resolveMediaSettings(byKey.get(MEDIA_SETTING_KEY)).responsive,
         permalinks: resolvePermalinks(byKey.get(PERMALINKS_SETTING_KEY)),
         queryRules: shaped.filter((rule) => rule.matchQuery !== ''),
         pathRules: shaped.filter((rule) => rule.matchQuery === ''),
@@ -114,6 +119,7 @@ export async function routingConfig(): Promise<RoutingConfig> {
   const pending = load().then(({ value, ok }) => {
     holder.__heRouting = { value, expires: Date.now() + (ok ? TTL_MS : RETRY_MS) };
     setSlashMode(value.permalinks.trailingSlash);
+    setImageMode(value.responsiveImages);
     return value;
   });
   holder.__heRouting = { value: cache?.value ?? FALLBACK, expires: 0, pending };

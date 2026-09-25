@@ -3,6 +3,7 @@ import { DEMO_SAVED_BLOCK_ID } from './savedBlocks';
 import type { AnyBlock } from '@/lib/blocks';
 import { demoAnimationUrl as anim } from './animations';
 import { demoImageUrl as img } from './images';
+import { demoVideo as film } from './videos';
 import { demoTemplatePages } from './templatePages';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1475,6 +1476,16 @@ const libraryShowcase: PageDefinition = {
     b('video', { eyebrow: 'Video', title: 'A film that plays in place', source: FILM, videoTitle: 'Big Buck Bunny', posterUrl: img('scene-forest'), caption: FILM_CREDIT }),
     b('video', { title: 'A play button on its own', display: 'button', buttonStyle: 'outlined', buttonSize: 'large', buttonLabel: 'Watch the film', source: FILM, videoTitle: 'Big Buck Bunny' }),
     b('video', { title: 'Over a picture, in frosted glass', display: 'button', buttonStyle: 'blurred', ratio: '21/9', posterUrl: img('scene-night'), source: FILM, videoTitle: 'Big Buck Bunny', caption: FILM_CREDIT }),
+    b('video', {
+      title: 'A moving picture — muted, looped, playing while on screen',
+      display: 'ambient',
+      ratio: 'auto',
+      source: film('ambient-loop', 'mp4'),
+      sources: [film('ambient-loop', 'webm')],
+      videoTitle: 'Colours drifting slowly',
+      maxWidth: 'medium',
+      rounded: true,
+    }),
     b('gallery', { eyebrow: 'Gallery', title: 'An even grid with a picture viewer', captions: 'below', images: PICTURES }),
     b('gallery', { title: 'Masonry keeps each picture’s shape', layout: 'masonry', columns: 4, gap: 'small', hover: 'greyscale', captions: 'overlay', images: MIXED_PICTURES }),
     b('gallery', { title: 'Metro mixes tile sizes', layout: 'metro', gap: 'none', images: PICTURES, link: { label: 'Follow on Instagram', href: 'https://www.instagram.com/' } }),

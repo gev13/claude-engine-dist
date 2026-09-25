@@ -1,5 +1,5 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
-import { type BlockStyle, type ColumnWidth, GRADIENT_ANGLES, type SpacingBox, type TypeOverride } from './blockStyle';
+import { type BlockStyle, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section style → CSS
@@ -261,7 +261,8 @@ export function blockStyleToCss(
   /* Every block paints its own band. With a background chosen here, that band
      steps aside so the choice is actually seen — unlayered, so it beats the
      band's own utility or component rule. */
-  if (background.some(([property]) => property === 'background-color' || property === 'background-image')) {
+  const video = Boolean(style.background?.videoUrl && SECTION_VIDEO.test(style.background.videoUrl));
+  if (video || background.some(([property]) => property === 'background-color' || property === 'background-image')) {
     parts.push(`${root}>*{background:transparent}`);
   }
   if (style.background?.gradient?.animate && background.some(([property]) => property === 'animation')) {
@@ -271,8 +272,9 @@ export function blockStyleToCss(
   // An overlay needs a stacking context and a pseudo-element; only emitted
   // when there is actually something to lay it over.
   const overlay = safe(style.background?.overlay);
+  // A video background (2.17) sits in the same stacking context, under the overlay.
+  if (video || (overlay && isColor(overlay))) parts.push(`${root}{position:relative;isolation:isolate}`);
   if (overlay && isColor(overlay)) {
-    parts.push(`${root}{position:relative;isolation:isolate}`);
     parts.push(
       `${root}::before{content:"";position:absolute;inset:0;background:${overlay};pointer-events:none;z-index:-1}`,
     );

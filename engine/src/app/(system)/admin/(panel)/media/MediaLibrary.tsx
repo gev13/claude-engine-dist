@@ -19,6 +19,7 @@ import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { ApiError, api, fetcher } from '@/lib/admin/client';
 import { cn } from '@/lib/utils';
 import { ConfirmDelete, Pagination, errorMessage, useDebounced } from '../_shared';
+import { MediaSettingsPanel } from './MediaSettingsPanel';
 
 /* Dates arrive over the wire as ISO strings, not Date objects — so this is the
    shape the screen actually receives, not the Drizzle row type. */
@@ -31,6 +32,8 @@ type MediaItem = {
   byteSize: number;
   width: number | null;
   height: number | null;
+  durationMs?: number | null;
+  variants?: { width: number; height: number; format: 'webp' | 'avif'; bytes: number }[];
   url: string;
   altText: string;
   caption: string;
@@ -45,8 +48,8 @@ const PER_PAGE = 48;
 const MAX_FILES = 100;
 
 /** Mirrors the server's allow-list in `src/server/media/storage.ts`. */
-const ACCEPTED_EXTENSIONS = ['jpg', 'png', 'webp', 'gif', 'mp4', 'webm', 'pdf', 'json'] as const;
-const ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.mp4,.webm,.pdf,.json';
+const ACCEPTED_EXTENSIONS = ['jpg', 'png', 'webp', 'gif', 'svg', 'mp4', 'webm', 'pdf', 'json'] as const;
+const ACCEPT_ATTR = '.jpg,.jpeg,.png,.webp,.gif,.svg,.mp4,.webm,.pdf,.json';
 
 function humanSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -67,15 +70,21 @@ function kindOf(mimeType: string): 'image' | 'video' | 'document' | 'animation' 
   return 'document';
 }
 
-export function MediaLibrary() {
+export function MediaLibrary({ canSettings = false }: { canSettings?: boolean }) {
   return (
     <ToastProvider>
-      <MediaLibraryInner />
+      <MediaLibraryInner canSettings={canSettings} />
     </ToastProvider>
   );
 }
 
-function MediaLibraryInner() {
+/** A film's length as m:ss. */
+function humanDuration(ms: number): string {
+  const seconds = Math.round(ms / 1000);
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
+function MediaLibraryInner({ canSettings }: { canSettings: boolean }) {
   const { toast } = useToast();
 
   const [search, setSearch] = useState('');
@@ -188,7 +197,7 @@ function MediaLibraryInner() {
     >
       <PageHeader
         title="Media"
-        description={`Drag files anywhere onto this page, or use the upload button. Accepted: ${ACCEPTED_EXTENSIONS.join(', ').toUpperCase()} (JSON for Lottie animations, up to 2 MB) — up to 100 MB per file and ${MAX_FILES} files at a time.`}
+        description={`Drag files anywhere onto this page, or use the upload button. Accepted: ${ACCEPTED_EXTENSIONS.join(', ').toUpperCase()} (JSON for Lottie animations, up to 2 MB; SVG is cleaned of anything that could run, up to 1 MB) — up to 100 MB per file and ${MAX_FILES} files at a time.`}
         actions={
           <AdminButton onClick={() => fileInput.current?.click()} disabled={uploading}>
             {uploading ? 'Uploading…' : 'Upload files'}
@@ -214,6 +223,12 @@ function MediaLibraryInner() {
           <p className="m-0 border-2 border-dashed border-flare px-10 py-8 font-mono text-[12px] uppercase tracking-[0.14em] text-flare-soft">
             Drop to upload
           </p>
+        </div>
+      )}
+
+      {canSettings && (
+        <div className="mb-6">
+          <MediaSettingsPanel />
         </div>
       )}
 
@@ -431,6 +446,21 @@ function MediaDetail({
           <dd className="m-0 text-ash">{humanSize(item.byteSize)}</dd>
           <dt className="m-0 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Dimensions</dt>
           <dd className="m-0 text-ash">{item.width && item.height ? `${item.width} × ${item.height}` : '—'}</dd>
+          {item.durationMs ? (
+            <>
+              <dt className="m-0 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Length</dt>
+              <dd className="m-0 text-ash">{humanDuration(item.durationMs)}</dd>
+            </>
+          ) : null}
+          {item.variants && item.variants.length > 0 ? (
+            <>
+              <dt className="m-0 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Sizes</dt>
+              <dd className="m-0 text-ash">
+                {[...new Set(item.variants.map((v) => v.width))].join(', ')} px · {[...new Set(item.variants.map((v) => v.format.toUpperCase()))].join(', ')} ·{' '}
+                {humanSize(item.variants.reduce((sum, v) => sum + v.bytes, 0))}
+              </dd>
+            </>
+          ) : null}
           <dt className="m-0 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Uploaded</dt>
           <dd className="m-0 text-ash">{humanDate(item.createdAt)}</dd>
           <dt className="m-0 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">URL</dt>

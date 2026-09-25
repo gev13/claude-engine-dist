@@ -202,6 +202,13 @@ export const media = pgTable(
     altText: varchar('alt_text', { length: 300 }).notNull().default(''),
     caption: text('caption').notNull().default(''),
     checksum: varchar('checksum', { length: 64 }),
+    /** A video's length, read from its header at upload (2.17). */
+    durationMs: integer('duration_ms'),
+    /** The smaller copies generated beside a picture (2.17); `lib/responsive.ts` names them. */
+    variants: jsonb('variants')
+      .$type<{ width: number; height: number; format: 'webp' | 'avif'; bytes: number }[]>()
+      .notNull()
+      .default(sql`'[]'::jsonb`),
     uploadedById: uuid('uploaded_by_id').references(() => users.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },

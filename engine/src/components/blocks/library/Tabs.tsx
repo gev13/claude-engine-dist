@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 import { arrowKeys } from './keys';
 import { MediaFill } from './media';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 type P = z.output<(typeof blockSchemas)['tabs']>;
 
@@ -51,8 +52,7 @@ export function TabsBlock(p: P) {
             onClick={() => setActive(i)}
           >
             {t.iconUrl && (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={t.iconUrl} alt="" className="he-tabs__icon" />
+              <SiteImg src={t.iconUrl} alt="" className="he-tabs__icon" />
             )}
             {t.label}
           </button>

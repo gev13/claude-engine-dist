@@ -16,6 +16,7 @@ import { LayersFigure } from './LayersFigure';
 import { LibraryHero } from './library/heroes';
 import { CardGridVariant, StatsFigures } from './library/content';
 import { MediaAccordion } from './library/MediaAccordion';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
 
@@ -245,8 +246,7 @@ function ListMarker({ icon, iconUrl, n }: { icon: P<'checkLists'>['icon']; iconU
   if (icon === 'number') return <span className="he-ilist__num">{String(n).padStart(2, '0')}</span>;
   if (icon === 'dot') return <span className="he-ilist__dot" aria-hidden="true" />;
   if (icon === 'custom') {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={iconUrl} alt="" className="he-ilist__img" />;
+    return <SiteImg src={iconUrl} alt="" className="he-ilist__img" sizes="thumb" />;
   }
   return (
     <svg className="he-ilist__mark" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -433,8 +433,7 @@ export function ImageBlock(p: P<'image'>) {
   return (
     <Section size="md">
       <figure className={cn(narrow && `he-img-size is-${p.size}`, narrow && p.align === 'center' ? 'mx-auto my-0' : 'm-0')}>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <SiteImg
           src={p.url}
           alt={p.alt}
           width={p.width}

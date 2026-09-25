@@ -7,6 +7,8 @@ import { clientIp } from '@/server/auth/rateLimit';
 import { requireUser } from '@/server/api/guard';
 import { badRequest, created, handle, ok } from '@/server/api/respond';
 import { MediaUploadError, saveUpload } from '@/server/media/storage';
+import { getMediaSettings, refreshVariants } from '@/server/media/variants';
+import { canUploadSvg } from '@/lib/mediaSettings';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -20,6 +22,8 @@ const COLUMNS = {
   byteSize: media.byteSize,
   width: media.width,
   height: media.height,
+  durationMs: media.durationMs,
+  variants: media.variants,
   url: media.url,
   altText: media.altText,
   caption: media.caption,
@@ -101,12 +105,13 @@ export async function POST(request: Request) {
     }
 
     const ip = clientIp(request.headers);
+    const mediaSettings = await getMediaSettings();
     const uploaded: Array<typeof media.$inferSelect> = [];
     const failed: Array<{ name: string; error: string }> = [];
 
     for (const file of files) {
       try {
-        const stored = await saveUpload(file, guard.user.id);
+        const stored = await saveUpload(file, guard.user.id, { allowSvg: canUploadSvg(mediaSettings, guard.user.role) });
 
         const [row] = await db
           .insert(media)
@@ -118,6 +123,7 @@ export async function POST(request: Request) {
             byteSize: stored.byteSize,
             width: stored.width,
             height: stored.height,
+            durationMs: stored.durationMs ?? null,
             url: stored.url,
             checksum: stored.checksum,
             uploadedById: guard.user.id,
@@ -126,6 +132,10 @@ export async function POST(request: Request) {
 
         if (!row) throw new MediaUploadError('The file was stored but could not be recorded.');
         uploaded.push(row);
+        /* Smaller copies, while responsive images are on (2.17). Started and
+           not awaited: the upload is done, and a copy that fails only means
+           the original is served. */
+        if (mediaSettings.responsive) void refreshVariants(row.id, row.filename, { avif: mediaSettings.avif });
 
         await audit({
           actorId: guard.user.id,

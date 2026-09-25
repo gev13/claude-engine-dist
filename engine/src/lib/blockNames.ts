@@ -223,8 +223,8 @@ const VARIANTS: Partial<Record<BlockType, VariantInfo>> = {
   video: {
     prop: 'display',
     fallback: 'inline',
-    labels: { inline: 'Plays in place', button: 'Plays over the page' },
-    patterns: same('EL10', ['inline', 'button']),
+    labels: { inline: 'Plays in place', button: 'Plays over the page', ambient: 'Moving picture' },
+    patterns: same('EL10', ['inline', 'button', 'ambient']),
   },
   gallery: {
     prop: 'layout',

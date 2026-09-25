@@ -22,6 +22,7 @@ import { getMessages } from '@/server/content/messages';
 import { listProjectCards, type ProjectDetail, type ProjectTermRef } from '@/server/content/projects';
 import type { Paging } from '@/server/content/resolve';
 import { pageTrail } from '@/server/content/trail';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A project's page, and a project category's or tag's archive (2.14)
@@ -47,12 +48,12 @@ function HeroMedia({ project, className }: { project: ProjectDetail; className?:
   }
   return (
     <div className={cn('he-prj-hero__media', className)}>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
+      <SiteImg
         src={media.url}
         alt=""
         className="he-fill"
         fetchPriority="high"
+        priority
         {...(media.width && media.height ? { width: media.width, height: media.height } : {})}
       />
     </div>

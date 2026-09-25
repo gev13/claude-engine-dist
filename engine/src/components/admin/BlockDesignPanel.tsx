@@ -112,7 +112,8 @@ export function BlockDesignPanel({
 }) {
   const band = useBandStyle(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
-  const [picking, setPicking] = useState(false);
+  /** Which background field the media picker is choosing for; null when it is closed. */
+  const [picking, setPicking] = useState<null | 'imageUrl' | 'videoUrl' | 'videoMobileUrl' | 'videoPoster'>(null);
 
   const current = style ?? {};
   const set = (path: Path) => (value: unknown) => {
@@ -361,7 +362,7 @@ export function BlockDesignPanel({
             </span>
             <button
               type="button"
-              onClick={() => setPicking(true)}
+              onClick={() => setPicking('imageUrl')}
               className="shrink-0 border-2 border-hairline px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-smoke hover:text-bone"
             >
               Choose
@@ -377,6 +378,24 @@ export function BlockDesignPanel({
             )}
           </div>
         </Field>
+
+        {/* 2.17 — a film behind the section, under the overlay. */}
+        <div className="mt-4 grid gap-3">
+          <PickedFile label="Video" hint="an mp4 or webm from the media library — muted, looped, playing while on screen" value={current.background?.videoUrl} onChoose={() => setPicking('videoUrl')} onClear={() => set(['background', 'videoUrl'])(undefined)} />
+          {current.background?.videoUrl && (
+            <>
+              <PickedFile label="Video on phones" hint="optional — a lighter file for small screens" value={current.background?.videoMobileUrl} onChoose={() => setPicking('videoMobileUrl')} onClear={() => set(['background', 'videoMobileUrl'])(undefined)} />
+              <PickedFile label="Poster" hint="shown until the film plays, and instead of it where it does not" value={current.background?.videoPoster} onChoose={() => setPicking('videoPoster')} onClear={() => set(['background', 'videoPoster'])(undefined)} />
+              <Field label="On phones">
+                <Select value={current.background?.videoMobile ?? 'video'} onChange={(e) => set(['background', 'videoMobile'])(e.target.value === 'video' ? undefined : e.target.value)}>
+                  <option value="video">Play the film</option>
+                  <option value="poster">Show the poster only</option>
+                </Select>
+              </Field>
+              <p className="m-0 text-[12px] text-smoke">Visitors with data saver on, or who asked for less motion, see the poster. The overlay colour above lies over the film.</p>
+            </>
+          )}
+        </div>
       </section>
       )}
 
@@ -587,15 +606,35 @@ export function BlockDesignPanel({
       </section>
 
       <MediaPicker
-        open={picking}
-        accept="image"
-        onClose={() => setPicking(false)}
+        open={picking !== null}
+        accept={picking === 'videoUrl' || picking === 'videoMobileUrl' ? 'video' : 'image'}
+        onClose={() => setPicking(null)}
         onSelect={(media) => {
-          set(['background', 'imageUrl'])(media.url);
-          setPicking(false);
+          if (picking) set(['background', picking])(media.url);
+          setPicking(null);
         }}
       />
     </div>
+  );
+}
+
+/** A file chosen from the library: its address, Choose and Clear. */
+function PickedFile({ label, hint, value, onChoose, onClear }: { label: string; hint?: string; value?: string; onChoose: () => void; onClear: () => void }) {
+  const button = 'shrink-0 border-2 border-hairline px-2.5 py-1.5 font-mono text-[10px] uppercase tracking-[0.1em] text-smoke hover:text-bone';
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex items-center gap-3">
+        <span className="min-w-0 flex-1 truncate font-mono text-[12px] text-smoke">{value ?? 'Not set'}</span>
+        <button type="button" onClick={onChoose} className={button}>
+          Choose
+        </button>
+        {value && (
+          <button type="button" onClick={onClear} className={button}>
+            Clear
+          </button>
+        )}
+      </div>
+    </Field>
   );
 }
 

@@ -10,6 +10,7 @@ import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
 import { BlockHead } from './parts';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 type Props = z.output<(typeof blockSchemas)['contactForm']>;
 
@@ -199,8 +200,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
             {p.body && <p className="he-lbody">{p.body}</p>}
             {p.imageUrl && (
               <div className="he-cform__media">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.imageUrl} alt={p.alt ?? ''} className="he-fill" loading="lazy" />
+                <SiteImg src={p.imageUrl} alt={p.alt ?? ''} className="he-fill" loading="lazy" />
               </div>
             )}
           </div>

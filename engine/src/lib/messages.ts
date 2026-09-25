@@ -88,6 +88,8 @@ export const MESSAGES = {
   'form.step': 'Step {n} of {total}',
 
   /* ── Bot protection (2.16) ─────────────────────────────────────────────── */
+  'media.pauseBackground': 'Pause background video',
+  'media.playBackground': 'Play background video',
   'captcha.label': 'Check that you are not a robot',
   'captcha.loading': 'Loading the check…',
   'captcha.failed': 'The check that you are not a robot could not load. Reload the page, or allow it in your browser, to send this form.',

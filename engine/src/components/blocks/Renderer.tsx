@@ -44,9 +44,10 @@ import {
   GalleryBlock,
   HorizontalAccordionBlock,
   MapBlock,
-  VideoBlock,
 } from './library/showcase';
 import { ProjectsSource } from './library/ProjectsSource';
+import { VideoSource } from './library/VideoSource';
+import { SectionVideo } from './library/SectionVideo';
 import { BreadcrumbsBlock, BusinessHoursBlock, ChartBlock, PriceListBlock, ReviewsBlock, SearchBlock, TextPathBlock } from './library/widgets';
 import { FlipBoxBlock, HotspotsBlock, ShareBlock, TocBlock } from './library/widgets-client';
 import type { Crumb } from '@/lib/seo/jsonld';
@@ -106,7 +107,8 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
   pricing: PricingBlock,
   team: TeamBlock,
   compare: CompareBlock,
-  video: VideoBlock,
+  // 2.17 — a server wrapper, so an ambient film's box has the file's own shape.
+  video: VideoSource,
   gallery: GalleryBlock,
   horizontalAccordion: HorizontalAccordionBlock,
   projects: ProjectsSource,
@@ -151,6 +153,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
   return (
     <div id={style.anchorId} className={cn(`he-b-${block.id}`, shellClass(style))} data-reveal-delay={revealDelay(style)}>
       {children}
+      {style.background?.videoUrl && <SectionVideo background={style.background} />}
       <ShapeDividers style={style} />
     </div>
   );
@@ -250,6 +253,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
           ))}
         </div>
       </div>
+      {style?.background?.videoUrl && <SectionVideo background={style.background} />}
       {style && <ShapeDividers style={style} />}
     </div>
   );

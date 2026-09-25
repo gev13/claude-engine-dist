@@ -7,6 +7,9 @@ import { nanoid } from 'nanoid';
 import sharp from 'sharp';
 import { env } from '@/lib/env';
 import { LOTTIE_MAX_BYTES, checkLottie } from '@/lib/lottie';
+import { RESPONSIVE_WIDTHS, isResizable, variantFilename } from '@/lib/responsive';
+import { probeVideo } from './probe';
+import { SVG_MAX_BYTES, cleanSvg } from './svg';
 
 /**
  * Everything that touches the media directory lives here, so the traversal and
@@ -31,9 +34,11 @@ const ALLOWED = {
   pdf: { mimes: ['application/pdf', 'application/x-pdf'], kind: 'document' },
   // Lottie animations (P3-F). JSON has no magic bytes, so these are checked by parsing instead.
   json: { mimes: ['application/json'], kind: 'animation' },
+  // 2.17 — text too, so parsed and rebuilt from an allowlist (./svg.ts), never sniffed.
+  svg: { mimes: ['image/svg+xml'], kind: 'image' },
 } as const satisfies Record<string, AllowedEntry>;
 
-const SUPPORTED = 'Allowed: webp, png, jpg, gif, mp4, webm, pdf and Lottie json.';
+const SUPPORTED = 'Allowed: webp, png, jpg, gif, svg, mp4, webm, pdf and Lottie json.';
 
 export type AllowedExtension = keyof typeof ALLOWED;
 
@@ -47,7 +52,11 @@ const SERVE_TYPE: Record<AllowedExtension, string> = {
   webm: 'video/webm',
   pdf: 'application/pdf',
   json: 'application/json',
+  svg: 'image/svg+xml',
 };
+
+/** Served but never uploaded: the AVIF copies generated beside a picture (2.17). */
+const SERVE_ONLY: Record<string, string> = { avif: 'image/avif' };
 
 export const ALLOWED_EXTENSIONS = Object.keys(ALLOWED) as AllowedExtension[];
 
@@ -71,6 +80,8 @@ export type StoredUpload = {
   byteSize: number;
   width: number | null;
   height: number | null;
+  /** A video's length, when its header could be read (2.17). */
+  durationMs?: number | null;
   url: string;
   checksum: string;
 };
@@ -111,7 +122,7 @@ export function resolveStoredPath(relative: string): string | null {
 /** Content type for a stored path, or null when the extension is not allowed. */
 export function contentTypeFor(relative: string): string | null {
   const ext = normaliseExtension(path.extname(relative).slice(1));
-  return ext in SERVE_TYPE ? SERVE_TYPE[ext as AllowedExtension] : null;
+  return ext in SERVE_TYPE ? SERVE_TYPE[ext as AllowedExtension] : (SERVE_ONLY[ext] ?? null);
 }
 
 export function kindForMime(mime: string): MediaKind {
@@ -151,7 +162,7 @@ function formatBytes(bytes: number): string {
  * Throws {@link MediaUploadError} with a message that is safe to show the
  * person who uploaded it.
  */
-export async function saveUpload(file: File, uploaderId: string): Promise<StoredUpload> {
+export async function saveUpload(file: File, uploaderId: string, options: { allowSvg?: boolean } = {}): Promise<StoredUpload> {
   // The uploader is recorded on the row by the caller; it is part of the
   // signature so future per-user quotas have somewhere to live.
   void uploaderId;
@@ -175,13 +186,17 @@ export async function saveUpload(file: File, uploaderId: string): Promise<Stored
   if (normaliseExtension(path.extname(originalName).slice(1)) === 'json') {
     return saveLottie(buffer, declaredMime(file), originalName);
   }
+  if (normaliseExtension(path.extname(originalName).slice(1)) === 'svg') {
+    if (!options.allowSvg) throw new MediaUploadError('Your role cannot upload SVG files. An administrator can allow it under Security.');
+    return saveSvg(buffer, declaredMime(file), originalName);
+  }
 
   // 1. What the bytes actually are.
   const sniffed = await fileTypeFromBuffer(buffer);
   if (!sniffed) throw new MediaUploadError(`That file type is not supported. ${SUPPORTED}`);
 
   const extension = normaliseExtension(sniffed.ext);
-  if (!(extension in ALLOWED) || extension === 'json') {
+  if (!(extension in ALLOWED) || extension === 'json' || extension === 'svg') {
     throw new MediaUploadError(`That file type is not supported. ${SUPPORTED}`);
   }
   const entry: AllowedEntry = ALLOWED[extension as AllowedExtension];
@@ -206,6 +221,12 @@ export async function saveUpload(file: File, uploaderId: string): Promise<Stored
 
   let width: number | null = null;
   let height: number | null = null;
+  let durationMs: number | null = null;
+  if (entry.kind === 'video') {
+    // The shape an ambient video reserves before it loads (2.17).
+    const info = probeVideo(buffer, extension);
+    if (info) ({ width, height, durationMs } = info);
+  }
   if (RASTER.has(extension)) {
     try {
       const meta = await sharp(buffer).metadata();
@@ -227,8 +248,37 @@ export async function saveUpload(file: File, uploaderId: string): Promise<Stored
     byteSize: buffer.byteLength,
     width,
     height,
+    durationMs,
     url: `/media/${relative}`,
     checksum,
+  };
+}
+
+/**
+ * An SVG upload: declared as one, parsed as XML, rebuilt from the allowlist
+ * in ./svg.ts, and stored as the cleaned text — what is kept is exactly what
+ * was checked, like a Lottie file.
+ */
+async function saveSvg(raw: Buffer, declared: string, originalName: string): Promise<StoredUpload> {
+  if (raw.byteLength > SVG_MAX_BYTES) throw new MediaUploadError(`An SVG can be at most ${formatBytes(SVG_MAX_BYTES)}.`);
+  if (!declared) throw new MediaUploadError('The upload did not declare a content type.');
+  if (!(ALLOWED.svg.mimes as readonly string[]).includes(declared)) {
+    throw new MediaUploadError(`The file is named .svg, but it was sent as ${declared}.`);
+  }
+  const cleaned = cleanSvg(raw.toString('utf8'));
+  if (!cleaned) throw new MediaUploadError('The file is not an SVG image.');
+  const buffer = Buffer.from(cleaned.svg);
+  const relative = await writeStored(buffer, 'svg');
+  return {
+    filename: relative,
+    originalName,
+    mimeType: SERVE_TYPE.svg,
+    extension: 'svg',
+    byteSize: buffer.byteLength,
+    width: cleaned.width,
+    height: cleaned.height,
+    url: `/media/${relative}`,
+    checksum: createHash('sha256').update(buffer).digest('hex'),
   };
 }
 
@@ -285,13 +335,22 @@ async function saveLottie(raw: Buffer, declared: string, originalName: string): 
   };
 }
 
-/** Remove a stored file. A missing file is not an error — the row is going anyway. */
+/** Remove a stored file, and any smaller copies made of it (2.17). A missing file is not an error — the row is going anyway. */
 export async function deleteStored(filename: string): Promise<void> {
   const absolute = resolveStoredPath(filename);
   if (!absolute) return;
-  try {
-    await unlink(absolute);
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  const gone = async (target: string | null) => {
+    if (!target) return;
+    try {
+      await unlink(target);
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+    }
+  };
+  await gone(absolute);
+  if (isResizable(`/media/${filename}`)) {
+    for (const width of RESPONSIVE_WIDTHS) {
+      for (const format of ['webp', 'avif'] as const) await gone(resolveStoredPath(variantFilename(filename, width, format)));
+    }
   }
 }

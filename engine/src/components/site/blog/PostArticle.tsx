@@ -21,6 +21,7 @@ import { getMessages } from '@/server/content/messages';
 import { listPosts, postUrl, type PostDetail } from '@/server/content/posts';
 import { getTheme } from '@/server/content/theme';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One post, as the public sees it — and as its preview shows it
@@ -118,8 +119,7 @@ export async function PostArticle({
   );
   const cover = post.coverUrl && (
     <div className="he-post__cover">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src={post.coverUrl} alt="" />
+      <SiteImg src={post.coverUrl} alt="" sizes="wide" priority />
     </div>
   );
   const postBlocks = blocks.length > 0 && <BlockRenderer blocks={blocks} trail={trail} locale={locale} />;
@@ -134,8 +134,7 @@ export async function PostArticle({
         {layout === 'fullscreen' && (
           // BL2 — the title over a full-width cover; it is main's first child, so an overlay header lies over it.
           <header className="he-post-hero he-bleed-top">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={post.coverUrl!} alt="" className="he-post-hero__img" />
+            <SiteImg src={post.coverUrl!} alt="" className="he-post-hero__img" priority />
             <div className="shell he-post-hero__text">
               {eyebrow}
               {title}

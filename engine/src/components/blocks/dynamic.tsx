@@ -18,6 +18,7 @@ import { listPosts } from '@/server/content/posts';
 import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
 
@@ -112,8 +113,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                   <Link href={postPath(permalinks, post)} className="he-news__card">
                     <div className={cn('he-news__media', !post.coverUrl && 'he-media-empty')}>
                       {post.coverUrl && (
-                        /* eslint-disable-next-line @next/next/no-img-element */
-                        <img src={post.coverUrl} alt="" className="he-fill" loading="lazy" />
+                        <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" sizes="third" />
                       )}
                       <span className="he-news__chip">{chipFor(post, t)}</span>
                     </div>
@@ -243,8 +243,7 @@ function FeaturedPosts({ p, posts, ctx: { permalinks, t } }: { p: P<'postList'>;
     );
   const cover = (post: PostRow) =>
     post.coverUrl ? (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
+      <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="third" />
     ) : (
       <span className="he-fill he-media-empty" aria-hidden="true" />
     );
@@ -325,8 +324,7 @@ export function PostCollection({
           {!minimal && (
             <div className="he-plst__media">
               {post.coverUrl ? (
-                /* eslint-disable-next-line @next/next/no-img-element */
-                <img src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
+                <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="third" />
               ) : (
                 <span className="he-fill he-media-empty" aria-hidden="true" />
               )}

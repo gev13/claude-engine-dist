@@ -814,7 +814,7 @@ type PlanItem = {
   button?: { label: string; href: string };
 };
 type MemberItem = { name: string; role?: string; bio?: string; imageUrl?: string; links?: SocialItem[] };
-type GalleryImage = { url: string; alt?: string; caption?: string; href?: string };
+type GalleryImage = { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string };
 type AccordionPanel = { title: string; label?: string; body?: string; imageUrl?: string; alt?: string; link?: { label: string; href: string } };
 type ProjectItem = {
   title: string;
@@ -2697,6 +2697,7 @@ function TypeFields({
 
     case 'video': {
       const parsed = parseVideoUrl(str(props, 'source'));
+      const ambient = str(props, 'display') === 'ambient';
       const where =
         parsed === null
           ? 'A YouTube or Vimeo link, or a video uploaded to the media library'
@@ -2710,14 +2711,63 @@ function TypeFields({
             <Input value={str(props, 'source')} placeholder="https://www.youtube.com/watch?v=…" spellCheck={false} onChange={(e) => set({ ...props, source: e.target.value.trim() })} />
           </Field>
           <Text label="Video title" k="videoTitle" props={props} set={set} hint="names the player and its play button for screen readers" />
-          <MediaInput label="Preview picture (optional)" value={str(props, 'posterUrl') || undefined} onChange={(posterUrl) => set({ ...props, posterUrl: posterUrl || undefined })} />
+          <MediaInput label={ambient ? 'Poster' : 'Preview picture (optional)'} hint={ambient ? 'shown before it plays, and to visitors who asked for less motion' : undefined} value={str(props, 'posterUrl') || undefined} onChange={(posterUrl) => set({ ...props, posterUrl: posterUrl || undefined })} />
           <div className="grid gap-3 sm:grid-cols-2">
-            <PropSelect label="Plays" k="display" fallback="inline" options={[['inline', 'In place'], ['button', 'Over the page']]} props={props} set={set} />
-            <PropSelect label="Shape" k="ratio" fallback="16/9" options={[['16/9', 'Wide 16:9'], ['4/3', '4:3'], ['1/1', 'Square'], ['21/9', 'Cinema 21:9']]} props={props} set={set} />
-            <PropSelect label="Play button" k="buttonStyle" fallback="filled" options={[['filled', 'Filled'], ['outlined', 'Outlined'], ['blurred', 'Frosted glass']]} props={props} set={set} />
-            <PropSelect label="Button size" k="buttonSize" fallback="medium" options={SIZE_OPTIONS} props={props} set={set} />
+            <PropSelect
+              label="Plays"
+              k="display"
+              fallback="inline"
+              options={[['inline', 'In place'], ['button', 'Over the page'], ['ambient', 'As a moving picture — muted, looped, while on screen']]}
+              props={props}
+              set={set}
+            />
+            <PropSelect
+              label="Shape"
+              k="ratio"
+              fallback="16/9"
+              options={[
+                ...(ambient ? ([['auto', 'The film’s own shape']] as [string, string][]) : []),
+                ['16/9', 'Wide 16:9'],
+                ['4/3', '4:3'],
+                ['1/1', 'Square'],
+                ['21/9', 'Cinema 21:9'],
+                ['9/16', 'Upright 9:16'],
+              ]}
+              props={props}
+              set={set}
+            />
+            {!ambient && (
+              <>
+                <PropSelect label="Play button" k="buttonStyle" fallback="filled" options={[['filled', 'Filled'], ['outlined', 'Outlined'], ['blurred', 'Frosted glass']]} props={props} set={set} />
+                <PropSelect label="Button size" k="buttonSize" fallback="medium" options={SIZE_OPTIONS} props={props} set={set} />
+              </>
+            )}
+            {ambient && (
+              <>
+                <PropSelect label="Fit" k="fit" fallback="cover" options={[['cover', 'Fill the shape, cropping the edges'], ['contain', 'Whole film, bars if needed']]} props={props} set={set} />
+                <PropSelect label="Width" k="maxWidth" fallback="full" options={[['full', 'The full column'], ['wide', 'Wide'], ['medium', 'Medium'], ['narrow', 'Narrow']]} props={props} set={set} />
+              </>
+            )}
           </div>
-          <Text label="Text beside the play button" k="buttonLabel" props={props} set={set} placeholder="Watch the film" />
+          {ambient ? (
+            <>
+              {parsed && parsed.kind !== 'file' && <p className="m-0 text-[13px] text-flare-soft">A moving picture needs a file from the media library — a YouTube or Vimeo link plays as an ordinary player.</p>}
+              <MediaInput
+                label="The same film in another format (optional)"
+                hint="an mp4 beside a webm, or the other way round — browsers take the one they play best"
+                accept="video"
+                value={arr<string>(props, 'sources')[0]}
+                onChange={(url) => set({ ...props, sources: url ? [url] : [] })}
+              />
+              <PropCheck label="Rounded corners" k="rounded" props={props} set={set} />
+              <label className="flex items-center gap-2 text-[14px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.controls !== false} onChange={(e) => set({ ...props, controls: e.target.checked })} />
+                A pause button over the film
+              </label>
+            </>
+          ) : (
+            <Text label="Text beside the play button" k="buttonLabel" props={props} set={set} placeholder="Watch the film" />
+          )}
           <Text label="Caption" k="caption" props={props} set={set} />
           <Repeater
             label="More videos — a playlist (up to 12)"
@@ -2796,6 +2846,13 @@ function TypeFields({
                 <Field label="Link (optional)" hint="a linked picture opens the link instead of the viewer">
                   <Input value={item.href ?? ''} placeholder="/path or https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() || undefined })} />
                 </Field>
+                <MediaInput
+                  label="Video instead (optional)"
+                  hint="plays muted and looped in the tile while it is on screen; the picture above is its poster"
+                  accept="video"
+                  value={item.videoUrl}
+                  onChange={(videoUrl) => update({ videoUrl })}
+                />
               </>
             )}
           />

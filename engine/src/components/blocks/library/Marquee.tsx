@@ -8,6 +8,7 @@ import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 import { Stars } from './Stars';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 type P = z.output<(typeof blockSchemas)['marquee']>;
 type Item = P['items'][number];
@@ -31,8 +32,7 @@ function ItemView({ item, kind, ratio }: { item: Item; kind: P['kind']; ratio: P
       <figure className="he-mq__photo">
         <span className="he-mq__pframe" style={{ aspectRatio: ratio.replace('/', ' / ') }}>
           {item.imageUrl ? (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={item.imageUrl} alt={item.label ? '' : 'Photo'} className="he-fill" loading="lazy" />
+            <SiteImg src={item.imageUrl} alt={item.label ? '' : 'Photo'} className="he-fill" loading="lazy" sizes="quarter" />
           ) : (
             <span className="he-fill he-media-empty" aria-hidden="true" />
           )}
@@ -42,8 +42,7 @@ function ItemView({ item, kind, ratio }: { item: Item; kind: P['kind']; ratio: P
     );
   } else if (kind === 'logos') {
     inner = item.imageUrl ? (
-      /* eslint-disable-next-line @next/next/no-img-element */
-      <img src={item.imageUrl} alt={item.label ?? ''} className="he-mq__logo" loading="lazy" />
+      <SiteImg src={item.imageUrl} alt={item.label ?? ''} className="he-mq__logo" loading="lazy" sizes="thumb" />
     ) : (
       <span className="he-mq__wordmark">{item.label}</span>
     );
@@ -54,8 +53,7 @@ function ItemView({ item, kind, ratio }: { item: Item; kind: P['kind']; ratio: P
         {item.quote && <blockquote>&ldquo;{item.quote}&rdquo;</blockquote>}
         <figcaption>
           {item.imageUrl && (
-            /* eslint-disable-next-line @next/next/no-img-element */
-            <img src={item.imageUrl} alt="" className="he-mq__avatar" loading="lazy" />
+            <SiteImg src={item.imageUrl} alt="" className="he-mq__avatar" loading="lazy" sizes="thumb" />
           )}
           <span>
             {item.name && <strong>{item.name}</strong>}
@@ -70,8 +68,7 @@ function ItemView({ item, kind, ratio }: { item: Item; kind: P['kind']; ratio: P
     inner = (
       <span className="he-mq__chip">
         {item.imageUrl && (
-          /* eslint-disable-next-line @next/next/no-img-element */
-          <img src={item.imageUrl} alt="" loading="lazy" />
+          <SiteImg src={item.imageUrl} alt="" loading="lazy" />
         )}
         {item.label}
       </span>

@@ -1,6 +1,14 @@
 {
-  "latest": "2.16.0",
+  "latest": "2.17.0",
   "releases": [
+    {
+      "version": "2.17.0",
+      "date": "2026-09-25",
+      "summary": "Video that plays on iPhones (byte ranges), moving pictures that loop silently while on screen, a film behind any section, SVG uploads cleaned of anything that could run, and responsive picture sizes with AVIF \u2014 each off until you switch it on.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.16.0",
       "date": "2026-09-25",

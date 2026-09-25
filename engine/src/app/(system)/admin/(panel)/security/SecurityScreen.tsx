@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { BotProtectionPanel } from './BotProtectionPanel';
+import { SvgUploadsPanel } from './SvgUploadsPanel';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Badge, EmptyState, Field, Input, Panel, Spinner } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
@@ -282,6 +283,7 @@ function SecurityScreenInner({ canWrite, canSettings }: { canWrite: boolean; can
           </Panel>
           {/* Keys and third parties are administrator settings (2.16). */}
           {canSettings && <BotProtectionPanel />}
+          {canSettings && <SvgUploadsPanel />}
         </aside>
       </div>
     </>

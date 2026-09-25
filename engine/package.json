@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "2.16.0",
+  "version": "2.17.0",
   "private": true,
   "engines": {
     "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
@@ -43,9 +43,12 @@
     "argon2": "^0.45.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "dom-serializer": "^3.1.1",
+    "domhandler": "^6.0.1",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "file-type": "^22.0.2",
+    "htmlparser2": "^12.0.0",
     "jose": "^6.2.12",
     "lottie-web": "5.13.0",
     "meilisearch": "^0.60.0",

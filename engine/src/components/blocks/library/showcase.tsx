@@ -20,8 +20,9 @@ import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 import { Carousel } from './Carousel';
-import { MediaFill } from './media';
+import { BgVideo, MediaFill } from './media';
 import { SmartLink } from './SmartLink';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Package 2 media and showcase (EL9 compare, EL10 video, EL11 gallery,
@@ -40,7 +41,8 @@ const toneClass = (tone?: keyof typeof TONES) => TONES[tone ?? 'base'];
 
 /** '16/9' → the CSS aspect-ratio and its numeric value. */
 function ratioStyle(ratio: string): CSSProperties {
-  const [w = 16, h = 9] = ratio.split('/').map(Number);
+  // `auto` is resolved from the file by the ambient player; a player falls back to 16:9.
+  const [w = 16, h = 9] = /^\d+\/\d+$/.test(ratio) ? ratio.split('/').map(Number) : [];
   return { aspectRatio: `${w} / ${h}`, '--ar': (w / h).toFixed(4) } as CSSProperties;
 }
 
@@ -107,11 +109,9 @@ export function CompareBlock(p: P<'compare'>) {
               dragging.current = false;
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={p.afterUrl} alt={p.afterAlt ?? ''} className="he-fill he-cmp__img" draggable={false} loading="lazy" decoding="async" />
+            <SiteImg src={p.afterUrl} alt={p.afterAlt ?? ''} className="he-fill he-cmp__img" draggable={false} loading="lazy" decoding="async" />
             <div className="he-cmp__before">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.beforeUrl} alt={p.beforeAlt ?? ''} className="he-fill he-cmp__img" draggable={false} loading="lazy" decoding="async" />
+              <SiteImg src={p.beforeUrl} alt={p.beforeAlt ?? ''} className="he-fill he-cmp__img" draggable={false} loading="lazy" decoding="async" />
             </div>
             {p.beforeLabel && (
               <span className="he-cmp__label is-before" aria-hidden="true">
@@ -214,8 +214,7 @@ export function VideoBlock(p: P<'video'>) {
           <button type="button" className={cn('he-vlist__item', i === current && 'is-active')} aria-current={i === current ? 'true' : undefined} onClick={() => pick(i)}>
             <span className="he-vlist__thumb">
               {it.posterUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={it.posterUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
+                <SiteImg src={it.posterUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
               ) : (
                 <span className="he-fill he-video__blank" aria-hidden="true" />
               )}
@@ -265,8 +264,7 @@ export function VideoBlock(p: P<'video'>) {
                 ) : (
                   <>
                     {item.posterUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.posterUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
+                      <SiteImg src={item.posterUrl} alt="" className="he-fill" loading="lazy" decoding="async" />
                     ) : (
                       <span className="he-fill he-video__blank" aria-hidden="true" />
                     )}
@@ -316,10 +314,15 @@ export function GalleryBlock(p: P<'gallery'>) {
             style={{ '--cols': p.columns } as CSSProperties}
           >
             {p.images.map((image, i) => {
+              // Inside a link or the lightbox button a second control would be a button in a button.
+              const plain = !image.href && !p.lightbox;
               const media = (
                 <>
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={image.url} alt={image.alt ?? ''} className="he-fill" loading="lazy" decoding="async" />
+                  {image.videoUrl ? (
+                    <BgVideo src={image.videoUrl} poster={image.url} className="he-fill" showControl={plain} />
+                  ) : (
+                    <SiteImg src={image.url} alt={image.alt ?? ''} className="he-fill" loading="lazy" decoding="async" sizes="third" />
+                  )}
                   {p.captions === 'overlay' && image.caption && <span className="he-gal__over">{image.caption}</span>}
                 </>
               );
@@ -372,8 +375,12 @@ export function GalleryBlock(p: P<'gallery'>) {
         >
           {current && open !== null && (
             <figure className="he-lightbox__fig">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={current.url} alt={current.alt ?? ''} className="he-lightbox__img" />
+              {current.videoUrl ? (
+                // Opened on purpose, so it has the browser's own controls and sound can be turned on.
+                <video src={current.videoUrl} poster={current.url} className="he-lightbox__img" controls autoPlay muted loop playsInline aria-label={current.alt || current.caption || undefined} />
+              ) : (
+                <SiteImg src={current.url} alt={current.alt ?? ''} className="he-lightbox__img" />
+              )}
               <figcaption className="he-lightbox__cap" aria-live="polite">
                 <span className="he-lightbox__count">
                   {open + 1} / {count}
@@ -601,8 +608,7 @@ function ProjectsGrid(p: ProjectsProps) {
                 <li key={`${item.title}-${i}`} className="he-plist__row" onPointerEnter={() => setHovered(i)}>
                   <MaybeLink href={item.href} className="he-plist__link">
                     {item.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={item.imageUrl} alt="" className="he-plist__thumb" loading="lazy" decoding="async" />
+                      <SiteImg src={item.imageUrl} alt="" className="he-plist__thumb" loading="lazy" decoding="async" sizes="thumb" />
                     )}
                     <span className="he-plist__title">{item.title}</span>
                     {meta(item) && <span className="he-plist__meta">{meta(item)}</span>}
@@ -613,8 +619,7 @@ function ProjectsGrid(p: ProjectsProps) {
             <div ref={cursorRef} className={cn('he-plist__cursor', hovered !== null && 'is-on')} aria-hidden="true">
               {shown.map(({ item, i }) =>
                 item.imageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={`${item.title}-${i}`} src={item.imageUrl} alt="" className={cn('he-fill', i === hovered && 'is-active')} loading="lazy" decoding="async" />
+                  <SiteImg key={`${item.title}-${i}`} src={item.imageUrl} alt="" className={cn('he-fill', i === hovered && 'is-active')} loading="lazy" decoding="async" />
                 ) : null,
               )}
             </div>
@@ -646,10 +651,9 @@ function ProjectsGrid(p: ProjectsProps) {
                     )}
                     <MaybeLink href={item.href} className="he-proj__link">
                       <div className="he-proj__media">
-                        <MediaFill imageUrl={item.imageUrl} alt={item.alt} className="he-fill" />
+                        <MediaFill imageUrl={item.imageUrl} alt={item.alt} className="he-fill" sizes="third" />
                         {p.hover === 'swap' && item.hoverImageUrl && (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.hoverImageUrl} alt="" className="he-fill he-proj__alt" loading="lazy" decoding="async" />
+                          <SiteImg src={item.hoverImageUrl} alt="" className="he-fill he-proj__alt" loading="lazy" decoding="async" sizes="third" />
                         )}
                         {onPicture && <div className="he-proj__over">{text}</div>}
                       </div>

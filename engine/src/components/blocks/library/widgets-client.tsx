@@ -15,6 +15,7 @@ import { BlockHead } from '../parts';
 import { arrowKeys } from './keys';
 import { MediaFill } from './media';
 import { SmartLink } from './SmartLink';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Package 3 widgets, client half
@@ -135,8 +136,7 @@ export function HotspotsBlock(p: P<'hotspots'>) {
             <div className="he-hs__stage" onMouseLeave={hover ? () => setOpen(null) : undefined}>
               {p.imageUrl ? (
                 // The pins are placed in percentages of the picture, so it keeps its own shape.
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.imageUrl} alt={p.alt ?? ''} className="he-hs__img" loading="lazy" decoding="async" />
+                <SiteImg src={p.imageUrl} alt={p.alt ?? ''} className="he-hs__img" loading="lazy" decoding="async" />
               ) : (
                 <div className="he-hs__img is-empty" />
               )}
@@ -213,8 +213,7 @@ export function FlipBoxBlock(p: P<'flipBox'>) {
                     {c.imageUrl && <MediaFill imageUrl={c.imageUrl} alt="" className="he-fill" />}
                     <div className="he-flip__content">
                       {c.iconUrl && (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img src={c.iconUrl} alt="" className="he-flip__icon" />
+                        <SiteImg src={c.iconUrl} alt="" className="he-flip__icon" />
                       )}
                       <h3 className="he-flip__title">{c.title}</h3>
                       {c.text && <p className="he-flip__text">{c.text}</p>}

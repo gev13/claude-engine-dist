@@ -64,6 +64,13 @@
       "when": 1790330965674,
       "tag": "0008_glorious_speedball",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790333802018,
+      "tag": "0009_overconfident_the_hunter",
+      "breakpoints": true
     }
   ]
 }

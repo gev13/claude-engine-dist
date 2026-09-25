@@ -23,6 +23,7 @@ import { safeCss } from '@/lib/customCode';
 import { PRESETS, activePresets, activeSnippets } from '@/lib/integrations';
 import { getIntegrations, getPublicCaptcha } from '@/server/integrations/settings';
 import { CaptchaProvider } from '@/components/site/Captcha';
+import { responsiveImages } from '@/lib/responsive';
 import { TagsNavigation } from '@/components/site/TagsNavigation';
 import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
@@ -142,6 +143,7 @@ export default async function SiteLayout({
       lang={locale}
       dir={localeDir(locale)}
       data-slash={permalinks.trailingSlash === 'always' ? 'always' : undefined}
+      data-img={responsiveImages() ? 'responsive' : undefined}
       suppressHydrationWarning
     >
       <head>

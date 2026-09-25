@@ -267,7 +267,7 @@ export function PriceListBlock(p: P<'priceList'>) {
           <li key={item.name + i} className="he-prl__item">
             {item.imageUrl && (
               <div className="he-prl__photo">
-                <MediaFill imageUrl={item.imageUrl} alt="" className="he-fill" />
+                <MediaFill imageUrl={item.imageUrl} alt="" className="he-fill" sizes="third" />
               </div>
             )}
             <div className="he-prl__body">
@@ -368,7 +368,7 @@ export function ReviewsBlock(p: P<'reviews'>) {
             <figcaption className="he-rev__who">
               {r.avatarUrl ? (
                 <span className="he-rev__avatar">
-                  <MediaFill imageUrl={r.avatarUrl} alt="" className="he-fill" />
+                  <MediaFill imageUrl={r.avatarUrl} alt="" className="he-fill" sizes="thumb" />
                 </span>
               ) : (
                 <span className="he-rev__avatar is-initial" aria-hidden="true">

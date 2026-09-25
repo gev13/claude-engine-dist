@@ -81,6 +81,11 @@
   }
   .he-media-pause:hover { background: rgb(0 0 0 / 0.75); }
 
+  /* 2.17 — a section's video background: under the overlay (z-index -1) and
+     the content, inside the wrapper's own stacking context. */
+  .he-bgv { position: absolute; inset: 0; z-index: -2; overflow: hidden; pointer-events: none; }
+  .he-bgv__media { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+
   .he-pillbadge {
     display: inline-flex;
     align-items: center;

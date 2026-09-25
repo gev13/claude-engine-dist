@@ -131,6 +131,9 @@ export const COLUMN_PRESETS: { label: string; spans: ColumnSpan[] }[] = [
   { label: '1/6 × 6', spans: [2, 2, 2, 2, 2, 2] },
 ];
 
+/** A section's video background: a file in the media library, nothing else (2.17). */
+export const SECTION_VIDEO = /^\/media\/[A-Za-z0-9._\-/]+\.(mp4|webm)$/;
+
 export const blockStyleSchema = z.object({
   /** Admin-only label, so a long page is navigable in the builder. */
   label: z.string().max(80).optional(),
@@ -163,6 +166,18 @@ export const blockStyleSchema = z.object({
       attachment: z.enum(['scroll', 'fixed']).optional(),
       /** Laid over the image so text stays readable. */
       overlay: color.optional(),
+      /**
+       * 2.17 — a film behind the section: muted, looped, playing only while
+       * on screen and never by itself for a visitor who wants less motion.
+       * Uploaded files only; `videoPoster` shows until it plays, and instead
+       * of it where it does not.
+       */
+      videoUrl: z.string().regex(SECTION_VIDEO, 'An mp4 or webm from the media library').optional(),
+      /** A lighter film for phones. */
+      videoMobileUrl: z.string().regex(SECTION_VIDEO, 'An mp4 or webm from the media library').optional(),
+      videoPoster: z.string().max(500).optional(),
+      /** `poster` shows only the poster on phones — and every visitor with data saver on gets it anyway. */
+      videoMobile: z.enum(['video', 'poster']).optional(),
       /** P3-C4 — a gradient, used when there is no image; it can drift slowly. Drawn once both ends are set. */
       gradient: z
         .object({

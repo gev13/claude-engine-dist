@@ -12,6 +12,7 @@ import { cn } from '@/lib/utils';
 import { BlockHead, BlockTitle } from '../parts';
 import { MediaFill } from './media';
 import { Stars } from './Stars';
+import { SiteImg } from '@/components/ui/SiteImg';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Carousel
@@ -132,8 +133,7 @@ function Indicator({
             onClick={() => onGo(i)}
           >
             {s.imageUrl ? (
-              /* eslint-disable-next-line @next/next/no-img-element */
-              <img src={s.imageUrl} alt="" loading="lazy" />
+              <SiteImg src={s.imageUrl} alt="" loading="lazy" />
             ) : (
               <span className="he-ind__thumbnum">{pad(i + 1)}</span>
             )}
@@ -512,7 +512,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
           )}
         </div>
         <div className="he-hcard__media">
-          <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-hcard__img" />
+          <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-hcard__img" sizes="third" />
         </div>
       </div>
     );
@@ -521,7 +521,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
   const inner = (
     <>
       <div className="he-card__media">
-        <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-card__img" showControl={false} />
+        <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-card__img" showControl={false} sizes="third" />
         {s.badge && <span className="he-card__badge">{s.badge}</span>}
       </div>
       <div className="he-card__body">
@@ -852,8 +852,7 @@ function QuoteSlider(p: P) {
               {(s.title || s.caption) && (
                 <figcaption className="he-qslide__cap">
                   {s.imageUrl && (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img src={s.imageUrl} alt="" className="he-qslide__avatar" loading="lazy" />
+                    <SiteImg src={s.imageUrl} alt="" className="he-qslide__avatar" loading="lazy" />
                   )}
                   <span>
                     {s.title && <span className="he-qslide__name">{s.title}</span>}

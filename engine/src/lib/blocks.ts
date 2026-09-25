@@ -336,11 +336,23 @@ export const blockSchemas = {
     /** Names the player and its play button for screen readers. */
     videoTitle: z.string().trim().min(1).max(120),
     posterUrl: mediaUrl.optional(),
-    display: z.enum(['inline', 'button']).default('inline'),
+    /**
+     * `ambient` (2.17) — a moving picture: an uploaded film that plays muted
+     * and looped while it is on screen, with no player chrome.
+     */
+    display: z.enum(['inline', 'button', 'ambient']).default('inline'),
     buttonStyle: z.enum(['filled', 'outlined', 'blurred']).default('filled'),
     buttonSize: sizeSml.default('medium'),
     buttonLabel: text(40),
-    ratio: z.enum(['16/9', '4/3', '1/1', '21/9']).default('16/9'),
+    /** `auto` (ambient only) takes the shape of the file itself, read at upload. */
+    ratio: z.enum(['16/9', '4/3', '1/1', '21/9', '9/16', 'auto']).default('16/9'),
+    /** Ambient: the same film in other formats — a WebM beside the MP4. WebM is tried first. */
+    sources: z.array(mediaUrl).max(3).default([]),
+    fit: z.enum(['cover', 'contain']).default('cover'),
+    rounded: z.boolean().default(false),
+    maxWidth: z.enum(['full', 'wide', 'medium', 'narrow']).default('full'),
+    /** Ambient: a pause button, for anyone who wants it to stop (WCAG 2.2.2). */
+    controls: z.boolean().default(true),
     caption: text(200),
     /** P3-B8 — more videos after the first, picked from a list beside or below the player. */
     playlist: z
@@ -361,7 +373,9 @@ export const blockSchemas = {
     captions: z.enum(['none', 'below', 'overlay']).default('none'),
     lightbox: z.boolean().default(true),
     images: z
-      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional() }))
+      /* 2.17 — `videoUrl` makes the tile a moving picture (an uploaded film,
+         muted and looped while on screen); `url` is its poster. */
+      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional() }))
       .min(1)
       .max(40),
     link: libraryLink.optional(),
