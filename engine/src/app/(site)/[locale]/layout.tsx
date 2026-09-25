@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { notFound, redirect } from 'next/navigation';
+import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, localeDir, type Locale } from '@/lib/locales';
 import { themeToCss } from '@/lib/theme-css';
@@ -69,7 +70,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     description: settings.description,
     applicationName: settings.name,
     authors: [{ name: settings.name, url: SITE_URL }],
-    creator: settings.name,
+    ...PLATFORM_META,
     publisher: settings.name,
     formatDetection: { telephone: false, address: false, email: false },
     icons: favicon

@@ -245,6 +245,11 @@ export function blockStyleToCss(
   if (typeof style.motion === 'number' && Number.isFinite(style.motion) && style.motion >= 0) {
     own.push(['--he-motion', String(style.motion)]);
   }
+  // 3.0 — the glitch's colours, inherited by the heading and its copies.
+  for (const [key, property] of [['colorA', '--he-glitch-a'], ['colorB', '--he-glitch-b'], ['background', '--he-glitch-bg']] as const) {
+    const value = safe(style.glitch?.[key]);
+    if (value && isColor(value)) own.push([property, value]);
+  }
 
   /* 2.21 — a panel first, so anything set by hand below (margins, a colour,
      corners) still wins inside the same rule. The inset shrinks with the

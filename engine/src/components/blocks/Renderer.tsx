@@ -59,6 +59,7 @@ import type { BlockStyle } from '@/lib/blockStyle';
 import { ShapeDividers } from './library/effects';
 import { CategoryIndexBlock } from './library/CategoryIndex';
 import { TiltObserver } from './library/TiltObserver';
+import { GlitchObserver } from './library/GlitchObserver';
 import { FormBlock } from './library/FormBlock';
 import { LottieBlock } from './library/LottieBlock';
 
@@ -153,7 +154,12 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
   if (!style) return <>{children}</>;
 
   return (
-    <div id={style.anchorId} className={cn(`he-b-${block.id}`, shellClass(style))} data-reveal-delay={revealDelay(style)}>
+    <div
+      id={style.anchorId}
+      className={cn(`he-b-${block.id}`, shellClass(style))}
+      data-reveal-delay={revealDelay(style)}
+      data-glitch={glitchScope(style)}
+    >
       {children}
       {style.background?.videoUrl && <SectionVideo background={style.background} />}
       <ShapeDividers style={style} />
@@ -170,6 +176,9 @@ function shellClass(style: BlockStyle) {
     style.width && WIDTH_CLASS[style.width],
     revealClass(style),
     style.hover && `he-hover he-hover--${style.hover}`,
+    // 3.0 — glitch text; GlitchObserver finds the headings.
+    style.glitch && `he-glitch he-glitch--${style.glitch.effect}`,
+    style.glitch?.trigger === 'hover' && 'he-glitch--hover',
     (style.shapeTop || style.shapeBottom) && 'he-has-shape',
     style.sticky && 'he-sticky',
     style.snap && 'he-snap',
@@ -179,6 +188,8 @@ function shellClass(style: BlockStyle) {
 }
 
 const revealDelay = (style: BlockStyle) => (style.reveal && style.revealDelay ? style.revealDelay : undefined);
+/** Every heading, or (unset) only the first — read by GlitchObserver. */
+const glitchScope = (style: BlockStyle) => (style.glitch?.scope === 'headings' ? 'all' : undefined);
 
 /** Whether any block on the page, or in any of its rows, has a style that matches. */
 function anyStyle(blocks: ParsedBlock[], test: (style: BlockStyle) => unknown): boolean {
@@ -247,6 +258,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       id={style?.anchorId}
       className={cn('he-row', `he-b-${block.id}`, style && shellClass(style))}
       data-reveal-delay={style ? revealDelay(style) : undefined}
+      data-glitch={style ? glitchScope(style) : undefined}
     >
       <div className="shell">
         <div className={`he-r-${block.id}`}>
@@ -380,6 +392,7 @@ export function BlockRenderer({
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
       {anyStyle(parsed, (s) => s.reveal) && <RevealObserver />}
       {anyStyle(parsed, (s) => s.hover === 'tilt') && <TiltObserver />}
+      {anyStyle(parsed, (s) => s.glitch) && <GlitchObserver />}
     </>
   );
 }

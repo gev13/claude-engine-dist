@@ -3,9 +3,40 @@
 Every release of the engine, newest first. A site reads the machine-readable
 version of this from `releases.json`; this file is for people.
 
-Versions follow semver: the patch digit for fixes, the minor for new
-functionality that breaks nothing, the major for anything a site has to be
-told about before taking it.
+Versions follow semver, read this way since 3.0: the patch digit (x.x.1)
+for a fix or a very small change, the minor (x.1.x) for a medium or large
+change, the major (1.x.x) for a large release of new features and
+improvements.
+
+---
+
+## 3.0.0 — 2026-09-25
+
+**A new major version.** 3.0 gathers everything since 2.12 — permalinks and
+redirects (2.13), projects (2.14), saved blocks and duplicates (2.15), tags,
+consent, CAPTCHA and form routing (2.16), video and SVG (2.17), blog and SEO
+parity (2.18), headers, menus and motion (2.19), checked and merging imports
+with a WordPress importer (2.20), cut corners, panels and the notch header
+(2.21) and the 2.22 sections — and adds:
+
+**Glitch text.** A block's Design tab → Effects → *Glitch on the heading*:
+*noise*, *psycho* or *split*, on the first heading or every heading, all the
+time or only on hover, in colours of your choosing. It runs only while on
+screen, is read once by screen readers, and stays still for anybody who
+asked for less motion. Off until chosen.
+
+**Platform credits.** Every page names the platform and its creator in two
+meta tags (`generator`, `creator`) that are not ranking signals and change
+nothing a search engine reads about the site; Settings shows the same, with
+the version, read-only.
+
+**One name.** The last traces of the project the engine grew out of are
+gone from the code and the documentation. Admin sign-ins are signed under
+the engine's own name now, so everybody signed in is asked to sign in once
+more after updating.
+
+No database changes in this release. A site updating from 2.12 or earlier
+runs the migrations of 2.13–2.19 on the way, and needs Node 22.12 or later.
 
 ---
 

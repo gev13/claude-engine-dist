@@ -83,6 +83,20 @@ const HOVER_OPTIONS = [
   { value: 'shadow', label: 'Shadow' },
   { value: 'tilt', label: 'Tilt towards the pointer' },
 ] as const;
+/* 3.0 — glitch text, after three CSS pens. */
+const GLITCH_OPTIONS = [
+  { value: 'noise', label: 'Noise — slices slipping in red and blue' },
+  { value: 'psycho', label: 'Psycho — stretching, with torn ghost copies' },
+  { value: 'split', label: 'Split — two-tone edges flickering' },
+] as const;
+const GLITCH_SCOPES = [
+  { value: 'title', label: 'The first heading' },
+  { value: 'headings', label: 'Every heading' },
+] as const;
+const GLITCH_TRIGGERS = [
+  { value: 'always', label: 'All the time' },
+  { value: 'hover', label: 'While the pointer is over it' },
+] as const;
 const SHAPE_OPTIONS = [
   { value: 'wave', label: 'Wave' },
   { value: 'curve', label: 'Curve' },
@@ -556,6 +570,25 @@ export function BlockDesignPanel({
             <input type="checkbox" checked={current.snap === true} onChange={(e) => set(['snap'])(e.target.checked || undefined)} className="h-4 w-4 accent-flare" />
             Let the page snap to this block
           </label>
+        </div>
+
+        <div className="mt-4 grid items-end gap-3 border-t-2 border-hairline pt-4 sm:grid-cols-3">
+          <ChoiceField
+            label="Glitch on the heading"
+            hint="speed follows Motion above"
+            value={current.glitch?.effect}
+            options={GLITCH_OPTIONS}
+            onChange={(effect) => set(['glitch'])(effect ? { ...current.glitch, effect } : undefined)}
+          />
+          {current.glitch && (
+            <>
+              <ChoiceField label="Which headings" value={current.glitch.scope} inherited="title" options={GLITCH_SCOPES} onChange={set(['glitch', 'scope'])} />
+              <ChoiceField label="When" value={current.glitch.trigger} inherited="always" options={GLITCH_TRIGGERS} onChange={set(['glitch', 'trigger'])} />
+              <ColorField label="First colour" hint="the effect’s own when empty" value={current.glitch.colorA} onChange={set(['glitch', 'colorA'])} />
+              <ColorField label="Second colour" hint="the effect’s own when empty" value={current.glitch.colorB} onChange={set(['glitch', 'colorB'])} />
+              <ColorField label="Behind the copies" hint="found from the section when empty" value={current.glitch.background} onChange={set(['glitch', 'background'])} />
+            </>
+          )}
         </div>
 
         {(['shapeTop', 'shapeBottom'] as const).map((edge) => {

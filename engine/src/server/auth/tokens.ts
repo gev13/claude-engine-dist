@@ -2,14 +2,13 @@ import 'server-only';
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { SignJWT, jwtVerify } from 'jose';
 import { and, eq, isNull, lt, or } from 'drizzle-orm';
+import { ACCESS_AUDIENCE as AUDIENCE, ACCESS_ISSUER as ISSUER } from '@/lib/accessToken';
 import { env } from '@/lib/env';
 import type { Role } from '@/lib/roles';
 import { db } from '@/server/db';
 import { refreshTokens } from '@/server/db/schema';
 
 const accessKey = new TextEncoder().encode(env.AUTH_ACCESS_SECRET);
-const ISSUER = 'house-edge';
-const AUDIENCE = 'house-edge-admin';
 
 export type AccessClaims = {
   sub: string;

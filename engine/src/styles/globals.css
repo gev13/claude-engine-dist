@@ -17,6 +17,7 @@
 @import './library-widgets.css';
 @import './library-upgrades.css';
 @import './library-effects.css';
+@import './library-glitch.css';
 @import './library-popups.css';
 @import './library-forms.css';
 @import './library-careers.css';
@@ -24,7 +25,7 @@
 @import './library-sliders.css';
 
 /* ══════════════════════════════════════════════════════════════════════════
-   Stock theme — design tokens (inherited from House Edge; a new site replaces them)
+   Stock theme — design tokens (the stock design; a new site replaces them)
    Extracted verbatim from mochup/. Do not invent new values: add them here.
    ══════════════════════════════════════════════════════════════════════════ */
 @theme {

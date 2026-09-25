@@ -78,3 +78,24 @@ Since 2.20 everything that moves is on one screen.
 - **Long galleries** — up to 200 pictures, shown all at once (as before),
   a few then *Load more*, or more as the visitor scrolls. *Add several from
   the library* picks many at once. The viewer swipes on a touch screen.
+
+## Glitch text — a block's Design tab → Effects (3.0)
+
+**Glitch on the heading** tears the block's heading, three ways:
+
+- **Noise** — thin slices of the words slip sideways, edged in red and blue.
+- **Psycho** — the line stretches and squeezes while bright ghost copies
+  tear across it.
+- **Split** — two-tone edges flicker on either side of the words.
+
+Then choose **which headings** (the first, or every heading in the block),
+**when** (all the time, or only while the pointer is over the block), the
+**two colours** of the copies, and the colour **behind the copies** — left
+empty, it is found from the section, so a slice covers the words it
+replaces; over a picture the copies stay clear. **Motion** (same tab)
+speeds it up or slows it down.
+
+It runs only while the heading is on screen. Screen readers hear the heading
+once, and visitors who ask for less motion — in their system, or with the
+site's own switch — see the heading still. Without it chosen, nothing is
+added to the page.

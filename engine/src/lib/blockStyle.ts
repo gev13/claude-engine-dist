@@ -86,6 +86,8 @@ export const REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur'] as cons
 export const REVEAL_DELAYS = [100, 200, 300, 500, 800] as const;
 export const HOVER_EFFECTS = ['lift', 'grow', 'shadow', 'tilt'] as const;
 export const DIVIDER_SHAPES = ['wave', 'curve', 'tilt', 'triangle', 'zigzag', 'arrow'] as const;
+/** 3.0 — the glitch effects a block's heading can carry (library-glitch.css). */
+export const GLITCH_EFFECTS = ['noise', 'psycho', 'split'] as const;
 export const GRADIENT_ANGLES = ['0', '45', '90', '135', '180', '225', '270', '315'] as const;
 
 /** P3-C3 — a shape drawn over the top or bottom edge, in the neighbouring section's colour. */
@@ -94,6 +96,23 @@ const dividerShape = z.object({
   color: color.optional(),
   height: z.enum(['small', 'medium', 'large']).optional(),
   flip: z.boolean().optional(),
+});
+
+/**
+ * 3.0 — a glitch on the block's heading. Off unless chosen; the colours
+ * start at the effect's own and the speed follows the block's `motion`.
+ */
+const glitchStyle = z.object({
+  effect: z.enum(GLITCH_EFFECTS),
+  /** `title` (the default) — the block's first heading; `headings` — every heading in it. */
+  scope: z.enum(['title', 'headings']).optional(),
+  /** `always` (the default) — runs while on screen; `hover` — only while the pointer is over the block. */
+  trigger: z.enum(['always', 'hover']).optional(),
+  /** The two tones of the torn copies. */
+  colorA: color.optional(),
+  colorB: color.optional(),
+  /** What the copies are painted on; found from the section when empty. */
+  background: color.optional(),
 });
 
 /** A section-level typography override — the same shape the theme uses. */
@@ -264,6 +283,9 @@ export const blockStyleSchema = z.object({
 
   /** P3-C2 — how the block answers the pointer; `tilt` leans towards it. */
   hover: z.enum(HOVER_EFFECTS).optional(),
+
+  /** 3.0 — a glitch on the heading text (noise, psycho, split). */
+  glitch: glitchStyle.optional(),
 
   /** P3-C3 — shape dividers along the top and bottom edges. */
   shapeTop: dividerShape.optional(),

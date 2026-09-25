@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import '@/styles/globals.css';
@@ -16,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: s.description,
     applicationName: s.name,
     authors: [{ name: s.name, url: SITE_URL }],
-    creator: s.name,
+    ...PLATFORM_META,
     publisher: s.name,
     formatDetection: { telephone: false, address: false, email: false },
     icons: {

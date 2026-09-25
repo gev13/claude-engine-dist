@@ -1,6 +1,14 @@
 {
-  "latest": "2.22.1",
+  "latest": "3.0.0",
   "releases": [
+    {
+      "version": "3.0.0",
+      "date": "2026-09-25",
+      "summary": "A new major version gathering everything since 2.12, plus glitch text on headings (noise, psycho, split — optional, per block), the platform's credits in two meta tags and in Settings, and the engine's own name throughout. Admins sign in once more after updating.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.22.1",
       "date": "2026-09-25",

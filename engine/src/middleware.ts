@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import { ACCESS_AUDIENCE, ACCESS_ISSUER } from '@/lib/accessToken';
 import { localeConfig, splitLocale } from '@/lib/locales';
 import { withSlash, feedTarget } from '@/lib/permalinks';
 import { pickRule } from '@/lib/redirectRules';
@@ -48,7 +49,7 @@ const secret = new TextEncoder().encode(
 async function hasValidAccess(token: string | undefined): Promise<boolean> {
   if (!token) return false;
   try {
-    await jwtVerify(token, secret, { issuer: 'house-edge', audience: 'house-edge-admin' });
+    await jwtVerify(token, secret, { issuer: ACCESS_ISSUER, audience: ACCESS_AUDIENCE });
     return true;
   } catch {
     return false;

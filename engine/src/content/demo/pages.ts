@@ -2266,6 +2266,10 @@ const libraryEffects: PageDefinition = {
         ]),
       })),
     }),
+    // 3.0 — glitch text: one heading per effect, the last only on hover.
+    b('heading', { eyebrow: 'Glitch — noise', title: 'Signal lost in the noise' }, { glitch: { effect: 'noise' } }),
+    b('heading', { eyebrow: 'Glitch — psycho', title: 'Stretched and torn' }, { glitch: { effect: 'psycho' } }),
+    b('heading', { eyebrow: 'Glitch — split, on hover', title: 'Point at me' }, { glitch: { effect: 'split', trigger: 'hover' } }),
     // 2.15 — a synced saved block, placed by reference; the demo seed creates it.
     b('savedBlock', { savedBlockId: DEMO_SAVED_BLOCK_ID, name: 'Demo call to action' }),
     b(

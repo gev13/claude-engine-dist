@@ -1,0 +1,198 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   Glitch text (3.0) — Design tab → Effects → Glitch
+   ──────────────────────────────────────────────────────────────────────────
+   Three effects on a block's heading, after three well-known CSS pens:
+   `noise` (bands of the words slipping sideways in red and blue), `psycho`
+   (the line stretching while bright ghost copies tear across it) and
+   `split` (two-tone edges flickering on either side).
+
+   Every rule is keyed to `.he-glitch-t`, which only `GlitchObserver` adds —
+   and only on a page where a block asked for it — so an untouched site is
+   styled by none of this. The copies are `::before`/`::after` holding the
+   heading's own words (`data-glitch-text`), with empty alternative text so
+   a screen reader hears the heading once. They are painted in the colour
+   behind the heading, found by the observer, so a slice covers the words
+   it replaces. Nothing moves for anybody who asked for less motion, and the
+   animations run only while the heading is on screen (`he-glitch-live`).
+   Unlayered, like the other opt-in motion rules: the classes exist only
+   when chosen.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.he-glitch-t { position: relative; }
+.he-glitch-t::before,
+.he-glitch-t::after {
+  content: attr(data-glitch-text);
+  content: attr(data-glitch-text) / "";
+  position: absolute;
+  inset: 0;
+  padding: inherit;
+  background: var(--he-glitch-bg, transparent);
+  pointer-events: none;
+  overflow: hidden;
+  clip-path: inset(50% 0 50% 0);
+  visibility: hidden;
+}
+.he-glitch-live::before,
+.he-glitch-live::after { visibility: visible; }
+
+/* Hover: still until the pointer (or focus) is in the block. */
+.he-glitch--hover:not(:hover, :focus-within) .he-glitch-t::before,
+.he-glitch--hover:not(:hover, :focus-within) .he-glitch-t::after { visibility: hidden; animation: none; }
+.he-glitch--hover:not(:hover, :focus-within) .he-glitch-t { animation: none; }
+
+/* ── noise ─────────────────────────────────────────────────────────────── */
+.he-glitch--noise .he-glitch-live::after {
+  translate: .04em 0;
+  text-shadow: -1px 0 var(--he-glitch-a, #f00);
+  animation: he-glitch-noise-a calc(9s * var(--he-motion, 1)) infinite linear alternate-reverse;
+}
+.he-glitch--noise .he-glitch-live::before {
+  translate: -.03em 0;
+  text-shadow: 1px 0 var(--he-glitch-b, #00f);
+  animation: he-glitch-noise-b calc(10s * var(--he-motion, 1)) infinite linear alternate-reverse;
+}
+
+/* ── psycho ────────────────────────────────────────────────────────────── */
+.he-glitch--psycho .he-glitch-live {
+  transform-origin: var(--he-glitch-origin, 0 50%);
+  animation: he-glitch-psycho calc(11s * var(--he-motion, 1)) infinite step-end;
+}
+.he-glitch--psycho .he-glitch-live::before { animation: he-glitch-psycho-a calc(3.1s * var(--he-motion, 1)) infinite step-end alternate; }
+.he-glitch--psycho .he-glitch-live::after { animation: he-glitch-psycho-b calc(1.7s * var(--he-motion, 1)) infinite step-end alternate-reverse; }
+
+/* ── split ─────────────────────────────────────────────────────────────── */
+.he-glitch--split .he-glitch-live::before {
+  translate: -.03em 0;
+  text-shadow: max(1px, .015em) 0 var(--he-glitch-a, #fbe601), max(2px, .03em) 0 var(--he-glitch-a, #eb3406);
+  animation: he-glitch-split-a calc(3s * var(--he-motion, 1)) infinite linear alternate-reverse;
+}
+.he-glitch--split .he-glitch-live::after {
+  translate: .03em 0;
+  text-shadow: min(-1px, -.015em) 0 var(--he-glitch-b, #63c3ea), min(-2px, -.03em) 0 var(--he-glitch-b, #2b30d1);
+  animation: he-glitch-split-b calc(2s * var(--he-motion, 1)) infinite linear alternate-reverse;
+}
+
+/* Less motion: the heading as it is, nothing over it. */
+@media (prefers-reduced-motion: reduce) {
+  .he-glitch-t { animation: none !important; transform: none; }
+  .he-glitch-t::before,
+  .he-glitch-t::after { display: none; }
+}
+.he-reduce-motion .he-glitch-t { animation: none !important; transform: none; }
+.he-reduce-motion .he-glitch-t::before,
+.he-reduce-motion .he-glitch-t::after { display: none; }
+
+@keyframes he-glitch-noise-a {
+  0% { clip-path: inset(19% 0 68% 0); }
+  5% { clip-path: inset(83% 0 2% 0); }
+  10% { clip-path: inset(9% 0 87% 0); }
+  15% { clip-path: inset(46% 0 48% 0); }
+  20% { clip-path: inset(64% 0 32% 0); }
+  25% { clip-path: inset(4% 0 87% 0); }
+  30% { clip-path: inset(55% 0 40% 0); }
+  35% { clip-path: inset(8% 0 76% 0); }
+  40% { clip-path: inset(11% 0 79% 0); }
+  45% { clip-path: inset(7% 0 77% 0); }
+  50% { clip-path: inset(28% 0 66% 0); }
+  55% { clip-path: inset(73% 0 23% 0); }
+  60% { clip-path: inset(6% 0 79% 0); }
+  65% { clip-path: inset(5% 0 85% 0); }
+  70% { clip-path: inset(37% 0 56% 0); }
+  75% { clip-path: inset(18% 0 66% 0); }
+  80% { clip-path: inset(73% 0 21% 0); }
+  85% { clip-path: inset(71% 0 17% 0); }
+  90% { clip-path: inset(13% 0 79% 0); }
+  95% { clip-path: inset(47% 0 44% 0); }
+  100% { clip-path: inset(70% 0 24% 0); }
+}
+@keyframes he-glitch-noise-b {
+  0% { clip-path: inset(72% 0 23% 0); }
+  5% { clip-path: inset(79% 0 17% 0); }
+  10% { clip-path: inset(63% 0 28% 0); }
+  15% { clip-path: inset(40% 0 44% 0); }
+  20% { clip-path: inset(74% 0 9% 0); }
+  25% { clip-path: inset(46% 0 37% 0); }
+  30% { clip-path: inset(31% 0 57% 0); }
+  35% { clip-path: inset(89% 0 3% 0); }
+  40% { clip-path: inset(10% 0 80% 0); }
+  45% { clip-path: inset(67% 0 21% 0); }
+  50% { clip-path: inset(43% 0 39% 0); }
+  55% { clip-path: inset(36% 0 47% 0); }
+  60% { clip-path: inset(15% 0 80% 0); }
+  65% { clip-path: inset(21% 0 63% 0); }
+  70% { clip-path: inset(19% 0 68% 0); }
+  75% { clip-path: inset(53% 0 29% 0); }
+  80% { clip-path: inset(85% 0 11% 0); }
+  85% { clip-path: inset(71% 0 24% 0); }
+  90% { clip-path: inset(43% 0 44% 0); }
+  95% { clip-path: inset(76% 0 10% 0); }
+  100% { clip-path: inset(74% 0 8% 0); }
+}
+
+@keyframes he-glitch-psycho {
+  0% { transform: scaleX(1); }
+  17% { transform: scaleX(.87); }
+  31% { transform: scaleX(1.1); }
+  37% { transform: scaleX(1.3); }
+  47% { transform: scaleX(.91); }
+  87% { transform: scaleX(1); }
+}
+@keyframes he-glitch-psycho-a {
+  0% { transform: translateX(0%); clip-path: inset(58% 0 12% 0); text-shadow: 0em 0 .02em var(--he-glitch-a, #0f0), 0em 0 .02em var(--he-glitch-b, #ff00e1); }
+  14% { transform: translateX(3.4%); clip-path: inset(11% 0 82% 0); text-shadow: -0.102em 0 .02em var(--he-glitch-a, #0f0), -0.204em 0 .02em var(--he-glitch-b, #ff00e1); }
+  29% { transform: translateX(-2.0%); clip-path: inset(34% 0 31% 0); text-shadow: 0.06em 0 .02em var(--he-glitch-a, #0f0), 0.12em 0 .02em var(--he-glitch-b, #ff00e1); }
+  43% { transform: translateX(8.3%); clip-path: inset(8% 0 72% 0); text-shadow: -0.249em 0 .02em var(--he-glitch-a, #0f0), -0.498em 0 .02em var(--he-glitch-b, #ff00e1); }
+  57% { transform: translateX(1.2%); clip-path: inset(93% 0 1% 0); text-shadow: -0.036em 0 .02em var(--he-glitch-a, #0f0), -0.072em 0 .02em var(--he-glitch-b, #ff00e1); }
+  71% { transform: translateX(-5.0%); clip-path: inset(39% 0 34% 0); text-shadow: 0.15em 0 .02em var(--he-glitch-a, #0f0), 0.3em 0 .02em var(--he-glitch-b, #ff00e1); }
+  86% { transform: translateX(6.0%); clip-path: inset(73% 0 2% 0); text-shadow: -0.18em 0 .02em var(--he-glitch-a, #0f0), -0.36em 0 .02em var(--he-glitch-b, #ff00e1); }
+  100% { transform: translateX(0%); clip-path: inset(57% 0 17% 0); text-shadow: 0em 0 .02em var(--he-glitch-a, #0f0), 0em 0 .02em var(--he-glitch-b, #ff00e1); }
+}
+@keyframes he-glitch-psycho-b {
+  0% { transform: translateX(0%); clip-path: inset(49% 0 37% 0); text-shadow: 0em 0 .02em var(--he-glitch-a, #0f0), 0em 0 .02em var(--he-glitch-b, #ff00e1); }
+  14% { transform: translateX(-3.4%); clip-path: inset(44% 0 23% 0); text-shadow: 0.102em 0 .02em var(--he-glitch-a, #0f0), 0.204em 0 .02em var(--he-glitch-b, #ff00e1); }
+  29% { transform: translateX(2.0%); clip-path: inset(59% 0 36% 0); text-shadow: -0.06em 0 .02em var(--he-glitch-a, #0f0), -0.12em 0 .02em var(--he-glitch-b, #ff00e1); }
+  43% { transform: translateX(-8.3%); clip-path: inset(21% 0 63% 0); text-shadow: 0.249em 0 .02em var(--he-glitch-a, #0f0), 0.498em 0 .02em var(--he-glitch-b, #ff00e1); }
+  57% { transform: translateX(-1.2%); clip-path: inset(14% 0 62% 0); text-shadow: 0.036em 0 .02em var(--he-glitch-a, #0f0), 0.072em 0 .02em var(--he-glitch-b, #ff00e1); }
+  71% { transform: translateX(5.0%); clip-path: inset(7% 0 73% 0); text-shadow: -0.15em 0 .02em var(--he-glitch-a, #0f0), -0.3em 0 .02em var(--he-glitch-b, #ff00e1); }
+  86% { transform: translateX(-6.0%); clip-path: inset(36% 0 53% 0); text-shadow: 0.18em 0 .02em var(--he-glitch-a, #0f0), 0.36em 0 .02em var(--he-glitch-b, #ff00e1); }
+  100% { transform: translateX(0%); clip-path: inset(31% 0 60% 0); text-shadow: 0em 0 .02em var(--he-glitch-a, #0f0), 0em 0 .02em var(--he-glitch-b, #ff00e1); }
+}
+
+@keyframes he-glitch-split-a {
+  0% { clip-path: inset(50% 0 35% 0); }
+  6% { clip-path: inset(63% 0 7% 0); }
+  12% { clip-path: inset(21% 0 74% 0); }
+  19% { clip-path: inset(51% 0 32% 0); }
+  25% { clip-path: inset(35% 0 45% 0); }
+  31% { clip-path: inset(55% 0 38% 0); }
+  38% { clip-path: inset(70% 0 0% 0); }
+  44% { clip-path: inset(53% 0 36% 0); }
+  50% { clip-path: inset(48% 0 38% 0); }
+  56% { clip-path: inset(19% 0 71% 0); }
+  62% { clip-path: inset(22% 0 73% 0); }
+  69% { clip-path: inset(29% 0 64% 0); }
+  75% { clip-path: inset(29% 0 47% 0); }
+  81% { clip-path: inset(62% 0 35% 0); }
+  88% { clip-path: inset(23% 0 48% 0); }
+  94% { clip-path: inset(36% 0 53% 0); }
+  100% { clip-path: inset(18% 0 79% 0); }
+}
+@keyframes he-glitch-split-b {
+  0% { clip-path: inset(68% 0 16% 0); }
+  6% { clip-path: inset(78% 0 8% 0); }
+  12% { clip-path: inset(40% 0 39% 0); }
+  19% { clip-path: inset(88% 0 5% 0); }
+  25% { clip-path: inset(65% 0 5% 0); }
+  31% { clip-path: inset(6% 0 72% 0); }
+  38% { clip-path: inset(71% 0 12% 0); }
+  44% { clip-path: inset(50% 0 35% 0); }
+  50% { clip-path: inset(50% 0 35% 0); }
+  56% { clip-path: inset(61% 0 33% 0); }
+  62% { clip-path: inset(51% 0 26% 0); }
+  69% { clip-path: inset(24% 0 72% 0); }
+  75% { clip-path: inset(26% 0 69% 0); }
+  81% { clip-path: inset(20% 0 63% 0); }
+  88% { clip-path: inset(43% 0 51% 0); }
+  94% { clip-path: inset(6% 0 72% 0); }
+  100% { clip-path: inset(0% 0 94% 0); }
+}

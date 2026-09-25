@@ -6,6 +6,8 @@ import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Field, Input, Panel, Select, Spinner, Textarea } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
+import { PLATFORM_CREATOR, PLATFORM_NAME } from '@/lib/credits';
+import { ENGINE_VERSION } from '@/lib/version';
 import { errorMessage } from '../_shared';
 
 type SettingRow = { key: string; value: unknown; updatedById: string | null; updatedAt: string };
@@ -287,7 +289,30 @@ function SettingsScreenInner() {
           </AdminButton>
         </form>
       )}
+
+      <PlatformCredits />
     </>
+  );
+}
+
+/** Who made the platform — fixed, shown for reference, never a field. */
+function PlatformCredits() {
+  const rows: [string, string][] = [
+    ['Platform', PLATFORM_NAME],
+    ['Created by', PLATFORM_CREATOR],
+    ['Version', ENGINE_VERSION],
+  ];
+  return (
+    <Panel title="Platform" className="mt-6">
+      <dl className="m-0 grid gap-x-6 gap-y-2 text-[14px] sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+        {rows.map(([label, value]) => (
+          <div key={label} className="contents">
+            <dt className="text-smoke">{label}</dt>
+            <dd className="m-0 text-bone">{value}</dd>
+          </div>
+        ))}
+      </dl>
+    </Panel>
   );
 }
 
