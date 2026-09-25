@@ -2,6 +2,9 @@
 
 import { useId, useState } from 'react';
 import type { z } from 'zod';
+import { useChallenge } from '@/components/site/Captcha';
+import { useMessages } from '@/components/site/Messages';
+import { afterSubmit } from '@/components/site/formActions';
 import { Button } from '@/components/ui/Button';
 import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
@@ -27,9 +30,16 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
   const uid = useId();
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = useState<string>('');
+  const t = useMessages();
+  const challenge = useChallenge('contactForm');
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const token = await challenge.token();
+    if (token === false) {
+      setState('error');
+      return setError(t('captcha.required'));
+    }
     setState('sending');
     setError('');
 
@@ -45,6 +55,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
       message: String(form.get('message') ?? ''),
       // Honeypot — bots fill it, humans never see it.
       website: String(form.get('website') ?? ''),
+      ...(token ? { captcha: token } : {}),
     };
 
     try {
@@ -58,7 +69,9 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
         throw new Error(body.error ?? 'Something went wrong. Please try again.');
       }
       setState('sent');
+      afterSubmit(p.after, 'Contact form');
     } catch (err) {
+      challenge.reset();
       setState('error');
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     }
@@ -156,6 +169,8 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
           <label htmlFor={`${uid}-website`}>Website</label>
           <input id={`${uid}-website`} name="website" tabIndex={-1} autoComplete="off" />
         </div>
+
+        {challenge.field && <div className="col-span-full">{challenge.field}</div>}
 
         {state === 'error' && (
           <p role="alert" className="col-span-full m-0 border-l-2 border-flare pl-4 text-[length:var(--he-block-small,15px)] text-flare-soft">

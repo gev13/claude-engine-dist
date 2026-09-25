@@ -46,6 +46,14 @@
   .he-fb__donetitle { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 30px); font-weight: 700; }
   .he-fb__donetext { margin: 10px 0 0; font-size: 16px; color: var(--color-ash); }
 
+  /* 2.16 — the CAPTCHA widget, on every public form. The provider draws the
+     box in its own frame; this only gives it room and keeps it from
+     widening a phone's page (the widgets are a fixed 300px). */
+  .he-captcha { margin-top: 20px; max-width: 100%; overflow-x: auto; }
+  .he-captcha__box:empty { min-height: 0; }
+  .he-captcha__note { margin: 8px 0 0; font-size: 13px; color: var(--color-smoke); }
+  .he-captcha__invisible { display: none; }
+
   @media (width <= 48rem) {
     .he-fb.is-card .he-fb__box { padding: 22px 18px; }
     .he-fb__grid { grid-template-columns: minmax(0, 1fr); }

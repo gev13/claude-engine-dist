@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext } from 'react';
-import { MESSAGES, type MessageKey, type Messages } from '@/lib/messages';
+import { MESSAGES, type MessageKey, type Messages, messageReader } from '@/lib/messages';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The engine's own words, for client components
@@ -21,8 +21,7 @@ export function MessagesProvider({ value, children }: { value: Messages; childre
   return <MessagesContext.Provider value={value}>{children}</MessagesContext.Provider>;
 }
 
-/** `const t = useMessages(); t('form.sending')` */
-export function useMessages(): (key: MessageKey) => string {
-  const messages = useContext(MessagesContext);
-  return (key: MessageKey) => messages[key] ?? MESSAGES[key] ?? key;
+/** `const t = useMessages(); t('form.sending')`, or `t('form.step', { n: 2, total: 3 })`. */
+export function useMessages(): (key: MessageKey, values?: Record<string, string | number>) => string {
+  return messageReader(useContext(MessagesContext));
 }

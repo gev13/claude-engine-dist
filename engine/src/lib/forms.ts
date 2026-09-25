@@ -41,8 +41,157 @@ export const formFieldSchema = z
     help: z.string().max(200).optional(),
     options: z.array(z.string().trim().min(1).max(80)).max(20).default([]),
     width: z.enum(['full', 'half']).default('full'),
+    /**
+     * 2.16 — show this question only when another one has a given answer:
+     * "Company size" only when "I am asking for" is "A business". A hidden
+     * question is neither asked nor checked, on either side.
+     */
+    showIf: z
+      .object({ field: z.string().regex(/^[A-Za-z0-9_-]{1,40}$/), equals: z.string().trim().max(80) })
+      .optional(),
   })
   .refine((f) => !CHOICE_TYPES.includes(f.type) || f.options.length > 0, 'Give this question at least one option');
+
+/* ── After a form is sent (T13, 2.16) ─────────────────────────────────────── */
+
+const email = z.string().trim().toLowerCase().email().max(254);
+const fieldRef = z.string().regex(/^(|[A-Za-z0-9_-]{1,40})$/).default('');
+
+/**
+ * Who hears about a submission. With no recipients it goes to the site's own
+ * notification list, as before 2.16. `includeAnswers` puts every answer in the
+ * email as a table — useful, and it means the answers sit in an inbox as well
+ * as here, so it is off unless chosen.
+ */
+export const formNotifySchema = z.object({
+  recipients: z.array(email).max(10).default([]),
+  includeAnswers: z.boolean().default(false),
+  /** `{formName}` and `{field:id}` are filled in. Empty is the subject every form had before 2.16. */
+  subject: z.string().trim().max(200).default(''),
+  /** The email question whose answer becomes Reply-To, so answering the email answers the visitor. */
+  replyToField: fieldRef,
+  /** The page, the date, the campaign and the hidden fields, under the answers. */
+  includeMeta: z.boolean().default(true),
+  /** The visitor's address, abbreviated. Off: it is personal data, and rarely needed. */
+  includeIp: z.boolean().default(false),
+});
+
+/** A reply to the person who sent the form, to the address they gave. */
+export const formAutoresponderSchema = z.object({
+  enabled: z.boolean().default(false),
+  emailField: fieldRef,
+  subject: z.string().trim().max(200).default(''),
+  /** Plain text; `{field:id}` and `{formName}` are filled in. Blank lines are paragraphs. */
+  body: z.string().max(6000).default(''),
+});
+
+/** Letters, digits, `_` and `-`: what an event name or a goal id may be. */
+const tag = z.string().trim().regex(/^(|[A-Za-z0-9_-]{1,60})$/, 'Letters, digits, _ and - only').default('');
+
+export const formAfterSchema = z.object({
+  /** A page to go to — a thank-you page, for an advertising conversion. Empty stays on the form. */
+  redirect: z
+    .string()
+    .trim()
+    .max(300)
+    // Not `//host`: that is protocol-relative, another site, and an open redirect.
+    .regex(/^(|\/(?!\/)[A-Za-z0-9._~\-/%?=&#]*)$/, 'A site path such as /thank-you')
+    .default(''),
+  /** Send the conversion to every tag that is switched on (Integrations). */
+  track: z.boolean().default(true),
+  event: tag.default('generate_lead'),
+  /** The name of a Google Ads conversion from Integrations. */
+  adsConversion: z.string().trim().max(60).default(''),
+  yandexGoal: tag,
+  linkedinConversion: z.string().trim().regex(/^(|[0-9]{3,12})$/, 'A conversion id — digits').default(''),
+});
+
+export const HIDDEN_SOURCES = [
+  'static',
+  'utm_source',
+  'utm_medium',
+  'utm_campaign',
+  'utm_term',
+  'utm_content',
+  'referrer',
+  'landingPage',
+  'pageUrl',
+  'gclid',
+  'fbclid',
+] as const;
+export type HiddenSource = (typeof HIDDEN_SOURCES)[number];
+
+export const HIDDEN_SOURCE_LABELS: Record<HiddenSource, string> = {
+  static: 'A fixed value',
+  utm_source: 'Campaign source (utm_source)',
+  utm_medium: 'Campaign medium (utm_medium)',
+  utm_campaign: 'Campaign name (utm_campaign)',
+  utm_term: 'Campaign term (utm_term)',
+  utm_content: 'Campaign content (utm_content)',
+  referrer: 'Where they came from (referrer)',
+  landingPage: 'The first page they landed on',
+  pageUrl: 'This page',
+  gclid: 'Google Ads click id (gclid)',
+  fbclid: 'Meta click id (fbclid)',
+};
+
+export const formHiddenSchema = z.object({
+  name: z.string().regex(/^[A-Za-z0-9_-]{1,40}$/, 'Letters, digits, _ and - only'),
+  source: z.enum(HIDDEN_SOURCES).default('static'),
+  /** For `static`. */
+  value: z.string().trim().max(200).default(''),
+});
+
+export type FormHidden = z.output<typeof formHiddenSchema>;
+
+/**
+ * The hidden values a submission may carry: only the names the form defines,
+ * each capped, a static one always its saved value — so a script cannot add
+ * fields, and cannot change a fixed one.
+ */
+export function readHiddenValues(defined: FormHidden[], sent: unknown): Record<string, string> {
+  const raw = sent && typeof sent === 'object' && !Array.isArray(sent) ? (sent as Record<string, unknown>) : {};
+  const out: Record<string, string> = {};
+  for (const field of defined) {
+    if (field.source === 'static') {
+      if (field.value) out[field.name] = field.value;
+      continue;
+    }
+    const value = raw[field.name];
+    if (typeof value === 'string' && value.trim()) out[field.name] = value.trim().slice(0, 500);
+  }
+  return out;
+}
+
+/** Fill `{formName}` and `{field:id}` in a subject or a reply — answers as plain text. */
+export function fillTemplate(template: string, formName: string, answers: Answer[]): string {
+  return template
+    .replace(/\{formName\}/g, formName)
+    .replace(/\{field:([A-Za-z0-9_-]{1,40})\}/g, (_, id: string) => {
+      const answer = answers.find((a) => a.id === id);
+      return answer ? answerText(answer.value) : '';
+    });
+}
+
+/**
+ * The questions currently asked: a question whose `showIf` does not hold is
+ * left out — of the page, of the checks, of the answers. Evaluated in order,
+ * so a question depending on a hidden one is hidden too.
+ */
+export function visibleFields(fields: FormField[], values: Record<string, unknown>): FormField[] {
+  const shown = new Set<string>();
+  const out: FormField[] = [];
+  for (const field of fields) {
+    if (field.showIf) {
+      const value = values[field.showIf.field];
+      const matches = Array.isArray(value) ? value.includes(field.showIf.equals) : typeof value === 'boolean' ? String(value) === field.showIf.equals : value === field.showIf.equals;
+      if (!shown.has(field.showIf.field) || !matches) continue;
+    }
+    shown.add(field.id);
+    out.push(field);
+  }
+  return out;
+}
 
 export type FormField = z.output<typeof formFieldSchema>;
 /**
@@ -91,11 +240,19 @@ const CHECK: Partial<Record<FormFieldType, (value: string, field: FormField) => 
  * ask are dropped; the result keeps each question's label beside its answer,
  * in the order the form asks them.
  */
-export function validateAnswers(fields: FormField[], input: unknown): { ok: true; answers: Answer[] } | { ok: false; error: string } {
+export function validateAnswers(
+  fields: FormField[],
+  input: unknown,
+  /** The whole form, when `fields` is one step of it: a condition can point at an earlier step. */
+  form: FormField[] = fields,
+): { ok: true; answers: Answer[] } | { ok: false; error: string } {
   const raw = input && typeof input === 'object' && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const answers: Answer[] = [];
 
+  // A question hidden by its condition is not asked, so it is neither required nor answered (2.16).
+  const shown = new Set(visibleFields(form, raw).map((field) => field.id));
   for (const field of fields) {
+    if (!shown.has(field.id)) continue;
     if (field.type === 'step') continue;
     const value = raw[field.id];
 
@@ -138,6 +295,13 @@ export function validateAnswers(fields: FormField[], input: unknown): { ok: true
   }
 
   return { ok: true, answers };
+}
+
+/** The answer to `fieldId` when it is an email address — for Reply-To and the autoresponder. */
+export function emailAnswer(answers: Answer[], fieldId: string): string | null {
+  if (!fieldId) return null;
+  const value = answers.find((answer) => answer.id === fieldId)?.value;
+  return typeof value === 'string' && /^[^\s@<>"]+@[^\s@<>"]+\.[^\s@<>"]{2,}$/.test(value) && value.length <= 254 ? value : null;
 }
 
 /** An answer as one line of text, for the admin and the CSV export. */

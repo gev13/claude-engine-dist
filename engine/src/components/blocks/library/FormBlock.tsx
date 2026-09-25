@@ -1,10 +1,13 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import type { z } from 'zod';
+import { useChallenge } from '@/components/site/Captcha';
+import { useMessages } from '@/components/site/Messages';
+import { afterSubmit, hiddenValues, noteFirstTouch } from '@/components/site/formActions';
 import type { blockSchemas } from '@/lib/blocks';
-import { type FormField, formSteps, validateAnswers } from '@/lib/forms';
+import { type FormField, formSteps, validateAnswers, visibleFields } from '@/lib/forms';
 import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 
@@ -14,7 +17,12 @@ import { BlockHead } from '../parts';
    Fields chosen in the editor, optionally split into steps. Each step is
    checked here before the next one opens, and the whole form again on the
    server against the form saved on this page. Answers are stored and read
-   in Form submissions; nothing is emailed.
+   in Form submissions.
+
+   2.16: a question can depend on an earlier answer (`showIf`), hidden fields
+   carry the visit's campaign, a CAPTCHA can guard the send, and success can
+   fire a conversion and open a thank-you page — each off unless the form's
+   settings turn it on.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type P = z.output<(typeof blockSchemas)['form']> & { blockId?: string };
@@ -28,12 +36,15 @@ const FILE_ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png';
 const FILE_HINT = 'PDF, Word, JPG or PNG, up to 8 MB.';
 
 function Field({ field, uid, value, onChange }: { field: FormField; uid: string; value: Values[string] | undefined; onChange: (next: Values[string]) => void }) {
+  const t = useMessages();
+  // One text node, as the markup always was.
+  const optional = <span className="he-fb__opt">{` (${t('form.optional')})`}</span>;
   const id = `${uid}-${field.id}`;
   const hint = field.help ? `${id}-help` : undefined;
   const label = (
     <label className="he-fb__label" htmlFor={id}>
       {field.label}
-      {!field.required && <span className="he-fb__opt"> (optional)</span>}
+      {!field.required && optional}
     </label>
   );
   const common = { id, name: field.id, required: field.required, 'aria-describedby': hint, className: 'he-fb__input' };
@@ -49,7 +60,7 @@ function Field({ field, uid, value, onChange }: { field: FormField; uid: string;
       <fieldset className={cn('he-fb__field he-fb__set', `is-${field.width}`)} aria-describedby={hint}>
         <legend className="he-fb__label">
           {field.label}
-          {!field.required && <span className="he-fb__opt"> (optional)</span>}
+          {!field.required && optional}
         </legend>
         <div className="he-fb__choices">
           {field.options.map((option) => (
@@ -107,7 +118,7 @@ function Field({ field, uid, value, onChange }: { field: FormField; uid: string;
         <textarea {...common} rows={5} placeholder={field.placeholder} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)} />
       ) : field.type === 'select' ? (
         <select {...common} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)}>
-          <option value="">{field.placeholder || 'Choose…'}</option>
+          <option value="">{field.placeholder || t('form.choose')}</option>
           {field.options.map((option) => (
             <option key={option} value={option}>
               {option}
@@ -138,17 +149,36 @@ function asAnswers(values: Values): Record<string, string | string[] | boolean> 
 }
 
 export function FormBlock(p: P) {
+  const t = useMessages();
   const uid = useId();
   const path = usePathname();
-  const steps = useMemo(() => formSteps(p.fields), [p.fields]);
   const [step, setStep] = useState(0);
   const [values, setValues] = useState<Values>({});
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
   const [trap, setTrap] = useState('');
+  const challenge = useChallenge('form', p.captcha);
 
-  const current = steps[step] ?? steps[0]!;
-  const last = step >= steps.length - 1;
+  /* A question whose condition does not hold is left out, and so is a step
+     left with nothing to ask. Worked out from the whole form, since a
+     condition can point at an earlier step. */
+  const answers = useMemo(() => asAnswers(values), [values]);
+  const steps = useMemo(() => {
+    const shown = new Set(visibleFields(p.fields, answers).map((field) => field.id));
+    const all = formSteps(p.fields);
+    const kept = all.map((s) => ({ ...s, fields: s.fields.filter((field) => shown.has(field.id)) })).filter((s) => s.fields.length > 0);
+    return kept.length > 0 ? kept : all.slice(0, 1);
+  }, [p.fields, answers]);
+
+  // The landing page is the visit's first page, so it is noted when a form with hidden fields is seen.
+  const hasHidden = p.hidden.length > 0;
+  useEffect(() => {
+    if (hasHidden) noteFirstTouch();
+  }, [hasHidden]);
+
+  const at = Math.min(step, steps.length - 1);
+  const current = steps[at] ?? { fields: [] };
+  const last = at >= steps.length - 1;
   const set = (id: string) => (value: Values[string]) => setValues((v) => ({ ...v, [id]: value }));
 
   async function next(e: React.FormEvent<HTMLFormElement>) {
@@ -156,24 +186,30 @@ export function FormBlock(p: P) {
     /* `validateAnswers` cannot see a File, so a file field is handed `true`
        when one has been chosen — the server does exactly the same with the
        multipart body, so both sides ask the same question. */
-    const check = validateAnswers(current.fields, asAnswers(values));
+    const check = validateAnswers(current.fields, answers, p.fields);
     if (!check.ok) return setError(check.error);
     setError('');
-    if (!last) return setStep(step + 1);
+    if (!last) return setStep(at + 1);
+
+    const token = await challenge.token();
+    if (token === false) return setError(t('captcha.required'));
 
     setState('sending');
     try {
       /* Multipart only when there is actually a file: a form of text questions
          keeps the cheaper JSON path it has always used. */
       const files = Object.entries(values).filter((entry): entry is [string, File] => entry[1] instanceof File);
+      const hidden = hiddenValues(p.hidden);
 
       let res: Response;
       if (files.length > 0) {
         const data = new FormData();
         data.set('formId', p.blockId ?? '');
         data.set('source', path);
-        data.set('answers', JSON.stringify(asAnswers(values)));
+        data.set('answers', JSON.stringify(answers));
         data.set('website', trap);
+        data.set('hidden', JSON.stringify(hidden));
+        if (token) data.set('captcha', token);
         for (const [id, file] of files) data.set(`file:${id}`, file);
         // No content-type header: only the browser knows the boundary.
         res = await fetch('/api/forms', { method: 'POST', body: data });
@@ -181,17 +217,20 @@ export function FormBlock(p: P) {
         res = await fetch('/api/forms', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ formId: p.blockId, source: path, answers: values, website: trap }),
+          body: JSON.stringify({ formId: p.blockId, source: path, answers: values, website: trap, hidden, ...(token ? { captcha: token } : {}) }),
         });
       }
       if (!res.ok) {
         const body = (await res.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? 'Something went wrong. Please try again.');
+        throw new Error(body.error ?? t('form.error'));
       }
       setState('sent');
+      afterSubmit(p.after, p.formName);
     } catch (err) {
       setState('idle');
-      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
+      // A token is spent once, so a refused send needs a fresh one.
+      challenge.reset();
+      setError(err instanceof Error ? err.message : t('form.error'));
     }
   }
 
@@ -199,7 +238,7 @@ export function FormBlock(p: P) {
   const body =
     state === 'sent' ? (
       <div className="he-fb__done" role="status">
-        <p className="he-fb__donetitle">{p.successTitle || 'Thank you — that is with us.'}</p>
+        <p className="he-fb__donetitle">{p.successTitle || t('form.thanks')}</p>
         {p.successText && <p className="he-fb__donetext">{p.successText}</p>}
       </div>
     ) : (
@@ -207,11 +246,11 @@ export function FormBlock(p: P) {
         {steps.length > 1 && (
           <div className="he-fb__progress">
             <p className="he-fb__stepname" aria-live="polite">
-              Step {step + 1} of {steps.length}
+              {t('form.step', { n: at + 1, total: steps.length })}
               {current.title ? ` — ${current.title}` : ''}
             </p>
             <div className="he-fb__bar" aria-hidden="true">
-              <span style={{ width: `${((step + 1) / steps.length) * 100}%` }} />
+              <span style={{ width: `${((at + 1) / steps.length) * 100}%` }} />
             </div>
           </div>
         )}
@@ -225,19 +264,20 @@ export function FormBlock(p: P) {
           <label htmlFor={`${uid}-website`}>Website</label>
           <input id={`${uid}-website`} name="website" tabIndex={-1} autoComplete="off" value={trap} onChange={(e) => setTrap(e.target.value)} />
         </div>
+        {last && challenge.field}
         {error && (
           <p role="alert" className="he-fb__error">
             {error}
           </p>
         )}
         <div className={cn('he-fb__actions', center && 'is-center')}>
-          {step > 0 && (
-            <button type="button" className="he-cbtn is-medium is-outline" onClick={() => (setError(''), setStep(step - 1))}>
-              Back
+          {at > 0 && (
+            <button type="button" className="he-cbtn is-medium is-outline" onClick={() => (setError(''), setStep(at - 1))}>
+              {t('form.back')}
             </button>
           )}
           <button type="submit" className="he-cbtn is-medium is-primary" disabled={state === 'sending'}>
-            {state === 'sending' ? 'Sending…' : last ? p.submitLabel || 'Send' : 'Next'}
+            {state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}
           </button>
         </div>
       </form>

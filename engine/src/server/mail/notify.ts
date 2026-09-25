@@ -2,7 +2,14 @@ import 'server-only';
 import { SITE_URL } from '@/lib/env';
 import { canSend } from '@/lib/mail';
 import { getMailSettings, mailBrand, notifyRecipients, sendInBackground } from './send';
-import { type SecurityAlertKind, notificationEmail, securityAlertEmail, welcomeEmail } from './templates';
+import { type Answer, answerLine, emailAnswer, fillTemplate } from '@/lib/forms';
+import type { blockSchemas } from '@/lib/blocks';
+import { rateLimit } from '@/server/auth/rateLimit';
+import { type SecurityAlertKind, autoresponderEmail, formSubmissionEmail, notificationEmail, securityAlertEmail, welcomeEmail } from './templates';
+
+type FormProps = ReturnType<(typeof blockSchemas)['form']['parse']>;
+type FormNotify = FormProps['notify'];
+type FormAutoresponder = FormProps['autoresponder'];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Notifications (package 5)
@@ -113,29 +120,76 @@ export function notifyEnquiry(input: { name: string; email: string; company: str
   });
 }
 
-/** A new form submission. The answers stay in the admin. */
-export function notifyFormSubmission(input: { formName: string; source: string; fields: number }): void {
+/**
+ * A new form submission. The form's own Email settings (2.16) decide who
+ * hears, what the subject says, and whether the answers travel: without
+ * `includeAnswers` the message is the count-only notice it always was, and
+ * the answers stay in the admin.
+ */
+export function notifyFormSubmission(input: {
+  submissionId: string;
+  formName: string;
+  source: string;
+  answers: Answer[];
+  meta: Record<string, string>;
+  ip: string;
+  notify: FormNotify;
+}): void {
   sendInBackground(async () => {
     const mail = await getMailSettings();
-    if (!mail.events.formSubmission) return null;
-    const to = await notifyRecipients(mail);
+    const own = input.notify.recipients;
+    // A form with its own recipients asked for mail; the site-wide list follows the event switch.
+    if (own.length === 0 && !mail.events.formSubmission) return null;
+    const to = own.length > 0 ? own : await notifyRecipients(mail);
     if (to.length === 0) return null;
 
     const brand = await mailBrand();
-    const message = notificationEmail({
+    const fallback = `New submission to “${input.formName}”`;
+    const subject = (input.notify.subject ? fillTemplate(input.notify.subject, input.formName, input.answers).trim().slice(0, 200) : '') || fallback;
+    const meta: [string, string][] = input.notify.includeMeta ? Object.entries(input.meta) : [];
+    if (input.notify.includeIp && input.ip && input.ip !== 'unknown') meta.push(['IP address', input.ip]);
+
+    const message = formSubmissionEmail({
       ...brand,
-      title: `New submission to “${input.formName}”`,
-      intro: 'Somebody filled in a form on the site. The answers are in the admin, not in this email.',
-      facts: [
-        ['Form', input.formName],
-        ['Page', input.source || '—'],
-        ['Answers', String(input.fields)],
-        ['Received', when()],
-      ],
+      subject,
+      formName: input.formName,
+      source: input.source,
+      received: when(),
+      count: input.answers.length,
+      answers: input.notify.includeAnswers
+        ? input.answers.map((answer) => ({
+            label: answer.label,
+            value: answerLine(answer) || '—',
+            link: answer.file ? adminUrl(`/api/admin/submissions/${input.submissionId}/file/${answer.id}`) : undefined,
+          }))
+        : null,
+      meta,
       adminUrl: adminUrl('/admin/submissions'),
-      adminLabel: 'Read the answers',
+      ownRecipients: own.length > 0,
     });
-    return { message: { ...message, to }, event: 'form submission' };
+    const replyTo = emailAnswer(input.answers, input.notify.replyToField) ?? undefined;
+    return { message: { ...message, to, replyTo }, event: 'form submission' };
+  });
+}
+
+/**
+ * The reply a visitor gets (2.16). Only to the address they typed into the
+ * form's own email question, and at most three a day to any one address —
+ * otherwise a form is a way to make this site email somebody else's inbox
+ * with text a stranger chose.
+ */
+export function sendAutoresponder(input: { formName: string; answers: Answer[]; settings: FormAutoresponder }): void {
+  const to = emailAnswer(input.answers, input.settings.emailField);
+  if (!input.settings.enabled || !to || !input.settings.body.trim()) return;
+  sendInBackground(async () => {
+    const mail = await getMailSettings();
+    if (!canSend(mail)) return null;
+    const limit = await rateLimit({ key: `autoreply:${to.toLowerCase()}`, limit: 3, windowSec: 86_400, blockSec: 86_400 });
+    if (!limit.allowed) return null;
+    const brand = await mailBrand();
+    const subject = fillTemplate(input.settings.subject || 'Thank you — {formName}', input.formName, input.answers).trim().slice(0, 200);
+    const body = fillTemplate(input.settings.body, input.formName, input.answers);
+    return { message: { ...autoresponderEmail({ ...brand, subject, body }), to }, event: 'form autoresponder' };
   });
 }
 

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import nextConfig from '../next.config';
+import { publicCsp } from '../src/server/routing/config';
+import { buildCsp } from '../src/lib/csp';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Who may frame this site, and what this site may frame
@@ -30,16 +32,24 @@ const matches = (rule: Rule, path: string) =>
 const forSource = (source: string) => rules.find((rule) => rule.source === source)!;
 const value = (rule: Rule, key: string) => rule.headers.find((h) => h.key === key)?.value ?? '';
 
+/* The public policy is the middleware's since 2.16 — built per request from
+   what is switched on. With nothing switched on, this is it. */
+const publicPolicy = publicCsp(new Map());
+
 const probe = forSource('/admin/band/:path*');
 const admin = forSource('/admin/((?!band$|band/).*)');
 const site = forSource('/((?!admin$|admin/).*)');
 
 describe('exactly one policy applies to any path', () => {
   /* The failure this prevents is silent: overlapping rules are enforced as
-     their intersection, so the relaxation appears to have been ignored. */
+     their intersection, so the relaxation appears to have been ignored. The
+     public pages' policy comes from the middleware, so next.config.ts must
+     set none for them. */
+  it.each(['/', '/blog/a-post', '/about'])('%s gets no policy from next.config — the middleware sets it', (path) => {
+    expect(policyRules.filter((rule) => matches(rule, path))).toHaveLength(0);
+  });
+
   it.each([
-    '/',
-    '/blog/a-post',
     '/admin',
     '/admin/pages',
     '/admin/pages/123',
@@ -50,8 +60,8 @@ describe('exactly one policy applies to any path', () => {
     expect(hit.map((r) => r.source)).toHaveLength(1);
   });
 
-  it('leaves nothing uncovered', () => {
-    for (const path of ['/', '/admin', '/admin/x', '/admin/band/hero', '/media/a.png']) {
+  it('leaves no admin path uncovered', () => {
+    for (const path of ['/admin', '/admin/x', '/admin/band/hero']) {
       expect(policyRules.some((rule) => matches(rule, path)), path).toBe(true);
     }
   });
@@ -59,10 +69,14 @@ describe('exactly one policy applies to any path', () => {
 
 describe('the public site', () => {
   it('refuses to be framed, and frames nothing of its own', () => {
-    expect(value(site, CSP)).toContain("frame-ancestors 'none'");
+    expect(publicPolicy).toContain("frame-ancestors 'none'");
     expect(value(site, 'X-Frame-Options')).toBe('DENY');
     // Only the video and map embeds, which load on a visitor's click.
-    expect(value(site, CSP)).not.toMatch(/frame-src [^;]*'self'/);
+    expect(publicPolicy).not.toMatch(/frame-src [^;]*'self'/);
+  });
+
+  it('is the same policy the admin is built from, when nothing is switched on', () => {
+    expect(publicPolicy).toBe(buildCsp({ isProd: process.env.NODE_ENV === 'production' }));
   });
 });
 
@@ -79,7 +93,7 @@ describe('the admin', () => {
   });
 
   it('changes that one directive and nothing else', () => {
-    expect(value(admin, CSP).replace("frame-src 'self' ", 'frame-src ')).toBe(value(site, CSP));
+    expect(value(admin, CSP).replace("frame-src 'self' ", 'frame-src ')).toBe(publicPolicy);
   });
 });
 
@@ -90,7 +104,7 @@ describe('the spacing probe', () => {
   });
 
   it('changes that one directive and nothing else', () => {
-    expect(value(probe, CSP).replace("frame-ancestors 'self'", "frame-ancestors 'none'")).toBe(value(site, CSP));
+    expect(value(probe, CSP).replace("frame-ancestors 'self'", "frame-ancestors 'none'")).toBe(publicPolicy);
   });
 
   /* The exception is about framing. Everything else that makes the response

@@ -1,6 +1,8 @@
 'use client';
 
 import { useId, useRef, useState } from 'react';
+import { useChallenge } from '@/components/site/Captcha';
+import { useMessages } from '@/components/site/Messages';
 import { cn } from '@/lib/utils';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -38,6 +40,8 @@ export function ApplicationForm({
   const [state, setState] = useState<State>('idle');
   const [error, setError] = useState('');
   const [cvName, setCvName] = useState('');
+  const t = useMessages();
+  const challenge = useChallenge('careers');
   const formRef = useRef<HTMLFormElement>(null);
 
   function onFile(event: React.ChangeEvent<HTMLInputElement>) {
@@ -79,6 +83,13 @@ export function ApplicationForm({
       return;
     }
 
+    const token = await challenge.token();
+    if (token === false) {
+      setError(t('captcha.required'));
+      return;
+    }
+    if (token) data.set('captcha', token);
+
     setError('');
     setState('sending');
 
@@ -92,6 +103,7 @@ export function ApplicationForm({
       }
       setState('sent');
     } catch (caught) {
+      challenge.reset();
       setState('idle');
       setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.');
     }
@@ -188,6 +200,8 @@ export function ApplicationForm({
         <label htmlFor={`${uid}-website`}>Website</label>
         <input id={`${uid}-website`} name="website" type="text" tabIndex={-1} autoComplete="off" />
       </div>
+
+      {challenge.field}
 
       {error && (
         <p className="he-fb__error" role="alert">

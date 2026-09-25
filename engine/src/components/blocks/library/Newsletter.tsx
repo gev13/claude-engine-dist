@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react';
 import type { z } from 'zod';
+import { useChallenge } from '@/components/site/Captcha';
+import { useMessages } from '@/components/site/Messages';
 import { Button } from '@/components/ui/Button';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
@@ -26,6 +28,8 @@ export function NewsletterBlock(p: P) {
   const id = useId();
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = useState('');
+  const t = useMessages();
+  const challenge = useChallenge('newsletter');
 
   const head = (
     <div className="he-nl__head">
@@ -44,6 +48,13 @@ export function NewsletterBlock(p: P) {
       return;
     }
 
+    const token = await challenge.token();
+    if (token === false) {
+      setState('error');
+      setError(t('captcha.required'));
+      return;
+    }
+
     setState('sending');
     setError('');
     try {
@@ -55,6 +66,7 @@ export function NewsletterBlock(p: P) {
           consent: form.get('consent') === 'on',
           source: window.location.pathname.slice(0, 300),
           website: String(form.get('website') ?? ''),
+          ...(token ? { captcha: token } : {}),
         }),
       });
       if (!res.ok) {
@@ -63,6 +75,7 @@ export function NewsletterBlock(p: P) {
       }
       setState('sent');
     } catch (err) {
+      challenge.reset();
       setState('error');
       setError(err instanceof Error ? err.message : 'Something went wrong.');
     }
@@ -106,6 +119,7 @@ export function NewsletterBlock(p: P) {
               <label htmlFor={`${id}-website`}>Website</label>
               <input id={`${id}-website`} name="website" tabIndex={-1} autoComplete="off" />
             </div>
+            {challenge.field}
             {state === 'error' && (
               <p role="alert" className="he-nl__error">
                 {error}

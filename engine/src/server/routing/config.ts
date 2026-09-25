@@ -1,8 +1,12 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import { db } from '@/server/db';
 import { redirects, settings } from '@/server/db/schema';
 import { DEFAULT_PERMALINKS, PERMALINKS_SETTING_KEY, resolvePermalinks, setSlashMode, type Permalinks } from '@/lib/permalinks';
 import { MATCH_TYPES, type MatchType, type RedirectRule } from '@/lib/redirectRules';
+import { buildCsp, mergeSources, type CspSources } from '@/lib/csp';
+import { INTEGRATIONS_SETTING_KEY, PRESETS, integrationSources, resolveIntegrations } from '@/lib/integrations';
+import { CAPTCHA_CSP, CAPTCHA_SETTING_KEY, captchaSettingsSchema } from '@/lib/captcha';
+import { ANALYTICS_PATTERN, CODE_SETTING_KEY } from '@/lib/customCode';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The routing configuration, cached per process
@@ -26,7 +30,28 @@ export type RoutingConfig = {
   queryRules: (RedirectRule & { id: string })[];
   /** Everything else — applied only where a route would otherwise 404. */
   pathRules: (RedirectRule & { id: string })[];
+  /**
+   * The public site's Content-Security-Policy (2.16), built from what is
+   * switched on: integrations, custom snippets' origins, the CAPTCHA
+   * provider. The middleware sends it on every page.
+   */
+  csp: string;
 };
+
+const isProd = process.env.NODE_ENV === 'production';
+
+/** The policy for a set of settings rows — pure apart from reading them, and tested. */
+export function publicCsp(rows: Map<string, unknown>): string {
+  const lists: CspSources[] = [integrationSources(resolveIntegrations(rows.get(INTEGRATIONS_SETTING_KEY)))];
+  // A GA4 id from before 2.16 (Custom code) still loads, so its hosts are still allowed.
+  const legacy = (rows.get(CODE_SETTING_KEY) as { analyticsId?: unknown } | undefined)?.analyticsId;
+  if (!rows.has(INTEGRATIONS_SETTING_KEY) && typeof legacy === 'string' && ANALYTICS_PATTERN.test(legacy.trim().toUpperCase())) {
+    lists.push(PRESETS.ga4.csp);
+  }
+  const captcha = captchaSettingsSchema.safeParse(rows.get(CAPTCHA_SETTING_KEY) ?? {});
+  if (captcha.success && captcha.data.provider !== 'none') lists.push(CAPTCHA_CSP[captcha.data.provider]);
+  return buildCsp({ isProd, extra: mergeSources(...lists) });
+}
 
 const TTL_MS = 15_000;
 /** A failed read is retried sooner than a good one expires. */
@@ -35,12 +60,15 @@ const RETRY_MS = 3_000;
 type Cache = { value: RoutingConfig; expires: number; pending?: Promise<RoutingConfig> };
 const holder = globalThis as unknown as { __heRouting?: Cache };
 
-const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [] };
+const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }) };
 
 async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
   try {
-    const [[row], rules] = await Promise.all([
-      db.select({ value: settings.value }).from(settings).where(eq(settings.key, PERMALINKS_SETTING_KEY)).limit(1),
+    const [settingRows, rules] = await Promise.all([
+      db
+        .select({ key: settings.key, value: settings.value })
+        .from(settings)
+        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY])),
       db
         .select({
           id: redirects.id,
@@ -62,10 +90,12 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       status: (rule.status === 302 ? 302 : 301) as 301 | 302,
     }));
 
+    const byKey = new Map(settingRows.map((row) => [row.key, row.value]));
     return {
       ok: true,
       value: {
-        permalinks: resolvePermalinks(row?.value),
+        csp: publicCsp(byKey),
+        permalinks: resolvePermalinks(byKey.get(PERMALINKS_SETTING_KEY)),
         queryRules: shaped.filter((rule) => rule.matchQuery !== ''),
         pathRules: shaped.filter((rule) => rule.matchQuery === ''),
       },

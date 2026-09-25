@@ -34,6 +34,8 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       // A CV is personal data, so this follows the three above rather than the
       // advert it answers. Must match `applications:read` in rbac.ts.
       { label: 'Applications', href: '/admin/applications', roles: ['admin', 'manager', 'editor', 'reviewer'] },
+      // Where submissions are sent onward; the server fetches the address, so administrators only.
+      { label: 'Webhooks', href: '/admin/webhooks', roles: ['admin'] },
     ],
   },
   {
@@ -47,8 +49,9 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       // `savedBlocks:write` — a synced block is on every page that uses it.
       { label: 'My blocks', href: '/admin/saved-blocks', roles: ['admin', 'manager'] },
       { label: 'Cookie notice', href: '/admin/cookies', roles: ['admin', 'manager'] },
-      // `settings:*`, not `popups:*` — it loads on every page, like the theme.
-      { label: 'Custom code', href: '/admin/code', roles: ['admin'] },
+      // `settings:*`, not `popups:*` — both load on every page, like the theme.
+      { label: 'Integrations', href: '/admin/integrations', roles: ['admin'] },
+      { label: 'Custom CSS', href: '/admin/code', roles: ['admin'] },
     ],
   },
   {

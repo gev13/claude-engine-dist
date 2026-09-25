@@ -1,6 +1,14 @@
 {
-  "latest": "2.15.0",
+  "latest": "2.16.0",
   "releases": [
+    {
+      "version": "2.16.0",
+      "date": "2026-09-25",
+      "summary": "Integrations for tracking tags, with a content policy built from what is switched on; a real cookie-consent manager with Google Consent Mode v2; CAPTCHA on every public form; and forms that email their answers, reply to the visitor, open a thank-you page, track conversions, carry campaign fields, ask questions conditionally and feed webhooks.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "2.15.0",
       "date": "2026-09-25",

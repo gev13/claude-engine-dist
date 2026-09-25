@@ -10,7 +10,7 @@ import { api, fetcher } from '@/lib/admin/client';
 import { type Answer, answerText } from '@/lib/forms';
 import { ConfirmDelete, Pagination, errorMessage } from '../_shared';
 
-type Submission = { id: string; formName: string; source: string; answers: Answer[]; createdAt: string };
+type Submission = { id: string; formName: string; source: string; answers: Answer[]; meta?: Record<string, string>; createdAt: string };
 type ListResponse = {
   items: Submission[];
   total: number;
@@ -72,7 +72,7 @@ function SubmissionsScreenInner({ canManage }: { canManage: boolean }) {
     <>
       <PageHeader
         title="Form submissions"
-        description="Answers sent through form blocks on the site. Nothing is emailed yet — read them here, or export one form's answers as a spreadsheet."
+        description="Answers sent through form blocks on the site — read them here, or export one form's answers as a spreadsheet. Who is emailed is set on each form."
       />
 
       <div className="mb-5 flex flex-wrap items-end gap-3">
@@ -146,6 +146,17 @@ function SubmissionsScreenInner({ canManage }: { canManage: boolean }) {
                 </Fragment>
               ))}
             </dl>
+            {/* Hidden fields (2.16): the campaign the visitor arrived with, and the like. */}
+            {row.meta && Object.keys(row.meta).length > 0 && (
+              <dl className="m-0 mt-3 grid gap-x-6 gap-y-1 border-t border-hairline pt-3 sm:grid-cols-[minmax(0,220px)_minmax(0,1fr)]">
+                {Object.entries(row.meta).map(([name, value]) => (
+                  <Fragment key={name}>
+                    <dt className="font-mono text-[11px] text-smoke">{name}</dt>
+                    <dd className="m-0 break-all text-[13px] text-ash">{value}</dd>
+                  </Fragment>
+                ))}
+              </dl>
+            )}
           </article>
         ))}
       </div>

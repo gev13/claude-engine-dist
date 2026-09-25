@@ -4,7 +4,7 @@ import { clientIp, rateLimit } from '@/server/auth/rateLimit';
 import { badRequest, handle, ok } from '@/server/api/respond';
 import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { findForm } from '@/server/content/forms';
-import { validateAnswers } from '@/lib/forms';
+import { readHiddenValues, validateAnswers } from '@/lib/forms';
 import {
   ATTACHMENT_KINDS,
   ApplicationFileError,
@@ -13,7 +13,9 @@ import {
 } from '@/server/applications/storage';
 import { db } from '@/server/db';
 import { formSubmissions } from '@/server/db/schema';
-import { notifyFormSubmission } from '@/server/mail/notify';
+import { notifyFormSubmission, sendAutoresponder } from '@/server/mail/notify';
+import { checkCaptcha } from '@/server/security/captcha';
+import { dispatchSubmission } from '@/server/webhooks/deliver';
 import { sweep } from '@/server/retention';
 
 export const runtime = 'nodejs';
@@ -30,6 +32,10 @@ const envelope = z.object({
   answers: z.record(z.string(), z.unknown()),
   /** Honeypot. Real people never see this field, so anything in it is a bot. */
   website: z.string().max(200).optional(),
+  /** The form's hidden fields (2.16); only names the saved form defines are kept. */
+  hidden: z.record(z.string(), z.unknown()).optional(),
+  /** The CAPTCHA provider's token, when the form is protected (2.16). */
+  captcha: z.string().max(4096).optional(),
 });
 
 /**
@@ -72,6 +78,8 @@ export async function POST(request: Request) {
           source: sent.get('source') ?? '',
           answers: JSON.parse(String(sent.get('answers') ?? '{}')),
           website: sent.get('website') ?? '',
+          hidden: JSON.parse(String(sent.get('hidden') ?? '{}')),
+          captcha: sent.get('captcha') ?? undefined,
         });
       } catch {
         return badRequest('Some fields need attention.');
@@ -97,6 +105,14 @@ export async function POST(request: Request) {
 
     const form = await findForm(body.source, body.formId);
     if (!form) return badRequest('This form is no longer on the page. Reload it and try again.');
+
+    /* Before anything is written: a refused challenge stores nothing. The
+       reason goes to the server log, the visitor gets something to act on. */
+    const verdict = await checkCaptcha('form', body.captcha, ip, form.captcha);
+    if (!verdict.ok) {
+      console.warn('[forms] CAPTCHA refused', { form: form.formName, reason: verdict.reason });
+      return badRequest(verdict.publicMessage);
+    }
 
     /* The form as saved decides which fields may carry a file, so a script
        cannot attach one to a question that never asked for it — the same rule
@@ -130,9 +146,11 @@ export async function POST(request: Request) {
       throw caught;
     }
 
+    const meta = readHiddenValues(form.hidden, body.hidden);
+
     const [row] = await db
       .insert(formSubmissions)
-      .values({ formId: body.formId, formName: form.formName, source: body.source, answers: checked.answers, ip })
+      .values({ formId: body.formId, formName: form.formName, source: body.source, answers: checked.answers, ip, meta })
       .returning({ id: formSubmissions.id });
 
     // What was asked is recorded, never what was answered: answers are personal data.
@@ -145,8 +163,22 @@ export async function POST(request: Request) {
       ip,
     });
 
-    // The email says what arrived and where to read it; the answers stay here.
-    notifyFormSubmission({ formName: form.formName, source: body.source, fields: checked.answers.length });
+    /* The form's own settings decide who hears and what they are told; all
+       three are started and not awaited — the visitor's answer is stored,
+       and nothing that goes wrong with mail or a receiver changes that. */
+    if (row) {
+      notifyFormSubmission({
+        submissionId: row.id,
+        formName: form.formName,
+        source: body.source,
+        answers: checked.answers,
+        meta,
+        ip,
+        notify: form.notify,
+      });
+      sendAutoresponder({ formName: form.formName, answers: checked.answers, settings: form.autoresponder });
+      dispatchSubmission(row.id, form.formName);
+    }
 
     /* The retention sweep, throttled and never thrown: the engine has no
        scheduler, so the honest trigger is the traffic the site already has —

@@ -1,12 +1,13 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
 import { PageHeader } from '@/components/admin/PageHeader';
-import { AdminButton, Alert, Field, Input, Panel, Spinner, Textarea } from '@/components/admin/ui';
+import { AdminButton, Alert, Panel, Spinner, Textarea } from '@/components/admin/ui';
 import { useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
-import { ANALYTICS_PATTERN, CSS_MAX, cssWasChanged, type SiteCode } from '@/lib/customCode';
+import { CSS_MAX, cssWasChanged, type SiteCode } from '@/lib/customCode';
 import { errorMessage, useUnsavedWarning } from '../_shared';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -44,15 +45,8 @@ export function CodeScreen({ canWrite }: { canWrite: boolean }) {
   const set = <K extends keyof SiteCode>(key: K, value: SiteCode[K]) =>
     setForm((current) => (current ? { ...current, [key]: value } : current));
 
-  /* Checked as you type as well as on the server, because a typo here means
-     no analytics at all and nothing on the page says so. */
-  const idProblem =
-    form && form.analyticsId !== '' && !ANALYTICS_PATTERN.test(form.analyticsId)
-      ? 'A GA4 measurement id looks like G-XXXXXXXXXX.'
-      : '';
-
   async function save() {
-    if (!form || idProblem) return;
+    if (!form) return;
     setBusy(true);
     setProblem('');
     try {
@@ -73,7 +67,7 @@ export function CodeScreen({ canWrite }: { canWrite: boolean }) {
   if (isLoading || !form) {
     return (
       <>
-        <PageHeader title="Custom code" description="Site-wide CSS, and the analytics tag." />
+        <PageHeader title="Custom CSS" description="Site-wide CSS, loaded on every page." />
         <Spinner />
       </>
     );
@@ -82,11 +76,11 @@ export function CodeScreen({ canWrite }: { canWrite: boolean }) {
   return (
     <>
       <PageHeader
-        title="Custom code"
-        description="CSS that loads on every page, and the analytics tag."
+        title="Custom CSS"
+        description="CSS that loads on every page, after the theme."
         actions={
           canWrite && (
-            <AdminButton type="button" onClick={() => void save()} disabled={busy || !dirty || Boolean(idProblem)}>
+            <AdminButton type="button" onClick={() => void save()} disabled={busy || !dirty}>
               {busy ? 'Saving…' : 'Save'}
             </AdminButton>
           )
@@ -101,11 +95,11 @@ export function CodeScreen({ canWrite }: { canWrite: boolean }) {
 
       <div className="mb-6">
         <Alert tone="info">
-          There is no box here for pasting a <code className="font-mono text-flare-soft">&lt;script&gt;</code>, on
-          purpose: a field that accepts JavaScript lets anyone who can sign in run code in every visitor&rsquo;s
-          browser. The two things people normally want a snippet for are here instead — <strong>CSS</strong>, which
-          cannot execute anything, and <strong>analytics</strong>, where you give the engine a measurement id and it
-          writes the tag itself. Anything else needs a change to the code, which is a review.
+          CSS cannot execute anything, so it is safe to write here. Tracking tags — Google Analytics, Tag Manager,
+          the Meta Pixel and the rest — are under <Link href="/admin/integrations" className="text-flare-soft">Integrations</Link>,
+          where you give the engine an id and it writes the vendor&rsquo;s own tag, held back until a visitor
+          agrees if the cookie notice asks for consent. Arbitrary script is there too, switched off, for
+          administrators only.
         </Alert>
       </div>
 
@@ -141,32 +135,6 @@ export function CodeScreen({ canWrite }: { canWrite: boolean }) {
           </div>
         </Panel>
 
-        <Panel title="Analytics">
-          <div className="grid max-w-md gap-3">
-            <Field
-              label="Google Analytics 4 measurement id"
-              htmlFor="analytics-id"
-              hint="leave empty for no analytics at all"
-              error={idProblem}
-            >
-              <Input
-                id="analytics-id"
-                value={form.analyticsId}
-                disabled={!canWrite}
-                spellCheck={false}
-                placeholder="G-XXXXXXXXXX"
-                onChange={(e) => set('analyticsId', e.target.value.trim().toUpperCase())}
-              />
-            </Field>
-            <p className="m-0 text-[12px] leading-relaxed text-ash">
-              With an id here the site loads <code className="font-mono">/analytics.js</code> from its own address
-              and that starts Google&rsquo;s tag. With the field empty nothing is loaded and nothing is sent to
-              Google. The cookie notice records an answer on{' '}
-              <code className="font-mono text-flare-soft">data-consent</code> — this tag does not read it yet, so if
-              your site needs consent before measuring, say so there.
-            </p>
-          </div>
-        </Panel>
       </div>
     </>
   );

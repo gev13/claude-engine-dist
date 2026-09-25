@@ -1,40 +1,19 @@
 import type { NextConfig } from 'next';
+import { buildCsp } from './src/lib/csp';
 
 const isProd = process.env.NODE_ENV === 'production';
 
 /**
  * Content-Security-Policy.
- * TinyMCE is self-hosted from /tinymce and needs 'unsafe-inline' for the styles
- * it injects into its editor chrome. Next's inline bootstrap needs
- * 'unsafe-inline' for scripts in dev; in production it is nonce-free but
- * restricted to 'self'.
+ *
+ * Built by `buildCsp` (src/lib/csp.ts), the one builder every policy uses.
+ * This file sets the admin's and the band probe's, which never change. The
+ * public site's is set by the middleware, per request, because it grows with
+ * the integrations and CAPTCHA an administrator switches on (2.16) — so the
+ * public rule below deliberately carries **no** CSP: two policies on one
+ * response are enforced as their intersection.
  */
-/* Google Analytics, and only Google Analytics.
-   
-   Listed unconditionally because the CSP is static while the analytics id is
-   a setting somebody changes in the admin. That is not as loose as it looks:
-   a host being *permitted* loads nothing — the only thing that ever points at
-   these is `/analytics.js`, which the engine writes and which returns a
-   comment when no id is set. Nothing else in the site references them. */
-const GA_SCRIPT = 'https://www.googletagmanager.com';
-const GA_BEACON = 'https://www.google-analytics.com https://*.google-analytics.com https://*.analytics.google.com';
-
-const csp = [
-  "default-src 'self'",
-  `script-src 'self' 'unsafe-inline' ${GA_SCRIPT}${isProd ? '' : " 'unsafe-eval'"}`,
-  "style-src 'self' 'unsafe-inline'",
-  "font-src 'self' data:",
-  `img-src 'self' data: blob: ${GA_BEACON}`,
-  "media-src 'self' blob:",
-  `connect-src 'self' ${GA_BEACON}`,
-  // Video players and maps, loaded only when a visitor asks (src/lib/embeds.ts).
-  "frame-src https://www.youtube-nocookie.com https://player.vimeo.com https://www.openstreetmap.org https://www.google.com",
-  "frame-ancestors 'none'",
-  "form-action 'self'",
-  "base-uri 'self'",
-  "object-src 'none'",
-  'upgrade-insecure-requests',
-].join('; ');
+const csp = buildCsp({ isProd });
 
 /* The one route that may be framed, and only by this site.
    ───────────────────────────────────────────────────────────────────────────
@@ -52,7 +31,7 @@ const csp = [
 export const BAND_PROBE_PATH = '/admin/band';
 
 /* The probe, which may be framed by this origin. */
-const probeCsp = csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'");
+const probeCsp = buildCsp({ isProd, frameAncestors: "'self'" });
 
 /* The admin, which is the thing doing the framing.
    ───────────────────────────────────────────────────────────────────────────
@@ -61,7 +40,7 @@ const probeCsp = csp.replace("frame-ancestors 'none'", "frame-ancestors 'self'")
    from its own origin, so the spacing it measures silently came back empty —
    a policy failure that looks exactly like a feature that does not work.
    Public pages keep the narrow list: only the admin frames anything of ours. */
-const adminCsp = csp.replace('frame-src ', "frame-src 'self' ");
+const adminCsp = buildCsp({ isProd, frameSelf: true });
 
 const withCsp = (value: string, frameOptions?: string) =>
   securityHeaders.map((header) =>
@@ -127,7 +106,8 @@ const nextConfig: NextConfig = {
       { source: '/admin/band/:path*', headers: [...withCsp(probeCsp, 'SAMEORIGIN'), NOINDEX] },
       { source: '/admin/((?!band$|band/).*)', headers: [...withCsp(adminCsp), NOINDEX] },
       { source: '/admin', headers: [...withCsp(adminCsp), NOINDEX] },
-      { source: '/((?!admin$|admin/).*)', headers: securityHeaders },
+      // No CSP here: the middleware sets the public policy per request (2.16).
+      { source: '/((?!admin$|admin/).*)', headers: securityHeaders.filter((header) => header.key !== 'Content-Security-Policy') },
       { source: '/api/:path*', headers: [NOINDEX] },
     ];
   },

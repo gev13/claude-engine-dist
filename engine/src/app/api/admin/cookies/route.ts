@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { handle, ok, readJson } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
@@ -7,7 +8,8 @@ import { revalidateEverything } from '@/server/content/revalidate';
 import { COOKIE_SETTING_KEY, cookieNoticeSchema } from '@/lib/cookies';
 import { getCookieNotice } from '@/server/content/cookies';
 import { db } from '@/server/db';
-import { settings } from '@/server/db/schema';
+import { consentStats, settings } from '@/server/db/schema';
+import { gte } from 'drizzle-orm';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -24,7 +26,12 @@ export async function GET(request: Request) {
   return handle(async () => {
     const guard = await requireUser(request, 'popups:read');
     if (!guard.ok) return guard.response;
-    return ok({ notice: await getCookieNotice() });
+    // The anonymous consent log's last thirty days, when it is on (2.16).
+    const since = new Date(Date.now() - 30 * 86_400_000).toISOString().slice(0, 10);
+    const rows = await db.select().from(consentStats).where(gte(consentStats.day, since));
+    const stats = { accepted: 0, rejected: 0, custom: 0 } as Record<string, number>;
+    for (const row of rows) stats[row.choice] = (stats[row.choice] ?? 0) + row.count;
+    return ok({ notice: await getCookieNotice(), stats });
   });
 }
 
@@ -56,7 +63,12 @@ export async function PUT(request: Request) {
       ip: clientIp(request.headers),
     });
 
-    // It renders in the shared layout, so every page is now stale.
+    // It renders in the shared layout, so every page is now stale — and the tag loader reads its consent rules.
+    try {
+      revalidatePath('/integrations.js');
+    } catch {
+      /* A cache hint, never a failed save. */
+    }
     revalidateEverything();
     return ok({ notice });
   });

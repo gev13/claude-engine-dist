@@ -83,6 +83,17 @@ export const MESSAGES = {
   'form.choose': 'Choose…',
   'form.optional': 'optional',
 
+  'form.next': 'Next',
+  'form.back': 'Back',
+  'form.step': 'Step {n} of {total}',
+
+  /* ── Bot protection (2.16) ─────────────────────────────────────────────── */
+  'captcha.label': 'Check that you are not a robot',
+  'captcha.loading': 'Loading the check…',
+  'captcha.failed': 'The check that you are not a robot could not load. Reload the page, or allow it in your browser, to send this form.',
+  'captcha.invisible': 'This form is protected against spam.',
+  'captcha.required': 'Please complete the check that you are not a robot.',
+
   /* ── Newsletter ──────────────────────────────────────────────────────── */
   'newsletter.subscribe': 'Subscribe',
   'newsletter.placeholder': 'Your email address',

@@ -205,6 +205,11 @@
     align-items: flex-start;
   }
 
+  /* A column: the text's 320px basis would be a height here, and wrapping
+     would move the buttons into a second, clipped column. */
+  .he-cookie.is-centre { flex-wrap: nowrap; }
+  .he-cookie.is-centre .he-cookie__text { flex: none; }
+
   .he-cookie__scrim { position: fixed; inset: 0; z-index: 91; background: rgb(0 0 0 / 0.55); }
 
   /* The bar centres one readable column rather than stretching a sentence
@@ -218,6 +223,15 @@
   .he-cookie__link:hover { color: var(--color-flare-hot); }
 
   .he-cookie__actions { display: flex; flex-wrap: wrap; gap: var(--he-gap, 10px); flex-shrink: 0; }
+
+  /* 2.16 — the consent manager's preferences: one row per category. */
+  .he-cookie.is-details { max-height: min(86vh, 720px); overflow-y: auto; }
+  .he-cookie__cats { display: flex; flex-direction: column; gap: 12px; width: 100%; margin: 0; padding: 0; list-style: none; }
+  .he-cookie__cats label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border: 1px solid var(--color-hairline); border-radius: 12px; cursor: pointer; }
+  .he-cookie__cats input { margin-top: 3px; width: 18px; height: 18px; accent-color: var(--color-flare); flex-shrink: 0; }
+  .he-cookie__cats input:disabled { opacity: 0.6; }
+  .he-cookie__cats strong { display: block; font-size: 15px; }
+  .he-cookie__cats span > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--color-ash); }
 
   @media (width <= 48rem) {
     .he-cookie { padding: 18px 18px; gap: 14px; }

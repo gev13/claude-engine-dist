@@ -19,7 +19,11 @@ import { getSiteSettings } from '@/server/content/siteSettings';
 import { getPopups } from '@/server/content/popups';
 import { getCookieNotice } from '@/server/content/cookies';
 import { getSiteCode } from '@/server/content/code';
-import { hasAnalytics, safeCss } from '@/lib/customCode';
+import { safeCss } from '@/lib/customCode';
+import { PRESETS, activePresets, activeSnippets } from '@/lib/integrations';
+import { getIntegrations, getPublicCaptcha } from '@/server/integrations/settings';
+import { CaptchaProvider } from '@/components/site/Captcha';
+import { TagsNavigation } from '@/components/site/TagsNavigation';
 import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
 import { Popups } from '@/components/site/Popups';
@@ -99,7 +103,7 @@ export default async function SiteLayout({
 
   /* Menus, the site's own details and popups all follow the language, each
      falling back to the shared value when nobody has translated it. */
-  const [theme, navigation, catalogue, settings, popups, messages, cookies, code, permalinks] = await Promise.all([
+  const [theme, navigation, catalogue, settings, popups, messages, cookies, code, permalinks, integrations, captcha] = await Promise.all([
     getTheme(),
     getNavigation(locale),
     getServiceCatalogue(),
@@ -109,7 +113,13 @@ export default async function SiteLayout({
     getCookieNotice(locale),
     getSiteCode(),
     getPermalinks(),
+    getIntegrations(),
+    getPublicCaptcha(),
   ]);
+  /* Any tag switched on loads through /integrations.js, which also holds each
+     one back until its consent category is granted (2.16). */
+  const tagsOn = activePresets(integrations).length > 0 || activeSnippets(integrations).length > 0;
+  const gtmNoscript = integrations.gtm.enabled && integrations.gtm.noscript && PRESETS.gtm.id.test(integrations.gtm.id);
   const css = themeToCss(theme);
   const chrome = resolveChrome(theme.chrome);
 
@@ -141,9 +151,22 @@ export default async function SiteLayout({
         <link rel="preload" href="/fonts/archivo-var-latin.woff2" as="font" type="font/woff2" crossOrigin="" />
       </head>
       <body>
+        {gtmNoscript && (
+          /* Tag Manager for visitors without script — it cannot ask consent, so it is off unless chosen. */
+          <noscript>
+            <iframe
+              src={`https://www.googletagmanager.com/ns.html?id=${encodeURIComponent(integrations.gtm.id)}`}
+              height="0"
+              width="0"
+              style={{ display: 'none', visibility: 'hidden' }}
+              title="Google Tag Manager"
+            />
+          </noscript>
+        )}
         {/* Client components — carousels, forms, the share button — read the
             engine's own words from here; server components call getMessages. */}
         <MessagesProvider value={messages}>
+        <CaptchaProvider value={captcha}>
         <div
           className="he-site"
           data-header={chrome.header.variant}
@@ -217,11 +240,18 @@ export default async function SiteLayout({
           {/* Last, and above the popups: it is the one thing a visitor is being
               asked to answer before carrying on. */}
           <CookieNotice notice={cookies} />
-          {/* The id lives in the route, not here: what runs is code this
-              repository wrote, and the only thing an editor chose is an id. */}
-          {hasAnalytics(code) && <script defer src="/analytics.js" />}
+          {/* The ids live in the route, not here: what runs is code this
+              repository wrote, and what an administrator chose is ids and
+              switches (Settings → Integrations). */}
+          {tagsOn && (
+            <>
+              <script async src="/integrations.js" />
+              <TagsNavigation />
+            </>
+          )}
           <JsonLd data={graph([organization(settings), website({ ...settings, searchPath: blogIndexPath(permalinks) }), siteNavigation(navLinks)])} />
         </div>
+        </CaptchaProvider>
         </MessagesProvider>
       </body>
     </html>

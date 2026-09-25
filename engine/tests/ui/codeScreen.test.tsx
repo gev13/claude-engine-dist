@@ -20,6 +20,7 @@ const store = vi.hoisted(() => ({
   api: vi.fn(),
 }));
 
+vi.mock('next/link', () => ({ default: ({ href, children, ...rest }: { href: string; children: React.ReactNode }) => <a href={href} {...rest}>{children}</a> }));
 vi.mock('swr', () => ({ default: () => ({ data: store.loaded, isLoading: false, mutate: vi.fn() }) }));
 vi.mock('@/lib/admin/client', () => ({
   api: store.api,
@@ -43,50 +44,26 @@ const button = (root: HTMLElement, text: string) =>
 const cssBox = (root: HTMLElement) =>
   root.querySelector<HTMLTextAreaElement>('textarea[aria-label="Site-wide custom CSS"]')!;
 
-const idBox = (root: HTMLElement) => root.querySelector<HTMLInputElement>('#analytics-id')!;
-
 describe('what the screen offers', () => {
-  it('says why there is no box for a script tag', () => {
+  /* 2.16 — tags moved to Integrations, where each is an id and a switch and
+     waits for consent. This screen is CSS, and says where the tags went. */
+  it('points at Integrations for tags, rather than offering a script box', () => {
     const { container } = render(<CodeScreen canWrite />);
-    expect(container.textContent).toContain('<script>');
-    expect(container.textContent).toMatch(/run code in every visitor/i);
+    expect(container.querySelector('a[href="/admin/integrations"]')).toBeTruthy();
+    expect(container.textContent).toMatch(/cannot execute anything/i);
   });
 
-  it('offers a CSS box and a measurement id, and nothing else', () => {
+  it('offers a CSS box and nothing else', () => {
     const { container } = render(<CodeScreen canWrite />);
     expect(cssBox(container)).toBeTruthy();
-    expect(idBox(container)).toBeTruthy();
     expect(container.querySelectorAll('textarea')).toHaveLength(1);
+    expect(container.querySelector('#analytics-id')).toBeNull();
   });
 
   it('gives a reader no editable fields', () => {
     const { container } = render(<CodeScreen canWrite={false} />);
     expect(cssBox(container).disabled).toBe(true);
-    expect(idBox(container).disabled).toBe(true);
     expect(button(container, 'Save')).toBeUndefined();
-  });
-});
-
-describe('the analytics id', () => {
-  it('refuses a Universal Analytics id, which is the usual paste', async () => {
-    const { container } = render(<CodeScreen canWrite />);
-    fireEvent.change(idBox(container), { target: { value: 'UA-12345-1' } });
-
-    await waitFor(() => expect(container.textContent).toContain('G-XXXXXXXXXX'));
-    expect(button(container, 'Save')!.disabled).toBe(true);
-    expect(store.api).not.toHaveBeenCalled();
-  });
-
-  it('accepts a GA4 id and sends it', async () => {
-    const { container } = render(<CodeScreen canWrite />);
-    fireEvent.change(idBox(container), { target: { value: 'g-abcd1234' } });
-
-    // Uppercased as it is typed, so what is shown is what is stored.
-    await waitFor(() => expect(idBox(container).value).toBe('G-ABCD1234'));
-
-    fireEvent.click(button(container, 'Save')!);
-    await waitFor(() => expect(store.api).toHaveBeenCalledTimes(1));
-    expect(store.api.mock.calls[0][1].json.code.analyticsId).toBe('G-ABCD1234');
   });
 });
 

@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { blockSchemas } from '../src/lib/blocks';
+import { buildCsp } from '../src/lib/csp';
 import { EMBED_ORIGINS, mapEmbedUrl, mapLinkUrl, parseVideoUrl, videoEmbedUrl } from '../src/lib/embeds';
 
 describe('video links (EL10)', () => {
@@ -67,9 +68,10 @@ describe('maps (EL14)', () => {
   });
 
   it('lets exactly these embeds through the Content-Security-Policy', () => {
-    const config = readFileSync('next.config.ts', 'utf8');
-    const frameSrc = /frame-src ([^"]+)"/.exec(config)?.[1]?.split(' ') ?? [];
+    // Since 2.16 every policy is built by lib/csp.ts; with nothing switched on, frames are the embeds alone.
+    const frameSrc = /frame-src ([^;]+)/.exec(buildCsp({ isProd: true }))?.[1]?.split(' ') ?? [];
     expect(frameSrc.sort()).toEqual([...EMBED_ORIGINS].sort());
+    expect(readFileSync('next.config.ts', 'utf8')).toContain('buildCsp');
   });
 
   it('keeps coordinates on the globe', () => {

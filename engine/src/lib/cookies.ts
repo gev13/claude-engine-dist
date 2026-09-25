@@ -48,6 +48,11 @@ export const COOKIE_SETTINGS_HASH = '#cookie-settings';
 
 const text = (max: number) => z.string().trim().max(max);
 
+const category = (title: string, description: string, enabled = true) =>
+  z
+    .object({ enabled: z.boolean().default(enabled), title: text(60).default(title), description: text(400).default(description) })
+    .prefault({});
+
 export const cookieNoticeSchema = z.object({
   /** Off by default: a site with nothing to declare should not nag anybody. */
   enabled: z.boolean().default(false),
@@ -78,6 +83,36 @@ export const cookieNoticeSchema = z.object({
 
   position: z.enum(COOKIE_POSITIONS).default('bottom-bar'),
 
+  /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
+     `notice` is the banner as it always was: a recorded answer and nothing
+     switched off. `consent` makes it a consent manager — categories, a
+     preferences dialog, and the tag loader (/integrations.js) holding back
+     every tag until its category is granted. */
+  mode: z.enum(['notice', 'consent']).default('notice'),
+  categories: z
+    .object({
+      necessary: z.object({ title: text(60).default('Necessary'), description: text(400).default('Needed for the site to work — signing in, security, remembering this choice. Always on.') }).prefault({}),
+      analytics: category('Analytics', 'Counting visits and how pages are used, so the site can be improved.'),
+      marketing: category('Marketing', 'Measuring advertising and showing relevant ads elsewhere.'),
+      preferences: category('Preferences', 'Remembering choices such as language and region.', false),
+    })
+    .prefault({}),
+  preferencesLabel: text(40).default('Preferences'),
+  saveLabel: text(40).default('Save choices'),
+  /** How long an answer is kept before asking again. */
+  months: z.number().int().min(1).max(24).default(12),
+  /** Bumped by "Ask everyone again"; a changed set of categories also asks again by itself. */
+  version: z.number().int().min(1).max(10_000).default(1),
+  /**
+   * `required`: only visitors whose country header (Cloudflare's
+   * CF-IPCountry, Vercel's X-Vercel-IP-Country) is in the EU, the EEA, the UK
+   * or Switzerland are asked; everybody else is treated as having agreed.
+   * Without such a header, everybody is asked.
+   */
+  region: z.enum(['everyone', 'required']).default('everyone'),
+  /** Count answers — accepted, rejected, chosen — per day, with nothing about who. */
+  log: z.boolean().default(false),
+
   /**
    * Treat a browser's Do Not Track as an answer and never ask.
    *
@@ -93,3 +128,58 @@ export const COOKIE_SETTING_KEY = 'cookies';
 
 /** The shipped defaults, for a site that has never opened the screen. */
 export const defaultCookieNotice = (): CookieNotice => cookieNoticeSchema.parse({});
+
+/* ── Consent (T11, 2.16) ─────────────────────────────────────────────────── */
+
+/** The cookie a consent-manager answer is kept in: first-party, read by the tag loader. */
+export const CONSENT_COOKIE = 'he_consent';
+/** Set by the middleware from the CDN's country header: `required` or `other`. */
+export const REGION_COOKIE = 'he_region';
+
+export const OPTIONAL_CATEGORIES = ['analytics', 'marketing', 'preferences'] as const;
+export type OptionalCategory = (typeof OPTIONAL_CATEGORIES)[number];
+export type ConsentChoice = Record<OptionalCategory, boolean>;
+
+/** Where consent is required: the EU and the EEA, the UK and Switzerland. */
+export const CONSENT_COUNTRIES = new Set([
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO',
+  'SK', 'SI', 'ES', 'SE', 'IS', 'LI', 'NO', 'GB', 'UK', 'CH',
+]);
+
+/**
+ * The version an answer must carry to count. It moves when an administrator
+ * asks everyone again, and by itself when the set of categories offered
+ * changes — somebody who agreed to analytics has not agreed to marketing
+ * that was added later.
+ */
+export function consentVersion(notice: CookieNotice): number {
+  const mask = OPTIONAL_CATEGORIES.reduce((bits, key, i) => bits | (notice.categories[key].enabled ? 1 << i : 0), 0);
+  return notice.version * 8 + mask;
+}
+
+/** An answer as the cookie holds it: `v:17|t:20356|a:1|m:0|p:0`. */
+export function encodeConsent(choice: ConsentChoice, version: number, now = Date.now()): string {
+  const day = Math.floor(now / 86_400_000);
+  return `v:${version}|t:${day}|a:${choice.analytics ? 1 : 0}|m:${choice.marketing ? 1 : 0}|p:${choice.preferences ? 1 : 0}`;
+}
+
+/** Read an answer back; null when there is none, or it was given to another version. */
+export function decodeConsent(raw: string | null | undefined, version: number): ConsentChoice | null {
+  if (!raw) return null;
+  let text: string;
+  try {
+    text = decodeURIComponent(raw);
+  } catch {
+    // A mangled cookie is no answer, so the visitor is asked again.
+    return null;
+  }
+  const parts = Object.fromEntries(text.split('|').map((pair) => pair.split(':') as [string, string]));
+  if (Number(parts.v) !== version) return null;
+  return { analytics: parts.a === '1', marketing: parts.m === '1', preferences: parts.p === '1' };
+}
+
+/** How an answer is counted in the anonymous log. */
+export function choiceKind(choice: ConsentChoice, offered: OptionalCategory[]): 'accepted' | 'rejected' | 'custom' {
+  const on = offered.filter((key) => choice[key]).length;
+  return on === offered.length ? 'accepted' : on === 0 ? 'rejected' : 'custom';
+}

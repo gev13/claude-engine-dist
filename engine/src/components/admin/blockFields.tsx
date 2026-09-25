@@ -35,6 +35,7 @@ import { VIDEO_HOST_LABEL, parseVideoUrl } from '@/lib/embeds';
 import { WEEKDAYS, WEEKDAY_LABELS, type Weekday } from '@/lib/hours';
 import { SHARE_LABELS, SHARE_NETWORKS } from '@/lib/share';
 import { FORM_FIELD_LABELS, FORM_FIELD_TYPES } from '@/lib/forms';
+import { AfterFields, FormSettingsFields, ShowIfField, type After } from '@/components/admin/FormSettingsFields';
 import { LOTTIE_PLAY, LOTTIE_PLAY_LABELS } from '@/lib/lottie';
 import { cn } from '@/lib/utils';
 
@@ -839,7 +840,17 @@ type NoteItem = { label: string; text: string };
 type ReviewItem = { name: string; meta?: string; avatarUrl?: string; rating?: number; title?: string; text: string; date?: string; source?: string };
 type ReviewSummary = { rating: number; count?: string; label?: string; link?: { label: string; href: string } };
 type PlaylistItem = { source: string; videoTitle: string; posterUrl?: string; duration?: string };
-type FormFieldRow = { id: string; type: string; label: string; required?: boolean; placeholder?: string; help?: string; options?: string[]; width?: string };
+type FormFieldRow = {
+  id: string;
+  type: string;
+  label: string;
+  required?: boolean;
+  placeholder?: string;
+  help?: string;
+  options?: string[];
+  width?: string;
+  showIf?: { field: string; equals: string };
+};
 
 const SIZE_OPTIONS: [string, string][] = [['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']];
 const HEAD_FIELDS = (props: Record<string, unknown>, set: (p: Record<string, unknown>) => void) => (
@@ -3236,9 +3247,10 @@ function TypeFields({
             onChange={(fields) => set({ ...props, fields: fields.slice(0, 30) })}
             blank={(): FormFieldRow => ({ id: nanoid(8), type: 'text', label: '', width: 'full' })}
             addLabel="Add question"
-            renderRow={(item, update) => {
+            renderRow={(item, update, index) => {
               const choices = ['select', 'radio', 'checkboxes'].includes(item.type);
               const step = item.type === 'step';
+              const earlier = arr<FormFieldRow>(props, 'fields').slice(0, index);
               return (
                 <>
                   <div className="grid gap-3 sm:grid-cols-[1.2fr_2fr]">
@@ -3288,6 +3300,7 @@ function TypeFields({
                       <Field label="Help text" hint="optional, shown under the question">
                         <Input value={item.help ?? ''} maxLength={200} onChange={(e) => update({ help: e.target.value || undefined })} />
                       </Field>
+                      <ShowIfField item={item} earlier={earlier} update={update} />
                     </>
                   )}
                 </>
@@ -3299,7 +3312,8 @@ function TypeFields({
             <Text label="Thank-you heading" k="successTitle" props={props} set={set} placeholder="Thank you — that is with us." />
             <Text label="Thank-you text" k="successText" props={props} set={set} />
           </div>
-          <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. Nothing is emailed yet: the site has no mail service configured.</p>
+          <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
+          <FormSettingsFields props={props} set={set} />
         </>
       );
 
@@ -4493,6 +4507,12 @@ function TypeFields({
           <p className="m-0 text-[13px] text-smoke">
             The form fields themselves are fixed, so submissions stay consistent with the enquiries table.
           </p>
+          <details className="border-2 border-hairline bg-ink px-3 py-2">
+            <summary className="cursor-pointer py-1 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke hover:text-bone">After sending</summary>
+            <div className="flex flex-col gap-3 pt-3 pb-1">
+              <AfterFields value={(props.after ?? {}) as After} onChange={(after) => set({ ...props, after })} />
+            </div>
+          </details>
         </>
       );
 

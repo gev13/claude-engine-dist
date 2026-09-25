@@ -103,7 +103,11 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
  * tell the destination it had already been installed, and `engine.update*` is
  * one site's record of what it last checked.
  */
-export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks', 'projects'] as const;
+/* 2.16: the cookie notice and the integrations travel — they are how the
+   site behaves, not whose server it is. CAPTCHA and webhooks do not: their
+   secrets are encrypted with this server's key, so elsewhere they would be
+   unreadable, and a webhook is an address this server was trusted to call. */
+export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks', 'projects', 'cookies', 'integrations'] as const;
 const PORTABLE_SETTING_PREFIX = 'site.';
 
 export const NEVER_EXPORTED_SETTING_KEYS = [
@@ -112,6 +116,8 @@ export const NEVER_EXPORTED_SETTING_KEYS = [
   'install.completed',
   'engine.update',
   'engine.update.run',
+  'captcha',
+  'webhooks',
 ] as const;
 
 export function isPortableSettingKey(key: string): boolean {

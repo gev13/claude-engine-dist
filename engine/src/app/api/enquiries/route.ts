@@ -6,6 +6,8 @@ import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { db } from '@/server/db';
 import { enquiries } from '@/server/db/schema';
 import { notifyEnquiry } from '@/server/mail/notify';
+import { checkCaptcha } from '@/server/security/captcha';
+import { dispatchEnquiry } from '@/server/webhooks/deliver';
 import { sweep } from '@/server/retention';
 
 export const runtime = 'nodejs';
@@ -23,6 +25,8 @@ const schema = z.object({
   message: z.string().min(1, 'Tell us a little about what you need.').max(8000),
   /** Honeypot. Real people never see this field, so anything in it is a bot. */
   website: z.string().max(200).optional(),
+  /** The CAPTCHA provider's token, when the contact form is protected (2.16). */
+  captcha: z.string().max(4096).optional(),
 });
 
 export async function POST(request: Request) {
@@ -49,6 +53,12 @@ export async function POST(request: Request) {
     // Silently accept and discard: telling a bot it was detected only helps it.
     if (body.website && body.website.trim() !== '') {
       return ok({ ok: true });
+    }
+
+    const verdict = await checkCaptcha('contactForm', body.captcha, ip);
+    if (!verdict.ok) {
+      console.warn('[enquiries] CAPTCHA refused', { reason: verdict.reason });
+      return badRequest(verdict.publicMessage);
     }
 
     const [row] = await db
@@ -84,6 +94,7 @@ export async function POST(request: Request) {
       message: body.message.trim(),
       ip,
     });
+    if (row) dispatchEnquiry(row.id);
 
     /* The retention sweep, throttled and never thrown: the engine has no
        scheduler, so the honest trigger is the traffic the site already has —

@@ -22,7 +22,7 @@ import { errorMessage, useUnsavedWarning } from '../_shared';
    top.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-type Response = { notice: CookieNotice };
+type Response = { notice: CookieNotice; stats?: Record<'accepted' | 'rejected' | 'custom', number> };
 
 export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
   const { toast } = useToast();
@@ -95,12 +95,22 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
 
       <div className="mb-6">
         <Alert tone="info">
-          This engine sets no tracking cookies and loads no third-party scripts, and its video and map embeds
-          already wait for a click — so there is nothing here for &ldquo;Reject&rdquo; to switch off. What the
-          notice does is <strong>record the answer</strong>: it is written to the visitor&rsquo;s browser and
-          stamped on the page as <code className="font-mono text-flare-soft">data-consent</code>, so anything you
-          add later — an analytics tag, a pixel — can read it before it runs. Nothing is stored until somebody
-          answers.
+          {form.mode === 'consent' ? (
+            <>
+              This is a <strong>consent manager</strong>: every tag switched on under Integrations waits until its
+              category is granted, &ldquo;Reject all&rdquo; is as easy as &ldquo;Accept all&rdquo;, and a visitor can
+              change their mind from any link to <code className="font-mono text-flare-soft">#cookie-settings</code>.
+              With Google Consent Mode on, Google&rsquo;s tags send only cookieless pings until somebody agrees.
+            </>
+          ) : (
+            <>
+              On its own the engine sets no tracking cookies, and its video and map embeds already wait for a click.
+              As a <strong>notice</strong> it records the answer — in the visitor&rsquo;s browser and as{' '}
+              <code className="font-mono text-flare-soft">data-consent</code> on the page — and switches nothing off.
+              If you switch on tags under Integrations, set it to ask for consent below.
+            </>
+          )}{' '}
+          Nothing is stored until somebody answers.
         </Alert>
       </div>
 
@@ -238,6 +248,129 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
                 widely ignored — but a site that means it should be able to honour it.
               </p>
             </div>
+          </div>
+        </Panel>
+      </div>
+
+      <div className="mt-6">
+        <Panel title="Consent">
+          <div className="flex flex-col gap-5">
+            <Field
+              label="What the notice does"
+              htmlFor="cookie-mode"
+              hint={
+                form.mode === 'consent'
+                  ? 'Tags under Integrations wait for their category; Reject all leaves only what is necessary.'
+                  : 'The answer is recorded; nothing is switched off by it.'
+              }
+            >
+              <Select id="cookie-mode" value={form.mode} disabled={!canWrite} onChange={(e) => set('mode', e.target.value as CookieNotice['mode'])}>
+                <option value="notice">A notice — record the answer</option>
+                <option value="consent">Ask for consent — categories, and nothing optional until agreed</option>
+              </Select>
+            </Field>
+
+            {form.mode === 'consent' && (
+              <>
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <Field label={`“${form.categories.necessary.title}” — always on`} htmlFor="cat-necessary">
+                    <Textarea
+                      id="cat-necessary"
+                      rows={2}
+                      value={form.categories.necessary.description}
+                      disabled={!canWrite}
+                      onChange={(e) => set('categories', { ...form.categories, necessary: { ...form.categories.necessary, description: e.target.value } })}
+                    />
+                  </Field>
+                  {(['analytics', 'marketing', 'preferences'] as const).map((key) => (
+                    <div key={key} className="flex flex-col gap-2 border-2 border-hairline p-3">
+                      <label className="flex items-center gap-2 text-[14px] text-ash">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-flare"
+                          checked={form.categories[key].enabled}
+                          disabled={!canWrite}
+                          onChange={(e) => set('categories', { ...form.categories, [key]: { ...form.categories[key], enabled: e.target.checked } })}
+                        />
+                        Offer this category
+                      </label>
+                      <Input
+                        value={form.categories[key].title}
+                        disabled={!canWrite}
+                        aria-label={`${key} title`}
+                        onChange={(e) => set('categories', { ...form.categories, [key]: { ...form.categories[key], title: e.target.value } })}
+                      />
+                      <Textarea
+                        rows={2}
+                        value={form.categories[key].description}
+                        disabled={!canWrite}
+                        aria-label={`${key} description`}
+                        onChange={(e) => set('categories', { ...form.categories, [key]: { ...form.categories[key], description: e.target.value } })}
+                      />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <Field label="Preferences button" htmlFor="cookie-prefs">
+                    <Input id="cookie-prefs" value={form.preferencesLabel} disabled={!canWrite} onChange={(e) => set('preferencesLabel', e.target.value)} />
+                  </Field>
+                  <Field label="Save button" htmlFor="cookie-save">
+                    <Input id="cookie-save" value={form.saveLabel} disabled={!canWrite} onChange={(e) => set('saveLabel', e.target.value)} />
+                  </Field>
+                  <Field label="Keep an answer for" htmlFor="cookie-months" hint="months, then ask again">
+                    <Input
+                      id="cookie-months"
+                      type="number"
+                      min={1}
+                      max={24}
+                      value={form.months}
+                      disabled={!canWrite}
+                      onChange={(e) => set('months', Math.min(24, Math.max(1, Math.round(Number(e.target.value) || 12))))}
+                    />
+                  </Field>
+                </div>
+
+                <Field
+                  label="Who is asked"
+                  htmlFor="cookie-region"
+                  hint="by the country header a CDN in front of the site sends — without one, everybody is asked"
+                >
+                  <Select id="cookie-region" value={form.region} disabled={!canWrite} onChange={(e) => set('region', e.target.value as CookieNotice['region'])}>
+                    <option value="everyone">Everybody</option>
+                    <option value="required">Only where consent is required — the EU, the EEA, the UK and Switzerland</option>
+                  </Select>
+                </Field>
+
+                <label className="flex items-center gap-2.5 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.log} disabled={!canWrite} onChange={(e) => set('log', e.target.checked)} />
+                  Count the answers — accepted, rejected, chosen — per day, with nothing about who
+                </label>
+                {form.log && data?.stats && (
+                  <p className="m-0 font-mono text-[12px] text-smoke">
+                    Last 30 days: {data.stats.accepted} accepted · {data.stats.rejected} rejected · {data.stats.custom} chose
+                  </p>
+                )}
+
+                {canWrite && (
+                  <div>
+                    <AdminButton
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        if (window.confirm('Ask every visitor again? Their answers stop counting when this is saved.')) set('version', form.version + 1);
+                      }}
+                    >
+                      Ask everyone again
+                    </AdminButton>
+                    <p className="m-0 mt-2 text-[12px] leading-relaxed text-smoke">
+                      For when what the site does with cookies has changed. Offering a different set of categories asks
+                      again by itself.
+                    </p>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </Panel>
       </div>

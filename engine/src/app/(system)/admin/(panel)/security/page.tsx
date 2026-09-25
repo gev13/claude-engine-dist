@@ -13,5 +13,5 @@ export default async function SecurityPage() {
   if (!user) redirect('/admin/login');
   if (!can(user, 'security:read')) redirect('/admin');
 
-  return <SecurityScreen canWrite={can(user, 'security:write')} />;
+  return <SecurityScreen canWrite={can(user, 'security:write')} canSettings={can(user, 'settings:write')} />;
 }

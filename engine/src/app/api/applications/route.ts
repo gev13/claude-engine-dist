@@ -4,6 +4,7 @@ import { audit } from '@/server/auth/audit';
 import { clientIp, rateLimit } from '@/server/auth/rateLimit';
 import { badRequest, handle, ok } from '@/server/api/respond';
 import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
+import { checkCaptcha } from '@/server/security/captcha';
 import { db } from '@/server/db';
 import { applications, jobs } from '@/server/db/schema';
 import { ApplicationFileError, CV_SUPPORTED, saveCv } from '@/server/applications/storage';
@@ -83,6 +84,13 @@ export async function POST(request: Request) {
 
     // Silently accept and discard: telling a bot it was detected only helps it.
     if (input.website && input.website.trim() !== '') return ok({ ok: true });
+
+    // Before the job is looked up or a byte of the CV is read (2.16).
+    const verdict = await checkCaptcha('careers', form.get('captcha'), ip);
+    if (!verdict.ok) {
+      console.warn('[applications] CAPTCHA refused', { reason: verdict.reason });
+      return badRequest(verdict.publicMessage);
+    }
 
     /* Published, not deleted, past its publish date, and open. A closed role's
        page does not render the form — this is what stops the form being

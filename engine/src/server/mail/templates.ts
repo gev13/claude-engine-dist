@@ -182,6 +182,109 @@ ${input.adminLabel}: ${input.adminUrl}`,
   };
 }
 
+/**
+ * A form block's submission (2.16). With `answers` it carries every answer
+ * as a table — the form asked for that in its Email settings; without, it is
+ * the count-only notice every form sent before. A file is a link into the
+ * admin, never an attachment: the file stays on the server.
+ */
+export function formSubmissionEmail(
+  input: Brand & {
+    subject: string;
+    formName: string;
+    source: string;
+    received: string;
+    count: number;
+    answers: { label: string; value: string; link?: string }[] | null;
+    meta: [string, string][];
+    adminUrl: string;
+    /** The form has recipients of its own, rather than the Email screen's list. */
+    ownRecipients?: boolean;
+  },
+): Message {
+  // A form that asked for nothing new sends exactly the notice it sent before 2.16.
+  if (!input.answers && input.meta.length === 0 && !input.ownRecipients) {
+    return notificationEmail({
+      ...input,
+      title: input.subject,
+      intro: 'Somebody filled in a form on the site. The answers are in the admin, not in this email.',
+      facts: [
+        ['Form', input.formName],
+        ['Page', input.source || '—'],
+        ['Answers', String(input.count)],
+        ['Received', input.received],
+      ],
+      adminUrl: input.adminUrl,
+      adminLabel: 'Read the answers',
+    });
+  }
+  const facts: [string, string][] = [
+    ['Form', input.formName],
+    ['Page', input.source || '—'],
+    ...(input.answers ? [] : ([['Answers', String(input.count)]] as [string, string][])),
+    ['Received', input.received],
+  ];
+  const answerRows = (input.answers ?? [])
+    .map(
+      (answer) =>
+        `<tr><td style="padding:8px 14px 8px 0;font-size:13px;color:#6f6a65;vertical-align:top;border-top:1px solid #efece8;">${esc(answer.label)}</td>` +
+        `<td style="padding:8px 0;font-size:14px;border-top:1px solid #efece8;">${
+          answer.link ? `<a href="${esc(answer.link)}" style="color:#c0341a;">${esc(answer.value)}</a>` : esc(answer.value).replace(/\n/g, '<br>')
+        }</td></tr>`,
+    )
+    .join('');
+  const answersHtml = input.answers
+    ? `<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="margin:4px 0 18px;">${answerRows}</table>`
+    : '';
+  const metaHtml = input.meta.length ? `<p style="margin:0 0 6px;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#6f6a65;">Details</p>${factTable(input.meta)}` : '';
+
+  const answersText = input.answers ? `\n${input.answers.map((a) => `${a.label}: ${a.value}${a.link ? ` (${a.link})` : ''}`).join('\n')}\n` : '';
+  const metaText = input.meta.length ? `\nDetails\n${factLines(input.meta)}\n` : '';
+
+  return {
+    subject: `[${input.siteName}] ${input.subject}`,
+    html: shell(
+      input,
+      input.subject,
+      p(esc(input.answers ? 'Somebody filled in a form on the site. Their answers are below and in the admin.' : 'Somebody filled in a form on the site. The answers are in the admin, not in this email.')) +
+        factTable(facts) +
+        answersHtml +
+        metaHtml +
+        button(input.adminUrl, 'Read the answers'),
+      input.ownRecipients
+        ? 'You are receiving this because you are listed for this form’s notifications.'
+        : 'You are receiving this because you are listed for notifications in Email settings.',
+    ),
+    text: `${input.subject}
+
+${factLines(facts)}
+${answersText}${metaText}
+Read the answers: ${input.adminUrl}`,
+  };
+}
+
+/**
+ * The reply a visitor gets after sending a form (2.16). Plain text written in
+ * the form's settings, blank lines as paragraphs, every value escaped — the
+ * answers filled into it came from the public internet.
+ */
+export function autoresponderEmail(input: Brand & { subject: string; body: string }): Message {
+  const paragraphs = input.body
+    .split(/\n{2,}/)
+    .map((para) => para.trim())
+    .filter(Boolean);
+  return {
+    subject: input.subject,
+    html: shell(
+      input,
+      input.subject,
+      paragraphs.map((para) => p(esc(para).replace(/\n/g, '<br>'))).join(''),
+      `You are receiving this because you sent a form on ${input.siteName}.`,
+    ),
+    text: `${paragraphs.join('\n\n')}\n\n—\n${input.siteName}\n${input.siteUrl}`,
+  };
+}
+
 export function testEmail(input: Brand & { by: string; when: string }): Message {
   return {
     subject: `[${input.siteName}] Test message`,

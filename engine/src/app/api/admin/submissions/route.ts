@@ -43,8 +43,10 @@ export async function GET(request: Request) {
 
       // Every question any submission was asked, in the order they first appear.
       const labels = [...new Set(rows.flatMap((r) => r.answers.map((a) => a.label)))];
+      // And every hidden field any of them carried (2.16), after the answers.
+      const hiddenNames = [...new Set(rows.flatMap((r) => Object.keys(r.meta ?? {})))];
       const csv = toCsv(
-        ['sent', 'page', ...labels],
+        ['sent', 'page', ...labels, ...hiddenNames],
         /* `answerLine` so the export names the file a visitor sent rather
            than showing an empty cell where an attachment was. The file itself
            is not in the CSV: an export is a spreadsheet, not an archive. */
@@ -55,6 +57,7 @@ export async function GET(request: Request) {
             const answer = r.answers.find((a) => a.label === label);
             return answer ? answerLine(answer) : '';
           }),
+          ...hiddenNames.map((name) => r.meta?.[name] ?? ''),
         ]),
       );
       const date = new Date().toISOString().slice(0, 10);

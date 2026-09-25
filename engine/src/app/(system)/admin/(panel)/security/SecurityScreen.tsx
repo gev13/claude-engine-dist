@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import useSWR from 'swr';
+import { BotProtectionPanel } from './BotProtectionPanel';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Badge, EmptyState, Field, Input, Panel, Spinner } from '@/components/admin/ui';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
@@ -58,15 +59,15 @@ function when(value: string | null): string {
   return date.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-export function SecurityScreen({ canWrite }: { canWrite: boolean }) {
+export function SecurityScreen({ canWrite, canSettings = false }: { canWrite: boolean; canSettings?: boolean }) {
   return (
     <ToastProvider>
-      <SecurityScreenInner canWrite={canWrite} />
+      <SecurityScreenInner canWrite={canWrite} canSettings={canSettings} />
     </ToastProvider>
   );
 }
 
-function SecurityScreenInner({ canWrite }: { canWrite: boolean }) {
+function SecurityScreenInner({ canWrite, canSettings }: { canWrite: boolean; canSettings: boolean }) {
   const { toast } = useToast();
   const { data, isLoading, mutate } = useSWR<Loaded>('/api/admin/security', fetcher);
 
@@ -242,7 +243,8 @@ function SecurityScreenInner({ canWrite }: { canWrite: boolean }) {
           </Panel>
         </div>
 
-        <aside className="flex flex-col gap-6 lg:sticky lg:top-10">
+        {/* Not sticky with the bot-protection panels in it: taller than a screen, a sticky column cannot be scrolled to its end. */}
+        <aside className={canSettings ? 'flex flex-col gap-6' : 'flex flex-col gap-6 lg:sticky lg:top-10'}>
           <Panel
             title="Rules"
             actions={
@@ -278,6 +280,8 @@ function SecurityScreenInner({ canWrite }: { canWrite: boolean }) {
               </p>
             </div>
           </Panel>
+          {/* Keys and third parties are administrator settings (2.16). */}
+          {canSettings && <BotProtectionPanel />}
         </aside>
       </div>
     </>

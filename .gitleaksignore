@@ -14,8 +14,13 @@
 # matters for generated code: does what this repository contains right now hold
 # a secret?
 #
-# Nothing is currently suppressed. The entry that used to live here covered a
-# smoke-test administrator password hard-coded in the workflow; it is generated
-# per run now, so the finding no longer exists to ignore. Add a line here only
-# for a finding somebody has read and judged safe, with the reason written
-# above it.
+# The entry that used to live here covered a smoke-test administrator password
+# hard-coded in the workflow; it is generated per run now, so the finding no
+# longer exists to ignore. Add a line here only for a finding somebody has read
+# and judged safe, with the reason written above it.
+
+# 2.16 — CAPTCHA_TEST_KEYS: Google's published reCAPTCHA test key pair
+# (developers.google.com/recaptcha/docs/faq). It passes every check for every
+# site and protects nothing; the Bot protection screen offers it for trying a
+# form out. Not a credential. If the line moves, update the number.
+engine/src/lib/captcha.ts:generic-api-key:127

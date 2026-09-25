@@ -5,6 +5,7 @@ import { withSlash } from '@/lib/permalinks';
 import { pickRule } from '@/lib/redirectRules';
 import { routingConfig } from '@/server/routing/config';
 import { countHit } from '@/server/routing/hits';
+import { CONSENT_COUNTRIES, REGION_COOKIE } from '@/lib/cookies';
 
 /**
  * Middleware. Five jobs:
@@ -75,6 +76,20 @@ async function hasValidAccess(token: string | undefined): Promise<boolean> {
        that a purge is the exception, not the mechanism.
    ═══════════════════════════════════════════════════════════════════════════ */
 const PAGE_CACHE = 'public, max-age=0, must-revalidate, s-maxage=300, stale-while-revalidate=60';
+
+/**
+ * Where the visitor is, as far as the consent manager needs to know: in a
+ * country that requires consent, or not. Only from a header a CDN in front of
+ * the site sets (Cloudflare, Vercel) — never guessed — and only when it
+ * changed, so a visitor without one gets no cookie at all.
+ */
+function markRegion(request: NextRequest, response: NextResponse) {
+  const country = (request.headers.get('cf-ipcountry') ?? request.headers.get('x-vercel-ip-country') ?? '').toUpperCase();
+  if (!/^[A-Z]{2}$/.test(country) || country === 'XX' || country === 'T1') return;
+  const region = CONSENT_COUNTRIES.has(country) ? 'required' : 'other';
+  if (request.cookies.get(REGION_COOKIE)?.value === region) return;
+  response.cookies.set(REGION_COOKIE, region, { path: '/', sameSite: 'lax', maxAge: 60 * 60 * 24 * 30, secure: request.nextUrl.protocol === 'https:' });
+}
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
@@ -156,6 +171,12 @@ export async function middleware(request: NextRequest) {
       request: { headers: requestHeaders },
     });
     rewritten.headers.set('cache-control', PAGE_CACHE);
+    /* The public policy is built from what an administrator switched on — a
+       tag manager, a pixel, a CAPTCHA — so it is set here, per request,
+       rather than fixed in next.config.ts, which sets none for public pages:
+       two policies on one response are enforced as their intersection. */
+    rewritten.headers.set('content-security-policy', routing.csp);
+    markRegion(request, rewritten);
     return rewritten;
   }
 

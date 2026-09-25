@@ -42,6 +42,7 @@ export const BACKUP_TABLES = [
   // 2.15 — saved blocks reference users; their usage index references them.
   'saved_blocks',
   'saved_block_usage',
+  'consent_stats',
   /* Jobs reference media and users, so they come after both; applications
      reference jobs, so they come after those. */
   'jobs',
@@ -50,6 +51,8 @@ export const BACKUP_TABLES = [
   'enquiries',
   'newsletter_subscribers',
   'form_submissions',
+  // 2.16 — the log of what was handed to a webhook; ids only, no payloads.
+  'webhook_deliveries',
   'content_revisions',
   'redirects',
   'not_found_log',
@@ -81,12 +84,14 @@ const TABLE_OBJECTS: Record<BackupTable, unknown> = {
   project_term_links: schema.projectTermLinks,
   saved_blocks: schema.savedBlocks,
   saved_block_usage: schema.savedBlockUsage,
+  consent_stats: schema.consentStats,
   jobs: schema.jobs,
   applications: schema.applications,
   settings: schema.settings,
   enquiries: schema.enquiries,
   newsletter_subscribers: schema.newsletterSubscribers,
   form_submissions: schema.formSubmissions,
+  webhook_deliveries: schema.webhookDeliveries,
   content_revisions: schema.contentRevisions,
   redirects: schema.redirects,
   not_found_log: schema.notFoundLog,

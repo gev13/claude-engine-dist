@@ -379,6 +379,10 @@ async function main() {
     '/api/admin/projects/terms',
     '/api/admin/projects/settings',
     '/api/admin/saved-blocks',
+    '/api/admin/integrations',
+    '/api/admin/captcha',
+    '/api/admin/webhooks',
+    '/api/admin/webhooks/deliveries',
   ]) {
     const res = await get(path);
     check(`anonymous GET ${path} -> 401`, res.status === 401, `got ${res.status}`);

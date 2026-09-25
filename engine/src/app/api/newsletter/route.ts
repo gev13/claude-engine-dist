@@ -6,6 +6,7 @@ import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { db } from '@/server/db';
 import { newsletterSubscribers } from '@/server/db/schema';
 import { notifyNewsletter } from '@/server/mail/notify';
+import { checkCaptcha } from '@/server/security/captcha';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -22,6 +23,8 @@ const schema = z.object({
     .optional(),
   /** Honeypot. Real people never see this field, so anything in it is a bot. */
   website: z.string().max(200).optional(),
+  /** The CAPTCHA provider's token, when sign-ups are protected (2.16). */
+  captcha: z.string().max(4096).optional(),
 });
 
 export async function POST(request: Request) {
@@ -48,6 +51,12 @@ export async function POST(request: Request) {
     // Silently accept and discard: telling a bot it was detected only helps it.
     if (body.website && body.website.trim() !== '') {
       return ok({ ok: true });
+    }
+
+    const verdict = await checkCaptcha('newsletter', body.captcha, ip);
+    if (!verdict.ok) {
+      console.warn('[newsletter] CAPTCHA refused', { reason: verdict.reason });
+      return badRequest(verdict.publicMessage);
     }
 
     const [row] = await db

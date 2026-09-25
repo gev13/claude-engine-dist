@@ -16,7 +16,7 @@ import { SOCIAL_NETWORKS, imageUrl as mediaUrl, isSafeHref } from './navigation'
 import { parseVideoUrl } from './embeds';
 import { TIME_PATTERN, WEEKDAYS, isTimeZone } from './hours';
 import { SHARE_NETWORKS } from './share';
-import { formFieldSchema } from './forms';
+import { formAfterSchema, formAutoresponderSchema, formFieldSchema, formHiddenSchema, formNotifySchema } from './forms';
 import { LOTTIE_PATH, LOTTIE_PLAY } from './lottie';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -566,6 +566,8 @@ export const blockSchemas = {
     body: text(4000),
     imageUrl: mediaUrl.optional(),
     alt: text(200),
+    /** 2.16 — a conversion to the site's tags and an optional thank-you page. */
+    after: formAfterSchema.prefault({}),
   }),
 
   /** Contact details / response-time column beside the form. */
@@ -1475,6 +1477,17 @@ export const blockSchemas = {
     submitLabel: text(40),
     successTitle: text(120),
     successText: text(400),
+    /* ── 2.16 (T12, T13) ────────────────────────────────────────────────── */
+    /** Bot protection for this form: the site's setting, or on or off regardless. */
+    captcha: z.enum(['inherit', 'on', 'off']).default('inherit'),
+    /** Where the answers are emailed, and how. See lib/forms.ts. */
+    notify: formNotifySchema.prefault({}),
+    /** A reply to whoever sent it. */
+    autoresponder: formAutoresponderSchema.prefault({}),
+    /** What happens after a successful send. */
+    after: formAfterSchema.prefault({}),
+    /** Values sent with the answers that nobody types — a campaign, where they came from. */
+    hidden: z.array(formHiddenSchema).max(12).default([]),
   }),
 
   /**

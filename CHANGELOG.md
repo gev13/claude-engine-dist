@@ -9,6 +9,67 @@ told about before taking it.
 
 ---
 
+## 2.16.0 — 2026-09-25
+
+**Integrations.** Settings → Integrations switches on tracking and marketing
+tags by their id: Google Tag Manager, Google Analytics 4, Google Ads, Meta
+Pixel, LinkedIn Insight, Yandex Metrica, Microsoft Clarity, Hotjar and TikTok
+Pixel. The engine writes each vendor's loader — nothing is pasted — checks
+every id, and puts each tag in a consent category. Google Consent Mode v2 is
+one tick. Custom snippets, for anything else, stay hidden until an
+administrator allows them. A GA4 id from *Custom code* moves here; that
+screen is now *Custom CSS*.
+
+**A content policy built from what is on.** The public site's
+Content-Security-Policy now lists exactly the hosts the switched-on tags,
+snippets and CAPTCHA need, and nothing else — so a site without analytics
+no longer allows Google Analytics' hosts, as every site did before. The
+Security screen names every third party the public site talks to.
+
+**Cookie consent.** The cookie notice can now ask: *Accept all* and *Reject
+all*, equally prominent, and *Preferences* with a switch per category. Tags
+wait for their category. Change the categories, or press *Ask everyone
+again*, and visitors are asked afresh; withdrawing consent removes those
+tags' cookies. It can ask only where the law requires it (from your CDN's
+country header), and keep an anonymous daily count of the answers. The
+notice mode stays the default.
+
+**Bot protection.** Security → Bot protection adds Cloudflare Turnstile,
+reCAPTCHA v2 or v3, or hCaptcha to form blocks, the contact form, newsletter
+sign-ups and job applications — each on or off, and per form block. The
+secret key is kept encrypted, test keys are one click, the widget loads only
+when a form comes into view, and you choose what happens when the provider
+is down.
+
+**Forms that do something when they are sent.** A form block can:
+
+- email up to ten addresses of its own, with a subject built from the
+  answers, Reply-To set to the visitor, and — if you choose — every answer in
+  the email as a table, files as links into the admin;
+- send the visitor an automatic reply;
+- open a thank-you page, and send the conversion to your tags
+  (`generate_lead`, a Google Ads conversion, a Yandex goal, a LinkedIn
+  conversion) — the contact form can too;
+- carry hidden fields — a fixed value, the campaign the visitor arrived with
+  (`utm_*`, `gclid`, `fbclid`), the referrer, the landing page — stored with
+  the answers and exported as columns;
+- show a question only when an earlier answer calls for it.
+
+**Webhooks.** Enquiries → Webhooks hands each submission to a CRM, Zapier or
+Make as signed JSON, with retries, a delivery log and Resend. Administrators
+only; addresses on private networks are refused.
+
+**Also fixed.** The cookie notice in the *centre* position left a tall empty
+gap under its text, and on a phone its buttons could wrap out of sight.
+
+Nothing changes until it is switched on: a form sends the same count-only
+email it always did, and a site with no tags loads nothing new.
+
+Includes a database migration: two new tables and a column on form
+submissions. Take the backup the Updates screen offers.
+
+---
+
 ## 2.15.0 — 2026-09-25
 
 **Saved blocks.** Design a block once and use it anywhere. Every block's new

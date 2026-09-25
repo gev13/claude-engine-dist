@@ -558,6 +558,22 @@ export const savedBlockUsage = pgTable(
   ],
 );
 
+/**
+ * Cookie-consent answers, counted per day (2.16). Anonymous by construction:
+ * a day, what was answered, and how many times — no address, no id, nothing
+ * that could tie an answer to a visitor.
+ */
+export const consentStats = pgTable(
+  'consent_stats',
+  {
+    day: varchar('day', { length: 10 }).notNull(),
+    /** `accepted`, `rejected` or `custom`. */
+    choice: varchar('choice', { length: 10 }).notNull(),
+    count: integer('count').notNull().default(0),
+  },
+  (t) => [primaryKey({ columns: [t.day, t.choice] })],
+);
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Settings, enquiries, audit
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -640,9 +656,40 @@ export const formSubmissions = pgTable(
       .default(sql`'[]'::jsonb`),
     /** Truncated, never used for anything but abuse triage. */
     ip: varchar('ip', { length: 64 }),
+    /**
+     * The form's hidden fields as they arrived (2.16): campaign parameters,
+     * the referrer, a click id, a fixed value. Only names the form defines.
+     */
+    meta: jsonb('meta').$type<Record<string, string>>().notNull().default(sql`'{}'::jsonb`),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [index('form_submissions_created_idx').on(t.createdAt), index('form_submissions_form_idx').on(t.formName)],
+);
+
+/**
+ * Every attempt to hand a submission to a webhook (2.16), so "did Zapier get
+ * it?" has an answer. The payload is not kept — it is personal data, and a
+ * resend rebuilds it from the submission, which keeps its own retention.
+ */
+export const webhookDeliveries = pgTable(
+  'webhook_deliveries',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    webhookId: varchar('webhook_id', { length: 36 }).notNull(),
+    webhookName: varchar('webhook_name', { length: 80 }).notNull(),
+    /** `form.submitted`, `enquiry.received`, `webhook.test`. */
+    event: varchar('event', { length: 40 }).notNull(),
+    /** The submission or enquiry it was about. */
+    targetId: uuid('target_id'),
+    /** `pending`, `ok` or `failed`. */
+    status: varchar('status', { length: 10 }).notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    responseCode: integer('response_code'),
+    error: varchar('error', { length: 300 }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [index('webhook_deliveries_created_idx').on(t.createdAt)],
 );
 
 /**
