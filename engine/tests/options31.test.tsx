@@ -89,3 +89,13 @@ describe('the width of section headings', () => {
     expect(themeSchema.safeParse({ layout: { titleWidth: 'wide' } }).success).toBe(false);
   });
 });
+
+describe('the width of an edge-to-edge picture (3.3.2)', () => {
+  const hero = (extra: object) =>
+    renderToStaticMarkup(<LibraryHero {...blockSchemas.hero.parse({ variant: 'split', title: 'T', imageUrl: '/media/a.webp', bleed: true, ...extra })} />);
+  it('is the drawn 72% until set, and only takes 30–90', () => {
+    expect(hero({})).not.toContain('--he-bleed-w');
+    expect(hero({ bleedWidth: 55 })).toContain('--he-bleed-w:55%');
+    expect(blockSchemas.hero.safeParse({ title: 'T', bleedWidth: 95 }).success).toBe(false);
+  });
+});

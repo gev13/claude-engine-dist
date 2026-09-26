@@ -198,6 +198,8 @@ export const blockSchemas = {
     mediaSide: z.enum(['right', 'left']).default('right'),
     /** 3.1 — split: the picture runs to the section's top, side and bottom edges, the text on its dark side. */
     bleed: z.boolean().optional(),
+    /** 3.3.2 — with `bleed`: how much of the section's width the picture takes, in percent; unset is 72. */
+    bleedWidth: z.number().int().min(30).max(90).optional(),
     eyebrow: z.string().optional(),
     kicker: z.string().optional(),
     title: z.string(),

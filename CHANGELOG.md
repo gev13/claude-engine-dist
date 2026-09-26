@@ -10,6 +10,15 @@ improvements.
 
 ---
 
+## 3.3.2 — 2026-09-26
+
+**The edge-to-edge hero picture takes the width you give it.** A split
+hero run to the section's edges can set how much of the width its picture
+takes (72% as before when empty), and the text beside it widens to match,
+never narrower than half the row.
+
+---
+
 ## 3.3.1 — 2026-09-26
 
 **Two fixes.** A card set to rounded corners now stays rounded when the

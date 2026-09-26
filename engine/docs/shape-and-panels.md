@@ -128,3 +128,9 @@ catalogue face.
   chips if you like.
 - **A split hero run to the edges reaches up behind the notch header**, so
   the picture fills the space beside the header tab.
+
+## Added in 3.3.2
+
+- **Picture width** on a split hero run to the edges — how much of the
+  section the picture takes, in percent (72 when empty). The text beside it
+  widens to match, never narrower than half the row.

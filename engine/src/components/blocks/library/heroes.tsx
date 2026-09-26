@@ -99,6 +99,7 @@ export function LibraryHero(p: P) {
           // 3.1 — the picture to the section's edges; the height applies only then.
           p.bleed && ['is-bleed', `is-h-${p.height}`],
         )}
+        style={p.bleed && p.bleedWidth ? ({ '--he-bleed-w': `${p.bleedWidth}%` } as React.CSSProperties) : undefined}
       >
         <div className="shell he-hero__split">
           <div className="he-hero__content">

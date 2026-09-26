@@ -243,13 +243,16 @@
      the space the header leaves (3.3); the section's panel clips it. */
   .he-hero--split.is-bleed { position: relative; isolation: isolate; overflow: visible; display: flex; align-items: center; }
   .he-hero--split.is-bleed > .shell { width: 100%; }
+  /* The picture is out of the grid, so the text gets one column, as wide as
+     the picture leaves it (3.3.2): never under half the row. */
+  .he-hero--split.is-bleed .he-hero__split { grid-template-columns: minmax(0, max(50%, calc(108% - var(--he-bleed-w, 72%)))); }
   .he-hero--split.is-bleed.is-h-tall { min-height: min(88svh, 960px); }
   .he-hero--split.is-bleed.is-h-screen { min-height: 100svh; }
   .he-hero--split.is-bleed .he-hero__visual {
     position: absolute;
     inset: calc(-1 * var(--he-ns-now, 0px)) 0 0 auto;
     z-index: -1;
-    width: min(72%, 1100px);
+    width: min(var(--he-bleed-w, 72%), 1100px);
     max-height: none;
     aspect-ratio: auto;
     border-radius: 0;
@@ -824,6 +827,7 @@
     .he-hero__visual { aspect-ratio: 4 / 3; }
     /* A phone has no side to stand the text on: the picture goes back above it. */
     .he-hero--split.is-bleed { display: block; min-height: 0; }
+    .he-hero--split.is-bleed .he-hero__split { grid-template-columns: minmax(0, 1fr); }
     .he-hero--split.is-bleed .he-hero__visual { position: relative; inset: auto; z-index: auto; width: auto; aspect-ratio: 1 / 1; }
     .he-hero__frame { aspect-ratio: 4 / 3; margin-top: 36px; border-radius: 12px; }
     .he-hero--statement { padding-block: 56px; }

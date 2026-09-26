@@ -2172,6 +2172,20 @@ function TypeFields({
                   </Field>
                 )}
                 {variant === 'split' && props.bleed === true && (
+                  <Field label="Picture width" hint="% of the section — empty is 72">
+                    <Input
+                      type="number"
+                      min={30}
+                      max={90}
+                      placeholder="72"
+                      value={typeof props.bleedWidth === 'number' ? props.bleedWidth : ''}
+                      onChange={(e) =>
+                        set(withOpt(props, 'bleedWidth', e.target.value === '' ? undefined : Math.min(90, Math.max(30, Math.round(Number(e.target.value) || 72)))))
+                      }
+                    />
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
                   <Field label="Height">
                     <Select value={str(props, 'height') || 'tall'} onChange={(e) => set({ ...props, height: e.target.value })}>
                       <option value="auto">Fit the content</option>
