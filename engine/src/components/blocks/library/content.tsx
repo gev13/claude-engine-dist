@@ -186,7 +186,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 )}
                 <div className="he-mrows__body">
                   {(numbered || c.eyebrow) && (
-                    <p className="he-mrows__num">{[numbered ? String(i + 1).padStart(2, '0') : null, c.eyebrow].filter(Boolean).join(' · ')}</p>
+                    <p className="he-mrows__num">{[numbered ? `${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}` : null, c.eyebrow].filter(Boolean).join(' · ')}</p>
                   )}
                   <h3 className="he-mrows__title">{c.title}</h3>
                   {c.body && <p className="he-mrows__text">{c.body}</p>}

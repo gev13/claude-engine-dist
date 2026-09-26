@@ -40,7 +40,7 @@ export async function CategoryIndexBlock(p: P) {
           {items.map((item, i) => (
             <li key={item.key}>
               <Link href={item.href} className="he-catidx__card">
-                {p.numbered && <span className="he-catidx__num">{String(i + 1).padStart(2, '0')}</span>}
+                {p.numbered && <span className="he-catidx__num">{`${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}`}</span>}
                 <h3 className="he-catidx__name">{item.name}</h3>
                 {p.descriptions && item.description && <p className="he-catidx__desc">{item.description}</p>}
               </Link>

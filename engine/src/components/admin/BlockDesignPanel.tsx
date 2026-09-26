@@ -100,6 +100,13 @@ const GLITCH_TRIGGERS = [
   { value: 'hover', label: 'While the pointer is over it' },
   { value: 'interval', label: 'In bursts, every few seconds' },
 ] as const;
+/** 3.6 — the parts of a section its typography can reach. */
+const TYPE_ROLE_LABELS = {
+  heading: 'Headings',
+  subheading: 'Card and item titles',
+  eyebrow: 'Eyebrow — the small label over the heading',
+  body: 'Body text',
+} as const;
 const GLITCH_TINTS = [
   { value: 'edge', label: 'A thin coloured edge' },
   { value: 'fill', label: 'Copies painted in the colours' },
@@ -501,10 +508,10 @@ export function BlockDesignPanel({
           Overrides the global Appearance settings for this section. Leave everything empty to follow the site theme.
         </p>
 
-        {(['heading', 'body'] as const).map((role) => (
+        {(['heading', 'subheading', 'eyebrow', 'body'] as const).map((role) => (
           <div key={role} className="mb-4 border-t-2 border-hairline pt-4 last:mb-0">
             <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">
-              {role === 'heading' ? 'Headings' : 'Body text'}
+              {TYPE_ROLE_LABELS[role]}
             </span>
             <div className="grid gap-3 sm:grid-cols-3">
               <ChoiceField

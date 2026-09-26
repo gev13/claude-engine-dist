@@ -119,6 +119,7 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
             options={[
               { value: 'left', label: 'At the left' },
               { value: 'center', label: 'Centred' },
+              { value: 'afterMenu', label: 'After the menu button' },
             ]}
             onChange={set(at('logoMobile'))}
           />

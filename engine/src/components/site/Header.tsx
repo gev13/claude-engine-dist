@@ -359,6 +359,7 @@ export function Header(props: HeaderProps) {
         h.behaviour === 'hide' && tucked && !menuOpen && openId === null && 'is-tucked',
         h.behaviour === 'shrink' && scrolled && 'is-shrunk',
         h.logoMobile === 'center' && 'is-logo-center',
+        h.logoMobile === 'afterMenu' && 'is-logo-after',
         h.variant === 'menuButtonInline' && `is-menu-${h.menuSide}`,
         hasHeight && 'has-height',
       )}

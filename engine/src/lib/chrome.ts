@@ -85,8 +85,8 @@ export const chromeSchema = z.object({
       glassOpacity: z.number().int().min(0).max(100).optional(),
       /** While scrolling: always there (as before), hide going down and return going up, or shrink. */
       behaviour: z.enum(['always', 'hide', 'shrink']).optional(),
-      /** Phones: the logo at the left (as before) or centred between the buttons. */
-      logoMobile: z.enum(['left', 'center']).optional(),
+      /** Phones: the logo at the left (as before), centred between the buttons, or (3.6) just after the menu button. */
+      logoMobile: z.enum(['left', 'center', 'afterMenu']).optional(),
       /** The bar's height per tier, in px; empty keeps the stylesheet's. */
       height: z
         .object({
@@ -241,7 +241,7 @@ export type ResolvedChrome = {
     glassBlur: number;
     glassOpacity: number;
     behaviour: 'always' | 'hide' | 'shrink';
-    logoMobile: 'left' | 'center';
+    logoMobile: 'left' | 'center' | 'afterMenu';
     height: { base?: number; laptop?: number; tablet?: number; mobile?: number };
   };
   megaMenu: MegaVariant;

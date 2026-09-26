@@ -833,6 +833,11 @@
     .he-hero--split.is-bleed { display: block; min-height: 0 !important; }
     .he-hero--split.is-bleed .he-hero__split { grid-template-columns: minmax(0, 1fr); }
     .he-hero--split.is-bleed .he-hero__visual { position: relative; inset: auto; z-index: auto; width: auto; aspect-ratio: 1 / 1; }
+    /* 3.6 — the picture first; run to the edges, it spans the section and
+       reaches up into a notch header's clearance, the tab sitting on it. */
+    .he-hero--split.is-media-first-sm .he-hero__visual { order: -1; }
+    .he-hero--split.is-bleed.is-media-first-sm { padding-top: 0; }
+    .he-hero--split.is-bleed.is-media-first-sm .he-hero__visual { margin: calc(-1 * var(--he-ns-now, 0px)) calc(50% - 50vw) 0; }
     .he-hero__frame { aspect-ratio: 4 / 3; margin-top: 36px; border-radius: 12px; }
     .he-hero--statement { padding-block: 56px; }
     .he-hero--shaped { padding: 0 6px 6px; }

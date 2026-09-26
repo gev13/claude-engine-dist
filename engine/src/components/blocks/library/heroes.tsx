@@ -98,6 +98,8 @@ export function LibraryHero(p: P) {
           p.mediaSide === 'left' && 'is-media-left',
           // 3.1 — the picture to the section's edges; the height applies only then.
           p.bleed && ['is-bleed', `is-h-${p.height}`, p.bleedFit === 'contain' && 'is-fit-contain'],
+          // 3.6 — on phones, the picture above the text.
+          p.mediaFirstMobile && 'is-media-first-sm',
         )}
         style={p.bleed ? bleedStyle(p) : undefined}
       >

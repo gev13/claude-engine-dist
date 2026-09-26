@@ -319,6 +319,14 @@ export function blockStyleToCss(
     parts.push(block(`${root} :is(p,li,td,span)`, body));
   }
 
+  // 3.6 — card and item titles, then the eyebrow (after body, which also reaches its span).
+  const subheading = typeDecls(style.typography?.subheading);
+  if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6)`, subheading));
+  const eyebrow = typeDecls(style.typography?.eyebrow);
+  if (eyebrow.length) parts.push(block(`${root} .he-eyebrow .type-eyebrow`, eyebrow));
+  const eyebrowColor = safe(style.typography?.eyebrow?.color);
+  if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
+
   /* 3.3 — a section's own sizes on tablets and phones, so a 56px heading
      set for a desktop is not 56px on a phone. */
   for (const [tier, key] of [['tablet', 'sizeTablet'], ['mobile', 'sizeMobile']] as const) {
@@ -326,6 +334,8 @@ export function blockStyleToCss(
     const inner = [
       block(`${root} :is(h1,h2,h3,h4,h5,h6)`, sizeDecl(style.typography?.heading?.[key])),
       block(`${root} :is(p,li,td,span)`, sizeDecl(style.typography?.body?.[key])),
+      block(`${root} :is(h3,h4,h5,h6)`, sizeDecl(style.typography?.subheading?.[key])),
+      block(`${root} .he-eyebrow .type-eyebrow`, sizeDecl(style.typography?.eyebrow?.[key])),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }

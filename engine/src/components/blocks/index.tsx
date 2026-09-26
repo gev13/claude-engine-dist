@@ -171,7 +171,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
 
   // 2.22 — a running number over the title, before any eyebrow of the card's own.
   const eyebrowOf = (c: (typeof p.cards)[number], i: number) =>
-    p.numbered ? [String(i + 1).padStart(2, '0'), c.eyebrow].filter(Boolean).join(' · ') : c.eyebrow;
+    p.numbered ? [`${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}`, c.eyebrow].filter(Boolean).join(' · ') : c.eyebrow;
   const cards = p.cards.map((c, i) => (
     <Card key={c.title} eyebrow={eyebrowOf(c, i)} title={c.title} href={c.href} badge={c.badge} className={itemClass(p.blockId, i, c.style)}>
       {c.body}
@@ -271,6 +271,8 @@ function ListMarker({ icon, iconUrl, n }: { icon: P<'checkLists'>['icon']; iconU
   if (icon === 'check' || (icon === 'custom' && !iconUrl)) return <Tick />;
   if (icon === 'number') return <span className="he-ilist__num">{String(n).padStart(2, '0')}</span>;
   if (icon === 'dot') return <span className="he-ilist__dot" aria-hidden="true" />;
+  // 3.6 — a slash sits inside the entry's text (below), so it opens its first line.
+  if (icon === 'slash') return null;
   if (icon === 'custom') {
     return <SiteImg src={iconUrl} alt="" className="he-ilist__img" sizes="thumb" />;
   }
@@ -288,9 +290,13 @@ export function CheckListsBlock(p: P<'checkLists'>) {
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       <div className={p.lists.length > 1 ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16' : ''}>
         {p.lists.map((list, li) => (
-          <div key={li} className={p.boxed ? 'he-ilist-box' : undefined}>
+          <div
+            key={li}
+            className={cn(p.boxed && 'he-ilist-box', list.accent && 'he-ilist-accent')}
+            style={list.accent ? ({ '--he-ilist-accent': list.accent } as React.CSSProperties) : undefined}
+          >
             {list.title && (
-              <h3 className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{list.title}</h3>
+              <h3 className="he-ilist__title mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{list.title}</h3>
             )}
             <ul className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}>
               {list.items.map((raw, i) => {
@@ -302,6 +308,11 @@ export function CheckListsBlock(p: P<'checkLists'>) {
                   >
                     <ListMarker icon={p.icon} iconUrl={p.iconUrl} n={i + 1} />
                     <span className="he-ilist__text">
+                      {p.icon === 'slash' && (
+                        <span className="he-ilist__slash" aria-hidden="true">
+                          /
+                        </span>
+                      )}
                       {item.href ? (
                         <Link href={item.href} className="he-ilist__link">
                           {item.text}

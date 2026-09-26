@@ -284,6 +284,10 @@ export const blockStyleSchema = z.object({
     .object({
       heading: typeOverride.optional(),
       body: typeOverride.optional(),
+      /** 3.6 — the small label over the section's heading, and its marker. */
+      eyebrow: typeOverride.optional(),
+      /** 3.6 — card and item titles (h3–h6), after `heading` so they can differ from the section's own. */
+      subheading: typeOverride.optional(),
     })
     .optional(),
 

@@ -57,7 +57,7 @@ export type BandType = {
 export type BandStyle = {
   spacing: Partial<Record<BandTab, Sides>>;
   box: BandBox;
-  type: { heading?: BandType; body?: BandType };
+  type: Partial<Record<keyof typeof ROLE_SELECTOR, BandType>>;
 };
 
 const EMPTY: BandStyle = { spacing: {}, box: {}, type: {} };
@@ -68,6 +68,9 @@ const EMPTY: BandStyle = { spacing: {}, box: {}, type: {} };
 const ROLE_SELECTOR = {
   heading: 'h1,h2,h3,h4,h5,h6',
   body: 'p,li,td,span',
+  // 3.6
+  subheading: 'h3,h4,h5,h6',
+  eyebrow: '.he-eyebrow .type-eyebrow',
 } as const;
 
 /**
@@ -196,6 +199,8 @@ async function measure(type: string): Promise<BandStyle> {
           result.type = {
             heading: measureRole(win, band, 'heading'),
             body: measureRole(win, band, 'body'),
+            subheading: measureRole(win, band, 'subheading'),
+            eyebrow: measureRole(win, band, 'eyebrow'),
           };
         }
       }

@@ -204,6 +204,12 @@ export const blockSchemas = {
     bleedFit: z.enum(['cover', 'contain']).optional(),
     /** 3.3.3 — with `bleed`: the least height of the hero, e.g. 640px; the picture takes it too. */
     bleedMinHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /**
+     * 3.6 — split hero on phones: the picture above the text (below, as
+     * before, when unset). Run to the edges, it spans the section's width
+     * and reaches up behind a notch header.
+     */
+    mediaFirstMobile: z.boolean().optional(),
     eyebrow: z.string().optional(),
     kicker: z.string().optional(),
     title: z.string(),
@@ -305,6 +311,8 @@ export const blockSchemas = {
     iconPosition: z.enum(['top', 'left', 'floating']).default('top'),
     /** 2.22 — a small running number ("01") over each card's title; the picture rows show it unless told not to. */
     numbered: z.boolean().optional(),
+    /** 3.6 — how that number reads: `plain` "01" (the default) or `slash` "/01". */
+    numberStyle: z.enum(['plain', 'slash']).optional(),
     /**
      * 2.22 — cards: how many cards each row holds, in turn — "2-3" is two,
      * then three, then two… A bento of mixed widths; unset is the even grid.
@@ -525,10 +533,11 @@ export const blockSchemas = {
     titleAs: textTagSchema.optional(),
     intro: text(4000),
     /** P3-B3 — the marker before each entry; `custom` uses `iconUrl`. */
-    icon: z.enum(['check', 'arrow', 'dot', 'star', 'plus', 'number', 'custom', 'none']).default('check'),
+    icon: z.enum(['check', 'arrow', 'dot', 'star', 'plus', 'number', 'custom', 'none', 'slash']).default('check'),
     iconUrl: mediaUrl.optional(),
     /** `rows` (ruled lines) is the original look. */
-    layout: z.enum(['rows', 'plain', 'inline', 'grid']).default('rows'),
+    /** 3.6 — `cards`: every entry a card of its own, cut or rounded like the site's cards. */
+    layout: z.enum(['rows', 'plain', 'inline', 'grid', 'cards']).default('rows'),
     /** 2.22 — the marker on a tinted circle. */
     markerStyle: z.enum(['plain', 'circle']).optional(),
     /** 2.22 — hairline rules between rows instead of the 2px ones. */
@@ -538,6 +547,8 @@ export const blockSchemas = {
     lists: z.array(
       z.object({
         title: z.string().optional(),
+        /** 3.6 — this list's own colour, for its heading and markers; the site accent when empty. */
+        accent: z.string().trim().refine(isColor, 'Not a colour').optional(),
         /** A plain string, as stored before P3-B3, or an entry with a link and small print. */
         items: z.array(
           z.union([z.string(), z.object({ text: z.string().trim().min(1).max(200), href: safeHref.optional(), note: text(200) })]),
@@ -1536,6 +1547,8 @@ export const blockSchemas = {
     intro: text(1000),
     source: z.enum(['blog', 'projects']).default('blog'),
     numbered: z.boolean().default(true),
+    /** 3.6 — `slash` reads "/01". */
+    numberStyle: z.enum(['plain', 'slash']).optional(),
     descriptions: z.boolean().default(true),
     columns: z.union([z.literal(2), z.literal(3)]).default(2),
     limit: z.number().int().min(1).max(24).default(12),

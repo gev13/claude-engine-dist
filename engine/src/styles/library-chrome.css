@@ -330,6 +330,11 @@
 @media (width <= 768px) {
   .he-hdr--notch .he-hdr__inner { min-height: 64px; padding-right: 16px; }
 }
+/* 3.6 — "Logo on phones: after the menu button". */
+@media (width <= 768px) {
+  .he-hdr.is-logo-after .he-hdr__toggle { order: -1; }
+  .he-hdr.is-logo-after .he-hdr__inner { justify-content: flex-start; }
+}
 /* The first section starts below the tab, so the tab never sits on its
    content. A transparent border rather than padding: padding would replace
    the section's own, where a border adds to it — and a panel's colour still

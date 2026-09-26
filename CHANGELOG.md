@@ -10,6 +10,17 @@ improvements.
 
 ---
 
+## 3.6.0 — 2026-09-26
+
+**Details a finished design asks for.** A section can colour and size its
+eyebrow and its card titles on their own; card grids, picture rows and the
+category list can number "/01"; an icon list can show every entry as a card
+behind a slash in the list's own colour; a split hero can put its picture
+above the text on phones, reaching up behind a notch header's tab; and the
+logo can follow the menu button on phones. All off until chosen.
+
+---
+
 ## 3.5.0 — 2026-09-26
 
 **Every section can enter as it scrolls into view, and glitch text runs on a

@@ -2171,6 +2171,14 @@ function TypeFields({
                     </Select>
                   </Field>
                 )}
+                {variant === 'split' && (
+                  <Field label="On phones">
+                    <Select value={props.mediaFirstMobile === true ? 'above' : 'below'} onChange={(e) => set(withOpt(props, 'mediaFirstMobile', e.target.value === 'above' || undefined))}>
+                      <option value="below">The picture below the text</option>
+                      <option value="above">The picture above the text</option>
+                    </Select>
+                  </Field>
+                )}
                 {variant === 'split' && props.bleed === true && (
                   <Field label="Picture width" hint="% of the section — empty is 72">
                     <Input
@@ -3775,6 +3783,12 @@ function TypeFields({
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.numbered !== false} onChange={(e) => set({ ...props, numbered: e.target.checked })} />
               Number them (01, 02…)
             </label>
+            {props.numbered !== false && (
+              <label className="flex items-center gap-2 text-[14px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.numberStyle === 'slash'} onChange={(e) => set(withOpt(props, 'numberStyle', e.target.checked ? 'slash' : undefined))} />
+                With a slash (/01)
+              </label>
+            )}
             <label className="flex items-center gap-2 text-[14px] text-ash">
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.descriptions !== false} onChange={(e) => set({ ...props, descriptions: e.target.checked })} />
               Show each description
@@ -4549,6 +4563,9 @@ function TypeFields({
                 />
                 A running number (01, 02…) over each title
               </label>
+              {((variant === 'cards' && props.numbered === true) || (variant === 'mediaRows' && props.numbered !== false)) && (
+                <PropSelect label="Number reads" k="numberStyle" fallback="plain" options={[['plain', '01'], ['slash', '/01']]} props={props} set={set} />
+              )}
               {variant === 'cards' && (
                 <Field label="Rows of mixed widths" hint="cards per row, in turn — e.g. 2-3; empty for the even grid">
                   <Input value={str(props, 'pattern')} placeholder="2-3" spellCheck={false} onChange={(e) => set(withOpt(props, 'pattern', e.target.value.trim() || undefined))} />
@@ -4706,11 +4723,11 @@ function TypeFields({
               label="Marker"
               k="icon"
               fallback="check"
-              options={[['check', 'Tick'], ['arrow', 'Arrow'], ['dot', 'Dot'], ['star', 'Star'], ['plus', 'Plus'], ['number', 'Number'], ['custom', 'My own icon'], ['none', 'None']]}
+              options={[['check', 'Tick'], ['arrow', 'Arrow'], ['dot', 'Dot'], ['star', 'Star'], ['plus', 'Plus'], ['number', 'Number'], ['slash', 'Slash ( / )'], ['custom', 'My own icon'], ['none', 'None']]}
               props={props}
               set={set}
             />
-            <PropSelect label="Layout" k="layout" fallback="rows" options={[['rows', 'Rows with lines'], ['plain', 'Plain list'], ['inline', 'In a line'], ['grid', 'Grid']]} props={props} set={set} />
+            <PropSelect label="Layout" k="layout" fallback="rows" options={[['rows', 'Rows with lines'], ['plain', 'Plain list'], ['inline', 'In a line'], ['grid', 'Grid'], ['cards', 'Each entry a card']]} props={props} set={set} />
           </div>
           <div className="flex flex-wrap gap-x-5 gap-y-2">
             <label className="flex items-center gap-2 text-[14px] text-ash">
@@ -4729,15 +4746,18 @@ function TypeFields({
           {custom && <PropMedia label="Icon" k="iconUrl" hint="a small square picture, shown before every entry" props={props} set={set} />}
           <Repeater
             label="Lists"
-            items={arr<{ title?: string; items: ListEntry[] }>(props, 'lists')}
+            items={arr<{ title?: string; accent?: string; items: ListEntry[] }>(props, 'lists')}
             onChange={(lists) => set({ ...props, lists })}
             blank={() => ({ title: '', items: [] })}
             addLabel="Add list"
             renderRow={(item, update) => (
               <>
-                <Field label="List heading">
-                  <Input value={item.title ?? ''} onChange={(e) => update({ title: e.target.value })} />
-                </Field>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Field label="List heading">
+                    <Input value={item.title ?? ''} onChange={(e) => update({ title: e.target.value })} />
+                  </Field>
+                  <ColorField label="Colour" hint="its heading and markers; the site accent when empty" value={item.accent} onChange={(accent) => update({ accent })} />
+                </div>
                 <EntriesField items={item.items ?? []} onChange={(items) => update({ items })} />
               </>
             )}

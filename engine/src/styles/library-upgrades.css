@@ -86,6 +86,15 @@
   .he-ilist.is-inline { display: flex; flex-wrap: wrap; gap: var(--he-gap, 12px 30px); }
   .he-ilist.is-inline .he-ilist__item { align-items: flex-start; gap: 9px; }
   .he-ilist.is-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 16px 32px); }
+  /* 3.6 — a slash marker, and every entry as a card of its own. A list's
+     accent (inline --he-ilist-accent) colours its heading and markers. */
+  .he-ilist__slash { margin-right: 0.3em; font-family: var(--font-display); font-weight: 700; color: var(--he-ilist-accent, var(--color-flare)); }
+  .he-ilist.is-cards { display: grid; gap: var(--he-gap, 16px); }
+  .he-ilist.is-cards .he-ilist__item {
+    align-items: center; gap: 8px; min-height: 88px; padding: 16px 24px; color: var(--color-bone);
+    border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface);
+  }
+  .is-raised .he-ilist.is-cards .he-ilist__item { background: var(--color-surface-2); }
 
   /* ── P3-B4: dividers ─────────────────────────────────────────────────── */
 
@@ -201,3 +210,10 @@
   }
   .he-reduce-motion .he-rot__word { animation: none; }
 }
+
+/* 3.6 — a list's accent on its heading. Unlayered: the heading carries the
+   smoke text utility, which a layered rule cannot outrank. */
+.he-ilist-accent .he-ilist__title { color: var(--he-ilist-accent); }
+/* The slash keeps its colour and face when the section sets a text colour
+   or font for its body (which reaches every span). */
+.he-ilist .he-ilist__slash { font-family: var(--font-display); font-weight: 700; color: var(--he-ilist-accent, var(--color-flare)); }

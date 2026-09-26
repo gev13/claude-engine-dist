@@ -117,3 +117,23 @@ still** there leaves it out. Anything already on screen when the page opens
 is shown at once; visitors who ask for less motion, and pages without
 script, see every section as it is. Empty (the default) moves only the
 sections that choose an entrance, as before.
+
+## Design details (3.6)
+
+All off until chosen.
+
+- **A section's eyebrow and card titles** — Design tab → Typography now has
+  *Eyebrow* (the small label over the heading, and its marker) and *Card and
+  item titles* (h3–h6) beside *Headings* and *Body text*, with the same
+  fields, sizes on tablets and phones included. A red label on one section
+  and a cyan one on the next is one colour each.
+- **Numbers with a slash** — card grids (cards and picture rows) and the
+  category list can number as **/01** instead of **01**.
+- **Lists as cards behind a slash** — an icon list's *Marker* can be
+  **Slash ( / )** and its *Layout* **Each entry a card** (cut or rounded like
+  the site's cards). Each list takes its own **Colour**, for its heading and
+  its slashes.
+- **A split hero on phones** — *On phones: the picture above the text*.
+  Run to the edges, it spans the section and reaches up behind a notch
+  header's tab.
+- **Logo on phones: after the menu button** (Appearance → Header & menus).
