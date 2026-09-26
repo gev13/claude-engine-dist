@@ -36,7 +36,7 @@
     {
       "version": "2.20.0",
       "date": "2026-09-25",
-      "summary": "Content imports are checked row by row like the editor's saves, can merge instead of replacing, and report what they did as a CSV; the archive format is documented with a JSON Schema. A WordPress importer reads an export file or a live site, maps types and taxonomies, cleans page-builder shortcodes, downloads media and adds redirects. Appearance gains a Motion screen with a reduce-motion switch for everyone.",
+      "summary": "Content imports are checked row by row like the editor's saves, can merge instead of replacing, and report what they did as a CSV. A WordPress importer reads an export file or a live site, maps types and taxonomies, cleans page-builder shortcodes, downloads media and adds redirects. Appearance gains a Motion screen with a reduce-motion switch for everyone.",
       "requiresMigration": false,
       "minNode": "22.12.0",
       "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
@@ -52,7 +52,7 @@
     {
       "version": "2.18.0",
       "date": "2026-09-25",
-      "summary": "Posts can have a share bar, a contents column that follows the reader, previous/next, related posts by category and an author box; archives gain a categories menu, breadcrumbs, card options, category pictures, blocks around the posts and RSS feeds. Share pictures, custom structured data and title control finally work, the 404 page can be any page, and social links gain 13 networks and short labels.",
+      "summary": "Posts can have a share bar, a contents column that follows the reader, previous/next, related posts by category and an author box; archives gain a categories menu, breadcrumbs, card options, category pictures, blocks around the posts and RSS feeds. Share pictures, structured data and titles work, the 404 page can be any page, and social links gain 13 networks.",
       "requiresMigration": true,
       "minNode": "22.12.0",
       "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
