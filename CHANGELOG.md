@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.9.0 — 2026-09-26
+
+**Split heroes that sit as designed, and button arrows in their own colour.**
+A split hero run to the edges under a notch header can centre its text in
+the whole panel, set its paragraphs' width apart from its heading, and show
+its kicker as plain small text; each button style can give its arrow a
+colour of its own. All off until chosen.
+
+---
+
 ## 3.8.0 — 2026-09-26
 
 **What a close comparison with a finished design asked for.** Headings can

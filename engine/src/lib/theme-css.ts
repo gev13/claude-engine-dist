@@ -199,6 +199,7 @@ function buttonDecls(theme: Theme): Decl[] {
     push(out, `--he-btn-${variant}-hover-bg`, style.hoverBackground, isColor);
     push(out, `--he-btn-${variant}-hover-text`, style.hoverText, isColor);
     push(out, `--he-btn-${variant}-hover-border`, style.hoverBorder, isColor);
+    push(out, `--he-btn-${variant}-arrow`, style.arrow, isColor);
   }
 
   return out;
@@ -345,6 +346,17 @@ function shapeCss(theme: Theme, scope: string): string {
     );
   }
   if (buttons.weight) parts.push(block(at(':is(.he-btn,.he-cbtn)'), [['font-weight', buttons.weight]]));
+
+  // 3.9 — a variant's arrow in a colour of its own.
+  for (const [variant, classes] of [
+    ['primary', ['.he-btn-primary', '.he-cbtn.is-primary']],
+    ['outline', ['.he-btn-outline', '.he-cbtn.is-outline']],
+    ['ghost', ['.he-btn-ghost']],
+  ] as const) {
+    if (buttons[variant]?.arrow && isColor(buttons[variant]!.arrow!)) {
+      parts.push(block(classes.map((c) => at(`${c}>svg:last-child`)).join(','), [['color', `var(--he-btn-${variant}-arrow)`]]));
+    }
+  }
 
   // 3.6 — the arrow turned to point up and right; only its drawing turns, so a cell's divider stays put.
   if (buttons.arrow === 'diagonal') {

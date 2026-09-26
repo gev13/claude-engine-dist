@@ -485,6 +485,7 @@ function AppearanceScreenInner() {
                     <ColorField label="Background (hover)" value={get(['buttons', variant, 'hoverBackground'])} onChange={set(['buttons', variant, 'hoverBackground'])} />
                     <ColorField label="Text (hover)" value={get(['buttons', variant, 'hoverText'])} onChange={set(['buttons', variant, 'hoverText'])} />
                     <ColorField label="Border (hover)" value={get(['buttons', variant, 'hoverBorder'])} onChange={set(['buttons', variant, 'hoverBorder'])} />
+                    <ColorField label="Arrow" value={get(['buttons', variant, 'arrow'])} placeholder="the label’s colour" onChange={set(['buttons', variant, 'arrow'])} />
                   </div>
                 </Panel>
               ))}

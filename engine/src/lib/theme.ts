@@ -269,6 +269,8 @@ const buttonStyle = z.object({
   hoverBackground: color.optional(),
   hoverText: color.optional(),
   hoverBorder: color.optional(),
+  /** 3.9 — the arrow's colour, when it should differ from the label's. */
+  arrow: color.optional(),
 });
 
 /* ── The theme ────────────────────────────────────────────────────────────── */

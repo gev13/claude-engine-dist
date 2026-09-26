@@ -210,6 +210,16 @@ export const blockSchemas = {
      * and reaches up behind a notch header.
      */
     mediaFirstMobile: z.boolean().optional(),
+    /**
+     * 3.9 — run to the edges under a notch header: centre the text in the
+     * whole panel (as a design tool draws it) rather than below the tab.
+     * Wide screens only; the least height then counts the tab's space too.
+     */
+    bleedCentre: z.enum(['below', 'panel']).optional(),
+    /** 3.9 — how wide the paragraphs under the heading run (e.g. 580px); the text column's width when unset. */
+    textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.9 — the small line above the eyebrow: a mono label (as before) or plain small text. */
+    kickerStyle: z.enum(['label', 'plain']).optional(),
     eyebrow: z.string().optional(),
     kicker: z.string().optional(),
     title: z.string(),

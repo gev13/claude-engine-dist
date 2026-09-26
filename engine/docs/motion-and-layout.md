@@ -175,3 +175,14 @@ All off until chosen, except two fixes.
 - **Fixes:** a section's body text size no longer reaches its eyebrow, a
   slash marker or the coloured words after a card title; a form's send
   button now takes the arrow compartment like every other button.
+
+## Split heroes and button arrows (3.9)
+
+- **Text centred** (a split hero run to the edges, under a notch header):
+  *below the menu tab* (as before) or *in the whole panel*, as a design tool
+  draws it. Wide screens only; the least height then counts the tab's space.
+- **Paragraph width** — how wide the paragraphs under a split hero's heading
+  run, independent of the heading.
+- **Kicker style** — a small mono label (as before) or plain small text.
+- **Appearance → Buttons → Arrow** (per style) — the arrow in a colour of its
+  own, e.g. a cyan arrow on a white-labelled outlined button.

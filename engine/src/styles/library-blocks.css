@@ -266,6 +266,15 @@
   .he-hero--split.is-bleed.is-media-left .he-hero__visualmedia { object-position: left center; }
   /* 3.3.3 — the whole picture at full height, against the edge, whatever the width. */
   .he-hero--split.is-bleed.is-fit-contain .he-hero__visualmedia { object-fit: contain; }
+  /* 3.9 — the paragraphs' own measure, and a plain kicker. */
+  .he-hero.has-text-width :is(.he-hero__lede, .he-hero__body) { max-width: var(--he-hero-text); }
+  .he-hero.is-kicker-plain .he-hero__kicker { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--color-bone); }
+  /* 3.9 — centred in the whole panel: the section reaches up into the tab's space itself. */
+  @media (width > 48rem) {
+    .he-hero--split.is-bleed.is-centre-panel { margin-top: calc(-1 * var(--he-ns-now, 0px)); }
+    .he-hero--split.is-bleed.is-centre-panel .he-hero__visual { inset: 0 0 0 auto; }
+    .he-hero--split.is-bleed.is-centre-panel.is-media-left .he-hero__visual { inset: 0 auto 0 0; }
+  }
 
   /* HR4 — statement, then a large framed image or video. */
   .he-hero--statement { padding-block: 96px; border-bottom: 2px solid var(--color-hairline); }

@@ -100,8 +100,11 @@ export function LibraryHero(p: P) {
           p.bleed && ['is-bleed', `is-h-${p.height}`, p.bleedFit === 'contain' && 'is-fit-contain'],
           // 3.6 — on phones, the picture above the text.
           p.mediaFirstMobile && 'is-media-first-sm',
+          p.bleed && p.bleedCentre === 'panel' && 'is-centre-panel',
+          p.kickerStyle === 'plain' && 'is-kicker-plain',
+          p.textWidth && 'has-text-width',
         )}
-        style={p.bleed ? bleedStyle(p) : undefined}
+        style={splitStyle(p)}
       >
         <div className="shell he-hero__split">
           <div className="he-hero__content">
@@ -142,9 +145,11 @@ export function LibraryHero(p: P) {
 }
 
 /** 3.3.2–3.3.3 — the edge-to-edge picture's width and the hero's least height, only when set. */
-function bleedStyle(p: P): React.CSSProperties | undefined {
+function splitStyle(p: P): React.CSSProperties | undefined {
   const style: Record<string, string> = {};
-  if (p.bleedWidth) style['--he-bleed-w'] = `${p.bleedWidth}%`;
-  if (p.bleedMinHeight) style.minHeight = p.bleedMinHeight;
+  if (p.bleed && p.bleedWidth) style['--he-bleed-w'] = `${p.bleedWidth}%`;
+  if (p.bleed && p.bleedMinHeight) style.minHeight = p.bleedMinHeight;
+  // 3.9 — the paragraphs' own measure.
+  if (p.textWidth) style['--he-hero-text'] = p.textWidth;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }

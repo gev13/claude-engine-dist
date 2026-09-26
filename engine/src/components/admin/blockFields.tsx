@@ -2181,6 +2181,19 @@ function TypeFields({
                   </Field>
                 )}
                 {variant === 'split' && (
+                  <Field label="Paragraph width" hint="e.g. 580px — empty follows the text column">
+                    <Input value={str(props, 'textWidth')} placeholder="580px" onChange={(e) => set(withOpt(props, 'textWidth', e.target.value.trim() || undefined))} />
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
+                  <Field label="Text centred" hint="under a notch header">
+                    <Select value={str(props, 'bleedCentre') || 'below'} onChange={(e) => set(withOpt(props, 'bleedCentre', e.target.value === 'panel' ? 'panel' : undefined))}>
+                      <option value="below">Below the menu tab</option>
+                      <option value="panel">In the whole panel</option>
+                    </Select>
+                  </Field>
+                )}
+                {variant === 'split' && (
                   <Field label="On phones">
                     <Select value={props.mediaFirstMobile === true ? 'above' : 'below'} onChange={(e) => set(withOpt(props, 'mediaFirstMobile', e.target.value === 'above' || undefined))}>
                       <option value="below">The picture below the text</option>
@@ -2276,6 +2289,9 @@ function TypeFields({
             </>
           )}
           <Text label="Kicker" k="kicker" props={props} set={set} hint="e.g. Services / 02" />
+          {str(props, 'kicker') && (
+            <PropSelect label="Kicker style" k="kickerStyle" fallback="label" options={[['label', 'A small mono label'], ['plain', 'Plain small text']]} props={props} set={set} />
+          )}
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Lede" k="lede" props={props} set={set} rows={2} />
