@@ -10,6 +10,20 @@ improvements.
 
 ---
 
+## 3.0.1 — 2026-09-26
+
+**An update no longer reports a failed reload that worked.** pm2 stops the
+old process together with everything it started — including the update's
+own `pm2 reload` command — so a successful update could end with “Command
+failed: pm2 reload …” while the site was already running the new version.
+The reload is now read from the version the restarted site reports, and a
+record left by an earlier update is settled the same way. The release list
+is also held to the limits every site checks, so an over-long description
+can no longer hide updates (“The release feed is not in the expected
+shape”).
+
+---
+
 ## 3.0.0 — 2026-09-25
 
 **A new major version.** 3.0 gathers everything since 2.12 — permalinks and

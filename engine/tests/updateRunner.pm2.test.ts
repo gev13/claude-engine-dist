@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { STEPS, pickPm2Process, reconcile, type RunState } from '@/server/engine/update';
+import { STEPS, killedBySignal, pickPm2Process, reconcile, type RunState } from '@/server/engine/update';
 import { ENGINE_VERSION } from '@/lib/version';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -138,10 +138,52 @@ describe('a run interrupted by its own reload', () => {
   });
 
   it('never touches a run that already finished', () => {
-    for (const status of ['idle', 'done', 'failed'] as const) {
+    for (const status of ['idle', 'done'] as const) {
       const state = { ...running(), status };
       expect(reconcile(state, minutesAgo(999)).status).toBe(status);
     }
+    // A failure anywhere but the reload stays a failure.
+    const failed = { ...running({ step: 'build', fromVersion: '0.0.1' }), status: 'failed' as const };
+    expect(reconcile(failed, minutesAgo(999)).status).toBe('failed');
+  });
+});
+
+/* 3.0.1 — seen live on the 3.0.0 update: pm2 stops the old process with
+   everything it started, including the `pm2 reload` command the update is
+   waiting on. The command dies by a signal and was recorded as "Command
+   failed: pm2 reload …" on a site that came back up on the new version. */
+describe('a reload recorded as failed because pm2 stopped its own command', () => {
+  const failedReload = (over: Partial<RunState> = {}): RunState => ({
+    ...running(),
+    status: 'failed',
+    fromVersion: '0.0.1',
+    error: 'Command failed: pm2 reload site --update-env',
+    log: [
+      { step: 'build', ok: true, detail: 'Rebuilt the site.' },
+      { step: 'reload', ok: false, detail: 'Command failed: pm2 reload site --update-env' },
+    ],
+    ...over,
+  });
+
+  it('is read as done when this process is running the version it was taking', () => {
+    const out = reconcile(failedReload(), minutesAgo(1));
+    expect(out.status).toBe('done');
+    expect(out.error).toBeUndefined();
+    expect(out.log).toHaveLength(2);
+    expect(out.log.at(-1)).toMatchObject({ step: 'reload', ok: true });
+    expect(out.log.at(-1)!.detail).toContain(ENGINE_VERSION);
+  });
+
+  it('stays a failure when the old version is still the one answering', () => {
+    expect(reconcile(failedReload({ target: '99.0.0' }), minutesAgo(1)).status).toBe('failed');
+    expect(reconcile(failedReload({ fromVersion: ENGINE_VERSION }), minutesAgo(1)).status).toBe('failed');
+  });
+
+  it('tells a signal from outside apart from the timeout and from an exit code', () => {
+    expect(killedBySignal({ signal: 'SIGINT', killed: false })).toBe(true);
+    expect(killedBySignal({ signal: 'SIGTERM', killed: true })).toBe(false); // execFile's own timeout
+    expect(killedBySignal({ code: 1, signal: null })).toBe(false);
+    expect(killedBySignal(undefined)).toBe(false);
   });
 });
 

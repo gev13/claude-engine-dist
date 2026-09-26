@@ -92,6 +92,23 @@ const PRESUMED_DEAD_MS = 45 * 60_000;
  * anyway.
  */
 export function reconcile(state: RunState, updatedAt: Date | null): RunState {
+  if (reloadKilledItsOwnCommand(state)) {
+    return {
+      ...state,
+      status: 'done',
+      step: undefined,
+      error: undefined,
+      log: [
+        ...state.log.slice(0, -1),
+        {
+          step: 'reload',
+          ok: true,
+          detail: `Reloaded — this site is running ${ENGINE_VERSION}. pm2 stopped the update's own reload command along with the old process, which is why it was recorded as a failure.`,
+        },
+      ],
+    };
+  }
+
   if (state.status !== 'running') return state;
 
   if (state.step === 'reload' && state.target && ENGINE_VERSION === state.target) {
@@ -121,6 +138,31 @@ export function reconcile(state: RunState, updatedAt: Date | null): RunState {
   }
 
   return state;
+}
+
+/**
+ * 3.0.1 — a "failed" reload that in fact worked.
+ *
+ * pm2 stops the old process with everything it started, and that includes
+ * the `pm2 reload` command this code is waiting on. The command dies by a
+ * signal, `run()` rejects, and in the moment before the process itself goes
+ * the catch block records "Command failed: pm2 reload …" — on a site that
+ * then comes back up on the new version (seen live, 3.0.0). The evidence is
+ * the same as above: the process answering is running the target, and it
+ * was not before. Records written by older updaters are read by the new
+ * process, so this also settles theirs.
+ */
+function reloadKilledItsOwnCommand(state: RunState): boolean {
+  const last = state.log.at(-1);
+  return (
+    state.status === 'failed' &&
+    state.step === 'reload' &&
+    last?.step === 'reload' &&
+    last.ok === false &&
+    Boolean(state.target) &&
+    state.target === ENGINE_VERSION &&
+    state.fromVersion !== ENGINE_VERSION
+  );
 }
 
 export async function getRunState(): Promise<RunState> {
@@ -380,13 +422,34 @@ async function runStep(step: Step, target: string): Promise<StepResult> {
             'Built and ready. Nothing was restarted — no pm2 process was found running from this directory, so restart the site yourself to pick up the new version.',
         };
       }
-      await run('pm2', ['reload', name, '--update-env'], { cwd: appDir(), timeout: 120_000 });
+      try {
+        await run('pm2', ['reload', name, '--update-env'], { cwd: appDir(), timeout: 120_000 });
+      } catch (error) {
+        /* Killed by a signal: pm2 is stopping this process's tree, which is
+           the reload working. Leave the run at `reload` for `reconcile` to
+           settle from the version the new process reports. */
+        if (killedBySignal(error)) throw new ReloadInFlight();
+        throw error;
+      }
       return { detail: `Reloaded ${name} through pm2.` };
     }
 
     default:
       return { detail: '' };
   }
+}
+
+/** The reload has taken this process's own command down with it. */
+class ReloadInFlight extends Error {}
+
+/**
+ * A child stopped by somebody else's signal. `killed` is set only when
+ * execFile itself killed it — the timeout — which is a real failure.
+ */
+export function killedBySignal(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const { signal, killed } = error as { signal?: unknown; killed?: unknown };
+  return typeof signal === 'string' && signal.length > 0 && killed !== true;
 }
 
 /**
@@ -428,6 +491,8 @@ export async function startUpdate(target: string, startedByEmail: string): Promi
 
       await save({ ...current, status: 'done', step: undefined, finishedAt: new Date().toISOString() });
     } catch (error) {
+      // The process is going; `reconcile` reads the run as done once the new one answers.
+      if (error instanceof ReloadInFlight) return;
       const reason = error instanceof Error ? error.message : 'The update failed.';
       await save({
         ...current,
