@@ -183,8 +183,13 @@ async function main() {
   const [indexEntry, researchEntry] = blogEntries;
   const blogIndex = indexEntry?.path ?? own('/blog');
 
+  /* 3.11 — a blog switched off (Appearance → Blog) lists nothing in its
+     sitemap and answers "not found" at its index; its checks then turn into
+     one: that it really is gone. */
+  const blogOff = blogEntries.length === 0 && (await get(blogIndex)).status === 404;
+
   // Routes that exist whether or not anybody has made a page for them.
-  for (const path of [blogIndex, researchEntry?.path ?? own('/blog/research')]) await checkPage(path);
+  if (!blogOff) for (const path of [blogIndex, researchEntry?.path ?? own('/blog/research')]) await checkPage(path);
 
   const notFound = await get(own(`/smoke-missing-${Date.now()}`));
   check('unknown path -> 404', notFound.status === 404, `got ${notFound.status}`);
@@ -192,27 +197,35 @@ async function main() {
   /* Blog */
   section('Blog');
 
-  const rest = blogEntries.slice(2);
-  const postPath = rest.find((e) => e.changefreq === 'monthly')?.path;
-  const categoryPath = rest.find((e) => e.changefreq === 'weekly' && e.priority === '0.6')?.path;
-
-  if (postPath) {
-    const html = await checkPage(postPath);
-    check('  post emits Article structured data', html.includes('"@type":"Article"'));
+  if (blogOff) {
+    const search = await get(`${blogIndex}?q=smoke`);
+    const research = await get(own('/blog/research'));
+    check('blog switched off: index, research and search answer 404', research.status === 404 && search.status === 404, `research ${research.status}, search ${search.status}`);
+    skip('published post renders', 'the blog is switched off');
   } else {
-    skip('published post renders', 'no posts published yet');
-  }
 
-  if (categoryPath) {
-    await checkPage(categoryPath);
-  } else {
-    skip('category page renders', 'no categories yet');
-  }
+    const rest = blogEntries.slice(2);
+    const postPath = rest.find((e) => e.changefreq === 'monthly')?.path;
+    const categoryPath = rest.find((e) => e.changefreq === 'weekly' && e.priority === '0.6')?.path;
 
-  const search = await text(`${blogIndex}?q=smoke`);
-  check('blog search view renders', search.res.status === 200, `got ${search.res.status}`);
-  const canonical = /rel="canonical" href="([^"]*)"/.exec(search.body)?.[1] ?? '';
-  check(`  search view canonicalises to ${blogIndex}`, canonical.endsWith(blogIndex), `got ${canonical}`);
+    if (postPath) {
+      const html = await checkPage(postPath);
+      check('  post emits Article structured data', html.includes('"@type":"Article"'));
+    } else {
+      skip('published post renders', 'no posts published yet');
+    }
+
+    if (categoryPath) {
+      await checkPage(categoryPath);
+    } else {
+      skip('category page renders', 'no categories yet');
+    }
+
+    const search = await text(`${blogIndex}?q=smoke`);
+    check('blog search view renders', search.res.status === 200, `got ${search.res.status}`);
+    const canonical = /rel="canonical" href="([^"]*)"/.exec(search.body)?.[1] ?? '';
+    check(`  search view canonicalises to ${blogIndex}`, canonical.endsWith(blogIndex), `got ${canonical}`);
+  }
 
   /* Careers */
   section('Careers');

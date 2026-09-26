@@ -94,6 +94,14 @@
   .he-band.is-topLeft::after { background: linear-gradient(to bottom, rgb(0 0 0 / calc(var(--he-ov, 0.42) * 1.7)), rgb(0 0 0 / calc(var(--he-ov, 0.42) * 0.3)) 70%); }
   .he-band__inner { display: flex; width: 100%; padding-block: 72px; }
   .he-band__text { max-width: 640px; }
+  /* 3.11 — a band's own text box; each property falls back to the band's usual value. */
+  .he-band__inner.has-text-box { padding-block: var(--he-band-py, 72px); }
+  .he-band__inner.has-text-box .he-band__text { margin-inline-start: var(--he-band-inset, 0); }
+  .he-band__inner.has-text-box .he-lbody { max-width: var(--he-band-body, 60ch); margin-top: var(--he-band-body-gap, 16px); }
+  .he-band__inner.has-text-box .he-actions { margin-top: var(--he-band-actions-gap, 28px); }
+  @media (width <= 48rem) {
+    .he-band__inner.has-text-box .he-band__text { margin-inline-start: 0; }
+  }
   .he-band.is-center .he-band__inner { align-items: center; justify-content: center; text-align: center; }
   .he-band.is-center .he-band__text { max-width: 780px; }
   .he-band.is-center .he-lbody { margin-inline: auto; }

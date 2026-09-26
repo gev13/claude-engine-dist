@@ -1573,6 +1573,34 @@ function AddSeveral({ onAdd, label = 'Add several from the library' }: { onAdd: 
 type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: number; text: 'light' | 'dark'; ink?: string; accentArrow?: boolean };
 
 /** 2.21 — the media band's colour fading in from one side, over the picture. */
+/** 3.11 — a band's text box: its padding, inset, paragraph width and gaps. */
+type BandTextBox = { paddingBlock?: string; inset?: string; bodyWidth?: string; bodyGap?: string; actionsGap?: string };
+function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
+  const box = (props.textBox as BandTextBox | undefined) ?? {};
+  const put = (key: keyof BandTextBox) => (value: string) => {
+    const next = { ...box, [key]: value.trim() || undefined };
+    const empty = Object.values(next).every((v) => v === undefined);
+    set(withOpt(props, 'textBox', empty ? undefined : next));
+  };
+  const field = (key: keyof BandTextBox, label: string, placeholder: string) => (
+    <Field label={label}>
+      <Input value={box[key] ?? ''} placeholder={placeholder} onChange={(e) => put(key)(e.target.value)} />
+    </Field>
+  );
+  return (
+    <details className="border-2 border-hairline px-4 py-3">
+      <summary className="cursor-pointer text-[14px] text-ash">The text’s box — padding, inset, widths and gaps</summary>
+      <div className="mt-3 grid gap-3 sm:grid-cols-3">
+        {field('paddingBlock', 'Space above and below', '72px')}
+        {field('inset', 'Further in than the page edge', '0')}
+        {field('bodyWidth', 'Paragraph width', '60ch')}
+        {field('bodyGap', 'Gap above the paragraph', '16px')}
+        {field('actionsGap', 'Gap above the buttons', '28px')}
+      </div>
+    </details>
+  );
+}
+
 function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
   const fade = props.fade as BandFade | undefined;
   const update = (patch: Partial<BandFade>) => set({ ...props, fade: { side: 'left', solid: 42, clear: 72, text: 'light', ...fade, ...patch } });
@@ -4126,6 +4154,7 @@ function TypeFields({
             )}
           </div>
           <BandFadeFields props={props} set={set} />
+          <BandTextBoxFields props={props} set={set} />
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Text" k="body" props={props} set={set} rows={2} />

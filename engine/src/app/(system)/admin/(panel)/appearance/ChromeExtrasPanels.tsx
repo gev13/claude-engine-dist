@@ -266,6 +266,8 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
       </div>
       <div className="mt-4">
         <Check label="Draw the footer as a panel (Shape → Panels)" value={footer?.panel} onChange={set(['chrome', 'footer', 'panel'])} />
+        <Check label="Show the contact email" value={footer?.email !== false} onChange={(v) => set(['chrome', 'footer', 'email'])(v ? undefined : false)} />
+        <Check label="The copyright line as written, not in capitals" value={footer?.copyrightCase === 'asWritten'} onChange={(v) => set(['chrome', 'footer', 'copyrightCase'])(v ? 'asWritten' : undefined)} />
       </div>
     </Panel>
   );

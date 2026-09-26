@@ -106,7 +106,7 @@ export function MediaBand(p: P<'mediaBand'>) {
     >
       {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
       {hasText && (
-        <div className="shell he-band__inner">
+        <div className={cn('shell he-band__inner', p.textBox && 'has-text-box')} style={textBoxStyle(p.textBox)}>
           <div className="he-band__text">
             {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
             {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
@@ -117,6 +117,18 @@ export function MediaBand(p: P<'mediaBand'>) {
       )}
     </section>
   );
+}
+
+/** 3.11 — a media band's text box as custom properties; only what was set. */
+function textBoxStyle(box: P<'mediaBand'>['textBox']): React.CSSProperties | undefined {
+  if (!box) return undefined;
+  const style: Record<string, string> = {};
+  if (box.paddingBlock) style['--he-band-py'] = box.paddingBlock;
+  if (box.inset) style['--he-band-inset'] = box.inset;
+  if (box.bodyWidth) style['--he-band-body'] = box.bodyWidth;
+  if (box.bodyGap) style['--he-band-body-gap'] = box.bodyGap;
+  if (box.actionsGap) style['--he-band-actions-gap'] = box.actionsGap;
+  return style as React.CSSProperties;
 }
 
 /* ── CT4 / CT5: card grid variants ────────────────────────────────────────── */

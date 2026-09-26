@@ -252,7 +252,7 @@ export default async function SiteLayout({
               <Footer
               siteName={settings.name}
               tagline={settings.tagline}
-              email={settings.contactEmail}
+              email={chrome.footer.email ? settings.contactEmail : undefined}
               address={navigation.footerAddress}
               columns={navigation.footer}
               note={navigation.footerNote}
@@ -262,6 +262,7 @@ export default async function SiteLayout({
               shareChip={chrome.footer.shareChip}
               logo={footerLogo(chrome.footer, theme.brand)}
               panel={chrome.footer.panel}
+              copyrightAsWritten={chrome.footer.copyrightCase === 'asWritten'}
               motionToggle={chrome.motionToggle}
               themeToggle={chrome.themeToggle}
             />,

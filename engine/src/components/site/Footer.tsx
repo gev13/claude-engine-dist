@@ -22,6 +22,8 @@ export type FooterProps = {
   siteName: string;
   tagline?: string;
   email?: string;
+  /** 3.11 — the copyright line as written, not in the bottom row's capitals. */
+  copyrightAsWritten?: boolean;
   address?: string;
   columns: Column[];
   note?: string;
@@ -97,7 +99,7 @@ export function Footer(props: FooterProps) {
 
   const bottom = (
     <div className="he-ftr__bottom">
-      <span>{copyright}</span>
+      <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
       {legal.length > 0 && (
         <ul className="he-ftr__legal">
           {legal.map((item) => (
@@ -136,7 +138,7 @@ export function Footer(props: FooterProps) {
           <Socials social={social} style={socialStyle} />
           {toggles}
           <div className="he-ftr__fine">
-            <span>{copyright}</span>
+            <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
             {legal.length > 0 && (
               <ul className="he-ftr__legal">
                 {legal.map((item) => (

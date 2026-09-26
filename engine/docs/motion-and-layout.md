@@ -194,3 +194,14 @@ All off until chosen, except two fixes.
 - **FAQ:** *Heading column width* (e.g. 460px) and, contained, *Lines stop
   short of the edges*. A section's *Card and item titles* typography now
   styles its questions too.
+
+## Band text boxes and the footer's bottom line (3.11)
+
+- **Media band → The text's box:** the space above and below the text, how
+  much further in than the page edge it starts, the paragraph's width, and
+  the gaps above the paragraph and the buttons. Each unset keeps the band's
+  own; phones drop the inset.
+- **Appearance → Footer:** *Show the contact email* (on, as before) and *The
+  copyright line as written, not in capitals*.
+- The smoke suite recognises a blog that is switched off and checks that it
+  really answers "not found".

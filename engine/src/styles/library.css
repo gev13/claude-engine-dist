@@ -610,6 +610,7 @@
   .he-ftr__social.is-text { gap: 6px 18px; }
   .he-ftr__social.is-text a { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; font-size: 14px; }
 
+  .he-ftr__copy.is-as-written { text-transform: none; letter-spacing: 0.02em; }
   .he-ftr__bottom {
     display: flex;
     flex-wrap: wrap;

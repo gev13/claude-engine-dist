@@ -927,6 +927,20 @@ export const blockSchemas = {
      * solid up to `solid`% of the width, clear from `clear`%. The text can
      * turn dark for a light colour, and the buttons with it.
      */
+    /**
+     * 3.11 — the text's box: the space above and below it, how much further
+     * in than the page's edge it starts, the paragraph's width, and the gaps
+     * above the paragraph and the buttons. Each unset keeps the band's own.
+     */
+    textBox: z
+      .object({
+        paddingBlock: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        inset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        bodyWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        bodyGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        actionsGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+      })
+      .optional(),
     fade: z
       .object({
         side: z.enum(['left', 'right']).default('left'),

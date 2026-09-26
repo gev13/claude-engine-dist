@@ -10,6 +10,17 @@ improvements.
 
 ---
 
+## 3.11.0 — 2026-09-27
+
+**A media band's text box, and the footer's bottom line.** A media band can
+set the space around its text, how far in it starts, its paragraph's width
+and the gaps above the paragraph and the buttons. The footer can leave out
+the contact email and write the copyright as typed rather than in capitals.
+The smoke suite now recognises a blog that is switched off. All off until
+chosen.
+
+---
+
 ## 3.10.0 — 2026-09-26
 
 **Two-column sections that line up with their heading.** Prose in two

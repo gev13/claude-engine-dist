@@ -145,6 +145,10 @@ export const chromeSchema = z.object({
       logoHeight: z.number().int().min(16).max(120).optional(),
       /** 3.1 — the footer as a panel: inset, in the panel colour and corners set in Appearance → Shape. */
       panel: z.boolean().optional(),
+      /** 3.11 — false leaves the contact email out of the footer. */
+      email: z.boolean().optional(),
+      /** 3.11 — the copyright line in capitals like the rest of the bottom row (as before), or as written. */
+      copyrightCase: z.enum(['upper', 'asWritten']).optional(),
     })
     .optional(),
 
@@ -268,6 +272,8 @@ export type ResolvedChrome = {
     logo: 'mark' | 'image' | 'none';
     logoHeight?: number;
     panel: boolean;
+    email: boolean;
+    copyrightCase: 'upper' | 'asWritten';
   };
   cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
   transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean };
@@ -350,6 +356,8 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       logo: c.footer?.logo ?? 'mark',
       logoHeight: c.footer?.logoHeight,
       panel: c.footer?.panel ?? false,
+      email: c.footer?.email ?? true,
+      copyrightCase: c.footer?.copyrightCase ?? 'upper',
     },
     cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
     transition: { style: c.transition?.style ?? 'off', preloader: c.transition?.preloader ?? false },
