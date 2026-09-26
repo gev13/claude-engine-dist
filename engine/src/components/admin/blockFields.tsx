@@ -4516,6 +4516,12 @@ function TypeFields({
               <option value="two">Two columns</option>
             </Select>
           </Field>
+          {str(props, 'columns') === 'two' && (
+            <label className="flex items-center gap-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.alignWithTitle === true} onChange={(e) => set(withOpt(props, 'alignWithTitle', e.target.checked || undefined))} />
+              The text starts level with the heading, below the eyebrow
+            </label>
+          )}
           <StringListRepeater
             label="Paragraphs"
             hint="One box per paragraph. Enter starts a new line inside the same paragraph."
@@ -4839,6 +4845,21 @@ function TypeFields({
                 set={set}
               />
               <PropSelect label="Marker" k="icon" fallback="plus" options={[['plus', 'Plus'], ['chevron', 'Chevron'], ['arrow', 'Arrow']]} props={props} set={set} />
+              <Field label="Heading column width" hint="e.g. 460px — empty shares the row">
+                <Input value={str(props, 'headWidth')} placeholder="460px" onChange={(e) => set(withOpt(props, 'headWidth', e.target.value.trim() || undefined))} />
+              </Field>
+              <div className="flex flex-col justify-end gap-2 pb-2">
+                <label className="flex items-center gap-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.alignWithTitle === true} onChange={(e) => set(withOpt(props, 'alignWithTitle', e.target.checked || undefined))} />
+                  Questions level with the heading
+                </label>
+                {str(props, 'style') === 'contained' && (
+                  <label className="flex items-center gap-2 text-[14px] text-ash">
+                    <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.insetDividers === true} onChange={(e) => set(withOpt(props, 'insetDividers', e.target.checked || undefined))} />
+                    Lines stop short of the edges
+                  </label>
+                )}
+              </div>
             </div>
           )}
           <ToneField props={props} set={set} />

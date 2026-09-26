@@ -186,3 +186,11 @@ All off until chosen, except two fixes.
 - **Kicker style** — a small mono label (as before) or plain small text.
 - **Appearance → Buttons → Arrow** (per style) — the arrow in a colour of its
   own, e.g. a cyan arrow on a white-labelled outlined button.
+
+## Two-column sections and the FAQ (3.10)
+
+- **Prose in two columns** and the **FAQ** can start their second column
+  level with the heading, below the eyebrow, as a design usually draws it.
+- **FAQ:** *Heading column width* (e.g. 460px) and, contained, *Lines stop
+  short of the edges*. A section's *Card and item titles* typography now
+  styles its questions too.

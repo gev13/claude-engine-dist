@@ -27,7 +27,7 @@ describe('a section’s eyebrow and card titles', () => {
     const out = blockStyleToCss('s1', blockStyleSchema.parse({ typography: { eyebrow: { color: '#e63946', sizeMobile: '13px' }, subheading: { color: '#1e90ff' } } }));
     expect(out).toContain('.he-b-s1 :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow){color:#e63946}');
     expect(out).toContain('.he-b-s1 .he-eyebrow__rule{background-color:#e63946}');
-    expect(out).toContain('.he-b-s1 :is(h3,h4,h5,h6){color:#1e90ff}');
+    expect(out).toContain('.he-b-s1 :is(h3,h4,h5,h6,.he-faq__btn){color:#1e90ff}');
     expect(out).toMatch(/@media \(max-width:\d+px\)\{[^}]*\.he-b-s1 :is\(\.he-eyebrow \.type-eyebrow,[^)]*\)\{font-size:13px\}/);
   });
 });

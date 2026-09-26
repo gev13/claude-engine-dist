@@ -1,6 +1,14 @@
 {
-  "latest": "3.9.0",
+  "latest": "3.10.0",
   "releases": [
+    {
+      "version": "3.10.0",
+      "date": "2026-09-26",
+      "summary": "Two-column prose and the FAQ can line their second column up with the heading; FAQ heading width and inset lines; question typography from the section.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.9.0",
       "date": "2026-09-26",

@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.10.0 — 2026-09-26
+
+**Two-column sections that line up with their heading.** Prose in two
+columns and the FAQ can start their second column level with the heading
+rather than the eyebrow above it; the FAQ can set its heading column's
+width and, contained, stop its lines short of the edges; a section's card-
+title typography now reaches its questions. All off until chosen.
+
+---
+
 ## 3.9.0 — 2026-09-26
 
 **Split heroes that sit as designed, and button arrows in their own colour.**

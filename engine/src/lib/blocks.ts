@@ -281,6 +281,8 @@ export const blockSchemas = {
     /** Sanitised rich text from TinyMCE; rendered instead of `paragraphs`. */
     html: z.string().optional(),
     columns: z.enum(['one', 'two']).default('one'),
+    /** 3.10 — two columns: the text starts level with the heading rather than the eyebrow above it. */
+    alignWithTitle: z.boolean().optional(),
     /** `footnotes` (CF4) sets it as small print, for claims and disclaimers before the footer. */
     variant: z.enum(['default', 'footnotes']).default('default'),
   }),
@@ -584,6 +586,12 @@ export const blockSchemas = {
     /** V1 — how the questions are drawn in the `list` layout; `lines` is the original look. */
     style: z.enum(['lines', 'filled', 'contained', 'outlined']).default('lines'),
     icon: z.enum(['plus', 'chevron', 'arrow']).default('plus'),
+    /** 3.10 — the heading column's width beside the questions (e.g. 460px); unset shares the row two to three. */
+    headWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.10 — the questions start level with the heading rather than the eyebrow above it. */
+    alignWithTitle: z.boolean().optional(),
+    /** 3.10 — contained: the lines between questions stop short of the edges. */
+    insetDividers: z.boolean().optional(),
     tone,
     eyebrow: z.string().optional(),
     title: z.string().optional(),

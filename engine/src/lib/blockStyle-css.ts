@@ -323,7 +323,7 @@ export function blockStyleToCss(
 
   // 3.6 — card and item titles, then the eyebrow (after body, which also reaches its span).
   const subheading = typeDecls(style.typography?.subheading);
-  if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6)`, subheading));
+  if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, subheading));
   const eyebrow = typeDecls(style.typography?.eyebrow);
   if (eyebrow.length) parts.push(block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, eyebrow));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
@@ -336,7 +336,7 @@ export function blockStyleToCss(
     const inner = [
       block(`${root} :is(h1,h2,h3,h4,h5,h6)`, sizeDecl(style.typography?.heading?.[key])),
       block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, sizeDecl(style.typography?.body?.[key])),
-      block(`${root} :is(h3,h4,h5,h6)`, sizeDecl(style.typography?.subheading?.[key])),
+      block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, sizeDecl(style.typography?.subheading?.[key])),
       block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, sizeDecl(style.typography?.eyebrow?.[key])),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);

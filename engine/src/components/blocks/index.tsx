@@ -99,6 +99,7 @@ export function ProseBlock(p: P<'prose'>) {
       <div
         className={cn(
           p.columns === 'two' && 'grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16',
+          p.columns === 'two' && p.alignWithTitle && p.eyebrow && 'he-align-title',
           p.variant === 'footnotes' && 'he-footnotes',
         )}
       >
@@ -345,9 +346,12 @@ export function FaqBlock(p: P<'faq'>) {
 
   return (
     <Section tone={p.tone ?? 'base'} size="lg" id="faq">
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16">
+      <div
+        className={cn('grid grid-cols-1 gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-16', p.headWidth && 'he-faq-headw', p.alignWithTitle && p.eyebrow && 'he-align-title')}
+        style={p.headWidth ? ({ '--he-faq-head': p.headWidth } as React.CSSProperties) : undefined}
+      >
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} />
-        <Accordion items={p.items} look={p.style} icon={p.icon} />
+        <Accordion items={p.items} look={p.style} icon={p.icon} className={p.insetDividers ? 'is-inset-lines' : undefined} />
       </div>
     </Section>
   );
