@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { reportTotals } from '@/lib/importReport';
 import { parseWxr } from '@/lib/wordpress/wxr';
 import { badRequest, handle, notFound, ok, readJson } from '@/server/api/respond';
+import { uploadedFile } from '@/server/api/upload';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
@@ -59,8 +60,8 @@ export async function POST(request: Request) {
       } catch {
         return badRequest('That upload could not be read.');
       }
-      const file = form.get('file');
-      if (!(file instanceof File)) return badRequest('Choose a WordPress export file first.');
+      const file = uploadedFile(form.get('file'));
+      if (!file) return badRequest('Choose a WordPress export file first.');
       if (file.size <= 0) return badRequest('That file is empty.');
       if (file.size > MAX_WXR_BYTES) return badRequest('That file is larger than the 200 MB limit.');
       let site;

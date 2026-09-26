@@ -4,6 +4,7 @@ import { Readable } from 'node:stream';
 import { z } from 'zod';
 import { ENGINE_VERSION } from '@/lib/version';
 import { badRequest, handle, notFound, ok, readJson } from '@/server/api/respond';
+import { uploadedFile, describeUpload } from '@/server/api/upload';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
@@ -104,8 +105,13 @@ export async function POST(request: Request) {
         return badRequest('That upload could not be read.');
       }
 
-      const file = form.get('file');
-      if (!(file instanceof File)) return badRequest('Choose an export file first.');
+      const file = uploadedFile(form.get('file'));
+      if (!file) {
+        // 3.4.1 — say what did arrive, so a file lost on the way is not mistaken for none chosen.
+        const arrived = describeUpload(form, request);
+        console.warn(`[transfer] an import arrived without its file: ${arrived}`);
+        return badRequest(form.has('file') ? `The export file arrived but could not be read as a file (${arrived}).` : `Choose an export file first. (The upload carried: ${arrived}.)`);
+      }
 
       const mode = String(form.get('mode') ?? 'inspect');
       // 2.20 — replace (as before) or merge, and what to do with rows the checks refuse.

@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { audit } from '@/server/auth/audit';
 import { clientIp, rateLimit } from '@/server/auth/rateLimit';
 import { badRequest, handle, ok } from '@/server/api/respond';
+import { uploadedFile } from '@/server/api/upload';
 import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { findForm } from '@/server/content/forms';
 import { readHiddenValues, validateAnswers } from '@/lib/forms';
@@ -86,8 +87,9 @@ export async function POST(request: Request) {
       }
 
       for (const [key, value] of sent.entries()) {
-        if (key.startsWith('file:') && value instanceof File && value.size > 0) {
-          uploads.set(key.slice(5), value);
+        const file = key.startsWith('file:') ? uploadedFile(value) : null;
+        if (file && file.size > 0) {
+          uploads.set(key.slice(5), file);
         }
       }
       // A cap on count as well as on size: ten questions, ten files, no more.

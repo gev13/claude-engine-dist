@@ -3,6 +3,7 @@ import { and, eq, isNull, sql } from 'drizzle-orm';
 import { audit } from '@/server/auth/audit';
 import { clientIp, rateLimit } from '@/server/auth/rateLimit';
 import { badRequest, handle, ok } from '@/server/api/respond';
+import { uploadedFile } from '@/server/api/upload';
 import { refuseIfBlocked, refuseRateLimited } from '@/server/security/guard';
 import { checkCaptcha } from '@/server/security/captcha';
 import { db } from '@/server/db';
@@ -111,8 +112,8 @@ export async function POST(request: Request) {
 
     if (!job) return badRequest('That role is no longer taking applications.');
 
-    const file = form.get('cv');
-    if (!(file instanceof File) || file.size === 0) {
+    const file = uploadedFile(form.get('cv'));
+    if (!file || file.size === 0) {
       return badRequest(`A CV is needed. ${CV_SUPPORTED}`);
     }
 

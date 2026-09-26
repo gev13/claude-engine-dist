@@ -6,6 +6,7 @@ import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { requireUser } from '@/server/api/guard';
 import { badRequest, created, handle, ok } from '@/server/api/respond';
+import { uploadedFiles } from '@/server/api/upload';
 import { MediaUploadError, saveUpload } from '@/server/media/storage';
 import { getMediaSettings, refreshVariants } from '@/server/media/variants';
 import { canUploadSvg } from '@/lib/mediaSettings';
@@ -98,7 +99,7 @@ export async function POST(request: Request) {
       return badRequest('The upload could not be read. Try again.');
     }
 
-    const files = [...form.values()].filter((value): value is File => value instanceof File);
+    const files = uploadedFiles(form);
     if (files.length === 0) return badRequest('Attach at least one file.');
     if (files.length > env.MEDIA_MAX_FILES_PER_UPLOAD) {
       return badRequest(`Upload at most ${env.MEDIA_MAX_FILES_PER_UPLOAD} files at a time.`);

@@ -1,6 +1,14 @@
 {
-  "latest": "3.4.0",
+  "latest": "3.4.1",
   "releases": [
+    {
+      "version": "3.4.1",
+      "date": "2026-09-26",
+      "summary": "Uploads (content and WordPress imports, media, form files, CVs) are recognised as files whatever class carried them, and an import that arrives without its file says what did arrive.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.4.0",
       "date": "2026-09-26",

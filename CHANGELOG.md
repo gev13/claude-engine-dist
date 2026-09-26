@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.4.1 — 2026-09-26
+
+**An upload is recognised by what it is, not by which class carried it.**
+Content imports, WordPress imports, media, form attachments and CVs accept
+any uploaded file that reads like a file, instead of refusing one that a
+different copy of the server's fetch machinery produced as if nothing had
+been attached. When an import still arrives without its file, the message
+says what did arrive (field names and size, never contents), and the same
+line is written to the server log.
+
+---
+
 ## 3.4.0 — 2026-09-26
 
 **A form can look like the design it came from.** Four options, all off
