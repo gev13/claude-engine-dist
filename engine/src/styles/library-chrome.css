@@ -264,6 +264,17 @@
 
 /* 2.21 — the plain content card (components/ui/Card) takes the card corners too. */
 .he-ucard { clip-path: var(--he-card-clip, none); }
+/* 3.2 — a picture inset at the top of a plain card (the post list's covers). */
+.he-ucard__media {
+  position: relative;
+  aspect-ratio: var(--he-ucard-ratio, 16 / 9);
+  margin: -12px -12px 22px;
+  overflow: hidden;
+  border-radius: var(--he-card-radius);
+  clip-path: var(--he-card-clip, none);
+  background: var(--color-surface-2);
+}
+.he-ucard__media > .he-fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 
 /* ══════════════════════════════════════════════════════════════════════════
    2.21 — the notch header: logo and links in a tab cut into the top-left of

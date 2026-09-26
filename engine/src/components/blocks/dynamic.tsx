@@ -168,7 +168,11 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
       ) : (
         <>
           {count}
-          <CardGrid cols={p.columns} id={listId}>
+          <CardGrid
+            cols={p.columns}
+            id={listId}
+            style={p.card?.image && p.card.ratio ? ({ '--he-ucard-ratio': p.card.ratio.replace('/', ' / ') } as React.CSSProperties) : undefined}
+          >
             {posts.map((post) => (
               <Card
                 key={post.id}
@@ -182,6 +186,13 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                 href={postPath(permalinks, post)}
                 hover={p.card?.hover}
                 moreLabel={t('blog.readMore')}
+                media={
+                  p.card?.image
+                    ? post.coverUrl
+                      ? <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="third" />
+                      : <span className="he-fill he-media-empty" aria-hidden="true" />
+                    : undefined
+                }
               >
                 {post.excerpt}
               </Card>

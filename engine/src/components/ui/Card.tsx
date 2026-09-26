@@ -16,6 +16,7 @@ export function CardGrid({
   gapSize,
   className,
   id,
+  style,
 }: {
   children: React.ReactNode;
   cols?: 2 | 3 | 4;
@@ -24,6 +25,8 @@ export function CardGrid({
   gapSize?: string;
   className?: string;
   id?: string;
+  /** 3.2 — custom properties for the cards inside (the picture shape). */
+  style?: React.CSSProperties;
 }) {
   const colClass = {
     2: 'sm:grid-cols-2',
@@ -38,7 +41,7 @@ export function CardGrid({
     <div
       id={id}
       className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', className)}
-      style={gapSize ? { gap: gapSize } : undefined}
+      style={gapSize || style ? { ...style, ...(gapSize ? { gap: gapSize } : {}) } : undefined}
     >
       {children}
     </div>
@@ -56,6 +59,7 @@ export function Card({
   interactive = true,
   hover,
   moreLabel,
+  media,
 }: {
   href?: string;
   eyebrow?: React.ReactNode;
@@ -70,6 +74,8 @@ export function Card({
   hover?: CardHover;
   /** The words of the link line, in the reader's language — from Site translations. */
   moreLabel?: string;
+  /** 3.2 — a picture above everything else, inset in the card. */
+  media?: React.ReactNode;
 }) {
   const moves = cardHoverProps(hover);
   const body = (
@@ -86,6 +92,7 @@ export function Card({
       {/* Before the eyebrow in the DOM as well as on the screen: "Coming soon"
           changes how the rest of the card should be read, so it has to be
           heard first too. */}
+      {media && <div className="he-ucard__media">{media}</div>}
       {badge && <span className="he-badge">{badge}</span>}
       {eyebrow && (
         <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{eyebrow}</div>

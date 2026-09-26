@@ -313,6 +313,15 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
+              {/* 3.2 — every text field and every unchosen choice chip. */}
+              <Panel title="Form fields">
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <ColorField label="Field fill" placeholder="the page colour" value={get(['fields', 'background'])} onChange={set(['fields', 'background'])} />
+                  <ColorField label="Field edge" placeholder="the hairline" value={get(['fields', 'border'])} onChange={set(['fields', 'border'])} />
+                  <ColorField label="Field text" placeholder="the primary text" value={get(['fields', 'text'])} onChange={set(['fields', 'text'])} />
+                </div>
+              </Panel>
+
               <Panel title="Text and rules">
                 <div className="grid gap-4 sm:grid-cols-2">
                   <ColorField label="Primary text" value={get(['colors', 'textPrimary'])} inherited={defaults[colorVar('textPrimary')!]} onChange={set(['colors', 'textPrimary'])} />

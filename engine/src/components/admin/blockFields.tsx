@@ -3559,6 +3559,10 @@ function TypeFields({
             <Text label="Thank-you text" k="successText" props={props} set={set} />
           </div>
           <Text label="A line beside the send button" k="submitNote" props={props} set={set} placeholder="We reply within one working day" />
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.wide === true} onChange={(e) => set(withOpt(props, 'wide', e.target.checked || undefined))} />
+            Run the form the full width of the section
+          </label>
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
         </>
@@ -5139,6 +5143,7 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
         </>
       )}
       {['list', 'minimal', 'overlay', 'compact', 'wide'].includes(str(props, 'variant')) && <PostCardFields props={props} set={set} />}
+      {(str(props, 'variant') || 'cards') === 'cards' && <PostCoverFields props={props} set={set} />}
     </>
   );
 }
@@ -5179,6 +5184,34 @@ function PostCardFields({ props, set }: { props: Props; set: Setter }) {
         <CardHoverFields value={card.hover as CardHover | undefined} onChange={(hover) => setCard('hover', hover)} />
       </div>
     </details>
+  );
+}
+
+/** 3.2 — the plain cards can carry each post's cover above the title. */
+function PostCoverFields({ props, set }: { props: Props; set: Setter }) {
+  const card = (props.card ?? {}) as Record<string, unknown>;
+  const setCard = (key: string, value: unknown) => {
+    const next = { ...card, [key]: value };
+    for (const k of Object.keys(next)) if (next[k] === undefined) delete next[k];
+    set({ ...props, card: Object.keys(next).length ? next : undefined });
+  };
+  return (
+    <div className="grid items-end gap-3 sm:grid-cols-2">
+      <label className="flex items-center gap-2 pb-3 text-[14px] text-ash">
+        <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.image === true} onChange={(e) => setCard('image', e.target.checked || undefined)} />
+        The cover picture above each title
+      </label>
+      {card.image === true && (
+        <Field label="Picture shape">
+          <Select value={(card.ratio as string) ?? ''} onChange={(e) => setCard('ratio', e.target.value || undefined)}>
+            <option value="">Wide 16:9</option>
+            <option value="3/2">3:2</option>
+            <option value="4/3">4:3</option>
+            <option value="1/1">Square</option>
+          </Select>
+        </Field>
+      )}
+    </div>
   );
 }
 

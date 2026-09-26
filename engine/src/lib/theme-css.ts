@@ -253,6 +253,22 @@ function lineDecls(lines: ReturnType<typeof cutLines>): Decl[] {
   ];
 }
 
+/**
+ * 3.2 — field colours. Background *colour*, not the shorthand, so a cut
+ * field keeps its drawn edge lines; chips only while unchosen, so a chosen
+ * chip keeps the accent.
+ */
+function fieldCss(theme: Theme, scope: string): string {
+  const f = theme.fields ?? {};
+  const field: Decl[] = [];
+  push(field, 'background-color', f.background, isColor);
+  push(field, 'border-color', f.border, isColor);
+  push(field, 'color', f.text, isColor);
+  if (field.length === 0) return '';
+  const chip = field.filter(([property]) => property !== 'color');
+  return block(`${scope}${INPUT_SELECTOR}`, field) + (chip.length ? block(`${scope}.he-fb__choice input:not(:checked)+span`, chip) : '');
+}
+
 function shapeCss(theme: Theme, scope: string): string {
   const parts: string[] = [];
   const shape = theme.shape ?? {};
@@ -453,6 +469,7 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
 
   parts.push(localeFontCss(theme, safeSelector));
   parts.push(shapeCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
+  parts.push(fieldCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
 
   /* 3.1 — no line under each section or above the footer. A section is a
      child of main, or the first thing inside its styled wrapper or row. */

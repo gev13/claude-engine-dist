@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.2.0 — 2026-09-26
+
+**Form fields and post cards, as a design draws them.** Appearance →
+Colours gains the fill, edge and text of every form field (and of the
+choice chips until one is chosen). A Form block can run the full width of
+its section. A Post list in the Cards layout can show each post's cover
+above its title, at a shape you choose. Nothing changes until chosen.
+
+---
+
 ## 3.1.0 — 2026-09-26
 
 **Five options for building a site of panels.** The footer can carry the

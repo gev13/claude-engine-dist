@@ -104,3 +104,12 @@ catalogue face.
   under each section and above the footer* for a page of panels.
 - **Section heading width** (same place) — how far a section's heading runs
   before it wraps, e.g. `820px`. Empty keeps each block's own.
+
+## Added in 3.2
+
+- **Form fields** (Appearance → Colours) — the fill, edge and text of
+  every text field, and of each choice chip until it is chosen.
+- **A form the full width of its section** — tick *Run the form the full
+  width of the section* on a Form block.
+- **Covers on the plain post cards** — a Post list in the Cards layout can
+  show each post's cover above its title, at the shape you choose.

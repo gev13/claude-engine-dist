@@ -625,6 +625,8 @@ export const blockSchemas = {
         readingTime: z.boolean().optional(),
         category: z.boolean().optional(),
         readMore: z.boolean().optional(),
+        /** 3.2 — the plain cards: the cover above the title. */
+        image: z.boolean().optional(),
         ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
         /** 2.19 — how each card answers the pointer; unset is nothing new. */
         hover: cardHoverSchema.optional(),
@@ -1602,6 +1604,8 @@ export const blockSchemas = {
       .refine((fields) => unique(fields.map((f) => f.id)), 'Two fields share an id'),
     layout: z.enum(['card', 'plain']).default('card'),
     align: z.enum(['left', 'center']).default('left'),
+    /** 3.2 — the form runs the full width of the section instead of its reading width. */
+    wide: z.boolean().optional(),
     submitLabel: text(40),
     /** 2.22 — a short line beside the send button: "We reply within one working day". */
     submitNote: text(160),

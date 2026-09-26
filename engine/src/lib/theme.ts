@@ -492,6 +492,15 @@ export const themeSchema = z.object({
     })
     .optional(),
 
+  /** 3.2 — the fill, edge and text of every text field and every unchosen choice chip. */
+  fields: z
+    .object({
+      background: color.optional(),
+      border: color.optional(),
+      text: color.optional(),
+    })
+    .optional(),
+
   brand: z
     .object({
       /** `mark` keeps the built-in placeholder mark; `image` uses the uploaded logo. */

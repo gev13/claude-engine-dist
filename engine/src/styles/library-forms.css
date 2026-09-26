@@ -5,6 +5,8 @@
 @layer components {
   .he-fb__box { max-width: 820px; }
   .he-fb.is-center .he-fb__box { margin-inline: auto; }
+  /* 3.2 — the full width of the section. */
+  .he-fb.is-wide .he-fb__box { max-width: none; }
   .he-fb.is-card .he-fb__box { padding: 32px; border: 1px solid var(--color-hairline); border-radius: 20px; background: var(--color-surface); }
   .he-fb.is-card.is-raised .he-fb__box { background: var(--color-surface-2); }
   .he-fb__progress { margin-bottom: 26px; }
