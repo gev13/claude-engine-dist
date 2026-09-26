@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.3.1 — 2026-09-26
+
+**Two fixes.** A card set to rounded corners now stays rounded when the
+site's cards are cut — a short card's text was clipped by the cut. And the
+contents column beside an article no longer takes the page's side padding a
+second time, which left it narrow, and very narrow on a wide-margined site.
+The search row under the blog's category bar shows its label once.
+
+---
+
 ## 3.3.0 — 2026-09-26
 
 **Finishing touches from a full site build.** A section's own heading and

@@ -60,7 +60,6 @@
   .he-post__body.has-toc-right > .he-post__toc { order: 2; }
   .he-post__body > .he-post__toc { position: sticky; top: calc(var(--he-header-h, 0px) + 24px); margin-top: 48px; }
   .he-post__toc .he-toc-sec { padding: 0; }
-  .he-post__toc .he-toc-sec .shell { padding: 0; max-width: none; }
   .he-post__toc.is-top .he-toc-sec { padding-top: 40px; }
 
   .he-postnav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 16px); }
@@ -139,3 +138,9 @@
 
 /* Unlayered: the eyebrow's colour is a utility, which beats anything in @layer components. */
 .he-post-hero__text > :first-child { color: rgb(255 255 255 / 0.85); }
+
+/* 3.3.1 — unlayered: `.shell`'s padding is a utility, which outranks the
+   components layer whatever the selector, so inside the layer this rule
+   lost and the contents column kept the page's side padding (96px off a
+   260px column on a full-width site). */
+.he-post__toc .he-toc-sec .shell { padding: 0; max-width: none; }

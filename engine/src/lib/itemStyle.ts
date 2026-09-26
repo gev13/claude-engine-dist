@@ -90,7 +90,11 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
   if (style.background && isColor(style.background)) decls.push(['background', style.background]);
   if (style.radius && isLength(style.radius)) decls.push(['border-radius', style.radius]);
   const legs = cutLegs(style.corners, 20);
-  if (legs) decls.push(['clip-path', cutPolygon(legs)]);
+  /* 3.3.1 — through the card variable as well as on the item, because the
+     card drawn inside the item reads `--he-card-clip` itself: "rounded" on
+     one card has to undo the site's cut, and a cut of its own has to reach it. */
+  if (legs) decls.push(['clip-path', cutPolygon(legs)], ['--he-card-clip', cutPolygon(legs)]);
+  else if (style.corners?.style === 'rounded') decls.push(['clip-path', 'none'], ['--he-card-clip', 'none']);
   if (style.align) decls.push(['text-align', style.align]);
 
   /* A width with no style draws nothing, which reads as the field being

@@ -107,14 +107,11 @@ async function CategoryBar({
   current?: string;
 }) {
   const categories = await listCategories(locale);
-  /* 3.3 — the search on its own row under the chips, labelled, when asked. */
+  /* 3.3 — the search on its own row under the chips, when asked (it carries its own label). */
   const searchPart =
     search &&
     (blog.searchBelow ? (
-      <div className="he-catbar__search is-below">
-        <span className="label-mono mr-2">{t('chrome.search')}</span>
-        {search}
-      </div>
+      <div className="he-catbar__search is-below">{search}</div>
     ) : (
       <div className="he-catbar__search">{search}</div>
     ));

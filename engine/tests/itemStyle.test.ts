@@ -191,3 +191,17 @@ describe('cardGrid gap', () => {
     }
   });
 });
+
+/* 3.3.1 — a card's own corners reach the card drawn inside the item: the
+   plain Card reads `--he-card-clip`, so "rounded" on one card left it cut
+   whenever the site's cards were cut, clipping its text on a short card. */
+describe('one card’s corners against the site’s', () => {
+  it('undo the site’s cut when rounded', () => {
+    expect(itemStyleToCss('.he-i-x-0', { corners: { style: 'rounded' } })).toBe('.he-i-x-0{clip-path:none;--he-card-clip:none}');
+  });
+
+  it('carry their own cut to the card inside', () => {
+    const css = itemStyleToCss('.he-i-x-0', { corners: { style: 'cut', size: 12 } });
+    expect(css).toMatch(/clip-path:polygon\(.*\);--he-card-clip:polygon\(/);
+  });
+});
