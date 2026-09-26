@@ -367,7 +367,8 @@ export function FormBlock(p: P) {
             </button>
           )}
           <button type="submit" className="he-cbtn is-medium is-primary" disabled={state === 'sending'}>
-            {state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}
+            {/* A span, so the theme's arrow compartment (which looks for the arrow after the label) applies. */}
+            <span>{state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}</span>
             {p.submitArrow && <ArrowRight />}
           </button>
           {/* 2.22 — a line beside the send button, on the last step only. */}

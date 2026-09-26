@@ -29,8 +29,8 @@ describe('words after a card’s title', () => {
   const card = { title: 'Northwind', body: 'b', imageUrl: '/media/x.webp', alt: '' };
   it('are nothing until given, then follow the title in their colour', () => {
     expect(render([{ id: 'g1', type: 'cardGrid', props: { variant: 'imageCards', cards: [card] } }])).not.toContain('he-title-after');
-    const html = render([{ id: 'g2', type: 'cardGrid', props: { variant: 'imageCards', cards: [{ ...card, titleAfter: '/ The Security Side', titleAfterColor: '#17bde7' }] } }]);
-    expect(html).toMatch(/Northwind<span class="he-title-after" style="color:#17bde7"> \/ The Security Side<\/span>/);
+    const html = render([{ id: 'g2', type: 'cardGrid', props: { variant: 'imageCards', cards: [{ ...card, titleAfter: '/ The Security Side', titleAfterColor: '#1e90ff' }] } }]);
+    expect(html).toMatch(/Northwind<span class="he-title-after" style="color:#1e90ff"> \/ The Security Side<\/span>/);
   });
 });
 
@@ -43,7 +43,7 @@ describe('the buttons’ arrow and “Read more”', () => {
 
   it('turn only the arrow’s drawing, and can drop the Read-more arrow', () => {
     const css = themeToCss(themeSchema.parse({ buttons: { arrow: 'diagonal', more: 'none' } }));
-    expect(css).toMatch(/svg:last-child>path[^{]*\{transform-box:fill-box;transform-origin:center;transform:rotate\(-45deg\)\}/);
+    expect(css).toMatch(/svg:last-child>path[^{]*\{transform-box:fill-box;transform-origin:center;transform:rotate\(-45deg\) scale\(1\.3\)\}/);
     expect(css).toMatch(/\.he-more__icon\{display:none\}/);
   });
 });

@@ -121,6 +121,8 @@ function layoutDecls(theme: Theme): Decl[] {
   push(out, '--spacing-gutter', layout.gutter, isLength);
   push(out, '--he-radius', layout.radius, isLength);
   push(out, '--he-title-measure', layout.titleWidth, isLength);
+  push(out, '--he-intro-gap', layout.introGap, isLength);
+  push(out, '--he-intro-measure', layout.introWidth, isLength);
   return out;
 }
 
@@ -338,10 +340,11 @@ function shapeCss(theme: Theme, scope: string): string {
         ['box-sizing', 'content-box'],
         ['padding', 'var(--he-btn-py) 15px'],
         ['margin', 'calc(-1 * var(--he-btn-py)) calc(-1 * var(--he-btn-px)) calc(-1 * var(--he-btn-py)) 6px'],
-        ['border-left', '1px solid color-mix(in srgb,currentColor 32%,transparent)'],
+        ['border-left', buttons.divider === 'solid' ? '2px solid currentColor' : '1px solid color-mix(in srgb,currentColor 32%,transparent)'],
       ]),
     );
   }
+  if (buttons.weight) parts.push(block(at(':is(.he-btn,.he-cbtn)'), [['font-weight', buttons.weight]]));
 
   // 3.6 — the arrow turned to point up and right; only its drawing turns, so a cell's divider stays put.
   if (buttons.arrow === 'diagonal') {
@@ -349,7 +352,8 @@ function shapeCss(theme: Theme, scope: string): string {
       block(`${at('.he-btn>svg:last-child>path')},${at('.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)>path')}`, [
         ['transform-box', 'fill-box'],
         ['transform-origin', 'center'],
-        ['transform', 'rotate(-45deg)'],
+        // Turned, a horizontal arrow spans less; a little larger keeps it the size it was.
+        ['transform', 'rotate(-45deg) scale(1.3)'],
       ]),
     );
   }
@@ -497,6 +501,9 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
 
   /* 3.1 — no line under each section or above the footer. A section is a
      child of main, or the first thing inside its styled wrapper or row. */
+  // 3.8 — headings fill each line before wrapping.
+  if (theme.layout?.titleWrap === 'wrap') parts.push(`${safeSelector === ':root' ? '' : `${safeSelector} `}:is(h1,h2,h3,h4){text-wrap:wrap}`);
+
   if (theme.layout?.sectionRules === false && safeSelector === ':root') {
     parts.push('#main>*,#main>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}.he-ftr{border-top-width:0}');
   }

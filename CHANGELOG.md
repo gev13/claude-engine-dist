@@ -10,6 +10,21 @@ improvements.
 
 ---
 
+## 3.8.0 — 2026-09-26
+
+**What a close comparison with a finished design asked for.** Headings can
+fill their lines instead of balancing them, and a section can set how wide
+its heading runs; the introduction under a heading has its own gap and
+width. Buttons can draw a solid line before their arrow and set their
+label's weight. A section's typography reaches its cards' labels, numbers
+and text. Picture rows take a picture-column width, image cards a picture
+shape, card grids a line between cards, figures a size, and a media band's
+dark text its own colour with the main arrow in the fade's colour. Fixed: a
+section's body size no longer reaches its eyebrow, and a form's send button
+takes the arrow compartment. All else off until chosen.
+
+---
+
 ## 3.7.0 — 2026-09-26
 
 **A blog that can be switched off, a drop-down of several choices, and more

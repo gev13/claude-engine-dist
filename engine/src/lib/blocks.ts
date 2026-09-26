@@ -250,6 +250,8 @@ export const blockSchemas = {
     items: z.array(z.object({ value: z.string(), label: z.string(), unit: text(12), iconUrl: mediaUrl.optional() })),
     footnote: z.string().optional(),
     /** 2.22 — the numbers glow in the accent colour. */
+    /** 3.8 — the size of the figures (e.g. 56px); unset grows with the screen up to 72px. */
+    valueSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     glow: z.boolean().optional(),
     /** 2.22 — thin rules between the figures, which then sit to the left. */
     dividers: z.boolean().optional(),
@@ -313,6 +315,12 @@ export const blockSchemas = {
     numbered: z.boolean().optional(),
     /** 3.6 — how that number reads: `plain` "01" (the default) or `slash` "/01". */
     numberStyle: z.enum(['plain', 'slash']).optional(),
+    /** 3.8 — cards: a thin line between the cards of a row. */
+    dividers: z.boolean().optional(),
+    /** 3.8 — picture rows: how wide the picture column is (e.g. 400px); unset is two fifths. */
+    mediaWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.8 — image cards: the picture's shape; unset is 4:3. */
+    mediaRatio: z.enum(['4/3', '5/4', '1/1', '3/2', '16/9']).optional(),
     /**
      * 2.22 — cards: how many cards each row holds, in turn — "2-3" is two,
      * then three, then two… A bento of mixed widths; unset is the even grid.
@@ -909,6 +917,9 @@ export const blockSchemas = {
         solid: z.number().int().min(0).max(100).default(42),
         clear: z.number().int().min(0).max(100).default(72),
         text: z.enum(['light', 'dark']).default('light'),
+        /** 3.8 — with dark text: its colour (the site's ink when unset), and the main button's arrow in the fade's colour. */
+        ink: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
+        accentArrow: z.boolean().optional(),
       })
       .optional(),
     eyebrow: text(80),

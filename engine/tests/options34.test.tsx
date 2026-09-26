@@ -36,7 +36,7 @@ describe('form options 3.4', () => {
   });
 
   it('put an arrow on the send button', () => {
-    expect(html({ submitArrow: true })).toMatch(/<button type="submit"[^>]*>Send<svg/);
+    expect(html({ submitArrow: true })).toMatch(/<button type="submit"[^>]*><span>Send<\/span><svg/);
   });
 
   it('set the space inside the card, one or two lengths only', () => {

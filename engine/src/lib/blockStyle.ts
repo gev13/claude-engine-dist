@@ -307,6 +307,9 @@ export const blockStyleSchema = z.object({
   /** 3.0 — a glitch on the heading text (noise, psycho, split). */
   glitch: glitchStyle.optional(),
 
+  /** 3.8 — how far this section's heading runs before it wraps; the site's (Appearance) when unset. */
+  titleWidth: length.optional(),
+
   /** P3-C3 — shape dividers along the top and bottom edges. */
   shapeTop: dividerShape.optional(),
   shapeBottom: dividerShape.optional(),

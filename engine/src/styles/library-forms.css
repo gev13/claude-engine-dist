@@ -16,7 +16,7 @@
   .he-fb__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 22px 20px); }
   .he-fb__field { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
   .he-fb__field.is-half { grid-column: auto / span 1; }
-  .he-fb__label { display: block; margin-bottom: 8px; padding: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-fb__label { display: block; margin-bottom: 8px; padding: 0; font-family: var(--font-mono); font-size: 11px; line-height: 1.3; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
   .he-fb__opt { text-transform: none; letter-spacing: 0; color: color-mix(in srgb, var(--color-smoke) 75%, transparent); }
   .he-fb__input {
     width: 100%;

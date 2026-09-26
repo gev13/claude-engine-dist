@@ -101,6 +101,27 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           onChange={set(['buttons', 'icon'])}
         />
         <ChoiceField
+          label="The line before the arrow"
+          value={buttons.divider}
+          inherited="soft"
+          options={[
+            { value: 'soft', label: 'Thin and faded' },
+            { value: 'solid', label: 'Solid, in the label’s colour' },
+          ]}
+          onChange={set(['buttons', 'divider'])}
+        />
+        <ChoiceField
+          label="Label weight"
+          value={buttons.weight}
+          options={[
+            { value: '400', label: 'Regular' },
+            { value: '500', label: 'Medium' },
+            { value: '600', label: 'Semibold' },
+            { value: '700', label: 'Bold' },
+          ]}
+          onChange={set(['buttons', 'weight'])}
+        />
+        <ChoiceField
           label="The arrow points"
           value={buttons.arrow}
           inherited="right"

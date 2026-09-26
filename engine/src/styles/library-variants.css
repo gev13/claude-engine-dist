@@ -212,13 +212,15 @@
   .he-band.has-fade::after { background: linear-gradient(to right, var(--he-fade-color, var(--color-flare)) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
   .he-band.has-fade.is-fade-right::after { background: linear-gradient(to left, var(--he-fade-color, var(--color-flare)) var(--he-fade-solid, 42%), transparent var(--he-fade-clear, 72%)); }
   .he-band.has-fade { background: var(--he-fade-color, var(--color-flare)); }
-  .he-band.is-text-dark :is(h1, h2, h3, h4, .he-lbody, .type-eyebrow) { color: var(--color-ink); }
+  .he-band.is-text-dark :is(h1, h2, h3, h4, .he-lbody, .type-eyebrow) { color: var(--he-fade-ink, var(--color-ink)); }
   .he-band.is-text-dark {
-    --he-btn-primary-bg: var(--color-ink); --he-btn-primary-text: var(--color-bone); --he-btn-primary-border: var(--color-ink);
+    --he-btn-primary-bg: var(--he-fade-ink, var(--color-ink)); --he-btn-primary-text: var(--color-bone); --he-btn-primary-border: var(--he-fade-ink, var(--color-ink));
     --he-btn-primary-hover-bg: var(--color-surface); --he-btn-primary-hover-text: var(--color-bone); --he-btn-primary-hover-border: var(--color-surface);
-    --he-btn-outline-bg: var(--color-ink); --he-btn-outline-text: var(--color-bone); --he-btn-outline-border: var(--color-ink);
+    --he-btn-outline-bg: var(--he-fade-ink, var(--color-ink)); --he-btn-outline-text: var(--color-bone); --he-btn-outline-border: var(--he-fade-ink, var(--color-ink));
     --he-btn-outline-hover-bg: var(--color-surface); --he-btn-outline-hover-text: var(--color-bone); --he-btn-outline-hover-border: var(--color-surface);
   }
+  /* 3.8 — the main button's arrow in the fade's colour. */
+  .he-band.is-arrow-accent :is(.he-btn-primary, .he-cbtn.is-primary) > svg:last-child { color: var(--he-fade-color, var(--color-flare)); }
   .he-band.is-left .he-band__inner { align-items: center; }
   .he-band.has-parallax { --amp: 8%; --inset: -12%; }
   .he-band.has-parallax.is-plx-subtle { --amp: 4%; --inset: -6%; }

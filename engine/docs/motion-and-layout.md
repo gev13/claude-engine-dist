@@ -151,3 +151,27 @@ All off until chosen.
   (as before) or up and to the right. Only the arrow turns; a compartment's
   divider stays where it is.
 - **"Read more" links** — *Text alone* drops the arrow.
+
+## Matching a finished design (3.8)
+
+All off until chosen, except two fixes.
+
+- **Appearance → Page structure:** *Headings wrap* — balanced across their
+  lines (as before) or filling each line first, as a layout tool draws them;
+  *Space above a section's introduction* and *Introduction width*.
+- **A section's Design tab → Heading width** — how far this section's heading
+  runs before it wraps, over the site's.
+- **Appearance → Shape → buttons:** *The line before the arrow* (thin and
+  faded, or solid in the label's colour) and *Label weight*. The up-and-right
+  arrow is drawn at the size the plain one was.
+- **A section's Typography** now reaches its cards too: *Eyebrow* styles the
+  cards' small labels and "/01" numbers, *Body text* the cards' text.
+- **Card grids:** *A thin line between the cards of a row*; picture rows take a
+  *Picture column width* (their text then fills the rest); image cards a
+  *Picture shape*.
+- **Figures:** *Figure size*.
+- **Media band, dark text on a fade:** *Dark text colour*, and *The main
+  button's arrow in the fade's colour*.
+- **Fixes:** a section's body text size no longer reaches its eyebrow, a
+  slash marker or the coloured words after a card title; a form's send
+  button now takes the arrow compartment like every other button.

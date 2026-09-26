@@ -248,6 +248,8 @@ export function blockStyleToCss(
   const own: Decl[] = [];
   const gap = safe(style.gap);
   if (gap && isLength(gap)) own.push(['--he-gap', gap]);
+  const titleWidth = safe(style.titleWidth);
+  if (titleWidth && isLength(titleWidth)) own.push(['--he-title-measure', titleWidth]);
   if (typeof style.motion === 'number' && Number.isFinite(style.motion) && style.motion >= 0) {
     own.push(['--he-motion', String(style.motion)]);
   }
@@ -316,14 +318,14 @@ export function blockStyleToCss(
 
   const body = typeDecls(style.typography?.body);
   if (body.length) {
-    parts.push(block(`${root} :is(p,li,td,span)`, body));
+    parts.push(block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, body));
   }
 
   // 3.6 — card and item titles, then the eyebrow (after body, which also reaches its span).
   const subheading = typeDecls(style.typography?.subheading);
   if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6)`, subheading));
   const eyebrow = typeDecls(style.typography?.eyebrow);
-  if (eyebrow.length) parts.push(block(`${root} .he-eyebrow .type-eyebrow`, eyebrow));
+  if (eyebrow.length) parts.push(block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, eyebrow));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
   if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
 
@@ -333,9 +335,9 @@ export function blockStyleToCss(
     const maxWidth = BREAKPOINTS.find((b) => b.key === tier)!.maxWidth;
     const inner = [
       block(`${root} :is(h1,h2,h3,h4,h5,h6)`, sizeDecl(style.typography?.heading?.[key])),
-      block(`${root} :is(p,li,td,span)`, sizeDecl(style.typography?.body?.[key])),
+      block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, sizeDecl(style.typography?.body?.[key])),
       block(`${root} :is(h3,h4,h5,h6)`, sizeDecl(style.typography?.subheading?.[key])),
-      block(`${root} .he-eyebrow .type-eyebrow`, sizeDecl(style.typography?.eyebrow?.[key])),
+      block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, sizeDecl(style.typography?.eyebrow?.[key])),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }

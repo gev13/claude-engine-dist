@@ -192,7 +192,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
           ))}
         </div>
       ) : (
-        <CardGrid cols={p.columns} gapSize={p.gap}>
+        <CardGrid cols={p.columns} gapSize={p.gap} dividers={p.dividers}>
           {cards}
         </CardGrid>
       )}

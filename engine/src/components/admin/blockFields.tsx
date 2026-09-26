@@ -1570,7 +1570,7 @@ function AddSeveral({ onAdd, label = 'Add several from the library' }: { onAdd: 
   );
 }
 
-type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: number; text: 'light' | 'dark' };
+type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: number; text: 'light' | 'dark'; ink?: string; accentArrow?: boolean };
 
 /** 2.21 — the media band's colour fading in from one side, over the picture. */
 function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
@@ -1606,6 +1606,15 @@ function BandFadeFields({ props, set }: { props: Props; set: Setter }) {
             <Field label="Clear from" hint="% of the width">
               <Input type="number" min={0} max={100} value={fade.clear} onChange={(e) => update({ clear: percent(e.target.value, 72) })} />
             </Field>
+            {fade.text === 'dark' && (
+              <>
+                <ColorField label="Dark text colour" value={fade.ink} placeholder="the site’s ink" onChange={(ink) => update({ ink: ink || undefined })} />
+                <label className="flex items-end gap-2 pb-3 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={fade.accentArrow === true} onChange={(e) => update({ accentArrow: e.target.checked || undefined })} />
+                  The main button’s arrow in the fade’s colour
+                </label>
+              </>
+            )}
           </div>
         )}
       </div>
@@ -4422,6 +4431,9 @@ function TypeFields({
               Thin lines between the figures, set to the left
             </label>
           </div>
+          <Field label="Figure size" hint="e.g. 56px — empty grows with the screen">
+            <Input value={str(props, 'valueSize')} placeholder="72px" onChange={(e) => set(withOpt(props, 'valueSize', e.target.value.trim() || undefined))} />
+          </Field>
           {variant === 'counters' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect label="Icons" k="iconPosition" fallback="top" options={[['top', 'Above the number'], ['left', 'Beside the number']]} props={props} set={set} />
@@ -4563,6 +4575,17 @@ function TypeFields({
                 />
                 A running number (01, 02…) over each title
               </label>
+              {variant === 'cards' && (
+                <label className="flex items-center gap-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.dividers === true} onChange={(e) => set(withOpt(props, 'dividers', e.target.checked || undefined))} />
+                  A thin line between the cards of a row
+                </label>
+              )}
+              {variant === 'mediaRows' && (
+                <Field label="Picture column width" hint="e.g. 400px — empty is two fifths">
+                  <Input value={str(props, 'mediaWidth')} placeholder="400px" onChange={(e) => set(withOpt(props, 'mediaWidth', e.target.value.trim() || undefined))} />
+                </Field>
+              )}
               {((variant === 'cards' && props.numbered === true) || (variant === 'mediaRows' && props.numbered !== false)) && (
                 <PropSelect label="Number reads" k="numberStyle" fallback="plain" options={[['plain', '01'], ['slash', '/01']]} props={props} set={set} />
               )}
@@ -4603,6 +4626,9 @@ function TypeFields({
                 <div className="flex items-end pb-3">
                   <PropCheck label="Every other column lower" k="offset" props={props} set={set} />
                 </div>
+              )}
+              {variant === 'imageCards' && (
+                <PropSelect label="Picture shape" k="mediaRatio" fallback="4/3" options={[['4/3', '4:3'], ['5/4', '5:4'], ['1/1', 'Square'], ['3/2', '3:2'], ['16/9', '16:9']]} props={props} set={set} />
               )}
             </div>
           )}

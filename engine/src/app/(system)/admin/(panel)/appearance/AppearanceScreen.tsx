@@ -508,6 +508,14 @@ function AppearanceScreenInner() {
                 <LengthField label="Gutter" hint="side padding at the widest breakpoint" placeholder="48px" value={get(['layout', 'gutter'])} onChange={set(['layout', 'gutter'])} />
                 <LengthField label="Corner radius" hint="cards, panels and media" placeholder="0px" value={get(['layout', 'radius'])} onChange={set(['layout', 'radius'])} />
                 <LengthField label="Section heading width" hint="how far a section’s heading runs before it wraps" placeholder="each block’s own" value={get(['layout', 'titleWidth'])} onChange={set(['layout', 'titleWidth'])} />
+                <Field label="Headings wrap">
+                  <Select value={theme.layout?.titleWrap ?? ''} onChange={(e) => setTheme((c) => setIn(c, ['layout', 'titleWrap'], e.target.value || undefined))}>
+                    <option value="">Balanced across their lines</option>
+                    <option value="wrap">Filling each line first</option>
+                  </Select>
+                </Field>
+                <LengthField label="Space above a section’s introduction" hint="under its heading" placeholder="16px" value={get(['layout', 'introGap'])} onChange={set(['layout', 'introGap'])} />
+                <LengthField label="Introduction width" placeholder="62ch" value={get(['layout', 'introWidth'])} onChange={set(['layout', 'introWidth'])} />
               </div>
               <label className="mt-4 flex items-center gap-2.5 text-[14px] text-ash">
                 <input

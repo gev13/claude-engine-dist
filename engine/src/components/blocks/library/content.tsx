@@ -100,8 +100,9 @@ export function MediaBand(p: P<'mediaBand'>) {
         `is-ov-${p.overlay}`,
         p.parallax !== 'none' && `has-parallax is-plx-${p.parallax} is-plx-${p.strength}`,
         fade && `has-fade is-fade-${fade.side} is-text-${fade.text}`,
+        fade?.accentArrow && 'is-arrow-accent',
       )}
-      style={fade ? ({ ...(fade.color ? { '--he-fade-color': fade.color } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
+      style={fade ? ({ ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
     >
       {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
       {hasText && (
@@ -127,7 +128,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   /* An editor's gap rides along with the column count, so each of these
      grids gets it without four separate props. Unset leaves the layout's own
      spacing alone — they differ on purpose. */
-  const cols = { '--cols': p.columns, ...(p.gap ? { gap: p.gap } : {}) } as React.CSSProperties;
+  const cols = { '--cols': p.columns, ...(p.gap ? { gap: p.gap } : {}), ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}) } as React.CSSProperties;
 
   /* The mosaic is the tile grid with two tile sizes, not a second component:
      same markup, same fields, same editor — the difference is which cells the
@@ -176,7 +177,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-lsec', toneClass(p.tone))}>
         <div className="shell">
           {head}
-          <ul className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`)} style={p.gap ? { gap: p.gap } : undefined}>
+          <ul
+            className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width')}
+            style={p.gap || p.mediaWidth ? ({ ...(p.gap ? { gap: p.gap } : {}), ...(p.mediaWidth ? { '--he-mrows-media': p.mediaWidth } : {}) } as React.CSSProperties) : undefined}
+          >
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-mrows__item', !c.imageUrl && 'no-media', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
@@ -329,7 +333,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
 export function StatsFigures(p: P<'stats'>) {
   if (p.variant === 'counters') return <StatsCounters {...p} />;
   return (
-    <section className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}>
+    <section
+      className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}
+      style={p.valueSize ? ({ '--he-figs-size': p.valueSize } as React.CSSProperties) : undefined}
+    >
       <div className="shell">
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />
         {p.imageUrl && (

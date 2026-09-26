@@ -188,7 +188,7 @@
   .he-feat__img { width: 28px; height: 28px; object-fit: contain; }
   .he-feat__icon .he-media-empty { width: 100%; height: 100%; }
   .he-icard__media {
-    aspect-ratio: 4 / 3;
+    aspect-ratio: var(--he-icard-ratio, 4 / 3);
     margin-bottom: 18px;
     overflow: hidden;
     border-radius: var(--he-card-radius) var(--he-card-radius) var(--he-card-radius) 56px; clip-path: var(--he-card-clip, none);
@@ -313,7 +313,7 @@
 
   .he-figs__media { margin-top: 44px; aspect-ratio: 21 / 9; overflow: hidden; border-radius: 24px; background: var(--color-surface); }
   .he-figs__grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: var(--he-gap, 32px); margin-top: 52px; text-align: center; }
-  .he-figs__value { font-family: var(--font-display); font-size: clamp(40px, 5vw, 72px); font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .he-figs__value { font-family: var(--font-display); font-size: var(--he-figs-size, clamp(40px, 5vw, 72px)); font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
   .he-figs__value sup { margin-left: 3px; font-size: 0.38em; font-weight: 600; letter-spacing: 0; }
   .he-figs__label { max-width: 24ch; margin: 12px auto 0; font-size: 14px; color: var(--color-ash); }
   .he-figs__foot { margin: 32px 0 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; color: var(--color-smoke); }

@@ -434,6 +434,10 @@ export const themeSchema = z.object({
       glow: z.object({ color: color.optional(), size: z.number().int().min(0).max(60).optional() }).optional(),
       /** 2.21 — a button's arrow inline (as before), or in a compartment of its own behind a thin divider. */
       icon: z.enum(['inline', 'cell']).optional(),
+      /** 3.8 — the line before a compartmented arrow: soft (1px, faded, as before) or solid (2px, the label's colour). */
+      divider: z.enum(['soft', 'solid']).optional(),
+      /** 3.8 — the label's weight. */
+      weight: z.enum(['400', '500', '600', '700']).optional(),
       /** 2.22 — a "Read more" link's arrow as it is, or on a small circle; (3.6) or none. */
       more: z.enum(['arrow', 'circle', 'none']).optional(),
       /** 3.6 — the buttons' arrow pointing right (as drawn) or up and to the right. */
@@ -502,6 +506,11 @@ export const themeSchema = z.object({
       titleWidth: length.optional(),
       /** 3.1 — the thin line under each section and above the footer; unset (or true) keeps them. */
       sectionRules: z.boolean().optional(),
+      /** 3.8 — headings balanced across their lines (as before) or filling each line before wrapping, as a layout tool would. */
+      titleWrap: z.enum(['balance', 'wrap']).optional(),
+      /** 3.8 — the space between a section's heading and its introduction, and how wide the introduction runs. */
+      introGap: length.optional(),
+      introWidth: length.optional(),
     })
     .optional(),
 

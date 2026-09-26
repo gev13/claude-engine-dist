@@ -205,6 +205,8 @@ export function BlockDesignPanel({
             </Select>
           </Field>
 
+          <LengthField label="Heading width" hint="how far this section’s heading runs before it wraps" value={current.titleWidth} emptyLabel="the site’s" onChange={set(['titleWidth'])} />
+
           <Field label="Anchor id" hint="lets a link jump here, e.g. #pricing">
             <Input
               value={current.anchorId ?? ''}

@@ -17,6 +17,7 @@ export function CardGrid({
   className,
   id,
   style,
+  dividers,
 }: {
   children: React.ReactNode;
   cols?: 2 | 3 | 4;
@@ -27,6 +28,8 @@ export function CardGrid({
   id?: string;
   /** 3.2 — custom properties for the cards inside (the picture shape). */
   style?: React.CSSProperties;
+  /** 3.8 — a thin line between the cards of a row. */
+  dividers?: boolean;
 }) {
   const colClass = {
     2: 'sm:grid-cols-2',
@@ -40,7 +43,7 @@ export function CardGrid({
        schema's length grammar. */
     <div
       id={id}
-      className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', className)}
+      className={cn('grid grid-cols-1', colClass, gap === 'rule' ? 'gap-0.5' : 'gap-6', dividers && 'he-cgrid-dividers', className)}
       style={gapSize || style ? { ...style, ...(gapSize ? { gap: gapSize } : {}) } : undefined}
     >
       {children}
@@ -95,14 +98,14 @@ export function Card({
       {media && <div className="he-ucard__media">{media}</div>}
       {badge && <span className="he-badge">{badge}</span>}
       {eyebrow && (
-        <div className="mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{eyebrow}</div>
+        <div className="he-ucard__eyebrow mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{eyebrow}</div>
       )}
       {title && (
         <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.18] tracking-[-0.02em] text-bone">
           {title}
         </h3>
       )}
-      {children && <div className="mt-3 text-[15px] text-ash">{children}</div>}
+      {children && <div className="he-ucard__body mt-3 text-[15px] text-ash">{children}</div>}
       {meta && <div className="mt-auto pt-5">{meta}</div>}
       {href && (
         <span className="he-more mt-auto flex items-center gap-2 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft transition-colors group-hover:text-flare-hot">

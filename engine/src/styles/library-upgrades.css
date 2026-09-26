@@ -89,9 +89,9 @@
   /* 3.6 — a slash marker, and every entry as a card of its own. A list's
      accent (inline --he-ilist-accent) colours its heading and markers. */
   .he-ilist__slash { margin-right: 0.3em; font-family: var(--font-display); font-weight: 700; color: var(--he-ilist-accent, var(--color-flare)); }
-  .he-ilist.is-cards { display: grid; gap: var(--he-gap, 16px); }
+  .he-ilist.is-cards { display: grid; gap: var(--he-gap, 24px); }
   .he-ilist.is-cards .he-ilist__item {
-    align-items: center; gap: 8px; min-height: 88px; padding: 16px 24px; color: var(--color-bone);
+    align-items: center; gap: 8px; min-height: 88px; padding: 20px 28px 20px 24px;
     border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); background: var(--color-surface);
   }
   .is-raised .he-ilist.is-cards .he-ilist__item { background: var(--color-surface-2); }
@@ -217,3 +217,8 @@
 /* The slash keeps its colour and face when the section sets a text colour
    or font for its body (which reaches every span). */
 .he-ilist .he-ilist__slash { font-family: var(--font-display); font-weight: 700; color: var(--he-ilist-accent, var(--color-flare)); }
+
+/* 3.8 — a thin line between the cards of a row (card grids, "Dividers between cards"). */
+@media (width >= 40rem) {
+  .he-cgrid-dividers > * + * { border-left: 1px solid var(--color-hairline); }
+}
