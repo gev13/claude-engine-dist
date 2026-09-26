@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.4.2 — 2026-09-26
+
+**A content import reaches the server whole.** The admin API no longer
+passes through the site's middleware, which added nothing there. Behind
+nginx, Next's copy of a request body for the middleware could hand an
+import an upload without its file ("Choose an export file first" although
+one was chosen). Admin API routes check the session themselves, as before.
+
+---
+
 ## 3.4.1 — 2026-09-26
 
 **An upload is recognised by what it is, not by which class carried it.**

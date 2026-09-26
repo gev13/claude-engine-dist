@@ -194,9 +194,15 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   runtime: 'nodejs',
+  /* 3.4.2 — not `/api/admin`: the admin API checks its own session, and the
+     middleware had nothing to add there but a request id nobody read. Running
+     it cost more than that: Next copies the request body for a middleware,
+     and on a live server behind nginx that copy handed an import route an
+     upload without its file part (the head of the body, where the file sits,
+     never reached the parser). A route no middleware sees reads the body
+     exactly as it arrived. */
   matcher: [
     '/admin/:path*',
-    '/api/admin/:path*',
     /* Everything else, so a public request can be put on a locale — except
        Next's internals, the API, uploaded media, and anything with a file
        extension (robots.txt, the sitemaps, images). */
