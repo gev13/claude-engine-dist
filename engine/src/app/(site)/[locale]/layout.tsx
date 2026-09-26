@@ -1,10 +1,11 @@
 import type { Metadata, Viewport } from 'next';
+import type { Theme } from '@/lib/theme';
 import { notFound, redirect } from 'next/navigation';
 import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, localeDir, type Locale } from '@/lib/locales';
 import { themeToCss } from '@/lib/theme-css';
-import { Footer } from '@/components/site/Footer';
+import { Footer, type FooterLogo } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
 import { JsonLd } from '@/components/site/JsonLd';
 import { BackToTop, RegionBar } from '@/components/site/SiteExtras';
@@ -258,6 +259,8 @@ export default async function SiteLayout({
               socialStyle={navigation.socialStyle}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}
+              logo={footerLogo(chrome.footer, theme.brand)}
+              panel={chrome.footer.panel}
               motionToggle={chrome.motionToggle}
               themeToggle={chrome.themeToggle}
             />,
@@ -319,4 +322,13 @@ function notchSpace(height: { base?: number; laptop?: number; tablet?: number; m
     if (typeof px === 'number' && px >= 40 && px <= 160) out[`--he-ns-${tier}`] = `${px}px`;
   }
   return Object.keys(out).length ? (out as React.CSSProperties) : undefined;
+}
+
+/** 3.1 — the footer's head: the uploaded logo when chosen and there is one, nothing, or (unset) the mark as before. */
+function footerLogo(footer: { logo: 'mark' | 'image' | 'none'; logoHeight?: number }, brand: Theme['brand']): FooterLogo {
+  if (footer.logo === 'none') return { kind: 'none' };
+  if (footer.logo === 'image' && brand?.logoType === 'image' && brand.logoUrl) {
+    return { kind: 'image', url: brand.logoUrl, height: footer.logoHeight };
+  }
+  return { kind: 'mark' };
 }

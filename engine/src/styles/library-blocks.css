@@ -236,6 +236,28 @@
     object-fit: cover;
   }
 
+  /* 3.1 — split with the picture running to the section's own edges, the
+     text standing on its dark side. The picture leaves the grid, so the text
+     keeps its half; the height follows the hero's Height setting. */
+  .he-hero--split.is-bleed { position: relative; isolation: isolate; overflow: hidden; display: flex; align-items: center; }
+  .he-hero--split.is-bleed > .shell { width: 100%; }
+  .he-hero--split.is-bleed.is-h-tall { min-height: min(88svh, 960px); }
+  .he-hero--split.is-bleed.is-h-screen { min-height: 100svh; }
+  .he-hero--split.is-bleed .he-hero__visual {
+    position: absolute;
+    inset: 0 0 0 auto;
+    z-index: -1;
+    width: min(72%, 1100px);
+    max-height: none;
+    aspect-ratio: auto;
+    border-radius: 0;
+    clip-path: none;
+    background: transparent;
+  }
+  .he-hero--split.is-bleed.is-media-left .he-hero__visual { inset: 0 auto 0 0; }
+  .he-hero--split.is-bleed .he-hero__visualmedia { object-position: right center; }
+  .he-hero--split.is-bleed.is-media-left .he-hero__visualmedia { object-position: left center; }
+
   /* HR4 — statement, then a large framed image or video. */
   .he-hero--statement { padding-block: 96px; border-bottom: 2px solid var(--color-hairline); }
   .he-hero--statement .he-hero__content { max-width: 860px; }
@@ -798,6 +820,9 @@
     .he-hero__split { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 32px); }
     .he-hero--split.is-media-left .he-hero__visual { order: 0; }
     .he-hero__visual { aspect-ratio: 4 / 3; }
+    /* A phone has no side to stand the text on: the picture goes back above it. */
+    .he-hero--split.is-bleed { display: block; min-height: 0; }
+    .he-hero--split.is-bleed .he-hero__visual { position: relative; inset: auto; z-index: auto; width: auto; aspect-ratio: 1 / 1; }
     .he-hero__frame { aspect-ratio: 4 / 3; margin-top: 36px; border-radius: 12px; }
     .he-hero--statement { padding-block: 56px; }
     .he-hero--shaped { padding: 0 6px 6px; }

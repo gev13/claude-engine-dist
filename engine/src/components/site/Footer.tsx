@@ -1,5 +1,6 @@
 import Link from '@/components/ui/SiteLink';
 import { SiteMark } from '@/components/ui/Logo';
+import { SiteImg } from '@/components/ui/SiteImg';
 import type { FooterVariant } from '@/lib/chrome';
 import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
@@ -13,6 +14,9 @@ import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras
    The same data feeds all four: the Menus footer columns, the Settings
    identity, and the social links — so switching variant loses nothing.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/** 3.1 — what heads the footer. */
+export type FooterLogo = { kind: 'mark' } | { kind: 'image'; url: string; height?: number } | { kind: 'none' };
 
 export type FooterProps = {
   siteName: string;
@@ -28,6 +32,10 @@ export type FooterProps = {
   shareChip?: boolean;
   motionToggle?: boolean;
   themeToggle?: boolean;
+  /** 3.1 — unset is the mark and the site name, as before. */
+  logo?: FooterLogo;
+  /** 3.1 — drawn as a panel (Appearance → Shape → Panels). */
+  panel?: boolean;
 };
 
 function Socials({ social, style = 'icon' }: { social: SocialLink[]; style?: SocialLabelStyle }) {
@@ -45,7 +53,21 @@ function Socials({ social, style = 'icon' }: { social: SocialLink[]; style?: Soc
   );
 }
 
-function Mark({ siteName }: { siteName: string }) {
+function Mark({ siteName, logo }: { siteName: string; logo?: FooterLogo }) {
+  if (logo?.kind === 'none') return null;
+  if (logo?.kind === 'image') {
+    return (
+      <div className="he-ftr__brand">
+        <SiteImg
+          src={logo.url}
+          alt={siteName}
+          className="he-ftr__logo"
+          sizes="thumb"
+          style={logo.height ? ({ '--he-ftr-logo-h': `${logo.height}px` } as React.CSSProperties) : undefined}
+        />
+      </div>
+    );
+  }
   return (
     <div className="he-ftr__brand">
       <span className="he-ftr__mark">
@@ -96,9 +118,9 @@ export function Footer(props: FooterProps) {
   if (variant === 'centered') {
     const links = main.flatMap((c) => c.items);
     return (
-      <footer className="he-ftr he-ftr--centered">
+      <footer className={cn('he-ftr he-ftr--centered', props.panel && 'is-panel')}>
         <div className="shell he-ftr__center">
-          <Mark siteName={siteName} />
+          <Mark siteName={siteName} logo={props.logo} />
           {tagline && <p className="he-ftr__tagline">{tagline}</p>}
           {links.length > 0 && (
             <ul className="he-ftr__row">
@@ -134,7 +156,7 @@ export function Footer(props: FooterProps) {
 
   if (variant === 'inset') {
     return (
-      <footer className="he-ftr he-ftr--inset">
+      <footer className={cn('he-ftr he-ftr--inset', props.panel && 'is-panel')}>
         <div className="he-ftr__card">
           {props.shareChip && (
             <div className="he-ftr__chip">
@@ -150,7 +172,7 @@ export function Footer(props: FooterProps) {
                 </a>
               )}
               <Socials social={social} style={socialStyle} />
-              <Mark siteName={siteName} />
+              <Mark siteName={siteName} logo={props.logo} />
             </div>
             <div className="he-ftr__cols">{cols}</div>
           </div>
@@ -163,11 +185,11 @@ export function Footer(props: FooterProps) {
   const brandBlock = variant === 'brand';
 
   return (
-    <footer className={cn('he-ftr', `he-ftr--${variant}`)}>
+    <footer className={cn('he-ftr', `he-ftr--${variant}`, props.panel && 'is-panel')}>
       <div className="shell">
         <div className="he-ftr__grid" style={{ '--he-footer-cols': main.length || 1 } as React.CSSProperties}>
           <div className="he-ftr__lead">
-            <Mark siteName={siteName} />
+            <Mark siteName={siteName} logo={props.logo} />
             {tagline && <p className="he-ftr__tagline">{tagline}</p>}
             {brandBlock && address && <address className="he-ftr__address">{address}</address>}
             {email && (

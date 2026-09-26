@@ -36,7 +36,7 @@ function Text({ p, align = 'left' }: { p: P; align?: 'left' | 'center' }) {
       {p.links.length > 0 && (
         <div className="he-hero__actions">
           {p.links.map((l, i) => (
-            <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')}>
+            <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined}>
               {l.label}
             </Button>
           ))}
@@ -92,7 +92,14 @@ export function LibraryHero(p: P) {
 
   if (p.variant === 'split') {
     return (
-      <section className={cn('he-hero he-hero--split', p.mediaSide === 'left' && 'is-media-left')}>
+      <section
+        className={cn(
+          'he-hero he-hero--split',
+          p.mediaSide === 'left' && 'is-media-left',
+          // 3.1 — the picture to the section's edges; the height applies only then.
+          p.bleed && ['is-bleed', `is-h-${p.height}`],
+        )}
+      >
         <div className="shell he-hero__split">
           <div className="he-hero__content">
             <Text p={p} />

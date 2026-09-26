@@ -47,7 +47,7 @@ export function HeroBlock(p: P<'hero'>) {
           {p.links.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {p.links.map((l, i) => (
-                <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={i === 0}>
+                <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow ?? i === 0}>
                   {l.label}
                 </Button>
               ))}
@@ -105,7 +105,7 @@ export function ProseBlock(p: P<'prose'>) {
         <div>
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
           {p.title && (
-            <BlockTitle as={p.titleAs} className="mb-4 max-w-[24ch]">
+            <BlockTitle as={p.titleAs} className="mb-4 max-w-[var(--he-title-measure,24ch)]">
               {p.title}
             </BlockTitle>
           )}
@@ -349,7 +349,7 @@ export function CtaBlock(p: P<'cta'>) {
   const buttons = p.links.length > 0 && (
     <div className="he-actions">
       {p.links.map((l, i) => (
-        <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')}>
+        <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined}>
           {l.label}
         </Button>
       ))}
@@ -416,14 +416,14 @@ export function CtaBlock(p: P<'cta'>) {
         {p.eyebrow && (
           <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink/70">{p.eyebrow}</div>
         )}
-        <BlockTitle as={p.titleAs} className="max-w-[22ch] text-ink">
+        <BlockTitle as={p.titleAs} className="max-w-[var(--he-title-measure,22ch)] text-ink">
           {p.title}
         </BlockTitle>
         {p.body && <p className="mt-5 max-w-[58ch] text-[length:var(--he-block-lead,17px)] text-ink/85">{p.body}</p>}
         {p.links.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-3">
             {p.links.map((l, i) => (
-              <Button key={l.href + i} href={l.href} variant="onFlare" withArrow={i === 0}>
+              <Button key={l.href + i} href={l.href} variant="onFlare" withArrow={l.arrow ?? i === 0}>
                 {l.label}
               </Button>
             ))}

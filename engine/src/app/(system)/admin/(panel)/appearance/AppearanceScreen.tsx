@@ -498,7 +498,17 @@ function AppearanceScreenInner() {
                 <LengthField label="Container width" hint="the standard content column" placeholder="1200px" value={get(['layout', 'containerWidth'])} onChange={set(['layout', 'containerWidth'])} />
                 <LengthField label="Gutter" hint="side padding at the widest breakpoint" placeholder="48px" value={get(['layout', 'gutter'])} onChange={set(['layout', 'gutter'])} />
                 <LengthField label="Corner radius" hint="cards, panels and media" placeholder="0px" value={get(['layout', 'radius'])} onChange={set(['layout', 'radius'])} />
+                <LengthField label="Section heading width" hint="how far a section’s heading runs before it wraps" placeholder="each block’s own" value={get(['layout', 'titleWidth'])} onChange={set(['layout', 'titleWidth'])} />
               </div>
+              <label className="mt-4 flex items-center gap-2.5 text-[14px] text-ash">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-flare"
+                  checked={theme.layout?.sectionRules !== false}
+                  onChange={(e) => set(['layout', 'sectionRules'])(e.target.checked ? undefined : false)}
+                />
+                A thin line under each section and above the footer
+              </label>
             </Panel>
 
             {/* Site-wide versions of two controls each block also has in its

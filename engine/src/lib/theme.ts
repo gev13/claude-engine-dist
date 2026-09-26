@@ -485,6 +485,10 @@ export const themeSchema = z.object({
       containerWidth: length.optional(),
       gutter: length.optional(),
       radius: length.optional(),
+      /** 3.1 — how wide a section's heading may run before it wraps (e.g. 820px or 32ch); unset keeps each block's own. */
+      titleWidth: length.optional(),
+      /** 3.1 — the thin line under each section and above the footer; unset (or true) keeps them. */
+      sectionRules: z.boolean().optional(),
     })
     .optional(),
 

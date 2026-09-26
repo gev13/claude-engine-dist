@@ -139,6 +139,12 @@ export const chromeSchema = z.object({
       revealOnMobile: z.boolean().optional(),
       /** The footer's own background, when it should differ from the page's — a hex colour. */
       background: z.string().trim().regex(HEX, 'A hex colour such as #000000').optional(),
+      /** 3.1 — what stands at the head of the footer: the built-in mark and the site name (as before), the uploaded logo, or nothing. */
+      logo: z.enum(['mark', 'image', 'none']).optional(),
+      /** 3.1 — the uploaded logo's height in the footer, px. */
+      logoHeight: z.number().int().min(16).max(120).optional(),
+      /** 3.1 — the footer as a panel: inset, in the panel colour and corners set in Appearance → Shape. */
+      panel: z.boolean().optional(),
     })
     .optional(),
 
@@ -253,7 +259,16 @@ export type ResolvedChrome = {
     contactTitle?: string;
     phone?: string;
   };
-  footer: { variant: FooterVariant; shareChip: boolean; reveal: boolean; revealOnMobile: boolean; background?: string };
+  footer: {
+    variant: FooterVariant;
+    shareChip: boolean;
+    reveal: boolean;
+    revealOnMobile: boolean;
+    background?: string;
+    logo: 'mark' | 'image' | 'none';
+    logoHeight?: number;
+    panel: boolean;
+  };
   cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
   transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean };
   rails: {
@@ -332,6 +347,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       reveal: c.footer?.reveal ?? false,
       revealOnMobile: c.footer?.revealOnMobile ?? false,
       background: c.footer?.background && HEX.test(c.footer.background) ? c.footer.background : undefined,
+      logo: c.footer?.logo ?? 'mark',
+      logoHeight: c.footer?.logoHeight,
+      panel: c.footer?.panel ?? false,
     },
     cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
     transition: { style: c.transition?.style ?? 'off', preloader: c.transition?.preloader ?? false },

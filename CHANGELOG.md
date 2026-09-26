@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.1.0 — 2026-09-26
+
+**Five options for building a site of panels.** The footer can carry the
+uploaded logo instead of the built-in mark, and can be drawn as a panel. A
+split hero can run its picture to the section's edges, behind the text's
+side. Buttons in the hero, the call to action, the media band, split media
+and quotes can each have an arrow or not. And from Appearance → Layout, the
+thin line under each section can be switched off, and section headings can
+be allowed to run wider before they wrap. Nothing changes until chosen.
+
+---
+
 ## 3.0.1 — 2026-09-26
 
 **An update no longer reports a failed reload that worked.** pm2 stops the

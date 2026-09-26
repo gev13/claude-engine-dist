@@ -228,12 +228,43 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
   );
 }
 
-/** The footer's own background (2.19). Its reveal lives with the rest of the motion. */
+/** The footer's own background (2.19), its logo and panel (3.1). Its reveal lives with the rest of the motion. */
 export function FooterExtrasPanel({ chrome, set }: Props) {
+  const id = useId();
+  const footer = chrome?.footer;
   return (
-    <Panel title="Footer background">
-      <div className="max-w-[320px]">
-        <ColorField label="Background" placeholder="the page’s" value={chrome?.footer?.background} onChange={(value) => set(['chrome', 'footer', 'background'])(value || undefined)} />
+    <Panel title="Footer background and logo">
+      <div className="grid gap-4 sm:grid-cols-3">
+        <ColorField label="Background" placeholder="the page’s" value={footer?.background} onChange={(value) => set(['chrome', 'footer', 'background'])(value || undefined)} />
+        <ChoiceField
+          label="At the head of the footer"
+          value={footer?.logo}
+          inherited="mark"
+          options={[
+            { value: 'mark', label: 'The mark and the site name' },
+            { value: 'image', label: 'The uploaded logo (Brand)' },
+            { value: 'none', label: 'Nothing' },
+          ]}
+          onChange={set(['chrome', 'footer', 'logo'])}
+        />
+        {footer?.logo === 'image' && (
+          <Field label="Logo height" hint="px" htmlFor={`${id}-logo-h`}>
+            <Input
+              id={`${id}-logo-h`}
+              type="number"
+              min={16}
+              max={120}
+              placeholder="40"
+              value={footer?.logoHeight ?? ''}
+              onChange={(e) =>
+                set(['chrome', 'footer', 'logoHeight'])(e.target.value === '' ? undefined : Math.min(120, Math.max(16, Math.round(Number(e.target.value) || 40))))
+              }
+            />
+          </Field>
+        )}
+      </div>
+      <div className="mt-4">
+        <Check label="Draw the footer as a panel (Shape → Panels)" value={footer?.panel} onChange={set(['chrome', 'footer', 'panel'])} />
       </div>
     </Panel>
   );

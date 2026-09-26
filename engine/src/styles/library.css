@@ -545,6 +545,15 @@
   .he-ftr__lead { display: flex; flex-direction: column; gap: 14px; }
   .he-ftr__brand { display: flex; align-items: center; gap: 11px; }
   .he-ftr__mark { display: block; width: 32px; height: 32px; }
+  /* 3.1 — the uploaded logo at the head of the footer. */
+  .he-ftr__logo { display: block; width: auto; height: var(--he-ftr-logo-h, 40px); max-width: 100%; }
+  /* 3.1 — the footer as a panel, like a section marked Panel. */
+  .he-ftr.is-panel {
+    margin: min(var(--he-panel-gap, 24px), 3vw) min(var(--he-panel-inset, 24px), 3vw);
+    background: var(--he-panel-bg, var(--color-surface));
+    clip-path: var(--he-panel-clip, none);
+    border-top-width: 0;
+  }
   .he-ftr__name { font-family: var(--font-display); font-size: 17px; font-weight: 800; }
   .he-ftr__tagline { margin: 0; max-width: 34ch; font-size: 14px; color: var(--color-smoke); }
   .he-ftr__address { font-style: normal; white-space: pre-line; font-size: 14px; color: var(--color-ash); }

@@ -30,7 +30,13 @@ import { LOTTIE_PATH, LOTTIE_PLAY } from './lottie';
    an entry in the renderer registry, and an editor form in the admin.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const link = z.object({ label: z.string(), href: z.string(), variant: z.enum(['primary', 'outline', 'ghost']).optional() });
+const link = z.object({
+  label: z.string(),
+  href: z.string(),
+  variant: z.enum(['primary', 'outline', 'ghost']).optional(),
+  /** 3.1 — the arrow on this button; unset is what the block always did (the first button's arrow, where it had one). */
+  arrow: z.boolean().optional(),
+});
 const tone = z.enum(['base', 'raised', 'flare']).optional();
 
 /* ── Pattern-library building blocks ─────────────────────────────────────────
@@ -41,7 +47,12 @@ const tone = z.enum(['base', 'raised', 'flare']).optional();
    ──────────────────────────────────────────────────────────────────────────── */
 
 const safeHref = z.string().trim().min(1).max(500).refine(isSafeHref, 'Use a path like /about or a full https:// URL');
-const libraryLink = z.object({ label: z.string().trim().min(1).max(60), href: safeHref });
+const libraryLink = z.object({
+  label: z.string().trim().min(1).max(60),
+  href: safeHref,
+  /** 3.1 — an arrow on this button (in its own compartment when Appearance → Buttons says so). */
+  arrow: z.boolean().optional(),
+});
 const text = (max: number) => z.string().max(max).optional();
 
 /** HR1 centred over media · HR2 bottom-left over media · HR3 split · HR4 statement + frame · HR8 shaped media. */
@@ -185,6 +196,8 @@ export const blockSchemas = {
     overlay: z.enum(['none', 'light', 'medium', 'strong']).default('medium'),
     scrollCue: z.boolean().optional(),
     mediaSide: z.enum(['right', 'left']).default('right'),
+    /** 3.1 — split: the picture runs to the section's top, side and bottom edges, the text on its dark side. */
+    bleed: z.boolean().optional(),
     eyebrow: z.string().optional(),
     kicker: z.string().optional(),
     title: z.string(),

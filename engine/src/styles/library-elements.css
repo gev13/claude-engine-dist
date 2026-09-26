@@ -24,9 +24,9 @@
     font-size: 12px;
     font-weight: 600;
   }
-  .he-hd.is-large .he-hd__title { max-width: 22ch; font-size: clamp(34px, 4.6vw, 64px); line-height: 1.05; }
+  .he-hd.is-large .he-hd__title { max-width: var(--he-title-measure, 22ch); font-size: clamp(34px, 4.6vw, 64px); line-height: 1.05; }
   .he-hd.is-display .he-hd__title { max-width: 16ch; font-size: clamp(44px, 8vw, 128px); line-height: 0.96; letter-spacing: -0.035em; }
-  .he-hd.is-medium .he-hd__title { max-width: 30ch; }
+  .he-hd.is-medium .he-hd__title { max-width: var(--he-title-measure, 30ch); }
   .he-mark { padding: 0 0.04em; background: none; color: inherit; }
   .he-mark.is-color { color: var(--color-flare); }
   .he-mark.is-marker { background: linear-gradient(transparent 58%, color-mix(in srgb, var(--color-flare) 45%, transparent) 58%); }

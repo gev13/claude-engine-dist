@@ -50,7 +50,20 @@ describe('the footer and motion panels', () => {
     expect(calls).toEqual([[['chrome', 'footer', 'reveal'], true]]);
     cleanup();
     render(<FooterExtrasPanel chrome={undefined} set={set} />);
-    expect(screen.getByText('Footer background')).toBeTruthy();
+    expect(screen.getByText('Footer background and logo')).toBeTruthy();
+  });
+
+  /* 3.1 — the logo's height is asked only once the uploaded logo is chosen;
+     the panel is a tick that writes only when ticked. */
+  it('asks the footer logo’s height only for the uploaded logo, and ticks the panel', () => {
+    const { calls, set } = recorder();
+    render(<FooterExtrasPanel chrome={undefined} set={set} />);
+    expect(screen.queryByText('Logo height')).toBeNull();
+    fireEvent.click(screen.getByLabelText('Draw the footer as a panel (Shape → Panels)'));
+    expect(calls).toEqual([[['chrome', 'footer', 'panel'], true]]);
+    cleanup();
+    render(<FooterExtrasPanel chrome={{ footer: { logo: 'image' } }} set={set} />);
+    expect(screen.getByText('Logo height')).toBeTruthy();
   });
 
   it('says when motion is off for everyone', () => {

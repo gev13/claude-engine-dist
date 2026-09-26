@@ -392,7 +392,7 @@ function TitleBodyRepeater({ label, items, onChange }: { label: string; items: T
   );
 }
 
-type LinkItem = { label: string; href: string; variant?: string };
+type LinkItem = { label: string; href: string; variant?: string; arrow?: boolean };
 function LinksRepeater({ items, onChange }: { items: LinkItem[]; onChange: (n: LinkItem[]) => void }) {
   return (
     <Repeater
@@ -416,9 +416,26 @@ function LinksRepeater({ items, onChange }: { items: LinkItem[]; onChange: (n: L
               <option value="ghost">Ghost</option>
             </Select>
           </Field>
+          <ArrowChoice value={item.arrow} onChange={(arrow) => update({ arrow })} />
         </div>
       )}
     />
+  );
+}
+
+/** 3.1 — the arrow on one button: as the block draws it (unset), always, or never. */
+function ArrowChoice({ value, onChange }: { value?: boolean; onChange: (next: boolean | undefined) => void }) {
+  return (
+    <Field label="Arrow">
+      <Select
+        value={value === undefined ? '' : value ? 'yes' : 'no'}
+        onChange={(e) => onChange(e.target.value === '' ? undefined : e.target.value === 'yes')}
+      >
+        <option value="">As the block draws it</option>
+        <option value="yes">With an arrow</option>
+        <option value="no">No arrow</option>
+      </Select>
+    </Field>
   );
 }
 
@@ -730,28 +747,32 @@ function LibLinksField({
   label = 'Buttons',
   k = 'links',
   max = 2,
+  arrows = false,
 }: {
   props: Props;
   set: Setter;
   label?: string;
   k?: string;
   max?: number;
+  /** 3.1 — offer the arrow per button, for the blocks whose buttons draw one. */
+  arrows?: boolean;
 }) {
   return (
     <Repeater
       label={`${label} (up to ${max})`}
-      items={arr<{ label: string; href: string }>(props, k)}
+      items={arr<{ label: string; href: string; arrow?: boolean }>(props, k)}
       onChange={(next) => set({ ...props, [k]: next.slice(0, max) })}
-      blank={() => ({ label: '', href: '' })}
+      blank={(): { label: string; href: string; arrow?: boolean } => ({ label: '', href: '' })}
       addLabel="Add"
       renderRow={(item, update) => (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={arrows ? 'grid gap-3 sm:grid-cols-3' : 'grid gap-3 sm:grid-cols-2'}>
           <Field label="Label">
             <Input value={item.label ?? ''} onChange={(e) => update({ label: e.target.value })} />
           </Field>
           <Field label="Link">
             <Input value={item.href ?? ''} placeholder="/path or https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
           </Field>
+          {arrows && <ArrowChoice value={item.arrow} onChange={(arrow) => update({ arrow })} />}
         </div>
       )}
     />
@@ -2150,7 +2171,22 @@ function TypeFields({
                     </Select>
                   </Field>
                 )}
+                {variant === 'split' && props.bleed === true && (
+                  <Field label="Height">
+                    <Select value={str(props, 'height') || 'tall'} onChange={(e) => set({ ...props, height: e.target.value })}>
+                      <option value="auto">Fit the content</option>
+                      <option value="tall">Tall — most of the screen</option>
+                      <option value="screen">Full screen</option>
+                    </Select>
+                  </Field>
+                )}
               </div>
+              {variant === 'split' && (
+                <label className="flex items-center gap-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.bleed === true} onChange={(e) => set(withOpt(props, 'bleed', e.target.checked || undefined))} />
+                  Run the picture to the section’s edges, behind the text’s side
+                </label>
+              )}
               {(variant === 'mediaCenter' || variant === 'mediaBottomLeft' || variant === 'layered') && (
                 <label className="flex items-center gap-2 text-[14px] text-ash">
                   <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.scrollCue === true} onChange={(e) => set(withOpt(props, 'scrollCue', e.target.checked || undefined))} />
@@ -3933,7 +3969,7 @@ function TypeFields({
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Text" k="body" props={props} set={set} rows={4} />
-          <LibLinksField props={props} set={set} />
+          <LibLinksField props={props} set={set} arrows />
         </>
       );
 
@@ -4006,7 +4042,7 @@ function TypeFields({
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
           <Area label="Text" k="body" props={props} set={set} rows={2} />
-          <LibLinksField props={props} set={set} />
+          <LibLinksField props={props} set={set} arrows />
         </>
       );
 
@@ -4146,7 +4182,7 @@ function TypeFields({
             <Text label="Picture description" k="alt" props={props} set={set} />
             <Text label="Play button label" k="mediaLabel" props={props} set={set} placeholder="Watch the video" />
           </div>
-          <LibLinksField props={props} set={set} />
+          <LibLinksField props={props} set={set} arrows />
         </>
       );
 

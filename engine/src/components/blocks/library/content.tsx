@@ -24,7 +24,7 @@ import { SiteImg } from '@/components/ui/SiteImg';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
-type LibLink = { label: string; href: string };
+type LibLink = { label: string; href: string; arrow?: boolean };
 
 const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
 const toneClass = (tone?: keyof typeof TONES) => TONES[tone ?? 'base'];
@@ -35,7 +35,7 @@ export function Actions({ links, className }: { links: LibLink[]; className?: st
   return (
     <div className={cn('he-actions', className)}>
       {links.map((l, i) => (
-        <Button key={l.href + i} href={l.href} variant={i === 0 ? 'primary' : 'outline'}>
+        <Button key={l.href + i} href={l.href} variant={i === 0 ? 'primary' : 'outline'} withArrow={l.arrow === true || undefined}>
           {l.label}
         </Button>
       ))}

@@ -84,3 +84,23 @@ catalogue face.
   circle, everywhere a card, a post or a row links on.
 - **Hero kicker** — the small line above the eyebrow (“Services / 02”) on
   every hero layout, not only the classic one.
+
+## Added in 3.1
+
+- **The footer's logo** (Appearance → Footer) — the built-in mark and the
+  site name (as before), the logo uploaded in Brand at a height you choose,
+  or nothing.
+- **The footer as a panel** (same place) — inset, in the panel colour and
+  corners, like a section marked Panel.
+- **A split hero to the edges** — tick *Run the picture to the section’s
+  edges* on a Split hero: the picture fills its side from the top to the
+  bottom and out to the edge, behind the text's side, at the height you
+  choose. On a phone it goes back above the text.
+- **An arrow per button** — the hero, the call to action, the media band,
+  split media and quotes each let a button carry the arrow (in its own
+  compartment when Appearance → Buttons says so), or not. Unset is what the
+  block always drew.
+- **Lines between sections** (Appearance → Layout) — untick *A thin line
+  under each section and above the footer* for a page of panels.
+- **Section heading width** (same place) — how far a section's heading runs
+  before it wraps, e.g. `820px`. Empty keeps each block's own.

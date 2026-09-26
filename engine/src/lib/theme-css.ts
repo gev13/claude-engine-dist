@@ -120,6 +120,7 @@ function layoutDecls(theme: Theme): Decl[] {
   push(out, '--container-shell', layout.containerWidth, isLength);
   push(out, '--spacing-gutter', layout.gutter, isLength);
   push(out, '--he-radius', layout.radius, isLength);
+  push(out, '--he-title-measure', layout.titleWidth, isLength);
   return out;
 }
 
@@ -452,6 +453,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
 
   parts.push(localeFontCss(theme, safeSelector));
   parts.push(shapeCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
+
+  /* 3.1 — no line under each section or above the footer. A section is a
+     child of main, or the first thing inside its styled wrapper or row. */
+  if (theme.layout?.sectionRules === false && safeSelector === ':root') {
+    parts.push('#main>*,#main>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}.he-ftr{border-top-width:0}');
+  }
 
   // Link underline is a rule rather than a variable: there is no sensible
   // "unset" value for text-decoration that inherits correctly.
