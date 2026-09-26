@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { FONT_STACKS, isColor, isLength, normaliseLength } from './theme';
+import { FONT_STACKS, SECTION_REVEALS, isColor, isLength, normaliseLength } from './theme';
 import { cornerShapeSchema } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -82,7 +82,7 @@ const BACKGROUND_REPEATS = ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'] as co
 
 /* ── Effects (package 3, phase C) ─────────────────────────────────────────── */
 
-export const REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur'] as const;
+export const REVEALS = SECTION_REVEALS;
 export const REVEAL_DELAYS = [100, 200, 300, 500, 800] as const;
 export const HOVER_EFFECTS = ['lift', 'grow', 'shadow', 'tilt'] as const;
 export const DIVIDER_SHAPES = ['wave', 'curve', 'tilt', 'triangle', 'zigzag', 'arrow'] as const;
@@ -106,8 +106,20 @@ const glitchStyle = z.object({
   effect: z.enum(GLITCH_EFFECTS),
   /** `title` (the default) — the block's first heading; `headings` — every heading in it. */
   scope: z.enum(['title', 'headings']).optional(),
-  /** `always` (the default) — runs while on screen; `hover` — only while the pointer is over the block. */
-  trigger: z.enum(['always', 'hover']).optional(),
+  /**
+   * `always` (the default) — runs while on screen; `hover` — only while the
+   * pointer is over the block; `interval` (3.5) — a burst every few seconds.
+   */
+  trigger: z.enum(['always', 'hover', 'interval']).optional(),
+  /** 3.5 — with `interval`: seconds between bursts (5 when empty) and how long each lasts (1). */
+  every: z.number().min(1).max(120).optional(),
+  burst: z.number().min(0.2).max(10).optional(),
+  /**
+   * 3.5 — how the colours show: `edge` (the default) — a thin coloured edge,
+   * the effect as drawn; `fill` — the torn copies painted in the colours, so
+   * a choice of colour is plain to see on a large heading.
+   */
+  tint: z.enum(['edge', 'fill']).optional(),
   /** The two tones of the torn copies. */
   colorA: color.optional(),
   colorB: color.optional(),
@@ -280,7 +292,8 @@ export const blockStyleSchema = z.object({
    * visible; the effect is armed in the browser only when motion is allowed,
    * and never for anything already on screen.
    */
-  reveal: z.enum(REVEALS).optional(),
+  /* 3.5 — `none` keeps a section still when the site gives every section an entrance. */
+  reveal: z.enum([...REVEALS, 'none']).optional(),
   /** P3-C1 — milliseconds before the entrance plays, for sections that follow one another. */
   revealDelay: z.union([z.literal(100), z.literal(200), z.literal(300), z.literal(500), z.literal(800)]).optional(),
 

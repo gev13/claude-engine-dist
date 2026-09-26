@@ -72,6 +72,21 @@
   animation: he-glitch-split-b calc(2s * var(--he-motion, 1)) infinite linear alternate-reverse;
 }
 
+/* ── 3.5 — the copies painted in the chosen colours ────────────────────────
+   The effects above draw their colours as a thin edge, which on a large
+   heading hardly shows whichever colour is chosen. `fill` paints each torn
+   copy in one of the two colours instead. The same copy that carries a
+   colour's edge carries its fill, with the effect's own tone as fallback. */
+.he-glitch--fill.he-glitch--noise .he-glitch-live::after { color: var(--he-glitch-a, #f00); }
+.he-glitch--fill.he-glitch--noise .he-glitch-live::before { color: var(--he-glitch-b, #00f); }
+.he-glitch--fill.he-glitch--split .he-glitch-live::before { color: var(--he-glitch-a, #fbe601); }
+.he-glitch--fill.he-glitch--split .he-glitch-live::after { color: var(--he-glitch-b, #63c3ea); }
+.he-glitch--fill.he-glitch--psycho .he-glitch-live::before { color: var(--he-glitch-a, #0f0); }
+.he-glitch--fill.he-glitch--psycho .he-glitch-live::after { color: var(--he-glitch-b, #ff00e1); }
+
+/* 3.5 — `interval` needs no rule of its own: GlitchObserver turns
+   `he-glitch-live` on for a burst every few seconds, and off in between. */
+
 /* Less motion: the heading as it is, nothing over it. */
 @media (prefers-reduced-motion: reduce) {
   .he-glitch-t { animation: none !important; transform: none; }

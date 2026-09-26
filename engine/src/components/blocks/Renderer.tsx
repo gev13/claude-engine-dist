@@ -132,7 +132,9 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
 };
 
 /** The reveal-on-scroll classes, when a block or row asks for them. */
-const revealClass = (style: ParsedBlock['style']) => style?.reveal && `he-reveal he-reveal--${style.reveal}`;
+const revealClass = (style: ParsedBlock['style']) =>
+  // 3.5 — `none` marks a section the site-wide entrance leaves alone.
+  style?.reveal === 'none' ? 'he-noreveal' : style?.reveal && `he-reveal he-reveal--${style.reveal}`;
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /** Named widths, applied by overriding the container the inner `.shell` reads. */
@@ -159,6 +161,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
       className={cn(`he-b-${block.id}`, shellClass(style))}
       data-reveal-delay={revealDelay(style)}
       data-glitch={glitchScope(style)}
+      {...glitchTiming(style)}
     >
       {children}
       {style.background?.videoUrl && <SectionVideo background={style.background} />}
@@ -179,6 +182,9 @@ function shellClass(style: BlockStyle) {
     // 3.0 — glitch text; GlitchObserver finds the headings.
     style.glitch && `he-glitch he-glitch--${style.glitch.effect}`,
     style.glitch?.trigger === 'hover' && 'he-glitch--hover',
+    // 3.5 — bursts on a timer (GlitchObserver), and copies painted in the chosen colours.
+    style.glitch?.trigger === 'interval' && 'he-glitch--interval',
+    style.glitch?.tint === 'fill' && 'he-glitch--fill',
     (style.shapeTop || style.shapeBottom) && 'he-has-shape',
     style.sticky && 'he-sticky',
     style.snap && 'he-snap',
@@ -189,7 +195,12 @@ function shellClass(style: BlockStyle) {
   );
 }
 
-const revealDelay = (style: BlockStyle) => (style.reveal && style.revealDelay ? style.revealDelay : undefined);
+const revealDelay = (style: BlockStyle) => (style.reveal && style.reveal !== 'none' && style.revealDelay ? style.revealDelay : undefined);
+/** 3.5 — seconds between glitch bursts and the length of each, read by GlitchObserver. */
+const glitchTiming = (style: BlockStyle) =>
+  style.glitch?.trigger === 'interval'
+    ? { 'data-glitch-every': style.glitch.every ?? 5, 'data-glitch-burst': style.glitch.burst ?? 1 }
+    : {};
 /** Every heading, or (unset) only the first — read by GlitchObserver. */
 const glitchScope = (style: BlockStyle) => (style.glitch?.scope === 'headings' ? 'all' : undefined);
 
@@ -261,6 +272,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       className={cn('he-row', `he-b-${block.id}`, style && shellClass(style))}
       data-reveal-delay={style ? revealDelay(style) : undefined}
       data-glitch={style ? glitchScope(style) : undefined}
+      {...(style ? glitchTiming(style) : {})}
     >
       <div className="shell">
         <div className={`he-r-${block.id}`}>
@@ -392,7 +404,7 @@ export function BlockRenderer({
           ))
         : parsed.map((block) => renderBlock(block, ctx))}
       {css && <style dangerouslySetInnerHTML={{ __html: css }} />}
-      {anyStyle(parsed, (s) => s.reveal) && <RevealObserver />}
+      {anyStyle(parsed, (s) => s.reveal && s.reveal !== 'none') && <RevealObserver />}
       {anyStyle(parsed, (s) => s.hover === 'tilt') && <TiltObserver />}
       {anyStyle(parsed, (s) => s.glitch) && <GlitchObserver />}
     </>

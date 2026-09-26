@@ -10,6 +10,19 @@ improvements.
 
 ---
 
+## 3.5.0 — 2026-09-26
+
+**Every section can enter as it scrolls into view, and glitch text runs on a
+timer.** Appearance → Spacing and motion → *Every section enters with* gives
+each top-level section of every page an entrance (fade, fade and rise, zoom,
+slide, blur), sections added later included; a section can still choose its
+own, or *None*. Glitch text gains *In bursts, every few seconds* with its own
+interval and burst length, and *How the colours show*: the torn copies can
+be painted in the chosen colours, where before a change of colour only
+tinted a thin edge that a large heading hardly showed. All off until chosen.
+
+---
+
 ## 3.4.3 — 2026-09-26
 
 **The page builder opens every page.** Since 2.15 the builder's check for a

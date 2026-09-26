@@ -4,6 +4,9 @@ import { chromeSchema } from './chrome';
 import { cornerShapeSchema } from './shape';
 import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
 
+/** The entrances a section can play as it scrolls into view (SC4); blockStyle's REVEALS is this list. */
+export const SECTION_REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur'] as const;
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Global theme
    ───────────────────────────────────────────────────────────────────────────
@@ -370,6 +373,12 @@ export const themeSchema = z.object({
    * gap for every block would flatten spacing that differs on purpose.
    */
   motion: z.number().min(0).max(5).optional(),
+  /**
+   * 3.5 — the entrance every top-level section plays as it scrolls into view,
+   * unless it chooses its own (or "none") in its Design tab. Unset: only the
+   * sections that ask for one move, as before.
+   */
+  reveal: z.enum(SECTION_REVEALS).optional(),
   gap: length.optional(),
 
   /** Meaning colours — open, closed, warning, stars. Not the brand palette. */

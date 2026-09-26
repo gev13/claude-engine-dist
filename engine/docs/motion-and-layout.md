@@ -95,7 +95,25 @@ empty, it is found from the section, so a slice covers the words it
 replaces; over a picture the copies stay clear. **Motion** (same tab)
 speeds it up or slows it down.
 
+**In bursts, every few seconds** (3.5) glitches once as the heading comes on
+screen, then again every **Every** seconds (5 when empty), each burst
+lasting **Each burst lasts** seconds (1 when empty). **How the colours show**
+(3.5): *a thin coloured edge* is the effect as drawn — on a large heading a
+change of colour there is hard to see; *copies painted in the colours*
+paints the torn copies themselves, so the chosen colours are plain to see.
+
 It runs only while the heading is on screen. Screen readers hear the heading
 once, and visitors who ask for less motion — in their system, or with the
 site's own switch — see the heading still. Without it chosen, nothing is
 added to the page.
+
+## Every section's entrance — Appearance → Spacing and motion (3.5)
+
+**Every section enters with** gives each top-level section of every page an
+entrance as it scrolls into view — fade, fade and rise, zoom, slide from
+either side or blur — including sections added later. A section keeps its
+own choice from its Design tab (Effects → Entrance), and **None — stays
+still** there leaves it out. Anything already on screen when the page opens
+is shown at once; visitors who ask for less motion, and pages without
+script, see every section as it is. Empty (the default) moves only the
+sections that choose an entrance, as before.

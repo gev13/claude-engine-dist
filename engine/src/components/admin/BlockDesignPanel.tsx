@@ -76,6 +76,8 @@ const REVEAL_OPTIONS = [
   { value: 'left', label: 'Slide in from the left' },
   { value: 'right', label: 'Slide in from the right' },
   { value: 'blur', label: 'Blur in' },
+  // 3.5 — stays still even when Appearance gives every section an entrance.
+  { value: 'none', label: 'None — stays still' },
 ] as const;
 const HOVER_OPTIONS = [
   { value: 'lift', label: 'Lift' },
@@ -96,7 +98,17 @@ const GLITCH_SCOPES = [
 const GLITCH_TRIGGERS = [
   { value: 'always', label: 'All the time' },
   { value: 'hover', label: 'While the pointer is over it' },
+  { value: 'interval', label: 'In bursts, every few seconds' },
 ] as const;
+const GLITCH_TINTS = [
+  { value: 'edge', label: 'A thin coloured edge' },
+  { value: 'fill', label: 'Copies painted in the colours' },
+] as const;
+/** 3.5 — seconds, typed; empty keeps the default the renderer uses. */
+const seconds = (value: string, min: number, max: number) => {
+  const n = Number(value);
+  return value.trim() === '' || !Number.isFinite(n) ? undefined : Math.min(max, Math.max(min, n));
+};
 const SHAPE_OPTIONS = [
   { value: 'wave', label: 'Wave' },
   { value: 'curve', label: 'Curve' },
@@ -598,6 +610,17 @@ export function BlockDesignPanel({
             <>
               <ChoiceField label="Which headings" value={current.glitch.scope} inherited="title" options={GLITCH_SCOPES} onChange={set(['glitch', 'scope'])} />
               <ChoiceField label="When" value={current.glitch.trigger} inherited="always" options={GLITCH_TRIGGERS} onChange={set(['glitch', 'trigger'])} />
+              {current.glitch.trigger === 'interval' && (
+                <>
+                  <Field label="Every" hint="seconds between bursts; 5 when empty">
+                    <Input type="number" min={1} max={120} step={0.5} placeholder="5" value={current.glitch.every ?? ''} onChange={(e) => set(['glitch', 'every'])(seconds(e.target.value, 1, 120))} />
+                  </Field>
+                  <Field label="Each burst lasts" hint="seconds; 1 when empty">
+                    <Input type="number" min={0.2} max={10} step={0.1} placeholder="1" value={current.glitch.burst ?? ''} onChange={(e) => set(['glitch', 'burst'])(seconds(e.target.value, 0.2, 10))} />
+                  </Field>
+                </>
+              )}
+              <ChoiceField label="How the colours show" value={current.glitch.tint} inherited="edge" options={GLITCH_TINTS} onChange={set(['glitch', 'tint'])} />
               <ColorField label="First colour" hint="the effect’s own when empty" value={current.glitch.colorA} onChange={set(['glitch', 'colorA'])} />
               <ColorField label="Second colour" hint="the effect’s own when empty" value={current.glitch.colorB} onChange={set(['glitch', 'colorB'])} />
               <ColorField label="Behind the copies" hint="found from the section when empty" value={current.glitch.background} onChange={set(['glitch', 'background'])} />

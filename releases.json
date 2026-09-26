@@ -1,6 +1,14 @@
 {
-  "latest": "3.4.3",
+  "latest": "3.5.0",
   "releases": [
+    {
+      "version": "3.5.0",
+      "date": "2026-09-26",
+      "summary": "A site-wide entrance for every section as it scrolls into view, glitch text in timed bursts, and glitch colours that can paint the torn copies.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.4.3",
       "date": "2026-09-26",

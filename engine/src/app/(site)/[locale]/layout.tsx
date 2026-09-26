@@ -27,6 +27,7 @@ import { CaptchaProvider } from '@/components/site/Captcha';
 import { CustomCursor } from '@/components/site/CustomCursor';
 import { PageTransition, Preloader } from '@/components/site/PageTransition';
 import { RevealFooter, SideRails } from '@/components/site/SiteMotion';
+import { SiteReveal } from '@/components/blocks/library/RevealObserver';
 import { responsiveImages } from '@/lib/responsive';
 import { isProfile } from '@/lib/navigation';
 import { titleTemplate } from '@/lib/siteSettings';
@@ -268,6 +269,8 @@ export default async function SiteLayout({
           </div>
           {/* 2.19 — motion and chrome extras, each only when switched on. */}
           {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} />}
+          {/* 3.5 — every section's entrance, when the site sets one. */}
+          {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
           {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
           {chrome.transition.style !== 'off' && !chrome.reduceMotion && <PageTransition style={chrome.transition.style} />}

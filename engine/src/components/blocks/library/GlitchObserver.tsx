@@ -34,13 +34,49 @@ export function GlitchObserver() {
     }
     if (!targets.length) return;
 
+    /* 3.5 — a block set to `interval` glitches in bursts: one as it comes on
+       screen, then one every `every` seconds, each `burst` seconds long, and
+       nothing while it is off screen. */
+    const timers = new Map<Element, () => void>();
+    const startBursts = (heading: HTMLElement, block: HTMLElement) => {
+      const every = Math.max(1, Number(block.dataset.glitchEvery) || 5) * 1000;
+      const burst = Math.max(0.2, Number(block.dataset.glitchBurst) || 1) * 1000;
+      let off = 0;
+      const fire = () => {
+        heading.classList.add('he-glitch-live');
+        window.clearTimeout(off);
+        off = window.setTimeout(() => heading.classList.remove('he-glitch-live'), Math.min(burst, every));
+      };
+      fire();
+      const loop = window.setInterval(fire, every);
+      timers.set(heading, () => {
+        window.clearInterval(loop);
+        window.clearTimeout(off);
+        heading.classList.remove('he-glitch-live');
+      });
+    };
+
     const observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) entry.target.classList.toggle('he-glitch-live', entry.isIntersecting);
+      for (const entry of entries) {
+        const heading = entry.target as HTMLElement;
+        const block = heading.closest<HTMLElement>('.he-glitch');
+        if (block?.classList.contains('he-glitch--interval')) {
+          if (entry.isIntersecting && !timers.has(heading)) startBursts(heading, block);
+          if (!entry.isIntersecting && timers.has(heading)) {
+            timers.get(heading)?.();
+            timers.delete(heading);
+          }
+          continue;
+        }
+        heading.classList.toggle('he-glitch-live', entry.isIntersecting);
+      }
     });
     targets.forEach((target) => observer.observe(target));
 
     return () => {
       observer.disconnect();
+      timers.forEach((stop) => stop());
+      timers.clear();
       for (const target of targets) {
         target.classList.remove('he-glitch-t', 'he-glitch-live');
         delete target.dataset.glitchText;

@@ -551,6 +551,20 @@ function AppearanceScreenInner() {
                     <option value="2">Twice as slow</option>
                   </Select>
                 </Field>
+                <Field label="Every section enters with" hint="plays once as it scrolls into view; a section can choose its own, or none">
+                  <Select
+                    value={theme.reveal ?? ''}
+                    onChange={(e) => setTheme((c) => ({ ...c, reveal: (e.target.value || undefined) as typeof c.reveal }))}
+                  >
+                    <option value="">Nothing — only sections that choose one</option>
+                    <option value="fade">Fade in</option>
+                    <option value="rise">Fade in and rise</option>
+                    <option value="zoom">Zoom in</option>
+                    <option value="left">Slide in from the left</option>
+                    <option value="right">Slide in from the right</option>
+                    <option value="blur">Blur in</option>
+                  </Select>
+                </Field>
               </div>
             </Panel>
             </>
