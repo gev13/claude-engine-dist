@@ -507,6 +507,20 @@ export function BlockDesignPanel({
                 inherited={band.type[role]?.size}
                 onChange={set(['typography', role, 'size'])}
               />
+              <LengthField
+                label="Size on tablets"
+                hint="≤1024px"
+                value={get(['typography', role, 'sizeTablet'])}
+                placeholder="as above"
+                onChange={set(['typography', role, 'sizeTablet'])}
+              />
+              <LengthField
+                label="Size on phones"
+                hint="≤768px"
+                value={get(['typography', role, 'sizeMobile'])}
+                placeholder="as above"
+                onChange={set(['typography', role, 'sizeMobile'])}
+              />
               <ChoiceField
                 label="Weight"
                 value={get(['typography', role, 'weight']) as never}

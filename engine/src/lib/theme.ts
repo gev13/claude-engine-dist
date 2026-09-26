@@ -455,6 +455,8 @@ export const themeSchema = z.object({
       gap: length.optional(),
       background: color.optional(),
       shape: cornerShapeSchema.optional(),
+      /** 3.3 — a panel's content in line with the content outside it, the inset taken from its own padding. */
+      alignContent: z.boolean().optional(),
     })
     .optional(),
 

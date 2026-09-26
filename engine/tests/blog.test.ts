@@ -31,6 +31,9 @@ describe('blog layouts (BL1, BL2)', () => {
       // 2.22 — search below the bar and no featured post, as before.
       searchInBar: false,
       featured: false,
+      // 3.3 — no bar on category pages, and the search at the end of the bar when it is there.
+      archiveBar: false,
+      searchBelow: false,
     });
   });
 

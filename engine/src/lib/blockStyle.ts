@@ -129,6 +129,9 @@ const typeOverride = z.object({
   letterSpacing: length.optional(),
   transform: z.enum(['none', 'uppercase', 'lowercase', 'capitalize']).optional(),
   align: z.enum(['left', 'center', 'right']).optional(),
+  /** 3.3 — the size on tablets and below, and on phones; unset keeps the size above. */
+  sizeTablet: length.optional(),
+  sizeMobile: length.optional(),
 });
 
 export type TypeOverride = z.infer<typeof typeOverride>;

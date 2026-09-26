@@ -334,13 +334,15 @@
    content. A transparent border rather than padding: padding would replace
    the section's own, where a border adds to it — and a panel's colour still
    paints underneath it. */
-.he-site[data-header='notch'] #main > :first-child { border-top: var(--he-ns-base, 80px) solid transparent; }
+/* `--he-ns-now` is the clearance in force, for anything inside that should
+   reach up into it (3.3: a split hero's picture run to the edges). */
+.he-site[data-header='notch'] #main > :first-child { --he-ns-now: var(--he-ns-base, 80px); border-top: var(--he-ns-now) solid transparent; }
 @media (width <= 1440px) {
-  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-laptop, var(--he-ns-base, 80px)); }
+  .he-site[data-header='notch'] #main > :first-child { --he-ns-now: var(--he-ns-laptop, var(--he-ns-base, 80px)); border-top-width: var(--he-ns-now); }
 }
 @media (width <= 1024px) {
-  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-tablet, var(--he-ns-laptop, var(--he-ns-base, 80px))); }
+  .he-site[data-header='notch'] #main > :first-child { --he-ns-now: var(--he-ns-tablet, var(--he-ns-laptop, var(--he-ns-base, 80px))); border-top-width: var(--he-ns-now); }
 }
 @media (width <= 768px) {
-  .he-site[data-header='notch'] #main > :first-child { border-top-width: var(--he-ns-mobile, 64px); }
+  .he-site[data-header='notch'] #main > :first-child { --he-ns-now: var(--he-ns-mobile, 64px); border-top-width: var(--he-ns-now); }
 }

@@ -64,6 +64,15 @@ export function PanelSettingsPanel({ theme, set }: Props) {
           <ColorField label="Panel colour" value={panel.background} placeholder="the surface colour" onChange={set(['panel', 'background'])} />
         </div>
         <CornerShapeFields label="Panel corners" value={panel.shape} fallbackSize={CUT_SIZES.panel} onChange={set(['panel', 'shape'])} roundedLabel="Square" />
+        <label className="flex items-center gap-2.5 text-[14px] text-ash">
+          <input
+            type="checkbox"
+            className="h-4 w-4 accent-flare"
+            checked={panel.alignContent === true}
+            onChange={(e) => set(['panel', 'alignContent'])(e.target.checked || undefined)}
+          />
+          Line up a panel’s content with the content outside panels
+        </label>
         <p className="m-0 text-[12px] text-smoke">
           Tick <strong className="text-bone">Panel</strong> in a section’s Design tab to set it on the page like this. The page
           around the panels is the page colour (Colours → Background). The inset shrinks on small screens by itself.

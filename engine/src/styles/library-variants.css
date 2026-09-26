@@ -29,7 +29,7 @@
   .he-faq.is-filled .he-faq__item.is-open { background: color-mix(in srgb, var(--color-flare) 10%, var(--color-surface)); }
   .he-faq.is-outlined .he-faq__item { border: 1px solid var(--color-hairline); border-radius: 14px; transition: border-color calc(200ms * var(--he-motion, 1)); }
   .he-faq.is-outlined .he-faq__item.is-open { border-color: var(--color-bone); }
-  .he-faq.is-contained { gap: 0; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: 18px; background: var(--color-surface); }
+  .he-faq.is-contained { gap: 0; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: var(--he-box-radius, 18px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-faq.is-contained .he-faq__item + .he-faq__item { border-top: 1px solid var(--color-hairline); }
   .he-faq__btn:focus-visible { outline: 3px solid var(--color-flare); outline-offset: -3px; border-radius: 14px; }
   .he-faq__marker { display: grid; flex-shrink: 0; place-items: center; margin-top: 2px; color: var(--color-flare); transition: transform calc(250ms * var(--he-motion, 1)); }

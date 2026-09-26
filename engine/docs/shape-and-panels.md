@@ -113,3 +113,18 @@ catalogue face.
   width of the section* on a Form block.
 - **Covers on the plain post cards** — a Post list in the Cards layout can
   show each post's cover above its title, at the shape you choose.
+
+## Added in 3.3
+
+- **Heading and text sizes on tablets and phones** — a section's own
+  typography (Design tab) takes a size for tablets and one for phones, so a
+  large desktop heading is not large on a phone.
+- **The contained FAQ follows cut corners** when cards are cut.
+- **Line up a panel's content** (Appearance → Shape → Panels) with the
+  content of the sections outside panels, at every width — for a
+  full-width site of panels.
+- **The blog's category bar on category pages** (Appearance → Blog), with
+  the page's own chip lit, and the search on its own labelled row under the
+  chips if you like.
+- **A split hero run to the edges reaches up behind the notch header**, so
+  the picture fills the space beside the header tab.

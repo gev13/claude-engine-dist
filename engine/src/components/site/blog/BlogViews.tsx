@@ -95,6 +95,7 @@ async function CategoryBar({
   t,
   blog,
   search,
+  current = 'all',
 }: {
   locale: Locale;
   permalinks: Permalinks;
@@ -102,8 +103,25 @@ async function CategoryBar({
   blog: ResolvedBlog;
   /** 2.22 — the search box, at the end of the bar. */
   search?: React.ReactNode;
+  /** 3.3 — the chip for the page being shown: `all`, `research` or a category's slug. */
+  current?: string;
 }) {
   const categories = await listCategories(locale);
+  /* 3.3 — the search on its own row under the chips, labelled, when asked. */
+  const searchPart =
+    search &&
+    (blog.searchBelow ? (
+      <div className="he-catbar__search is-below">
+        <span className="label-mono mr-2">{t('chrome.search')}</span>
+        {search}
+      </div>
+    ) : (
+      <div className="he-catbar__search">{search}</div>
+    ));
+  const chip = (active: boolean) =>
+    active
+      ? 'he-chip border-2 border-flare bg-flare px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-bone'
+      : 'he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone';
   if (categories.length === 0) return search ? <Section size="sm">{search}</Section> : null;
   const research =
     blog.chipResearch === 'show' || (blog.chipResearch === 'auto' && (await countPosts({ kind: 'research', locale })) > 0);
@@ -113,7 +131,7 @@ async function CategoryBar({
       <Section size="sm">
         <nav aria-label={t('blog.categories')} className="he-catbar">
           {blog.chipAll && (
-            <Link href={blogIndexPath(permalinks)} aria-current="page" className="he-catbar__all">
+            <Link href={blogIndexPath(permalinks)} aria-current={current === 'all' ? 'page' : undefined} className="he-catbar__all">
               {t('blog.all')}
             </Link>
           )}
@@ -135,7 +153,7 @@ async function CategoryBar({
               ))}
             </ul>
           </details>
-          {search && <div className="he-catbar__search">{search}</div>}
+          {searchPart}
         </nav>
       </Section>
     );
@@ -146,19 +164,12 @@ async function CategoryBar({
       <nav aria-label={t('blog.categories')} className="flex flex-wrap items-center gap-2">
         <span className="label-mono mr-2">{t('blog.browse')}</span>
         {blog.chipAll && (
-          <Link
-            href={blogIndexPath(permalinks)}
-            aria-current="page"
-            className="he-chip border-2 border-flare bg-flare px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-bone"
-          >
+          <Link href={blogIndexPath(permalinks)} aria-current={current === 'all' ? 'page' : undefined} className={chip(current === 'all')}>
             {t('blog.all')}
           </Link>
         )}
         {research && (
-          <Link
-            href={researchPath(permalinks)}
-            className="he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
-          >
+          <Link href={researchPath(permalinks)} aria-current={current === 'research' ? 'page' : undefined} className={chip(current === 'research')}>
             {t('blog.research')}
           </Link>
         )}
@@ -166,12 +177,13 @@ async function CategoryBar({
           <Link
             key={c.slug}
             href={categoryPath(permalinks, c.slug)}
-            className="he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone"
+            aria-current={current === c.slug ? 'page' : undefined}
+            className={chip(current === c.slug)}
           >
             {c.name}
           </Link>
         ))}
-        {search && <div className="he-catbar__search">{search}</div>}
+        {searchPart}
       </nav>
     </Section>
   );
@@ -474,6 +486,25 @@ export async function ArchiveView({
           </>
         )}
       </Section>
+      {/* 3.3 — the blog's category bar here too, with this page's chip lit. */}
+      {blog.archiveBar && (
+        <CategoryBar
+          locale={locale}
+          permalinks={permalinks}
+          t={t}
+          blog={blog}
+          current={kind === 'category' && category ? category.slug : 'research'}
+          search={
+            blog.searchInBar ? (
+              <BlogSearch
+                initialQuery=""
+                action={blogIndexPath(permalinks)}
+                labels={{ label: t('chrome.search'), placeholder: t('blog.searchArticles'), submit: t('chrome.search'), clear: t('blog.clear') }}
+              />
+            ) : undefined
+          }
+        />
+      )}
       {around.before.length > 0 && <BlockRenderer blocks={around.before} trail={trail} locale={locale} />}
 
       <Section size="lg">

@@ -276,7 +276,8 @@ function shapeCss(theme: Theme, scope: string): string {
 
   // Cards clip through a variable every card rule already carries (`clip-path: var(--he-card-clip, none)`).
   const card = cutLegs(shape.cards, CUT_SIZES.cards);
-  if (card) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', '0px'], ['--he-card-clip', cutPolygon(card)]]));
+  // 3.3 — boxes drawn like cards (the contained FAQ) square off with them.
+  if (card) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', '0px'], ['--he-box-radius', '0px'], ['--he-card-clip', cutPolygon(card)]]));
 
   const image = cutLegs(shape.images, CUT_SIZES.images);
   if (image) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', cutPolygon(image)]]));
@@ -470,6 +471,16 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   parts.push(localeFontCss(theme, safeSelector));
   parts.push(shapeCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
   parts.push(fieldCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
+
+  /* 3.3 — a panel's content lines up with the content outside panels: its
+     shell gives back the panel's inset at every width. */
+  if (theme.panel?.alignContent === true && safeSelector === ':root') {
+    const shells = '.he-panel>.shell,.he-panel>*>.shell,.he-ftr.is-panel>.shell';
+    const inset = 'min(var(--he-panel-inset,24px),3vw)';
+    parts.push(`${shells}{padding-inline:max(12px,calc(20px - ${inset}))}`);
+    parts.push(`@media (width>=48rem){${shells}{padding-inline:calc(32px - ${inset})}}`);
+    parts.push(`@media (width>=64rem){${shells}{padding-inline:max(16px,calc(var(--spacing-gutter) - ${inset}))}}`);
+  }
 
   /* 3.1 — no line under each section or above the footer. A section is a
      child of main, or the first thing inside its styled wrapper or row. */

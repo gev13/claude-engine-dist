@@ -184,6 +184,8 @@ function shellClass(style: BlockStyle) {
     style.snap && 'he-snap',
     // 2.19 (T31) — the site's alternate palette on this section: a light band on a dark site.
     style.scheme === 'alt' && 'he-scheme-alt',
+    // 3.3 — the hook Appearance → Panels' "line up the content" aims at.
+    style.panel && 'he-panel',
   );
 }
 

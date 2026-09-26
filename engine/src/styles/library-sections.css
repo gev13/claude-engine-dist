@@ -74,6 +74,9 @@
 
   /* ── Blog: search in the category bar, and the featured post ─────────── */
   .he-catbar__search { flex: 1 1 280px; max-width: 460px; margin-left: auto; }
+  /* 3.3 — on its own row under the chips, labelled like the chips' "Browse". */
+  .he-catbar__search.is-below { display: flex; flex: 1 0 100%; align-items: center; gap: 8px; max-width: none; margin: 14px 0 0; }
+  .he-catbar__search.is-below > :last-child { flex: 0 1 560px; }
   .he-featpost-wrap { margin-bottom: 48px; }
   .he-featpost__label { margin: 0 0 18px; }
   .he-featpost {

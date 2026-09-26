@@ -141,6 +141,10 @@ export const blogSchema = z.object({
   searchInBar: z.boolean().optional(),
   /** 2.22 — the newest post as a large card, picture left, above the list on the blog's first page. */
   featured: z.boolean().optional(),
+  /** 3.3 — the category bar (with the search, when it is in the bar) on every category and research page too. */
+  archiveBar: z.boolean().optional(),
+  /** 3.3 — with the search in the bar: on its own row under the chips, labelled, instead of at the end. */
+  searchBelow: z.boolean().optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
@@ -176,6 +180,8 @@ export type ResolvedBlog = {
   categoryHero: 'title' | 'full';
   searchInBar: boolean;
   featured: boolean;
+  archiveBar: boolean;
+  searchBelow: boolean;
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -203,6 +209,8 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     categoryHero: blog?.categoryHero ?? 'title',
     searchInBar: blog?.searchInBar ?? false,
     featured: blog?.featured ?? false,
+    archiveBar: blog?.archiveBar ?? false,
+    searchBelow: blog?.searchBelow ?? false,
   };
 }
 

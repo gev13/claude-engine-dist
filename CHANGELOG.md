@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.3.0 — 2026-09-26
+
+**Finishing touches from a full site build.** A section's own heading and
+text sizes can be set for tablets and phones. The contained FAQ follows cut
+card corners. A panel's content can line up with the rest of the page, for a
+full-width site of panels. The blog's category bar can appear on every
+category and research page, with that page's chip lit and the search on its
+own row. And an edge-to-edge split hero now fills the space beside the notch
+header. Nothing changes until chosen.
+
+---
+
 ## 3.2.0 — 2026-09-26
 
 **Form fields and post cards, as a design draws them.** Appearance →

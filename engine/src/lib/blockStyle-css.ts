@@ -161,6 +161,12 @@ function typeDecls(override: TypeOverride | undefined): Decl[] {
   return out;
 }
 
+function sizeDecl(value: string | undefined): Decl[] {
+  const out: Decl[] = [];
+  push(out, 'font-size', value, isLength);
+  return out;
+}
+
 function block(selector: string, decls: Decl[]): string {
   if (decls.length === 0) return '';
   return `${selector}{${decls.map(([p, v]) => `${p}:${v}`).join(';')}}`;
@@ -311,6 +317,17 @@ export function blockStyleToCss(
   const body = typeDecls(style.typography?.body);
   if (body.length) {
     parts.push(block(`${root} :is(p,li,td,span)`, body));
+  }
+
+  /* 3.3 — a section's own sizes on tablets and phones, so a 56px heading
+     set for a desktop is not 56px on a phone. */
+  for (const [tier, key] of [['tablet', 'sizeTablet'], ['mobile', 'sizeMobile']] as const) {
+    const maxWidth = BREAKPOINTS.find((b) => b.key === tier)!.maxWidth;
+    const inner = [
+      block(`${root} :is(h1,h2,h3,h4,h5,h6)`, sizeDecl(style.typography?.heading?.[key])),
+      block(`${root} :is(p,li,td,span)`, sizeDecl(style.typography?.body?.[key])),
+    ].join('');
+    if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }
 
   for (const { key, maxWidth } of BREAKPOINTS) {
