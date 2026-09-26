@@ -9,6 +9,7 @@ import { afterSubmit, hiddenValues, noteFirstTouch } from '@/components/site/for
 import type { blockSchemas } from '@/lib/blocks';
 import { type FormField, formSteps, validateAnswers, visibleFields } from '@/lib/forms';
 import { cn } from '@/lib/utils';
+import { ArrowRight } from '@/components/ui/Button';
 import { BlockHead } from '../parts';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -35,10 +36,10 @@ const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
 const FILE_ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png';
 const FILE_HINT = 'PDF, Word, JPG or PNG, up to 8 MB.';
 
-function Field({ field, uid, value, onChange }: { field: FormField; uid: string; value: Values[string] | undefined; onChange: (next: Values[string]) => void }) {
+function Field({ field, uid, value, onChange, mark }: { field: FormField; uid: string; value: Values[string] | undefined; onChange: (next: Values[string]) => void; mark: boolean }) {
   const t = useMessages();
   // One text node, as the markup always was.
-  const optional = <span className="he-fb__opt">{` (${t('form.optional')})`}</span>;
+  const optional = mark && <span className="he-fb__opt">{` (${t('form.optional')})`}</span>;
   const id = `${uid}-${field.id}`;
   const hint = field.help ? `${id}-help` : undefined;
   const label = (
@@ -256,7 +257,7 @@ export function FormBlock(p: P) {
         )}
         <div className="he-fb__grid">
           {current.fields.map((field) => (
-            <Field key={field.id} field={field} uid={uid} value={values[field.id]} onChange={set(field.id)} />
+            <Field key={field.id} field={field} uid={uid} value={values[field.id]} onChange={set(field.id)} mark={p.optionalMark !== false} />
           ))}
         </div>
         {/* A trap for bots: people never see it, so anything typed here is not from a person. */}
@@ -278,6 +279,7 @@ export function FormBlock(p: P) {
           )}
           <button type="submit" className="he-cbtn is-medium is-primary" disabled={state === 'sending'}>
             {state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}
+            {p.submitArrow && <ArrowRight />}
           </button>
           {/* 2.22 — a line beside the send button, on the last step only. */}
           {last && p.submitNote && <p className="he-fb__note">{p.submitNote}</p>}
@@ -286,10 +288,12 @@ export function FormBlock(p: P) {
     );
 
   return (
-    <section className={cn('he-lsec he-fb', TONES[p.tone ?? 'base'], `is-${p.layout}`, center && 'is-center', p.wide && 'is-wide')}>
+    <section className={cn('he-lsec he-fb', TONES[p.tone ?? 'base'], `is-${p.layout}`, center && 'is-center', p.wide && 'is-wide', p.compactChoices && 'is-compact')}>
       <div className="shell">
         {(p.eyebrow || p.title || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.align} className="mb-9" />}
-        <div className="he-fb__box">{body}</div>
+        <div className="he-fb__box" style={p.cardPadding ? ({ '--he-fb-pad': p.cardPadding } as React.CSSProperties) : undefined}>
+          {body}
+        </div>
       </div>
     </section>
   );

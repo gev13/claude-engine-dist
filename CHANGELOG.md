@@ -10,6 +10,17 @@ improvements.
 
 ---
 
+## 3.4.0 — 2026-09-26
+
+**A form can look like the design it came from.** Four options, all off
+until chosen: leave "(optional)" off the questions that need no answer, put
+an arrow on the send button, size the choice chips to their text, and set
+the space inside the form card. A card form now follows the site's card
+corners, as the contained FAQ does, so on a site with cut cards the form
+card is cut too.
+
+---
+
 ## 3.3.3 — 2026-09-26
 
 **The edge-to-edge hero keeps its proportions.** Its picture can be shown

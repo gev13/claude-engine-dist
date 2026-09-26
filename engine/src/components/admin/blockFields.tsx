@@ -3594,6 +3594,19 @@ function TypeFields({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.wide === true} onChange={(e) => set(withOpt(props, 'wide', e.target.checked || undefined))} />
             Run the form the full width of the section
           </label>
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.optionalMark === false} onChange={(e) => set(withOpt(props, 'optionalMark', e.target.checked ? false : undefined))} />
+            Leave “(optional)” off the questions that need no answer
+          </label>
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.submitArrow === true} onChange={(e) => set(withOpt(props, 'submitArrow', e.target.checked || undefined))} />
+            An arrow on the send button
+          </label>
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.compactChoices === true} onChange={(e) => set(withOpt(props, 'compactChoices', e.target.checked || undefined))} />
+            Compact choice chips, sized to their text
+          </label>
+          <Text label="Space inside the card" k="cardPadding" props={props} set={set} placeholder="32px — or two values, e.g. 48px 56px" />
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
         </>

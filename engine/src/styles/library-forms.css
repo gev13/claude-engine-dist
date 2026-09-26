@@ -7,7 +7,7 @@
   .he-fb.is-center .he-fb__box { margin-inline: auto; }
   /* 3.2 — the full width of the section. */
   .he-fb.is-wide .he-fb__box { max-width: none; }
-  .he-fb.is-card .he-fb__box { padding: 32px; border: 1px solid var(--color-hairline); border-radius: 20px; background: var(--color-surface); }
+  .he-fb.is-card .he-fb__box { padding: var(--he-fb-pad, 32px); border: 1px solid var(--color-hairline); border-radius: var(--he-box-radius, 20px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-fb.is-card.is-raised .he-fb__box { background: var(--color-surface-2); }
   .he-fb__progress { margin-bottom: 26px; }
   .he-fb__stepname { margin: 0 0 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
@@ -39,6 +39,8 @@
   .he-fb__choice:hover span { border-color: var(--color-rule); color: var(--color-bone); }
   .he-fb__choice input:checked + span { border-color: var(--color-flare); background: var(--color-flare); color: var(--he-btn-primary-text); }
   .he-fb__choice input:focus-visible + span { outline: 2px solid var(--color-flare-hot); outline-offset: 2px; }
+  /* 3.4 — chips sized to their text, not to the page's line height. */
+  .he-fb.is-compact .he-fb__choice span { align-items: center; min-height: 36px; padding-block: 0; line-height: 20px; }
   .he-fb__consent { display: flex; align-items: flex-start; gap: 12px; font-size: 14px; line-height: 1.5; color: var(--color-ash); cursor: pointer; }
   .he-fb__consent input { flex-shrink: 0; width: 18px; height: 18px; margin-top: 2px; accent-color: var(--color-flare); }
   .he-fb__error { margin: 20px 0 0; padding-left: 14px; border-left: 2px solid var(--color-flare); font-size: 15px; color: var(--color-flare-soft); }

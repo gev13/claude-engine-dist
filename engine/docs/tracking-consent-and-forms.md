@@ -110,6 +110,14 @@ A form block's settings, under its questions:
 - **Show only when…** Any question can depend on an earlier answer: "Company
   size" only when "I am" is "A business". A question that is not shown is not
   required and not stored — the server applies the same rule.
+- **How it looks (3.4).** All off until chosen: *Leave "(optional)" off*
+  (put it in the question's own label where it matters), *An arrow on the
+  send button* (styled like the site's other arrow buttons), *Compact
+  choice chips* (chips sized to their text instead of the page's line
+  height) and *Space inside the card* (one or two CSS lengths, e.g.
+  `48px 56px`; phones keep their tighter padding). A card form follows the
+  site's card corners, as the contained FAQ does, so a site with cut cards
+  gets a cut form card.
 
 ## Webhooks — Enquiries → Webhooks
 

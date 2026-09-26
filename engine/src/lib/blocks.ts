@@ -1615,6 +1615,24 @@ export const blockSchemas = {
     submitLabel: text(40),
     /** 2.22 — a short line beside the send button: "We reply within one working day". */
     submitNote: text(160),
+    /* ── 3.4 ─────────────────────────────────────────────────────────────── */
+    /** false leaves "(optional)" off the questions that need no answer. */
+    optionalMark: z.boolean().optional(),
+    /** An arrow on the send button, as on the site's other buttons. */
+    submitArrow: z.boolean().optional(),
+    /** Space inside the card: one length, or two (top and bottom, then the sides). */
+    cardPadding: z
+      .string()
+      .trim()
+      .max(40)
+      .refine((v) => {
+        if (v === '') return true;
+        const parts = v.split(/\s+/);
+        return parts.length <= 2 && parts.every(isLength);
+      }, 'One or two CSS lengths')
+      .optional(),
+    /** Choice chips sized to their text instead of the page's line height. */
+    compactChoices: z.boolean().optional(),
     successTitle: text(120),
     successText: text(400),
     /* ── 2.16 (T12, T13) ────────────────────────────────────────────────── */
