@@ -203,6 +203,8 @@
   .he-fgrid__link { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color calc(150ms * var(--he-motion, 1)); }
   .he-fgrid__item:hover .he-fgrid__link { text-decoration-color: currentColor; }
   .he-fgrid__body { margin: 8px 0 0; font-size: 15px; color: var(--color-ash); }
+  /* 3.6 — an item's text inset (item style), beyond the card's own padding. */
+  .he-fgrid__item > :is(.he-fgrid__eyebrow, .he-fgrid__title, .he-fgrid__body, .he-fgrid__more) { padding-inline: var(--he-item-text-inset, 0); }
   .he-fgrid__more { margin-top: 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--he-link); }
 
   /* ── CT6: image accordion ────────────────────────────────────────────── */

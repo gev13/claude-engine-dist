@@ -85,3 +85,10 @@ real address — `/what-we-do/strategy/audits` as much as `/services/audits`.
 The Services index block's card labels ("Core", "Specialist") can be renamed
 or left out, and the services list in the structured data belongs to
 whichever page holds that block.
+
+## Switching the blog off (3.7)
+
+Appearance → Blog → *Switch the blog off*. Its index, categories, research,
+posts, search and feeds answer "not found", and its sitemap is empty, until
+it is switched back on. Nothing is deleted, and pages elsewhere on the site
+are untouched — take links to the blog out of the menus yourself.

@@ -119,6 +119,7 @@ export function ItemStylePanel({
               ]}
               onChange={set('align')}
             />
+            <LengthField label="Text inset" hint="image cards: the text this much further in than the picture" value={style.textInset} emptyLabel="none" onChange={set('textInset')} />
             <Field label="CSS class" hint="to aim your own CSS at this card">
               <Input
                 value={style.className ?? ''}

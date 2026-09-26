@@ -2,6 +2,8 @@ import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { listCategories } from '@/server/content/categories';
 import { allPublishedPostsByGroup } from '@/server/content/posts';
 import { getPermalinks } from '@/server/routing/config';
+import { getTheme } from '@/server/content/theme';
+import { resolveBlog } from '@/lib/blog';
 import { blogIndexPath, categoryPath, postPath, researchPath } from '@/lib/permalinks';
 
 export const revalidate = 3600;
@@ -11,7 +13,9 @@ export const revalidate = 3600;
  * alternates that describe it (package 8).
  */
 export async function GET() {
-  const [posts, categories, permalinks] = await Promise.all([allPublishedPostsByGroup(), listCategories(), getPermalinks()]);
+  const [posts, categories, permalinks, theme] = await Promise.all([allPublishedPostsByGroup(), listCategories(), getPermalinks(), getTheme()]);
+  // 3.6 — a blog switched off lists nothing.
+  if (resolveBlog(theme.blog).off) return new Response(urlSet([]), { headers: XML_HEADERS });
 
   return new Response(
     urlSet([

@@ -100,6 +100,16 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           ]}
           onChange={set(['buttons', 'icon'])}
         />
+        <ChoiceField
+          label="The arrow points"
+          value={buttons.arrow}
+          inherited="right"
+          options={[
+            { value: 'right', label: 'Right →' },
+            { value: 'diagonal', label: 'Up and right ↗' },
+          ]}
+          onChange={set(['buttons', 'arrow'])}
+        />
         <Field label="Glow round the main button" hint="px — 0 or empty for none" htmlFor={`${id}-glow`}>
           <Input
             id={`${id}-glow`}
@@ -119,6 +129,7 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           options={[
             { value: 'arrow', label: 'Text and an arrow' },
             { value: 'circle', label: 'Text and an arrow on a circle' },
+            { value: 'none', label: 'Text alone' },
           ]}
           onChange={set(['buttons', 'more'])}
         />

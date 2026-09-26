@@ -110,6 +110,9 @@ A form block's settings, under its questions:
 - **Show only when…** Any question can depend on an earlier answer: "Company
   size" only when "I am" is "A business". A question that is not shown is not
   required and not stored — the server applies the same rule.
+- **A drop-down of several choices (3.7).** The question type *Drop-down,
+  several choices* opens a list of tick boxes under a button that names what
+  is chosen; its answers are stored and emailed exactly as *Several choices*.
 - **How it looks (3.4).** All off until chosen: *Leave "(optional)" off*
   (put it in the question's own label where it matters), *An arrow on the
   send button* (styled like the site's other arrow buttons), *Compact

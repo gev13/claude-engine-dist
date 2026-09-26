@@ -324,6 +324,9 @@ export const blockSchemas = {
         style: itemStyleSchema.optional(),
         eyebrow: z.string().optional(),
         title: z.string(),
+        /** 3.6 — words after the title in a colour of their own ("Northwind / the security side"). */
+        titleAfter: text(80),
+        titleAfterColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
         body: z.string().optional(),
         href: z.string().optional(),
         /** The tile's background, the card's picture, or the feature's icon. */

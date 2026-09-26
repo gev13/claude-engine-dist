@@ -109,6 +109,12 @@ export const blogSchema = z.object({
     .optional(),
   /** The author's picture, name, bio and links under the article (Profile). */
   authorBox: z.boolean().optional(),
+  /**
+   * 3.6 — the blog switched off: its index, categories, research, posts,
+   * search and feeds answer "not found" and its sitemap is empty, until it
+   * is switched back on. Nothing is deleted.
+   */
+  off: z.boolean().optional(),
   /** "← Back to the blog" above the title. */
   backLink: z.boolean().optional(),
   /** The line above the title; `{category}`, `{date}` and `{minutes}` are filled in. Empty is what it always said. */
@@ -182,6 +188,7 @@ export type ResolvedBlog = {
   featured: boolean;
   archiveBar: boolean;
   searchBelow: boolean;
+  off: boolean;
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -199,6 +206,7 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     prevNext: blog?.prevNext ?? 'off',
     related: { source: blog?.related?.source ?? 'kind', count: blog?.related?.count ?? 3, layout: blog?.related?.layout ?? 'grid', title: blog?.related?.title },
     authorBox: blog?.authorBox ?? false,
+    off: blog?.off ?? false,
     backLink: blog?.backLink ?? false,
     eyebrow: blog?.eyebrow || undefined,
     chipAll: blog?.chipAll ?? true,

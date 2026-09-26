@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.7.0 — 2026-09-26
+
+**A blog that can be switched off, a drop-down of several choices, and more
+design details.** Appearance → Blog can switch the blog off: its index,
+categories, posts, search and feeds answer "not found" and its sitemap is
+empty until it is switched back on — nothing is deleted. Forms gain *Drop-
+down, several choices*. Image cards can set their text further in than their
+picture and colour the words after a title; the buttons' arrow can point up
+and right; "Read more" can be words alone. All off until chosen.
+
+---
+
 ## 3.6.0 — 2026-09-26
 
 **Details a finished design asks for.** A section can colour and size its

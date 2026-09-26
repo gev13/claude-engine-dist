@@ -161,6 +161,12 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
   return (
     <Panel title="Blog navigation and cards">
       <div className="space-y-5">
+        {/* 3.6 — the whole blog hidden, nothing deleted. */}
+        <Check
+          label="Switch the blog off — its index, categories, posts, search and feeds answer “not found” until it is switched back on"
+          checked={blog?.off === true}
+          onChange={(v) => set(['blog', 'off'])(v || undefined)}
+        />
         <div className="grid gap-4 sm:grid-cols-2">
           <Choice label="Categories" value={blog?.filterStyle} options={[['chips', 'A row of chips'], ['dropdown', 'One “Categories” menu']]} onChange={set(['blog', 'filterStyle'])} />
           <Choice

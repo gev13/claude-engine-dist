@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { BlogIndexView } from '@/components/site/blog/BlogViews';
 import { localeConfig } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
@@ -22,6 +22,9 @@ import { getPermalinks } from '@/server/routing/config';
 
    It is `noindex` and canonical to the blog index, as the old `?q=` view was.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+import { resolveBlog } from '@/lib/blog';
+import { getTheme } from '@/server/content/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -51,6 +54,8 @@ export default async function BlogSearchPage({ params, searchParams }: Props) {
   const locale = config.locales.includes(raw) ? raw : config.defaultLocale;
   const permalinks = await getPermalinks();
   const page = await getPageByPath(permalinks.blogIndex, locale);
+  // 3.6 — no blog, no search of it.
+  if (resolveBlog((await getTheme()).blog).off) notFound();
   const q = one(query.q).trim().slice(0, 200);
   // An empty search is the index itself, which has its own (cached) address.
   if (!q) redirect(withSlash(blogIndexPath(permalinks)));

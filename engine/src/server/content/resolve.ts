@@ -63,7 +63,8 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
   const matches = matchBlogPath(permalinks, path);
   const blog = resolveBlog((await getTheme()).blog);
 
-  const indexMatch = matches.find((m) => m.kind === 'blogIndex');
+  // 3.6 — a blog switched off answers none of its own addresses; pages still resolve.
+  const indexMatch = blog.off ? undefined : matches.find((m) => m.kind === 'blogIndex');
   if (indexMatch) {
     const page = await getPageByPath(permalinks.blogIndex, locale);
     const list = page ? findServerList(page.blocks as AnyBlock[]) : undefined;
@@ -84,12 +85,13 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
   }
 
   for (const match of matches) {
+    if (blog.off && BLOG_KINDS.has(match.kind)) continue;
     const found = await resolveMatch(match, { permalinks, blog, locale, path });
     if (found) return found;
   }
 
   // An address the shipped defaults would have used, for a site that moved away from them.
-  if (!samePermalinks(permalinks, DEFAULT_PERMALINKS)) {
+  if (!blog.off && !samePermalinks(permalinks, DEFAULT_PERMALINKS)) {
     for (const match of matchBlogPath(DEFAULT_PERMALINKS, path)) {
       if (match.kind === 'category') {
         const category = await getCategory(match.slug, locale);
@@ -106,6 +108,9 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
 });
 
 type Context = { permalinks: Permalinks; blog: ResolvedBlog; locale: Locale; path: string };
+
+/** The addresses that belong to the blog, and go when it is switched off. */
+const BLOG_KINDS = new Set<string>(['blogIndex', 'research', 'category', 'post']);
 
 async function resolveMatch(match: BlogMatch, { permalinks, blog, locale, path }: Context): Promise<Resolved | null> {
   switch (match.kind) {

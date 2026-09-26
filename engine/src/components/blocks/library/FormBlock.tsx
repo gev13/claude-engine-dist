@@ -1,7 +1,7 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { useEffect, useId, useMemo, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import type { z } from 'zod';
 import { useChallenge } from '@/components/site/Captcha';
 import { useMessages } from '@/components/site/Messages';
@@ -54,6 +54,24 @@ function Field({ field, uid, value, onChange, mark }: { field: FormField; uid: s
       {field.help}
     </p>
   );
+
+  // 3.7 — several choices in a drop-down: a button naming what is chosen, over a list of tick boxes.
+  if (field.type === 'multiselect') {
+    return (
+      <div className={cn('he-fb__field', `is-${field.width}`)}>
+        {label}
+        <MultiSelect
+          id={id}
+          options={field.options}
+          value={Array.isArray(value) ? value : []}
+          placeholder={field.placeholder || t('form.choose')}
+          describedBy={hint}
+          onChange={onChange}
+        />
+        {help}
+      </div>
+    );
+  }
 
   if (field.type === 'radio' || field.type === 'checkboxes') {
     const list = Array.isArray(value) ? value : [];
@@ -138,6 +156,77 @@ function Field({ field, uid, value, onChange, mark }: { field: FormField; uid: s
         />
       )}
       {help}
+    </div>
+  );
+}
+
+function MultiSelect({
+  id,
+  options,
+  value,
+  placeholder,
+  describedBy,
+  onChange,
+}: {
+  id: string;
+  options: string[];
+  value: string[];
+  placeholder: string;
+  describedBy?: string;
+  onChange: (next: string[]) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const box = useRef<HTMLDivElement>(null);
+
+  // Closes on a click anywhere else, or Escape (which hands focus back to the button).
+  useEffect(() => {
+    if (!open) return;
+    const away = (e: MouseEvent) => {
+      if (!box.current?.contains(e.target as Node)) setOpen(false);
+    };
+    const escape = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      setOpen(false);
+      document.getElementById(id)?.focus();
+    };
+    document.addEventListener('mousedown', away);
+    document.addEventListener('keydown', escape);
+    return () => {
+      document.removeEventListener('mousedown', away);
+      document.removeEventListener('keydown', escape);
+    };
+  }, [open, id]);
+
+  return (
+    <div ref={box} className={cn('he-fb__multi', open && 'is-open')}>
+      <button
+        type="button"
+        id={id}
+        className="he-fb__input he-fb__multibtn"
+        aria-expanded={open}
+        aria-controls={`${id}-list`}
+        aria-describedby={describedBy}
+        onClick={() => setOpen((o) => !o)}
+      >
+        <span className={cn('he-fb__multival', value.length === 0 && 'is-empty')}>{value.length ? value.join(', ') : placeholder}</span>
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" aria-hidden="true" className="he-fb__multichev">
+          <path d="M6 9l6 6 6-6" />
+        </svg>
+      </button>
+      {open && (
+        <div id={`${id}-list`} className="he-fb__multilist" role="group" aria-labelledby={id}>
+          {options.map((option) => (
+            <label key={option} className="he-fb__multiopt">
+              <input
+                type="checkbox"
+                checked={value.includes(option)}
+                onChange={(e) => onChange(e.target.checked ? [...value, option] : value.filter((v) => v !== option))}
+              />
+              <span>{option}</span>
+            </label>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

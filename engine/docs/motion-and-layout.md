@@ -137,3 +137,17 @@ All off until chosen.
   Run to the edges, it spans the section and reaches up behind a notch
   header's tab.
 - **Logo on phones: after the menu button** (Appearance → Header & menus).
+
+## More design details (3.7)
+
+- **A card's text inset** — a card's own style (the brush on a card) →
+  *Text inset*: on image cards the text sits that much further in than the
+  picture, so a picture can run nearly to the card's edge while its words
+  keep a wider margin.
+- **Words after a card's title** — image cards and icon features: *After
+  the title* and *Their colour* ("Northwind" then "/ the security side" in the
+  accent).
+- **The buttons' arrow** — Appearance → Shape → *The arrow points*: right
+  (as before) or up and to the right. Only the arrow turns; a compartment's
+  divider stays where it is.
+- **"Read more" links** — *Text alone* drops the arrow.

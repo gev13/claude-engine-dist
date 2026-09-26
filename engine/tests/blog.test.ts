@@ -34,6 +34,7 @@ describe('blog layouts (BL1, BL2)', () => {
       // 3.3 — no bar on category pages, and the search at the end of the bar when it is there.
       archiveBar: false,
       searchBelow: false,
+      off: false,
     });
   });
 

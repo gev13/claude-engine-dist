@@ -818,7 +818,7 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type GridCard = { eyebrow?: string; title: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
+type GridCard = { eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -3533,7 +3533,7 @@ function TypeFields({
             blank={(): FormFieldRow => ({ id: nanoid(8), type: 'text', label: '', width: 'full' })}
             addLabel="Add question"
             renderRow={(item, update, index) => {
-              const choices = ['select', 'radio', 'checkboxes'].includes(item.type);
+              const choices = ['select', 'radio', 'checkboxes', 'multiselect'].includes(item.type);
               const step = item.type === 'step';
               const earlier = arr<FormFieldRow>(props, 'fields').slice(0, index);
               return (
@@ -4633,6 +4633,14 @@ function TypeFields({
                 <Field label="Title">
                   <Input value={item.title ?? ''} onChange={(e) => update({ title: e.target.value })} />
                 </Field>
+                {(variant === 'imageCards' || variant === 'icons') && (
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <Field label="After the title" hint="more words, in a colour of their own">
+                      <Input value={item.titleAfter ?? ''} placeholder="/ the security side" onChange={(e) => update({ titleAfter: e.target.value || undefined })} />
+                    </Field>
+                    <ColorField label="Their colour" value={item.titleAfterColor} onChange={(titleAfterColor) => update({ titleAfterColor })} />
+                  </div>
+                )}
                 <Field label="Body">
                   <Textarea rows={2} value={item.body ?? ''} onChange={(e) => update({ body: e.target.value })} />
                 </Field>

@@ -265,12 +265,22 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
         {head}
         <ul className={cn('he-fgrid', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods)} style={cols}>
           {p.cards.map((c, i) => {
+            // 3.6 — the words after the title, in their own colour.
+            const after = c.titleAfter && (
+              <span className="he-title-after" style={c.titleAfterColor ? { color: c.titleAfterColor } : undefined}>
+                {` ${c.titleAfter}`}
+              </span>
+            );
             const title = c.href ? (
               <Link href={c.href} className="he-fgrid__link">
                 {c.title}
+                {after}
               </Link>
             ) : (
-              c.title
+              <>
+                {c.title}
+                {after}
+              </>
             );
             // V3 — the text sits on the picture, over a shade.
             if (overlay) {

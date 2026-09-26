@@ -6,6 +6,8 @@ import { getCategory } from '@/server/content/categories';
 import { listPosts } from '@/server/content/posts';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { getPermalinks } from '@/server/routing/config';
+import { resolveBlog } from '@/lib/blog';
+import { getTheme } from '@/server/content/theme';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,6 +32,8 @@ export async function GET(_request: Request, ctx: { params: Promise<{ locale: st
   const locale = (config.locales.includes(raw) ? raw : config.defaultLocale) as Locale;
   const [permalinks, settings] = await Promise.all([getPermalinks(), getSiteSettings(locale)]);
   if (!permalinks.feeds) return new Response('Not found', { status: 404 });
+  // 3.6 — a blog switched off has no feeds.
+  if (resolveBlog((await getTheme()).blog).off) return new Response('Not found', { status: 404 });
 
   // `/_feed/<slug>`: a query would not survive the rewrite into a route handler.
   if (segments && segments.length > 1) return new Response('Not found', { status: 404 });

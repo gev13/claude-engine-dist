@@ -36,6 +36,8 @@ export const itemStyleSchema = z.object({
   /** 2.21 — this card's corners cut on the diagonal, whatever the site's cards do. */
   corners: cornerShapeSchema.optional(),
   align: z.enum(['left', 'center', 'right']).optional(),
+  /** 3.6 — image cards: the text sits this much further in than the picture. */
+  textInset: length.optional(),
   /**
    * A name to aim your own CSS at, the same escape hatch a block has.
    *
@@ -96,6 +98,7 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
   if (legs) decls.push(['clip-path', cutPolygon(legs)], ['--he-card-clip', cutPolygon(legs)]);
   else if (style.corners?.style === 'rounded') decls.push(['clip-path', 'none'], ['--he-card-clip', 'none']);
   if (style.align) decls.push(['text-align', style.align]);
+  if (style.textInset && isLength(style.textInset)) decls.push(['--he-item-text-inset', style.textInset]);
 
   /* A width with no style draws nothing, which reads as the field being
      broken. `solid` is what somebody typing a width meant. */

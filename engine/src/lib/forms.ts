@@ -10,7 +10,7 @@ import { z } from 'zod';
    questions the form actually asks.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'textarea', 'select', 'radio', 'checkboxes', 'date', 'file', 'consent', 'step'] as const;
+export const FORM_FIELD_TYPES = ['text', 'email', 'phone', 'number', 'textarea', 'select', 'radio', 'checkboxes', 'multiselect', 'date', 'file', 'consent', 'step'] as const;
 export type FormFieldType = (typeof FORM_FIELD_TYPES)[number];
 
 export const FORM_FIELD_LABELS: Record<FormFieldType, string> = {
@@ -22,13 +22,14 @@ export const FORM_FIELD_LABELS: Record<FormFieldType, string> = {
   select: 'Drop-down',
   radio: 'One choice',
   checkboxes: 'Several choices',
+  multiselect: 'Drop-down, several choices',
   date: 'Date',
   file: 'File upload',
   consent: 'Tick box (consent)',
   step: 'New step',
 };
 
-const CHOICE_TYPES: FormFieldType[] = ['select', 'radio', 'checkboxes'];
+const CHOICE_TYPES: FormFieldType[] = ['select', 'radio', 'checkboxes', 'multiselect'];
 
 export const formFieldSchema = z
   .object({
@@ -256,7 +257,8 @@ export function validateAnswers(
     if (field.type === 'step') continue;
     const value = raw[field.id];
 
-    if (field.type === 'checkboxes') {
+    // 3.7 — a multi-select drop-down answers exactly as the tick boxes do.
+    if (field.type === 'checkboxes' || field.type === 'multiselect') {
       const list = Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
       if (list.some((v) => !field.options.includes(v))) return { ok: false, error: `${field.label}: pick from the options.` };
       if (field.required && list.length === 0) return { ok: false, error: `${field.label}: pick at least one.` };

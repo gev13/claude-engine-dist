@@ -343,6 +343,19 @@ function shapeCss(theme: Theme, scope: string): string {
     );
   }
 
+  // 3.6 — the arrow turned to point up and right; only its drawing turns, so a cell's divider stays put.
+  if (buttons.arrow === 'diagonal') {
+    parts.push(
+      block(`${at('.he-btn>svg:last-child>path')},${at('.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)>path')}`, [
+        ['transform-box', 'fill-box'],
+        ['transform-origin', 'center'],
+        ['transform', 'rotate(-45deg)'],
+      ]),
+    );
+  }
+  // 3.6 — "Read more" as words alone.
+  if (buttons.more === 'none') parts.push(block(at('.he-more__icon'), [['display', 'none']]));
+
   // 2.22 — every "Read more" arrow (`.he-more__icon`, an svg or a text arrow) on a small tinted circle.
   if (buttons.more === 'circle') {
     parts.push(
