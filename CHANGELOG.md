@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.4.3 — 2026-09-26
+
+**The page builder opens every page.** Since 2.15 the builder's check for a
+synced block used twice read every block's `columns` as a row's list of
+columns; on a page whose card grid or post list set a number of columns,
+it stopped with "Application error" ("number 3 is not iterable"). It now
+looks inside rows only.
+
+---
+
 ## 3.4.2 — 2026-09-26
 
 **A content import reaches the server whole.** The admin API no longer

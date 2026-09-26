@@ -7,7 +7,7 @@ import { AdminButton, Alert, Field, Input, Select, Textarea } from '@/components
 import { Wireframe } from '@/components/admin/Wireframe';
 import { api, fetcher } from '@/lib/admin/client';
 import { type AnyBlock, type BlockType, blockLabels, migrateBlock, parseBlock } from '@/lib/blocks';
-import { CLIPBOARD_KEY, SAVED_BLOCK_TYPE, freshIds, fromClipboard, hasUniqueParts, toClipboard } from '@/lib/blockTree';
+import { CLIPBOARD_KEY, SAVED_BLOCK_TYPE, freshIds, fromClipboard, hasUniqueParts, toClipboard, walkBlocks } from '@/lib/blockTree';
 import { BLOCK_WIREFRAMES } from '@/lib/wireframes';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -51,16 +51,14 @@ export function insertSaved(saved: SavedBlockSummary): AnyBlock[] {
  */
 export function repeatedUniqueParts(tree: readonly AnyBlock[], byId: Map<string, SavedBlockSummary>): string[] {
   const counts = new Map<string, number>();
-  const visit = (blocks: readonly AnyBlock[]) => {
-    for (const block of blocks) {
-      if (block.type === SAVED_BLOCK_TYPE) {
-        const id = (block.props as { savedBlockId?: string }).savedBlockId;
-        if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
-      }
-      for (const column of ((block.props as { columns?: { blocks?: AnyBlock[] }[] })?.columns ?? [])) visit(column.blocks ?? []);
-    }
-  };
-  visit(tree);
+  /* 3.4.3 — through `walkBlocks`, which only goes into a row's columns. A
+     card grid's or post list's `columns` is a number, and walking it as a
+     list stopped the builder for any page that set one. */
+  walkBlocks(tree, (block) => {
+    if (block.type !== SAVED_BLOCK_TYPE) return;
+    const id = (block.props as { savedBlockId?: string }).savedBlockId;
+    if (id) counts.set(id, (counts.get(id) ?? 0) + 1);
+  });
   return [...counts]
     .filter(([id, n]) => n > 1 && hasUniqueParts(byId.get(id)?.tree ?? []))
     .map(([id]) => byId.get(id)?.name ?? 'A saved block');

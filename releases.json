@@ -1,6 +1,14 @@
 {
-  "latest": "3.4.2",
+  "latest": "3.4.3",
   "releases": [
+    {
+      "version": "3.4.3",
+      "date": "2026-09-26",
+      "summary": "The page builder opens pages whose card grids or post lists set a number of columns, instead of stopping with an application error.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.4.2",
       "date": "2026-09-26",
