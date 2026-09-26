@@ -2186,6 +2186,23 @@ function TypeFields({
                   </Field>
                 )}
                 {variant === 'split' && props.bleed === true && (
+                  <Field label="The picture">
+                    <Select value={str(props, 'bleedFit') || 'cover'} onChange={(e) => set(withOpt(props, 'bleedFit', e.target.value === 'cover' ? undefined : e.target.value))}>
+                      <option value="cover">Fills its box</option>
+                      <option value="contain">Whole, at full height, against the edge</option>
+                    </Select>
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
+                  <Field label="Least height" hint="e.g. 640px — empty follows Height">
+                    <Input
+                      value={str(props, 'bleedMinHeight')}
+                      placeholder="640px"
+                      onChange={(e) => set(withOpt(props, 'bleedMinHeight', e.target.value.trim() || undefined))}
+                    />
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
                   <Field label="Height">
                     <Select value={str(props, 'height') || 'tall'} onChange={(e) => set({ ...props, height: e.target.value })}>
                       <option value="auto">Fit the content</option>

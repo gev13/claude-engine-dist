@@ -10,6 +10,15 @@ improvements.
 
 ---
 
+## 3.3.3 — 2026-09-26
+
+**The edge-to-edge hero keeps its proportions.** Its picture can be shown
+whole, at the section's full height against the edge, instead of filling
+its box; the hero can hold a least height; and the text beside it stops at
+a reading measure, so a heading keeps its lines on a wide screen.
+
+---
+
 ## 3.3.2 — 2026-09-26
 
 **The edge-to-edge hero picture takes the width you give it.** A split

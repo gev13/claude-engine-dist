@@ -99,3 +99,19 @@ describe('the width of an edge-to-edge picture (3.3.2)', () => {
     expect(blockSchemas.hero.safeParse({ title: 'T', bleedWidth: 95 }).success).toBe(false);
   });
 });
+
+describe('the edge-to-edge picture’s fit and the hero’s least height (3.3.3)', () => {
+  const hero = (extra: object) =>
+    renderToStaticMarkup(<LibraryHero {...blockSchemas.hero.parse({ variant: 'split', title: 'T', imageUrl: '/media/a.webp', bleed: true, ...extra })} />);
+  it('fill the box and follow Height until set', () => {
+    const html = hero({});
+    expect(html).not.toContain('is-fit-contain');
+    expect(html).not.toContain('min-height');
+  });
+  it('show the whole picture and hold the height when chosen', () => {
+    const html = hero({ bleedFit: 'contain', bleedMinHeight: '640px' });
+    expect(html).toContain('is-fit-contain');
+    expect(html).toContain('min-height:640px');
+    expect(blockSchemas.hero.safeParse({ title: 'T', bleedMinHeight: '640 px;' }).success).toBe(false);
+  });
+});

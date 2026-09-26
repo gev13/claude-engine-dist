@@ -134,3 +134,12 @@ catalogue face.
 - **Picture width** on a split hero run to the edges — how much of the
   section the picture takes, in percent (72 when empty). The text beside it
   widens to match, never narrower than half the row.
+
+## Added in 3.3.3
+
+- **The picture** on a split hero run to the edges — *Fills its box* (as
+  before) or *Whole, at full height, against the edge*, which keeps a
+  square picture square at every screen width.
+- **Least height** for that hero, e.g. `640px`.
+- The text beside it now stops at a reading width (40rem), so a heading
+  keeps its lines on a wide screen.

@@ -200,6 +200,10 @@ export const blockSchemas = {
     bleed: z.boolean().optional(),
     /** 3.3.2 — with `bleed`: how much of the section's width the picture takes, in percent; unset is 72. */
     bleedWidth: z.number().int().min(30).max(90).optional(),
+    /** 3.3.3 — with `bleed`: `contain` shows the whole picture at the section's full height against its edge; unset fills the box (cover). */
+    bleedFit: z.enum(['cover', 'contain']).optional(),
+    /** 3.3.3 — with `bleed`: the least height of the hero, e.g. 640px; the picture takes it too. */
+    bleedMinHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     eyebrow: z.string().optional(),
     kicker: z.string().optional(),
     title: z.string(),

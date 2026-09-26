@@ -97,9 +97,9 @@ export function LibraryHero(p: P) {
           'he-hero he-hero--split',
           p.mediaSide === 'left' && 'is-media-left',
           // 3.1 — the picture to the section's edges; the height applies only then.
-          p.bleed && ['is-bleed', `is-h-${p.height}`],
+          p.bleed && ['is-bleed', `is-h-${p.height}`, p.bleedFit === 'contain' && 'is-fit-contain'],
         )}
-        style={p.bleed && p.bleedWidth ? ({ '--he-bleed-w': `${p.bleedWidth}%` } as React.CSSProperties) : undefined}
+        style={p.bleed ? bleedStyle(p) : undefined}
       >
         <div className="shell he-hero__split">
           <div className="he-hero__content">
@@ -137,4 +137,12 @@ export function LibraryHero(p: P) {
       </div>
     </section>
   );
+}
+
+/** 3.3.2–3.3.3 — the edge-to-edge picture's width and the hero's least height, only when set. */
+function bleedStyle(p: P): React.CSSProperties | undefined {
+  const style: Record<string, string> = {};
+  if (p.bleedWidth) style['--he-bleed-w'] = `${p.bleedWidth}%`;
+  if (p.bleedMinHeight) style.minHeight = p.bleedMinHeight;
+  return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
