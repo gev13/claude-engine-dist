@@ -105,6 +105,7 @@ const TYPE_ROLE_LABELS = {
   heading: 'Headings',
   subheading: 'Card and item titles',
   eyebrow: 'Eyebrow — the small label over the heading',
+  cardLabel: 'Card labels and numbers',
   body: 'Body text',
 } as const;
 const GLITCH_TINTS = [
@@ -206,6 +207,7 @@ export function BlockDesignPanel({
           </Field>
 
           <LengthField label="Heading width" hint="how far this section’s heading runs before it wraps" value={current.titleWidth} emptyLabel="the site’s" onChange={set(['titleWidth'])} />
+          <LengthField label="Most width" hint="the section no wider than this, centred — a document card" value={current.maxWidth} emptyLabel="full" onChange={set(['maxWidth'])} />
 
           <Field label="Anchor id" hint="lets a link jump here, e.g. #pricing">
             <Input
@@ -510,7 +512,7 @@ export function BlockDesignPanel({
           Overrides the global Appearance settings for this section. Leave everything empty to follow the site theme.
         </p>
 
-        {(['heading', 'subheading', 'eyebrow', 'body'] as const).map((role) => (
+        {(['heading', 'subheading', 'eyebrow', 'cardLabel', 'body'] as const).map((role) => (
           <div key={role} className="mb-4 border-t-2 border-hairline pt-4 last:mb-0">
             <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">
               {TYPE_ROLE_LABELS[role]}

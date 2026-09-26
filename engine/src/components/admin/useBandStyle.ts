@@ -71,6 +71,7 @@ const ROLE_SELECTOR = {
   // 3.6
   subheading: 'h3,h4,h5,h6',
   eyebrow: '.he-eyebrow .type-eyebrow',
+  cardLabel: '.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow',
 } as const;
 
 /**
@@ -201,6 +202,7 @@ async function measure(type: string): Promise<BandStyle> {
             body: measureRole(win, band, 'body'),
             subheading: measureRole(win, band, 'subheading'),
             eyebrow: measureRole(win, band, 'eyebrow'),
+            cardLabel: measureRole(win, band, 'cardLabel'),
           };
         }
       }

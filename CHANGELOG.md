@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.12.0 — 2026-09-27
+
+**Pictures that stand clear, document cards, and card labels of their own.**
+An edge-to-edge hero picture can stand clear of the panel's top and bottom;
+a section can be no wider than a set width, centred, which with a background
+and corners makes a document card; and a section can style its cards' labels
+and "/01" numbers apart from its eyebrow. All off until chosen.
+
+---
+
 ## 3.11.0 — 2026-09-27
 
 **A media band's text box, and the footer's bottom line.** A media band can

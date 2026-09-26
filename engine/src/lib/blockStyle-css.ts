@@ -250,6 +250,8 @@ export function blockStyleToCss(
   if (gap && isLength(gap)) own.push(['--he-gap', gap]);
   const titleWidth = safe(style.titleWidth);
   if (titleWidth && isLength(titleWidth)) own.push(['--he-title-measure', titleWidth]);
+  const maxWidth = safe(style.maxWidth);
+  if (maxWidth && isLength(maxWidth)) own.push(['max-width', maxWidth], ['margin-inline', 'auto']);
   if (typeof style.motion === 'number' && Number.isFinite(style.motion) && style.motion >= 0) {
     own.push(['--he-motion', String(style.motion)]);
   }
@@ -326,6 +328,10 @@ export function blockStyleToCss(
   if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, subheading));
   const eyebrow = typeDecls(style.typography?.eyebrow);
   if (eyebrow.length) parts.push(block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, eyebrow));
+  // 3.12 — card labels and numbers on their own, after the eyebrow that also reaches them.
+  const cardLabel = typeDecls(style.typography?.cardLabel);
+  // `:not(.type-eyebrow)` lifts it to the eyebrow rule's weight, so being written later is enough to win.
+  if (cardLabel.length) parts.push(block(`${root} :is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow):not(.type-eyebrow)`, cardLabel));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
   if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
 
@@ -338,6 +344,7 @@ export function blockStyleToCss(
       block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, sizeDecl(style.typography?.body?.[key])),
       block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, sizeDecl(style.typography?.subheading?.[key])),
       block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, sizeDecl(style.typography?.eyebrow?.[key])),
+      block(`${root} :is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow):not(.type-eyebrow)`, sizeDecl(style.typography?.cardLabel?.[key])),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }

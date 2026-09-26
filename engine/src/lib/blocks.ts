@@ -216,6 +216,8 @@ export const blockSchemas = {
      * Wide screens only; the least height then counts the tab's space too.
      */
     bleedCentre: z.enum(['below', 'panel']).optional(),
+    /** 3.12 — run to the edges: space above and below the picture (e.g. 5%), so it stands smaller than the panel. */
+    bleedInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.9 — how wide the paragraphs under the heading run (e.g. 580px); the text column's width when unset. */
     textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.9 — the small line above the eyebrow: a mono label (as before) or plain small text. */

@@ -103,6 +103,7 @@ export function LibraryHero(p: P) {
           p.bleed && p.bleedCentre === 'panel' && 'is-centre-panel',
           p.kickerStyle === 'plain' && 'is-kicker-plain',
           p.textWidth && 'has-text-width',
+          p.bleed && p.bleedInset && 'has-bleed-inset',
         )}
         style={splitStyle(p)}
       >
@@ -151,5 +152,6 @@ function splitStyle(p: P): React.CSSProperties | undefined {
   if (p.bleed && p.bleedMinHeight) style.minHeight = p.bleedMinHeight;
   // 3.9 — the paragraphs' own measure.
   if (p.textWidth) style['--he-hero-text'] = p.textWidth;
+  if (p.bleed && p.bleedInset) style['--he-bleed-inset'] = p.bleedInset;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }

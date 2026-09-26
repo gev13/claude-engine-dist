@@ -2214,6 +2214,11 @@ function TypeFields({
                   </Field>
                 )}
                 {variant === 'split' && props.bleed === true && (
+                  <Field label="Space around the picture" hint="above and below, e.g. 5% — empty runs it full height">
+                    <Input value={str(props, 'bleedInset')} placeholder="5%" onChange={(e) => set(withOpt(props, 'bleedInset', e.target.value.trim() || undefined))} />
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
                   <Field label="Text centred" hint="under a notch header">
                     <Select value={str(props, 'bleedCentre') || 'below'} onChange={(e) => set(withOpt(props, 'bleedCentre', e.target.value === 'panel' ? 'panel' : undefined))}>
                       <option value="below">Below the menu tab</option>

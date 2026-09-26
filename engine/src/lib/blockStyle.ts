@@ -288,6 +288,8 @@ export const blockStyleSchema = z.object({
       eyebrow: typeOverride.optional(),
       /** 3.6 — card and item titles (h3–h6), after `heading` so they can differ from the section's own. */
       subheading: typeOverride.optional(),
+      /** 3.12 — the cards' small labels and "/01" numbers, apart from the section's eyebrow. */
+      cardLabel: typeOverride.optional(),
     })
     .optional(),
 
@@ -309,6 +311,8 @@ export const blockStyleSchema = z.object({
 
   /** 3.8 — how far this section's heading runs before it wraps; the site's (Appearance) when unset. */
   titleWidth: length.optional(),
+  /** 3.12 — the section no wider than this, centred: a document card on a wide page. */
+  maxWidth: length.optional(),
 
   /** P3-C3 — shape dividers along the top and bottom edges. */
   shapeTop: dividerShape.optional(),

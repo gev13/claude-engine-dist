@@ -205,3 +205,13 @@ All off until chosen, except two fixes.
   copyright line as written, not in capitals*.
 - The smoke suite recognises a blog that is switched off and checks that it
   really answers "not found".
+
+## Pictures that stand clear, document cards and card labels (3.12)
+
+- **Split hero run to the edges → Space around the picture** (e.g. 5%): the
+  picture stands clear of the panel's top and bottom, a share of its height.
+- **A section's Design tab → Most width** (e.g. 952px): the section no wider
+  than that, centred — with a background and corners, a document card.
+- **Typography → Card labels and numbers:** the cards' small labels and
+  "/01" numbers styled apart from the section's eyebrow (white numbers under
+  a red eyebrow, say).

@@ -266,6 +266,9 @@
   .he-hero--split.is-bleed.is-media-left .he-hero__visualmedia { object-position: left center; }
   /* 3.3.3 — the whole picture at full height, against the edge, whatever the width. */
   .he-hero--split.is-bleed.is-fit-contain .he-hero__visualmedia { object-fit: contain; }
+  /* 3.12 — the picture standing clear of the panel's top and bottom. */
+  /* Top and bottom, not padding: a percentage then means the panel's height, as a designer means it. */
+  .he-hero--split.is-bleed.has-bleed-inset .he-hero__visualmedia { position: absolute; top: var(--he-bleed-inset); left: 0; width: 100%; height: calc(100% - 2 * var(--he-bleed-inset)); }
   /* 3.9 — the paragraphs' own measure, and a plain kicker. */
   .he-hero.has-text-width :is(.he-hero__lede, .he-hero__body) { max-width: var(--he-hero-text); }
   .he-hero.is-kicker-plain .he-hero__kicker { font-family: var(--font-sans); font-size: 11px; letter-spacing: 0; text-transform: none; color: var(--color-bone); }
