@@ -297,11 +297,12 @@ async function main() {
 
   const sitemap = await text('/sitemap.xml');
   check('sitemap index served', sitemap.res.status === 200);
+  // 3.15.1 — pages and services always; the others whenever they list something, and only then.
+  const segmentMaps = [['/sitemaps/blog.xml', blogMap], ['/sitemaps/careers.xml', careersMap], ['/sitemaps/projects.xml', projectsMap]];
   check(
-    '  references every segment',
-    ['/sitemaps/pages.xml', '/sitemaps/services.xml', '/sitemaps/blog.xml', '/sitemaps/careers.xml', '/sitemaps/projects.xml'].every((s) =>
-      sitemap.body.includes(s),
-    ),
+    '  references every segment with something in it',
+    ['/sitemaps/pages.xml', '/sitemaps/services.xml'].every((s) => sitemap.body.includes(s)) &&
+      segmentMaps.every(([s, map]) => sitemap.body.includes(s) === sitemapPaths(map.body).length > 0),
   );
   for (const [name, map] of [
     ['pages', pagesMap],

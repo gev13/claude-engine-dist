@@ -7,7 +7,7 @@ import { blockStyleSchema } from '@/lib/blockStyle';
 import { chromeSchema, resolveChrome } from '@/lib/chrome';
 import { FONT_CATALOGUE } from '@/lib/fontCatalogue';
 import { itemStyleToCss } from '@/lib/itemStyle';
-import { CUT_BUTTON_BACKGROUND, cutLegs, cutLines, cutPolygon } from '@/lib/shape';
+import { CUT_BUTTON_FILL, cutLegs, cutLines, cutPolygon } from '@/lib/shape';
 import { themeSchema } from '@/lib/theme';
 import { themeToCss } from '@/lib/theme-css';
 
@@ -59,7 +59,8 @@ describe('the theme’s shapes', () => {
 
   it('paint buttons, so a glow follows the cut', () => {
     const out = css({ shape: { buttons: { style: 'cut' } }, buttons: { glow: { size: 18, color: '#17bde7' } } });
-    expect(out).toContain(`background:${CUT_BUTTON_BACKGROUND}`);
+    expect(out).toContain('background:none');
+    expect(out).toContain(`background:var(--he-bf);clip-path:${CUT_BUTTON_FILL}`);
     expect(out).toContain('--he-cut-tr:10px');
     expect(out).toContain('.he-btn-primary,.he-cbtn.is-primary{--he-bf:var(--he-btn-primary-bg)');
     expect(out).toContain('.he-btn-primary:hover,.he-cbtn.is-primary:hover{--he-bf:var(--he-btn-primary-hover-bg)');

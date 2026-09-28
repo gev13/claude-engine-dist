@@ -18,6 +18,8 @@ export async function GET() {
   // The trailing-slash form every URL below is written in is a setting; load it first.
   await getPermalinks();
   const jobs = (await allPublishedJobsByGroup()).filter((job) => job.isOpen);
+  // 3.15.1 — with no open role the section has nothing to offer a crawler.
+  if (jobs.length === 0) return new Response(urlSet([]), { headers: XML_HEADERS });
 
   return new Response(
     urlSet([

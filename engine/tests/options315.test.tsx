@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
 import { blockStyleToCss } from '@/lib/blockStyle-css';
 import { blockSchemas } from '@/lib/blocks';
-import { CUT_BUTTON_BACKGROUND, CUT_BUTTON_RING } from '@/lib/shape';
+import { CUT_BUTTON_FILL, CUT_BUTTON_RING } from '@/lib/shape';
 import { themeSchema } from '@/lib/theme';
 import { themeToCss } from '@/lib/theme-css';
 
@@ -62,9 +62,10 @@ describe('picture rows in WebKit', () => {
 describe('cut buttons', () => {
   const out = theme({ shape: { buttons: { style: 'cut' } } });
 
-  it('paint only the fill as the background', () => {
-    expect(CUT_BUTTON_BACKGROUND).not.toContain('border-box');
-    expect(CUT_BUTTON_BACKGROUND).not.toContain('--he-bl');
+  it('paint the fill as one shape, so a see-through fill shows no seam or cross (3.15.1)', () => {
+    expect(CUT_BUTTON_FILL).toMatch(/^polygon\(max\(0px,var\(--he-cut-tl,0px\) - var\(--he-bw,0px\) \* \.4142\) 0,/);
+    expect(out).toContain(`:is(.he-btn,.he-cbtn:not(.is-text))::after{content:'';position:absolute;inset:0;z-index:-1;background:var(--he-bf);clip-path:${CUT_BUTTON_FILL}`);
+    expect(out).not.toContain('linear-gradient(135deg,transparent');
   });
 
   it('draw the edge as a ring behind the label, as thick as the real border', () => {
@@ -98,7 +99,8 @@ describe('the phone layout', () => {
     const out = theme({ layout: { gutterMobile: '32px', sectionGapMobile: '120px', itemGapMobile: '30px' } });
     expect(out).toContain('@media (max-width:768px){:root{--he-gutter-m:32px}');
     expect(out).toContain(':where(#main>*+*){margin-top:120px}');
-    expect(out).toContain(':where(#main>:not(.he-panel)),:where(#main>:not(.he-panel)>section){padding-block:0}');
+    expect(out).toContain(':where(#main>:not(.he-panel)),:where(#main>:not(.he-panel)>section),:where(#main>:not(.he-panel)>.shell),:where(#main>:not(.he-panel)>section>.shell){padding-block:0}');
+    expect(out).toContain('.he-cols2>:first-child>:last-child{margin-bottom:0}');
     expect(out).toContain('#main>*{--he-panel-mt:120px;--he-panel-mb:0px}');
     expect(out).toContain(':root{--he-gap:30px;--he-intro-gap:30px}.he-head{margin-bottom:0}.he-head+*{margin-top:30px}');
   });

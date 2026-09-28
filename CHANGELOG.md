@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.15.1 — 2026-09-28
+
+**Fixes.** The phone space between sections now also replaces the padding
+of the classic blocks (it sat on their inner column, so those gaps were
+larger than set); a two-column block's heading adds no margin of its own
+to the phone space between parts; a see-through button with cut corners no
+longer shows a faint cross (its fill is now one shape); and the sitemap
+index lists the blog, careers and projects only when they have something
+in them — the careers sitemap is empty with no open role.
+
+---
+
 ## 3.15.0 — 2026-09-28
 
 **Phones.** Appearance → Layout gains the phone side padding, the space

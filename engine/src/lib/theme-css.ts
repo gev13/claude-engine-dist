@@ -10,7 +10,7 @@ import {
   isUsableLength as isLength,
   isLineHeight,
 } from './theme';
-import { CUT_BUTTON_BACKGROUND, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
+import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme → CSS
@@ -322,7 +322,7 @@ function shapeCss(theme: Theme, scope: string): string {
     parts.push(
       block(at(BUTTON_SELECTOR), [
         ...cutVars(button),
-        ['background', CUT_BUTTON_BACKGROUND],
+        ['background', 'none'],
         ['border-color', 'transparent'],
         ['border-radius', '0'],
         // 3.15 — the edge is a ring behind the label (CUT_BUTTON_RING), as thick as the real border.
@@ -341,6 +341,18 @@ function shapeCss(theme: Theme, scope: string): string {
         ['z-index', '-1'],
         ['background', 'var(--he-bl)'],
         ['clip-path', CUT_BUTTON_RING],
+        ['pointer-events', 'none'],
+      ]),
+    );
+    // 3.15.1 — the fill, one shape inside the edge.
+    parts.push(
+      block(at(`${BUTTON_SELECTOR}::after`), [
+        ['content', "''"],
+        ['position', 'absolute'],
+        ['inset', '0'],
+        ['z-index', '-1'],
+        ['background', 'var(--he-bf)'],
+        ['clip-path', CUT_BUTTON_FILL],
         ['pointer-events', 'none'],
       ]),
     );
@@ -596,7 +608,8 @@ function phoneLayoutCss(theme: Theme): string {
   if (gap && isLength(gap)) {
     rules.push(
       `:where(#main>*+*){margin-top:${gap}}`,
-      ':where(#main>:not(.he-panel)),:where(#main>:not(.he-panel)>section){padding-block:0}',
+      // The band's padding sits on the section or, in the classic blocks, on its inner shell.
+      ':where(#main>:not(.he-panel)),:where(#main>:not(.he-panel)>section),:where(#main>:not(.he-panel)>.shell),:where(#main>:not(.he-panel)>section>.shell){padding-block:0}',
       `#main>*{--he-panel-mt:${gap};--he-panel-mb:0px}`,
       '#main>:first-child{--he-panel-mt:initial}#main>:last-child{--he-panel-mb:initial}#main>* *{--he-panel-mt:initial;--he-panel-mb:initial}',
     );
@@ -608,6 +621,8 @@ function phoneLayoutCss(theme: Theme): string {
       // A heading that shares a grid with its content (the FAQ) has only the space above; two columns and several lists stack this far apart.
       ':is(div,section):has(>.he-head+*){row-gap:0}',
       `:is(.he-cols2,.he-lists){row-gap:${item}}`,
+      // 3.15.1 — the heading column's last line keeps no margin of its own, so the gap is exactly the setting.
+      '.he-cols2>:first-child>:last-child{margin-bottom:0}',
     );
   }
   return rules.length ? `@media (max-width:768px){${rules.join('')}}` : '';

@@ -1,6 +1,14 @@
 {
-  "latest": "3.15.0",
+  "latest": "3.15.1",
   "releases": [
+    {
+      "version": "3.15.1",
+      "date": "2026-09-28",
+      "summary": "Fixes: phone section spacing reaches the classic blocks; two-column headings on phones; no cross in see-through cut buttons; the sitemap index leaves out an empty blog, careers or projects.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.15.0",
       "date": "2026-09-28",

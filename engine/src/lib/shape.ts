@@ -5,7 +5,7 @@ import { z } from 'zod';
    ───────────────────────────────────────────────────────────────────────────
    A cut corner is a clip-path polygon with the legs written in — cards,
    inputs, chips, images and sections clip. Buttons are *painted* instead
-   (`CUT_BUTTON_BACKGROUND`, legs as `--he-cut-*` on the button), because a
+   (`CUT_BUTTON_FILL` and `CUT_BUTTON_RING`, legs as `--he-cut-*` on the button), because a
    clip-path also clips the glow a button may carry.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -81,28 +81,19 @@ export function cutLines(legs: CutLegs, width = 1): { image: string; position: s
 }
 
 /**
- * Buttons, painted rather than clipped: four quarter layers of the fill,
- * each transparent across its own corner's cut. A glow (`filter:
- * drop-shadow`) then follows the painted shape, which a clip-path would have
- * cut off. The fill and edge colours are `--he-bf` and `--he-bl`, set per
- * variant and per state.
+ * Buttons, painted rather than clipped, so a glow (`filter: drop-shadow`)
+ * follows the painted shape instead of being cut off by a clip-path. The
+ * fill and edge colours are `--he-bf` and `--he-bl`, set per variant and per
+ * state.
  *
- * 3.15 — the edge used to be four more layers, of the whole border box,
- * under the fill; a see-through fill (a ghost or outlined button) then showed
- * the edge colour across the whole button. The edge is `CUT_BUTTON_RING` now.
+ * 3.15.1 — the fill is one shape on `::after`, the padding box with each
+ * cut shortened by the border's share of the diagonal. It used to be four
+ * quarter layers of the background, overlapping by half a pixel so no seam
+ * showed; a see-through fill then showed the overlap as a faint cross.
  */
-export const CUT_BUTTON_BACKGROUND = (() => {
-  const corner = (angle: number, leg: string, colour: string, box: 'padding-box' | 'border-box', place: string) =>
-    `linear-gradient(${angle}deg,transparent calc(${leg} * .7071),${colour} 0) ${place}/calc(50% + .5px) calc(50% + .5px) no-repeat ${box}`;
-  const layers = (colour: string, box: 'padding-box' | 'border-box', inset: string) =>
-    [
-      corner(135, `max(0px,var(--he-cut-tl,0px) - ${inset})`, colour, box, 'top left'),
-      corner(225, `max(0px,var(--he-cut-tr,0px) - ${inset})`, colour, box, 'top right'),
-      corner(315, `max(0px,var(--he-cut-br,0px) - ${inset})`, colour, box, 'bottom right'),
-      corner(45, `max(0px,var(--he-cut-bl,0px) - ${inset})`, colour, box, 'bottom left'),
-    ].join(',');
-  // The fill sits inside the border; its cut is shorter by the border's share of the diagonal.
-  return layers('var(--he-bf)', 'padding-box', 'var(--he-bw,0px) * .4142');
+export const CUT_BUTTON_FILL = (() => {
+  const inner = (c: string) => `max(0px,var(--he-cut-${c},0px) - var(--he-bw,0px) * .4142)`;
+  return `polygon(${inner('tl')} 0,calc(100% - ${inner('tr')}) 0,100% ${inner('tr')},100% calc(100% - ${inner('br')}),calc(100% - ${inner('br')}) 100%,${inner('bl')} 100%,0 calc(100% - ${inner('bl')}),0 ${inner('tl')})`;
 })();
 
 /**

@@ -276,3 +276,6 @@ but not a button's own, which is exactly what was typed.
 - Fixed: picture rows showed no pictures on iPhones (the picture's box
   collapsed in WebKit), and an outlined or ghost button with cut corners was
   drawn filled with its edge colour.
+- 3.15.1: *Space between sections* also reaches the classic blocks, whose
+  padding sits on their inner column, and a two-column block's heading keeps
+  no margin of its own under *Space between a section's parts*.

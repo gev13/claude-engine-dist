@@ -16,6 +16,8 @@ export async function GET() {
   const [posts, categories, permalinks, theme] = await Promise.all([allPublishedPostsByGroup(), listCategories(), getPermalinks(), getTheme()]);
   // 3.6 — a blog switched off lists nothing.
   if (resolveBlog(theme.blog).off) return new Response(urlSet([]), { headers: XML_HEADERS });
+  // 3.15.1 — nor does a blog with no published post, as the sitemap index agrees.
+  if (!posts.some((p) => p.indexable)) return new Response(urlSet([]), { headers: XML_HEADERS });
 
   return new Response(
     urlSet([
