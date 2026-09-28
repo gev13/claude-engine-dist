@@ -198,15 +198,27 @@ export function Header(props: HeaderProps) {
 
   const fullscreenOpen = openId !== null && chrome.megaMenu === 'fullscreen';
 
+  /* The page stays where it is while a menu covers it. `overflow: hidden` on
+     the body alone does not stop an iPhone scrolling the page underneath
+     (3.17), so the body is pinned in place and put back on close. */
+  const locked = menuOpen || fullscreenOpen;
+  useEffect(() => {
+    if (!locked) return;
+    const body = document.body;
+    const y = window.scrollY;
+    const saved = { position: body.style.position, top: body.style.top, left: body.style.left, right: body.style.right, overflow: body.style.overflow };
+    Object.assign(body.style, { position: 'fixed', top: `-${y}px`, left: '0', right: '0', overflow: 'hidden' });
+    return () => {
+      Object.assign(body.style, saved);
+      window.scrollTo({ top: y, left: 0, behavior: 'instant' as ScrollBehavior });
+    };
+  }, [locked]);
+
   useEffect(() => {
     const body = document.body;
-    body.style.overflow = menuOpen || fullscreenOpen ? 'hidden' : '';
     body.classList.toggle('he-push-open', menuOpen && chrome.mobileMenu.variant === 'push');
-    return () => {
-      body.style.overflow = '';
-      body.classList.remove('he-push-open');
-    };
-  }, [menuOpen, fullscreenOpen, chrome.mobileMenu.variant]);
+    return () => body.classList.remove('he-push-open');
+  }, [menuOpen, chrome.mobileMenu.variant]);
 
   const solid = !h.overlay || !overMedia || scrolled || menuOpen || openId !== null;
   /* The server renders under the rewritten `/en/about`, the browser sees
@@ -499,6 +511,7 @@ export function Header(props: HeaderProps) {
           toggleRef.current?.focus();
         }}
         config={chrome.mobileMenu}
+        toggleRef={toggleRef}
         nav={chrome.mobileMenu.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
         cta={cta}
         secondaryCta={secondaryCta}
@@ -755,10 +768,13 @@ function MobileMenu({
   siteName,
   brand,
   contact,
+  toggleRef,
 }: {
   open: boolean;
   onClose: () => void;
   config: ResolvedChrome['mobileMenu'];
+  /** 3.17 — the menu button, whose place the close button can take. */
+  toggleRef?: React.RefObject<HTMLButtonElement | null>;
   nav: NavItem[];
   cta: Cta;
   secondaryCta: Cta;
@@ -773,6 +789,16 @@ function MobileMenu({
   const [pointed, setPointed] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  /** 3.17 — where the menu button and the header's logo are, when both are on screen. */
+  const [mirror, setMirror] = useState<{ close: DOMRect; logo: DOMRect } | null>(null);
+
+  useEffect(() => {
+    if (!open || !config.closeAtToggle) return setMirror(null);
+    const close = toggleRef?.current?.getBoundingClientRect();
+    const logo = toggleRef?.current?.closest('header')?.querySelector('.he-hdr__logo')?.getBoundingClientRect();
+    const onScreen = (r?: DOMRect) => r && r.width > 0 && r.top >= 0 && r.bottom <= window.innerHeight;
+    setMirror(onScreen(close) && onScreen(logo) ? { close: close!, logo: logo! } : null);
+  }, [open, config.closeAtToggle, toggleRef]);
 
   useEffect(() => {
     if (open) closeRef.current?.focus();
@@ -884,12 +910,26 @@ function MobileMenu({
           fullscreen && config.size === 'huge' && 'is-huge',
           config.entrance !== 'none' && `is-enter-${config.entrance}`,
           config.hoverImages && fullscreen && 'has-pictures',
+          config.closeAtToggle && 'is-close-first',
+          config.servicesLook === 'rows' && 'is-services-rows',
         )}
         style={config.opacity < 100 ? ({ '--he-menu-alpha': `${config.opacity}%` } as React.CSSProperties) : undefined}
       >
-        <div className="he-menu__top">
-          <Brand siteName={siteName} brand={brand} onClick={onClose} />
-          <button ref={closeRef} type="button" className="he-menu__close" onClick={onClose} aria-label="Close menu">
+        <div
+          className={cn('he-menu__top', mirror && 'is-mirrored')}
+          style={mirror ? ({ '--he-mx': '20px', height: `${Math.ceil(Math.max(mirror.close.bottom, mirror.logo.bottom)) + 12}px` } as React.CSSProperties) : undefined}
+        >
+          <span className="he-menu__brand" style={mirror ? { position: 'absolute', left: mirror.logo.left - 20, top: mirror.logo.top, height: mirror.logo.height } : undefined}>
+            <Brand siteName={siteName} brand={brand} onClick={onClose} />
+          </span>
+          <button
+            ref={closeRef}
+            type="button"
+            className="he-menu__close"
+            onClick={onClose}
+            aria-label="Close menu"
+            style={mirror ? { position: 'absolute', left: mirror.close.left - 20, top: mirror.close.top, width: mirror.close.width, height: mirror.close.height, margin: 0 } : undefined}
+          >
             <Icon.Close size={22} />
           </button>
         </div>

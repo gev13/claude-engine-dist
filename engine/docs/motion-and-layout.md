@@ -295,3 +295,17 @@ but not a button's own, which is exactly what was typed.
   opens in a new tab), a style and an arrow, apart from the card's own link.
 - **On phones → Space between a section's parts** also sets the space under
   a list's small title.
+
+## The phone menu, the space under the hero, card button colours (3.17)
+
+- **Appearance → Header & menus → phone menu:** *The close button where the
+  menu button was, the logo where the header has it* — the open menu mirrors
+  the header, so the button does not jump; and *Service links in the menu*:
+  a small grey list (as before) or in the menu's own type, white.
+- The page underneath an open menu no longer scrolls on an iPhone: it is
+  held in place and returned to where it was on close.
+- **Appearance → Layout → On phones → Space under the first section**: the
+  gap under the hero, when it should differ from the space between sections.
+- **Cards → Button colour**: a filled button in its own colour, glowing in it.
+- Fixed: a button's label sits centred between its edge and the arrow's
+  divider; a contained FAQ cut like the cards keeps its border along the cuts.

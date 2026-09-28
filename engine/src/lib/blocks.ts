@@ -391,6 +391,8 @@ export const blockSchemas = {
             href: safeHref,
             variant: z.enum(['primary', 'outline', 'ghost']).optional(),
             arrow: z.boolean().optional(),
+            /** 3.17 — a fill colour of its own (a main button in another colour); it glows in it too. */
+            fill: z.string().trim().refine(isColor, 'Not a colour').optional(),
           })
           .optional(),
         alt: text(200),

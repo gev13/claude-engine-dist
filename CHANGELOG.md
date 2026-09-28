@@ -10,6 +10,19 @@ improvements.
 
 ---
 
+## 3.17.0 — 2026-09-28
+
+**The phone menu, and a few finishing touches.** The open phone menu can
+mirror the header — its close button where the menu button was, the logo
+where the header has it — and can show its service links in its own type.
+The page under an open menu now stays still on iPhones. On phones, the space
+under the first section can differ from the rest. A card's button can take a
+colour of its own. Fixes: button labels are centred between the edge and
+the arrow's divider, and a contained FAQ with cut corners keeps its border
+along the cuts.
+
+---
+
 ## 3.16.0 — 2026-09-28
 
 **Parts that enter on their own, hero pictures that keep their shape, and

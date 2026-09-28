@@ -549,6 +549,7 @@ function AppearanceScreenInner() {
               <div className="grid gap-4 sm:grid-cols-3">
                 <LengthField label="Side padding" hint="from the screen’s edges to the content" placeholder="20px" value={get(['layout', 'gutterMobile'])} onChange={set(['layout', 'gutterMobile'])} />
                 <LengthField label="Space between sections" hint="replaces the sections’ own; boxed sections keep the room inside" emptyLabel="each section’s own" value={get(['layout', 'sectionGapMobile'])} onChange={set(['layout', 'sectionGapMobile'])} />
+                <LengthField label="Space under the first section" hint="the hero; empty is the space between sections" emptyLabel="as between sections" value={get(['layout', 'firstGapMobile'])} onChange={set(['layout', 'firstGapMobile'])} />
                 <LengthField label="Space between a section’s parts" hint="heading, introduction, list, and between cards" emptyLabel="each block’s own" value={get(['layout', 'itemGapMobile'])} onChange={set(['layout', 'itemGapMobile'])} />
               </div>
             </Panel>
@@ -779,6 +780,21 @@ function AppearanceScreenInner() {
                     />
                   </div>
                   <Toggle label="Large menu type" value={theme.chrome?.mobileMenu?.largeType} onChange={set(['chrome', 'mobileMenu', 'largeType'])} />
+                  {/* 3.17 */}
+                  <Toggle
+                    label="The close button where the menu button was, the logo where the header has it"
+                    value={theme.chrome?.mobileMenu?.closeAtToggle}
+                    onChange={set(['chrome', 'mobileMenu', 'closeAtToggle'])}
+                  />
+                  <ChoiceField
+                    label="Service links in the menu"
+                    value={theme.chrome?.mobileMenu?.servicesLook}
+                    options={[
+                      { value: 'list', label: 'Small grey list (default)' },
+                      { value: 'rows', label: 'In the menu’s own type, white' },
+                    ]}
+                    onChange={set(['chrome', 'mobileMenu', 'servicesLook'])}
+                  />
                 </div>
               </Panel>
 

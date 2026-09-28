@@ -41,6 +41,7 @@ export function Button({
   withArrow = false,
   type = 'button',
   pad,
+  style,
   ...rest
 }: {
   href?: string;
@@ -52,7 +53,8 @@ export function Button({
   /** 3.14 — this button's own padding, over the theme's. */
   pad?: ButtonPad;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
-  const own = buttonPadProps(pad);
+  const padded = buttonPadProps(pad);
+  const own = { className: padded.className, style: padded.style || style ? { ...(padded.style ?? {}), ...(style ?? {}) } : undefined };
   const classes = cn(base, variants[variant], className, own.className);
   const content = (
     <>
@@ -65,20 +67,20 @@ export function Button({
     const external = /^https?:\/\//i.test(href);
     if (external) {
       return (
-        <a href={href} rel="noopener noreferrer" target="_blank" className={classes} style={own.style}>
+        <a href={href} rel="noopener noreferrer" target="_blank" className={classes} style={own.style as React.CSSProperties | undefined}>
           {content}
         </a>
       );
     }
     return (
-      <Link href={href} className={classes} style={own.style}>
+      <Link href={href} className={classes} style={own.style as React.CSSProperties | undefined}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type={type} className={classes} style={own.style} {...rest}>
+    <button type={type} className={classes} style={own.style as React.CSSProperties | undefined} {...rest}>
       {content}
     </button>
   );

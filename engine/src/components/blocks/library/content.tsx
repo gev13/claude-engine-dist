@@ -358,7 +358,12 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 {/* 3.16 — a button of its own under the text (an outside address opens in a new tab). */}
                 {c.button && (
                   <div className="he-fgrid__actions">
-                    <Button href={c.button.href} variant={c.button.variant ?? 'primary'} withArrow={c.button.arrow === true || undefined}>
+                    <Button
+                      href={c.button.href}
+                      variant={c.button.fill ? 'primary' : (c.button.variant ?? 'primary')}
+                      withArrow={c.button.arrow === true || undefined}
+                      style={c.button.fill && isColor(c.button.fill) ? buttonFill(c.button.fill) : undefined}
+                    >
                       {c.button.label}
                     </Button>
                   </div>
@@ -370,6 +375,17 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       </div>
     </section>
   );
+}
+
+/** 3.17 — a main button in a colour of its own: its fill, hover, edge and glow. */
+function buttonFill(fill: string): React.CSSProperties {
+  return {
+    '--he-btn-primary-bg': fill,
+    '--he-btn-primary-hover-bg': `color-mix(in srgb, ${fill} 85%, #fff)`,
+    '--he-btn-primary-border': fill,
+    '--he-btn-primary-hover-border': fill,
+    '--he-btn-glow-c': `color-mix(in srgb, ${fill} 55%, transparent)`,
+  } as React.CSSProperties;
 }
 
 /* ── CT8: figures row ─────────────────────────────────────────────────────── */

@@ -125,6 +125,10 @@ export const chromeSchema = z.object({
       /** The contact column — its heading, and a phone number beside the email. */
       contactTitle: z.string().trim().max(60).optional(),
       phone: z.string().trim().max(40).regex(/^\+?[0-9 ()./-]{0,40}$/, 'A phone number').optional(),
+      /** 3.17 — the close button where the menu button was, the logo where the header's is. */
+      closeAtToggle: z.boolean().optional(),
+      /** 3.17 — the service links in the menu's own type and colour (`rows`), rather than small grey text (`list`). */
+      servicesLook: z.enum(['list', 'rows']).optional(),
     })
     .optional(),
 
@@ -264,6 +268,8 @@ export type ResolvedChrome = {
     hoverImages: boolean;
     contactTitle?: string;
     phone?: string;
+    closeAtToggle: boolean;
+    servicesLook: 'list' | 'rows';
   };
   footer: {
     variant: FooterVariant;
@@ -349,6 +355,8 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       hoverImages: c.mobileMenu?.hoverImages ?? false,
       contactTitle: c.mobileMenu?.contactTitle || undefined,
       phone: c.mobileMenu?.phone || undefined,
+      closeAtToggle: c.mobileMenu?.closeAtToggle ?? false,
+      servicesLook: c.mobileMenu?.servicesLook ?? 'list',
     },
     footer: {
       variant: c.footer?.variant ?? 'sitemap',

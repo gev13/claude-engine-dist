@@ -541,6 +541,8 @@ export const themeSchema = z.object({
       gutterMobile: length.optional(),
       /** 3.15 — phones: the space between one section and the next; unset is each block's own padding. */
       sectionGapMobile: length.optional(),
+      /** 3.17 — phones: the space under the first section (the hero), when it should differ. */
+      firstGapMobile: length.optional(),
       /** 3.15 — phones: the space between a section's parts — heading, intro, list — and between its cards. */
       itemGapMobile: length.optional(),
     })

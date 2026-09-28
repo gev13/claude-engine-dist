@@ -489,6 +489,9 @@ function CardButtonFields({ value, onChange }: { value?: CardButton; onChange: (
           <option value="yes">With an arrow</option>
         </Select>
       </Field>
+      <div className="sm:col-span-4">
+        <ColorField label="Button colour" hint="a filled button in this colour; empty uses the style above" value={current.fill} onChange={(fill) => update({ fill })} />
+      </div>
     </div>
   );
 }
@@ -889,7 +892,7 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean };
+type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean; fill?: string };
 type GridCard = { button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };

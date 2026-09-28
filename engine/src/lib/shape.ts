@@ -61,7 +61,8 @@ export function cutVars(legs: CutLegs): [string, string][] {
  * true of every chip and field it is used on. Null when nothing is cut.
  */
 export function cutLines(legs: CutLegs, width = 1): { image: string; position: string; size: string } | null {
-  const w = Math.max(1, Math.min(4, width)) * 1.5;
+  // 3.17 — down to a hairline (0.5), for a box whose own border is 1px.
+  const w = Math.max(0.5, Math.min(4, width)) * 1.5;
   const gradient = (angle: 'to bottom right' | 'to top right') =>
     `linear-gradient(${angle},transparent calc(50% - ${w}px),var(--he-cut-line,currentColor) calc(50% - ${w}px),var(--he-cut-line,currentColor) calc(50% + ${w}px),transparent calc(50% + ${w}px))`;
   const layers = (

@@ -298,6 +298,8 @@ function shapeCss(theme: Theme, scope: string): string {
   const card = cutLegs(shape.cards, CUT_SIZES.cards);
   // 3.3 — boxes drawn like cards (the contained FAQ) square off with them.
   if (card) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', '0px'], ['--he-box-radius', '0px'], ['--he-card-clip', cutPolygon(card)]]));
+  // 3.17 — a bordered box cut like a card (the contained FAQ) keeps its border along the cuts.
+  if (card) parts.push(block(at('.he-faq.is-contained'), [['--he-cut-line', 'var(--color-hairline)'], ...lineDecls(cutLines(card, 0.67))]));
 
   const image = cutLegs(shape.images, CUT_SIZES.images);
   if (image) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', cutPolygon(image)]]));
@@ -383,7 +385,8 @@ function shapeCss(theme: Theme, scope: string): string {
   if (glow && (glow.size ?? 0) > 0) {
     const size = Math.max(0, Math.min(60, Math.round(glow.size ?? 0)));
     const colour = glow.color && isColor(glow.color) ? glow.color : 'color-mix(in srgb,var(--he-btn-primary-bg) 55%,transparent)';
-    parts.push(block(at(':is(.he-btn-primary,.he-cbtn.is-primary)'), [['filter', `drop-shadow(0 0 ${size}px ${colour})`]]));
+    // 3.17 — a button with a fill of its own glows in it (`--he-btn-glow-c`).
+    parts.push(block(at(':is(.he-btn-primary,.he-cbtn.is-primary)'), [['filter', `drop-shadow(0 0 ${size}px var(--he-btn-glow-c,${colour}))`]]));
   }
   if (buttons.font && buttons.font in FONT_STACKS) parts.push(block(scope ? scope.trim() : ':root', [['--he-btn-font', FONT_STACKS[buttons.font]!]]));
   if (buttons.icon === 'cell') {
@@ -393,7 +396,8 @@ function shapeCss(theme: Theme, scope: string): string {
       block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)')}`, [
         ['box-sizing', 'content-box'],
         ['padding', 'var(--he-btn-py) 15px'],
-        ['margin', 'calc(-1 * var(--he-btn-py)) calc(-1 * var(--he-btn-px)) calc(-1 * var(--he-btn-py)) 6px'],
+        // 3.17 — the label centred between the edge and the divider: as much room after it as before (less its tracking).
+        ['margin', 'calc(-1 * var(--he-btn-py)) calc(-1 * var(--he-btn-px)) calc(-1 * var(--he-btn-py)) max(4px, calc(var(--he-btn-px) - 10px - var(--he-btn-tracking, 0px)))'],
         ['border-left', buttons.divider === 'solid' ? '2px solid currentColor' : '1px solid color-mix(in srgb,currentColor 32%,transparent)'],
       ]),
     );
@@ -614,6 +618,9 @@ function phoneLayoutCss(theme: Theme): string {
       '#main>:first-child{--he-panel-mt:initial}#main>:last-child{--he-panel-mb:initial}#main>* *{--he-panel-mt:initial;--he-panel-mb:initial}',
     );
   }
+  // 3.17 — the space under the first section (the hero), after the rule above.
+  const first = layout.firstGapMobile;
+  if (first && isLength(first)) rules.push(`:where(#main>:first-child+*){margin-top:${first}}`, `#main>:first-child+*{--he-panel-mt:${first}}`);
   const item = layout.itemGapMobile;
   if (item && isLength(item)) {
     // A gap set for phones on its own (3.13) keeps the cards' gap.

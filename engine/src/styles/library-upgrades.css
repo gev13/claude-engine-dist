@@ -303,3 +303,15 @@
 }
 /* 3.16 — a card's own button, under its text, level with the text. */
 .he-fgrid__actions { position: relative; z-index: 1; margin-top: 24px; padding-inline: var(--he-item-text-inset, 0); }
+
+/* 3.17 — the phone menu mirroring the header: the close button first (and,
+   when measured, exactly where the menu button was), the logo after it. */
+.he-menu__brand { display: inline-flex; align-items: center; }
+.he-menu.is-close-first .he-menu__top { justify-content: flex-start; gap: 12px; }
+.he-menu.is-close-first .he-menu__close { order: -1; margin: 0 0 0 -10px; }
+.he-menu__top.is-mirrored { position: relative; display: block; min-height: 0; }
+/* 3.17 — the service links in the menu's own type and colour. */
+.he-menu.is-services-rows .he-menu__services a { font-family: var(--he-h4-family); font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--color-bone); }
+.he-menu.is-services-rows .he-menu__services a:hover { color: var(--color-flare-soft); }
+/* 3.17 — a menu's own scrolling never carries on into the page. */
+.he-menu { overscroll-behavior: contain; }

@@ -64,7 +64,7 @@ describe('the theme’s shapes', () => {
     expect(out).toContain('--he-cut-tr:10px');
     expect(out).toContain('.he-btn-primary,.he-cbtn.is-primary{--he-bf:var(--he-btn-primary-bg)');
     expect(out).toContain('.he-btn-primary:hover,.he-cbtn.is-primary:hover{--he-bf:var(--he-btn-primary-hover-bg)');
-    expect(out).toContain('filter:drop-shadow(0 0 18px #17bde7)');
+    expect(out).toContain('filter:drop-shadow(0 0 18px var(--he-btn-glow-c,#17bde7))');
   });
 
   it('clip chips and fields, keeping their border along the cut', () => {
