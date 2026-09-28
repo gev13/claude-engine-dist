@@ -260,6 +260,13 @@ export const BUTTON_VARIANT_LABELS: Record<ButtonVariant, string> = {
   ghost: 'Ghost (text only)',
 };
 
+/** 3.13 — a button's geometry on one screen tier. */
+const buttonTier = z.object({
+  paddingX: length.optional(),
+  paddingY: length.optional(),
+  fontSize: length.optional(),
+});
+
 const buttonStyle = z.object({
   background: color.optional(),
   text: color.optional(),
@@ -364,6 +371,10 @@ export const themeSchema = z.object({
   blockText: z
     .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
     .optional(),
+  /** 3.13 — the same three on phones; each unset keeps the size above. */
+  blockTextMobile: z
+    .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
+    .optional(),
 
   /**
    * Site-wide spacing between the items a block lays out, and how fast
@@ -382,6 +393,9 @@ export const themeSchema = z.object({
    */
   reveal: z.enum(SECTION_REVEALS).optional(),
   gap: length.optional(),
+  /** 3.13 — the site's space between items on tablets and on phones. */
+  gapTablet: length.optional(),
+  gapMobile: length.optional(),
 
   /** Meaning colours — open, closed, warning, stars. Not the brand palette. */
   status: statusPalette.optional(),
@@ -436,6 +450,10 @@ export const themeSchema = z.object({
       glow: z.object({ color: color.optional(), size: z.number().int().min(0).max(60).optional() }).optional(),
       /** 2.21 — a button's arrow inline (as before), or in a compartment of its own behind a thin divider. */
       icon: z.enum(['inline', 'cell']).optional(),
+      /** 3.13 — padding and label size per screen tier, over the values above; each unset keeps the wider tier's. */
+      laptop: buttonTier.optional(),
+      tablet: buttonTier.optional(),
+      mobile: buttonTier.optional(),
       /** 3.8 — the line before a compartmented arrow: soft (1px, faded, as before) or solid (2px, the label's colour). */
       divider: z.enum(['soft', 'solid']).optional(),
       /** 3.8 — the label's weight. */

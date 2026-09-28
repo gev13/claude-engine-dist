@@ -849,6 +849,8 @@
        reaches up into a notch header's clearance, the tab sitting on it. */
     .he-hero--split.is-media-first-sm .he-hero__visual { order: -1; }
     .he-hero--split.is-bleed.is-media-first-sm { padding-top: 0; }
+    /* 3.13 — the square picture on top fills its box; the desktop inset gives way. */
+    .he-hero--split.is-bleed.has-bleed-inset .he-hero__visualmedia { top: 0; height: 100%; }
     .he-hero--split.is-bleed.is-media-first-sm .he-hero__visual { margin: calc(-1 * var(--he-ns-now, 0px)) calc(50% - 50vw) 0; }
     .he-hero__frame { aspect-ratio: 4 / 3; margin-top: 36px; border-radius: 12px; }
     .he-hero--statement { padding-block: 56px; }

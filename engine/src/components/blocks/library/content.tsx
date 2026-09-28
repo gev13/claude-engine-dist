@@ -14,6 +14,7 @@ import { MediaFill } from './media';
 import { ParallaxLayer } from './ParallaxLayer';
 import { QuoteMedia } from './QuoteMedia';
 import { SiteImg } from '@/components/ui/SiteImg';
+import { gapTiers } from './gapTiers';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Library content sections (CT1–CT5, CT8–CT10, CT14, CT16)
@@ -124,11 +125,21 @@ function textBoxStyle(box: P<'mediaBand'>['textBox']): React.CSSProperties | und
   if (!box) return undefined;
   const style: Record<string, string> = {};
   if (box.paddingBlock) style['--he-band-py'] = box.paddingBlock;
+  if (box.paddingBlockMobile) style['--he-band-py-m'] = box.paddingBlockMobile;
   if (box.inset) style['--he-band-inset'] = box.inset;
   if (box.bodyWidth) style['--he-band-body'] = box.bodyWidth;
   if (box.bodyGap) style['--he-band-body-gap'] = box.bodyGap;
   if (box.actionsGap) style['--he-band-actions-gap'] = box.actionsGap;
   return style as React.CSSProperties;
+}
+
+/** 3.13 — a figures row's number sizes, per screen, as custom properties; only what was set. */
+function figureSizes(p: P<'stats'>): React.CSSProperties | undefined {
+  const style: Record<string, string> = {};
+  if (p.valueSize) style['--he-figs-size'] = p.valueSize;
+  if (p.valueSizeTablet) style['--he-figs-size-tablet'] = p.valueSizeTablet;
+  if (p.valueSizeMobile) style['--he-figs-size-mobile'] = p.valueSizeMobile;
+  return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
 
 /* ── CT4 / CT5: card grid variants ────────────────────────────────────────── */
@@ -140,7 +151,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   /* An editor's gap rides along with the column count, so each of these
      grids gets it without four separate props. Unset leaves the layout's own
      spacing alone — they differ on purpose. */
-  const cols = { '--cols': p.columns, ...(p.gap ? { gap: p.gap } : {}), ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}) } as React.CSSProperties;
+  const gaps = gapTiers(p);
+  const cols = { '--cols': p.columns, ...gaps.style, ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}) } as React.CSSProperties;
 
   /* The mosaic is the tile grid with two tile sizes, not a second component:
      same markup, same fields, same editor — the difference is which cells the
@@ -151,7 +163,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-tiles', toneClass(p.tone))}>
         {head && <div className="shell he-tiles__head">{head}</div>}
         <div
-          className={cn('he-tiles__grid', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many')}
+          className={cn('he-tiles__grid', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many', gaps.className)}
           style={cols}
         >
           {p.cards.map((c, i) => {
@@ -190,8 +202,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
         <div className="shell">
           {head}
           <ul
-            className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width')}
-            style={p.gap || p.mediaWidth ? ({ ...(p.gap ? { gap: p.gap } : {}), ...(p.mediaWidth ? { '--he-mrows-media': p.mediaWidth } : {}) } as React.CSSProperties) : undefined}
+            className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className)}
+            style={p.gap || p.gapTablet || p.gapMobile || p.mediaWidth ? ({ ...gapTiers(p).style, ...(p.mediaWidth ? { '--he-mrows-media': p.mediaWidth } : {}) } as React.CSSProperties) : undefined}
           >
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-mrows__item', !c.imageUrl && 'no-media', itemClass(p.blockId, i, c.style))}>
@@ -228,7 +240,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-lsec', toneClass(p.tone))}>
         <div className="shell">
           {head}
-          <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`)} style={cols}>
+          <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`, gaps.className)} style={cols}>
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-rows__item', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
@@ -279,7 +291,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     <section className={cn('he-lsec', toneClass(p.tone))}>
       <div className="shell">
         {head}
-        <ul className={cn('he-fgrid', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods)} style={cols}>
+        <ul className={cn('he-fgrid', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className)} style={cols}>
           {p.cards.map((c, i) => {
             // 3.6 — the words after the title, in their own colour.
             const after = c.titleAfter && (
@@ -347,7 +359,7 @@ export function StatsFigures(p: P<'stats'>) {
   return (
     <section
       className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}
-      style={p.valueSize ? ({ '--he-figs-size': p.valueSize } as React.CSSProperties) : undefined}
+      style={figureSizes(p)}
     >
       <div className="shell">
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />

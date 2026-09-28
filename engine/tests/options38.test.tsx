@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
-import { blockStyleToCss } from '@/lib/blockStyle-css';
+import { BODY, EYEBROWS, blockStyleToCss } from '@/lib/blockStyle-css';
 import { themeSchema } from '@/lib/theme';
 import { themeToCss } from '@/lib/theme-css';
 
@@ -42,8 +42,8 @@ describe('theme options', () => {
 describe('a section’s typography', () => {
   it('reaches card eyebrows, numbers and bodies', () => {
     const css = blockStyleToCss('s', blockStyleSchema.parse({ typography: { eyebrow: { color: '#123456' }, body: { size: '16px' } } }));
-    expect(css).toContain('.he-b-s :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow){color:#123456}');
-    expect(css).toContain('.he-b-s :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after){font-size:16px}');
+    expect(css).toContain(`.he-b-s ${EYEBROWS}{color:#123456}`);
+    expect(css).toContain(`.he-b-s ${BODY}{font-size:16px}`);
   });
 
   it('no longer sets the eyebrow in the body’s size (a fix)', () => {

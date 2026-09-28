@@ -17,6 +17,7 @@ import { LibraryHero } from './library/heroes';
 import { CardGridVariant, StatsFigures } from './library/content';
 import { MediaAccordion } from './library/MediaAccordion';
 import { SiteImg } from '@/components/ui/SiteImg';
+import { gapTiers } from './library/gapTiers';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
 
@@ -36,7 +37,7 @@ export function HeroBlock(p: P<'hero'>) {
       >
         <div className="animate-rise">
           {p.kicker && (
-            <div className="mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-flare">{p.kicker}</div>
+            <div className="he-hero__kicker mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-flare">{p.kicker}</div>
           )}
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
           <BlockTitle as={p.titleAs ?? 'h1'} className="mb-5 max-w-[15ch]">
@@ -185,7 +186,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {spans ? (
         // 2.22 — rows of mixed widths, in the pattern given ("2-3": two, then three…).
-        <div className="he-bento" style={p.gap ? { gap: p.gap } : undefined}>
+        <div className={cn('he-bento', gapTiers(p).className)} style={gapTiers(p).style}>
           {cards.map((card, i) => (
             <div key={i} className="he-bento__cell" style={{ '--span': spans[i] } as React.CSSProperties}>
               {card}
@@ -193,7 +194,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
           ))}
         </div>
       ) : (
-        <CardGrid cols={p.columns} gapSize={p.gap} dividers={p.dividers}>
+        <CardGrid cols={p.columns} dividers={p.dividers} className={gapTiers(p).className} style={gapTiers(p).style}>
           {cards}
         </CardGrid>
       )}

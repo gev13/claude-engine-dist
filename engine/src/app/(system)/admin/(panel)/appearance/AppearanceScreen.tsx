@@ -15,6 +15,7 @@ import {
   STATUS_DEFAULTS,
   TYPE_ROLES,
   TYPE_ROLE_LABELS,
+  TIER_LABELS,
   emptyTheme,
   type BreakpointKey,
   type ButtonVariant,
@@ -453,6 +454,9 @@ function AppearanceScreenInner() {
                   <LengthField label="Intro and lead text" inherited={defaults['--he-block-lead']} value={get(['blockText', 'lead'])} onChange={set(['blockText', 'lead'])} />
                   <LengthField label="Standard" inherited={defaults['--he-block-text']} value={get(['blockText', 'text'])} onChange={set(['blockText', 'text'])} />
                   <LengthField label="Secondary" inherited={defaults['--he-block-small']} value={get(['blockText', 'small'])} onChange={set(['blockText', 'small'])} />
+                  <LengthField label="Intro and lead text — phones" value={get(['blockTextMobile', 'lead'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'lead'])} />
+                  <LengthField label="Standard — phones" value={get(['blockTextMobile', 'text'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'text'])} />
+                  <LengthField label="Secondary — phones" value={get(['blockTextMobile', 'small'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'small'])} />
                 </div>
               </Panel>
 
@@ -473,6 +477,17 @@ function AppearanceScreenInner() {
                   <LengthField label="Letter spacing" inherited={defaults['--he-btn-tracking']} value={get(['buttons', 'letterSpacing'])} onChange={set(['buttons', 'letterSpacing'])} />
                   <ChoiceField label="Text transform" value={get(['buttons', 'transform']) as never} inherited={defaults['--he-btn-transform']} options={TRANSFORM_OPTIONS} onChange={set(['buttons', 'transform'])} />
                 </div>
+              </Panel>
+
+              {/* 3.13 — the same three, per screen tier; each empty field keeps the wider tier's. */}
+              <Panel title="On smaller screens">
+                {(['laptop', 'tablet', 'mobile'] as const).map((tier) => (
+                  <div key={tier} className="mb-4 grid gap-4 sm:grid-cols-3 last:mb-0">
+                    <LengthField label={`${TIER_LABELS[tier]} — horizontal padding`} value={get(['buttons', tier, 'paddingX'])} emptyLabel="as above" onChange={set(['buttons', tier, 'paddingX'])} />
+                    <LengthField label={`${TIER_LABELS[tier]} — vertical padding`} value={get(['buttons', tier, 'paddingY'])} emptyLabel="as above" onChange={set(['buttons', tier, 'paddingY'])} />
+                    <LengthField label={`${TIER_LABELS[tier]} — font size`} value={get(['buttons', tier, 'fontSize'])} emptyLabel="as above" onChange={set(['buttons', tier, 'fontSize'])} />
+                  </div>
+                ))}
               </Panel>
 
               {BUTTON_VARIANTS.map((variant: ButtonVariant) => (
@@ -545,6 +560,8 @@ function AppearanceScreenInner() {
                   emptyLabel="each block's own"
                   onChange={set(['gap'])}
                 />
+                <LengthField label="Space between items on tablets" value={get(['gapTablet'])} emptyLabel="as above" onChange={set(['gapTablet'])} />
+                <LengthField label="Space between items on phones" value={get(['gapMobile'])} emptyLabel="as on tablets" onChange={set(['gapMobile'])} />
                 <Field label="Animation speed" hint="1 is normal; 0.5 is twice as fast">
                   <Select
                     value={theme.motion === undefined ? '' : String(theme.motion)}
@@ -955,6 +972,11 @@ function AppearanceScreenInner() {
                     <ColorField label="Primary accent" value={get(['colorsAlt', 'primary'])} onChange={set(['colorsAlt', 'primary'])} />
                     <ColorField label="Hairline" value={get(['colorsAlt', 'hairline'])} onChange={set(['colorsAlt', 'hairline'])} />
                     <ColorField label="Rule" value={get(['colorsAlt', 'rule'])} onChange={set(['colorsAlt', 'rule'])} />
+                    <ColorField label="Accent, hovered" value={get(['colorsAlt', 'primaryHover'])} onChange={set(['colorsAlt', 'primaryHover'])} />
+                    <ColorField label="Soft accent" value={get(['colorsAlt', 'primarySoft'])} onChange={set(['colorsAlt', 'primarySoft'])} />
+                    <ColorField label="Links" value={get(['colorsAlt', 'link'])} onChange={set(['colorsAlt', 'link'])} />
+                    <ColorField label="Links, hovered" value={get(['colorsAlt', 'linkHover'])} onChange={set(['colorsAlt', 'linkHover'])} />
+                    <ColorField label="Selected text" value={get(['colorsAlt', 'selection'])} onChange={set(['colorsAlt', 'selection'])} />
                   </div>
                 </Panel>
               )}

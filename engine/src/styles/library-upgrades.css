@@ -233,3 +233,12 @@
 /* 3.10 — the lines between contained questions stop short of the edges. */
 .he-faq.is-contained.is-inset-lines .he-faq__item + .he-faq__item { position: relative; border-top: 0; }
 .he-faq.is-contained.is-inset-lines .he-faq__item + .he-faq__item::before { content: ''; position: absolute; top: 0; left: 24px; right: 24px; border-top: 1px solid var(--color-hairline); }
+
+/* 3.13 — a grid's gap per screen (gapTiers.ts). Unlayered, over the grids' utilities. */
+.he-gap-tiers.has-g { gap: var(--he-g); }
+@media (width <= 1024px) {
+  .he-gap-tiers.has-gt { gap: var(--he-g-t); }
+}
+@media (width <= 768px) {
+  .he-gap-tiers.has-gm { gap: var(--he-g-m); }
+}

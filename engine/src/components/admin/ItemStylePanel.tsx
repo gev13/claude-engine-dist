@@ -37,9 +37,9 @@ export function ItemStylePanel({
     onChange(isEmptyItemStyle(merged) ? undefined : merged);
   };
 
-  const setSide = (side: keyof SpacingBox) => (next: string | undefined) => {
-    const spacing = { ...(style.spacing ?? {}), [side]: next };
-    const merged = { ...style, spacing } as ItemStyle;
+  const setSide = (side: keyof SpacingBox, key: 'spacing' | 'spacingMobile' = 'spacing') => (next: string | undefined) => {
+    const spacing = { ...(style[key] ?? {}), [side]: next };
+    const merged = { ...style, [key]: spacing } as ItemStyle;
     onChange(isEmptyItemStyle(merged) ? undefined : merged);
   };
 
@@ -87,6 +87,17 @@ export function ItemStylePanel({
               />
             ))}
           </div>
+
+          {/* 3.13 — the same on phones, where a desktop padding is usually too much. */}
+          <details>
+            <summary className="cursor-pointer text-[13px] text-ash">On phones — padding and text inset</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-4">
+              {BOX_SIDES.map(([key, label]) => (
+                <LengthField key={key} label={label} value={style.spacingMobile?.[key]} emptyLabel="as above" onChange={setSide(key, 'spacingMobile')} />
+              ))}
+              <LengthField label="Text inset" value={style.textInsetMobile} emptyLabel="as above" onChange={set('textInsetMobile')} />
+            </div>
+          </details>
 
           <div className="grid gap-3 sm:grid-cols-4">
             <LengthField label="Border" value={style.borderWidth} emptyLabel="none" onChange={set('borderWidth')} />

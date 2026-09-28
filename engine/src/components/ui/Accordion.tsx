@@ -67,7 +67,7 @@ export function Accordion({
               >
                 <span
                   className={cn(
-                    'font-display text-[17px] font-bold leading-[1.35] tracking-[-0.01em] transition-colors md:text-[19px]',
+                    'he-faq__q font-display text-[17px] font-bold leading-[1.35] tracking-[-0.01em] transition-colors md:text-[19px]',
                     isOpen ? 'text-bone' : 'text-ash',
                   )}
                 >

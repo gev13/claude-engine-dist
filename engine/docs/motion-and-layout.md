@@ -215,3 +215,24 @@ All off until chosen, except two fixes.
 - **Typography → Card labels and numbers:** the cards' small labels and
   "/01" numbers styled apart from the section's eyebrow (white numbers under
   a red eyebrow, say).
+
+## Per-device values and what typography reaches (3.13)
+
+- **Appearance → Buttons → On smaller screens:** the buttons' side padding,
+  top-and-bottom padding and text size for laptops, tablets and phones, each
+  left empty to keep the size above it.
+- **Appearance → Layout:** the gap between items on tablets and on phones;
+  the block text size on phones (lead, body and small text).
+- **Appearance → Colours:** the alternate colours — main colour on hover,
+  soft main colour, links, links on hover, text selection.
+- **Stats → Figure size on tablets / on phones:** the big numbers' own size
+  per device.
+- **Row → Gap and Least height per device; Card grid → Gap on tablets /
+  phones; Media band → Padding on phones** for the text box.
+- **An item's style → On phones:** its padding and text inset on phones.
+- **Footer → Logo height on phones.**
+- **A section's Design tab:** gap on tablets and phones in the spacing tabs,
+  the background picture's repeat, parallax, and line height and capitals in
+  every typography role.
+- **Typography now reaches** FAQ questions (subheadings), the classic hero's
+  kicker (eyebrow) and stat labels (body text).

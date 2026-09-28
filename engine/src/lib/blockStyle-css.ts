@@ -214,6 +214,21 @@ function swipeCss(root: string, isRow: boolean, maxWidth: number): string {
   );
 }
 
+/* ── What each typography role of a section reaches (3.13) ─────────────────
+   Body text is any paragraph, item, cell or span, except the labels, markers
+   and headings that live in spans or paragraphs of their own — each of those
+   belongs to its own role, or keeps the size it is drawn at (a counter's big
+   number, a button's label). */
+export const BODY = ':is(p,li,td,span,.he-ucard__body,.he-figs__label,.he-stat__label):not(.type-eyebrow,.he-ilist__slash,.he-title-after,.he-hero__kicker,.he-mrows__num,.he-counter__value,.he-faq__q,.he-cbtn *,.he-btn *)';
+/** Every heading, but not a list's small title, which is a label drawn as an h3. */
+export const HEADINGS = ':is(h1,h2,h3,h4,h5,h6):not(.he-ilist__title)';
+/** Card and item titles, the FAQ's questions and a list's titles — as heavy as HEADINGS (the :not), written after it. */
+export const SUBHEADINGS = ':is(h3,h4,h5,h6,.he-faq__btn,.he-faq__q):not(.type-eyebrow)';
+/** The section's eyebrow, the hero's kicker, and (unless Card labels says otherwise) the cards' labels. */
+export const EYEBROWS = ':is(.he-eyebrow .type-eyebrow,.he-hero__kicker,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow)';
+/** Cards' small labels and "/01" numbers — as heavy as the eyebrow rule, written after it. */
+export const CARD_LABELS = ':is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow):not(.type-eyebrow)';
+
 export function blockStyleToCss(
   id: string,
   style: BlockStyle | undefined,
@@ -315,23 +330,23 @@ export function blockStyleToCss(
 
   const heading = typeDecls(style.typography?.heading);
   if (heading.length) {
-    parts.push(block(`${root} :is(h1,h2,h3,h4,h5,h6)`, heading));
+    parts.push(block(`${root} ${HEADINGS}`, heading));
   }
 
   const body = typeDecls(style.typography?.body);
   if (body.length) {
-    parts.push(block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, body));
+    parts.push(block(`${root} ${BODY}`, body));
   }
 
   // 3.6 — card and item titles, then the eyebrow (after body, which also reaches its span).
   const subheading = typeDecls(style.typography?.subheading);
-  if (subheading.length) parts.push(block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, subheading));
+  if (subheading.length) parts.push(block(`${root} ${SUBHEADINGS}`, subheading));
   const eyebrow = typeDecls(style.typography?.eyebrow);
-  if (eyebrow.length) parts.push(block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, eyebrow));
+  if (eyebrow.length) parts.push(block(`${root} ${EYEBROWS}`, eyebrow));
   // 3.12 — card labels and numbers on their own, after the eyebrow that also reaches them.
   const cardLabel = typeDecls(style.typography?.cardLabel);
   // `:not(.type-eyebrow)` lifts it to the eyebrow rule's weight, so being written later is enough to win.
-  if (cardLabel.length) parts.push(block(`${root} :is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow):not(.type-eyebrow)`, cardLabel));
+  if (cardLabel.length) parts.push(block(`${root} ${CARD_LABELS}`, cardLabel));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
   if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
 
@@ -339,12 +354,15 @@ export function blockStyleToCss(
      set for a desktop is not 56px on a phone. */
   for (const [tier, key] of [['tablet', 'sizeTablet'], ['mobile', 'sizeMobile']] as const) {
     const maxWidth = BREAKPOINTS.find((b) => b.key === tier)!.maxWidth;
+    const tierGap = safe(tier === 'tablet' ? style.gapTablet : style.gapMobile);
     const inner = [
-      block(`${root} :is(h1,h2,h3,h4,h5,h6)`, sizeDecl(style.typography?.heading?.[key])),
-      block(`${root} :is(p,li,td,span,.he-ucard__body):not(.type-eyebrow,.he-ilist__slash,.he-title-after)`, sizeDecl(style.typography?.body?.[key])),
-      block(`${root} :is(h3,h4,h5,h6,.he-faq__btn)`, sizeDecl(style.typography?.subheading?.[key])),
-      block(`${root} :is(.he-eyebrow .type-eyebrow,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow)`, sizeDecl(style.typography?.eyebrow?.[key])),
-      block(`${root} :is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow):not(.type-eyebrow)`, sizeDecl(style.typography?.cardLabel?.[key])),
+      block(`${root} ${HEADINGS}`, sizeDecl(style.typography?.heading?.[key])),
+      block(`${root} ${BODY}`, sizeDecl(style.typography?.body?.[key])),
+      block(`${root} ${SUBHEADINGS}`, sizeDecl(style.typography?.subheading?.[key])),
+      block(`${root} ${EYEBROWS}`, sizeDecl(style.typography?.eyebrow?.[key])),
+      block(`${root} ${CARD_LABELS}`, sizeDecl(style.typography?.cardLabel?.[key])),
+      // 3.13 — the section's gap on this tier.
+      block(root, tierGap && isLength(tierGap) ? [['--he-gap', tierGap]] : []),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }
@@ -393,6 +411,9 @@ export type RowCssInput = {
   align?: 'start' | 'center' | 'end' | 'stretch';
   reverseOnMobile?: boolean;
   minHeight?: string;
+  gapTablet?: string;
+  gapMobile?: string;
+  minHeightMobile?: string;
   columns: { id: string; width: ColumnWidth; order?: ColumnOrder; style?: BlockStyle }[];
 };
 
@@ -470,6 +491,16 @@ export function rowToCss(row: RowCssInput): string {
     const previous = tracksAt(key === 'laptop' ? 'base' : key === 'tablet' ? 'laptop' : 'tablet');
     if (tracks === previous) continue;
     parts.push(`@media (max-width:${maxWidth}px){${root}{grid-template-columns:${tracks}}}`);
+  }
+
+  // 3.13 — the gap on tablets and phones, and the least height on phones.
+  for (const [maxWidth, tier] of [
+    [1024, [['gap', row.gapTablet]]],
+    [768, [['gap', row.gapMobile], ['min-height', row.minHeightMobile]]],
+  ] as const) {
+    const tierDecls: Decl[] = [];
+    for (const [prop, value] of tier) push(tierDecls, prop, value, isLength);
+    if (tierDecls.length) parts.push(`@media (max-width:${maxWidth}px){${block(root, tierDecls)}}`);
   }
 
   // Below the point where columns stack, "reverse" is the only way to say

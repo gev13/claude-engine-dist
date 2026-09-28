@@ -264,6 +264,9 @@ export const blockSchemas = {
     /** 2.22 — the numbers glow in the accent colour. */
     /** 3.8 — the size of the figures (e.g. 56px); unset grows with the screen up to 72px. */
     valueSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.13 — the figures' size on tablets and on phones; each unset keeps the wider screen's. */
+    valueSizeTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    valueSizeMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     glow: z.boolean().optional(),
     /** 2.22 — thin rules between the figures, which then sit to the left. */
     dividers: z.boolean().optional(),
@@ -329,6 +332,9 @@ export const blockSchemas = {
     numbered: z.boolean().optional(),
     /** 3.6 — how that number reads: `plain` "01" (the default) or `slash` "/01". */
     numberStyle: z.enum(['plain', 'slash']).optional(),
+    /** 3.13 — the space between cards on tablets and on phones; each unset keeps the wider screen's. */
+    gapTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    gapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.8 — cards: a thin line between the cards of a row. */
     dividers: z.boolean().optional(),
     /** 3.8 — picture rows: how wide the picture column is (e.g. 400px); unset is two fifths. */
@@ -796,6 +802,10 @@ export const blockSchemas = {
     /** Stack order on mobile, for the "image above text" case. */
     reverseOnMobile: z.boolean().optional(),
     minHeight: z.string().optional(),
+    /** 3.13 — the space between columns on tablets and phones, and the least height on phones; each unset keeps the wider screen's. */
+    gapTablet: z.string().optional(),
+    gapMobile: z.string().optional(),
+    minHeightMobile: z.string().optional(),
   }),
 
   /** Simple data table. */
@@ -937,6 +947,8 @@ export const blockSchemas = {
     textBox: z
       .object({
         paddingBlock: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.13 — the space above and below on phones. */
+        paddingBlockMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         inset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         bodyWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         bodyGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
-import { blockStyleToCss } from '@/lib/blockStyle-css';
+import { SUBHEADINGS, blockStyleToCss } from '@/lib/blockStyle-css';
 
 /* 3.10 — two-column sections whose second column starts level with the
    heading, a FAQ's heading column of a set width, contained questions with
@@ -39,6 +39,6 @@ describe('a FAQ', () => {
   });
 
   it('takes the section’s card-title type for its questions', () => {
-    expect(blockStyleToCss('f', blockStyleSchema.parse({ typography: { subheading: { size: '20px' } } }))).toContain('.he-b-f :is(h3,h4,h5,h6,.he-faq__btn){font-size:20px}');
+    expect(blockStyleToCss('f', blockStyleSchema.parse({ typography: { subheading: { size: '20px' } } }))).toContain(`.he-b-f ${SUBHEADINGS}{font-size:20px}`);
   });
 });

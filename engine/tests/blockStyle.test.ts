@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
-import { blockStyleToCss, blocksStyleToCss, isSafeBlockId } from '@/lib/blockStyle-css';
+import { HEADINGS, blockStyleToCss, blocksStyleToCss, isSafeBlockId } from '@/lib/blockStyle-css';
 import { parseBlock } from '@/lib/blocks';
 
 const parse = (input: unknown) => blockStyleSchema.parse(input);
@@ -130,7 +130,7 @@ describe('section style to CSS', () => {
 
   it('scopes a typography override to the tags it applies to', () => {
     const css = blockStyleToCss('b1', parse({ typography: { heading: { align: 'center' } } }));
-    expect(css).toBe('.he-b-b1 :is(h1,h2,h3,h4,h5,h6){text-align:center}');
+    expect(css).toBe(`.he-b-b1 ${HEADINGS}{text-align:center}`);
   });
 
   /* The id becomes part of a selector, and the values become declarations, so

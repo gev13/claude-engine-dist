@@ -143,6 +143,8 @@ export const chromeSchema = z.object({
       logo: z.enum(['mark', 'image', 'none']).optional(),
       /** 3.1 — the uploaded logo's height in the footer, px. */
       logoHeight: z.number().int().min(16).max(120).optional(),
+      /** 3.13 — the footer logo's height on phones, px; unset keeps the height above. */
+      logoHeightMobile: z.number().int().min(16).max(120).optional(),
       /** 3.1 — the footer as a panel: inset, in the panel colour and corners set in Appearance → Shape. */
       panel: z.boolean().optional(),
       /** 3.11 — false leaves the contact email out of the footer. */
@@ -271,6 +273,7 @@ export type ResolvedChrome = {
     background?: string;
     logo: 'mark' | 'image' | 'none';
     logoHeight?: number;
+    logoHeightMobile?: number;
     panel: boolean;
     email: boolean;
     copyrightCase: 'upper' | 'asWritten';
@@ -355,6 +358,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       background: c.footer?.background && HEX.test(c.footer.background) ? c.footer.background : undefined,
       logo: c.footer?.logo ?? 'mark',
       logoHeight: c.footer?.logoHeight,
+      logoHeightMobile: c.footer?.logoHeightMobile,
       panel: c.footer?.panel ?? false,
       email: c.footer?.email ?? true,
       copyrightCase: c.footer?.copyrightCase ?? 'upper',

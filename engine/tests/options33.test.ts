@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
-import { blockStyleToCss } from '@/lib/blockStyle-css';
+import { HEADINGS, blockStyleToCss } from '@/lib/blockStyle-css';
 import { resolveBlog } from '@/lib/blog';
 import { themeSchema } from '@/lib/theme';
 import { themeToCss } from '@/lib/theme-css';
@@ -18,8 +18,8 @@ describe('a section’s own sizes on smaller screens', () => {
   it('apply at the tablet and phone widths, and only when set', () => {
     const style = blockStyleSchema.parse({ typography: { heading: { size: '56px', sizeTablet: '44px', sizeMobile: '32px' } } });
     const out = blockStyleToCss('b1', style);
-    expect(out).toContain('@media (max-width:1024px){.he-b-b1 :is(h1,h2,h3,h4,h5,h6){font-size:44px}}');
-    expect(out).toContain('@media (max-width:768px){.he-b-b1 :is(h1,h2,h3,h4,h5,h6){font-size:32px}}');
+    expect(out).toContain(`@media (max-width:1024px){.he-b-b1 ${HEADINGS}{font-size:44px}}`);
+    expect(out).toContain(`@media (max-width:768px){.he-b-b1 ${HEADINGS}{font-size:32px}}`);
     expect(blockStyleToCss('b1', blockStyleSchema.parse({ typography: { heading: { size: '56px' } } }))).not.toContain('max-width:768px');
   });
 });

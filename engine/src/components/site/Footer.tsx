@@ -16,7 +16,7 @@ import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /** 3.1 — what heads the footer. */
-export type FooterLogo = { kind: 'mark' } | { kind: 'image'; url: string; height?: number } | { kind: 'none' };
+export type FooterLogo = { kind: 'mark' } | { kind: 'image'; url: string; height?: number; heightMobile?: number } | { kind: 'none' };
 
 export type FooterProps = {
   siteName: string;
@@ -65,7 +65,11 @@ function Mark({ siteName, logo }: { siteName: string; logo?: FooterLogo }) {
           alt={siteName}
           className="he-ftr__logo"
           sizes="thumb"
-          style={logo.height ? ({ '--he-ftr-logo-h': `${logo.height}px` } as React.CSSProperties) : undefined}
+          style={
+            logo.height || logo.heightMobile
+              ? ({ ...(logo.height ? { '--he-ftr-logo-h': `${logo.height}px` } : {}), ...(logo.heightMobile ? { '--he-ftr-logo-h-m': `${logo.heightMobile}px` } : {}) } as React.CSSProperties)
+              : undefined
+          }
         />
       </div>
     );

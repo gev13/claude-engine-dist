@@ -130,7 +130,7 @@ export function StatCard({ value, label }: { value: string; label: string }) {
   return (
     <div className="he-stat bg-surface px-6 py-7">
       <div className="he-stat__value display text-[clamp(34px,5vw,46px)] text-flare-hot">{value}</div>
-      <div className="mt-2.5 text-[14px] text-ash">{label}</div>
+      <div className="he-stat__label mt-2.5 text-[14px] text-ash">{label}</div>
     </div>
   );
 }

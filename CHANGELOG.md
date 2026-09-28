@@ -10,6 +10,19 @@ improvements.
 
 ---
 
+## 3.13.0 — 2026-09-28
+
+**Per-device values across the admin.** Buttons' padding and text size per
+device (laptop, tablet, phone); the site gap and block text size on smaller
+screens; stats figure sizes, row and card-grid gaps, row least height, band
+padding, item padding and the footer logo per device; the alternate theme
+colours; background repeat, parallax, line height and capitals in a
+section's design; and section typography now reaches FAQ questions, the
+classic hero's kicker and stat labels. All empty until set, so existing
+sites look the same.
+
+---
+
 ## 3.12.0 — 2026-09-27
 
 **Pictures that stand clear, document cards, and card labels of their own.**

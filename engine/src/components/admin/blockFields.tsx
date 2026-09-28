@@ -1574,7 +1574,7 @@ type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: 
 
 /** 2.21 — the media band's colour fading in from one side, over the picture. */
 /** 3.11 — a band's text box: its padding, inset, paragraph width and gaps. */
-type BandTextBox = { paddingBlock?: string; inset?: string; bodyWidth?: string; bodyGap?: string; actionsGap?: string };
+type BandTextBox = { paddingBlock?: string; paddingBlockMobile?: string; inset?: string; bodyWidth?: string; bodyGap?: string; actionsGap?: string };
 function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
   const box = (props.textBox as BandTextBox | undefined) ?? {};
   const put = (key: keyof BandTextBox) => (value: string) => {
@@ -1592,6 +1592,7 @@ function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
       <summary className="cursor-pointer text-[14px] text-ash">The text’s box — padding, inset, widths and gaps</summary>
       <div className="mt-3 grid gap-3 sm:grid-cols-3">
         {field('paddingBlock', 'Space above and below', '72px')}
+        {field('paddingBlockMobile', 'Space above and below on phones', 'as above')}
         {field('inset', 'Further in than the page edge', '0')}
         {field('bodyWidth', 'Paragraph width', '60ch')}
         {field('bodyGap', 'Gap above the paragraph', '16px')}
@@ -1731,6 +1732,9 @@ function RowFields({ props, set, depth }: { props: Props; set: Setter; depth: nu
       <div className="grid gap-4 sm:grid-cols-2">
         <Text label="Gap between columns" k="gap" props={props} set={set} placeholder="32px" />
         <Text label="Minimum height" k="minHeight" props={props} set={set} placeholder="none" />
+        <Text label="Gap on tablets" k="gapTablet" props={props} set={set} placeholder="as above" />
+        <Text label="Gap on phones" k="gapMobile" props={props} set={set} placeholder="as on tablets" />
+        <Text label="Minimum height on phones" k="minHeightMobile" props={props} set={set} placeholder="as above" />
         <Field label="Column alignment" hint="how columns line up when they differ in height">
           <Select
             value={str(props, 'align') || 'stretch'}
@@ -2450,6 +2454,10 @@ function TypeFields({
                 <Textarea rows={2} value={item.body ?? ''} onChange={(e) => update({ body: e.target.value || undefined })} />
               </Field>
               <MediaInput label="Image" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
+              {/* 3.13 — what the picture shows, for anyone who cannot see it. */}
+              <Field label="Image description" hint="alt text; empty if purely decorative">
+                <Input value={item.alt ?? ''} onChange={(e) => update({ alt: e.target.value || undefined })} />
+              </Field>
               <MediaInput label="Video" accept="video" value={item.videoUrl} onChange={(videoUrl) => update({ videoUrl })} />
               <div className="grid gap-3 sm:grid-cols-2">
                 <Field label="Button label">
@@ -4484,6 +4492,14 @@ function TypeFields({
           <Field label="Figure size" hint="e.g. 56px — empty grows with the screen">
             <Input value={str(props, 'valueSize')} placeholder="72px" onChange={(e) => set(withOpt(props, 'valueSize', e.target.value.trim() || undefined))} />
           </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Figure size on tablets" hint="empty keeps the size above">
+              <Input value={str(props, 'valueSizeTablet')} placeholder="48px" onChange={(e) => set(withOpt(props, 'valueSizeTablet', e.target.value.trim() || undefined))} />
+            </Field>
+            <Field label="Figure size on phones" hint="empty keeps the tablet size">
+              <Input value={str(props, 'valueSizeMobile')} placeholder="32px" onChange={(e) => set(withOpt(props, 'valueSizeMobile', e.target.value.trim() || undefined))} />
+            </Field>
+          </div>
           {variant === 'counters' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect label="Icons" k="iconPosition" fallback="top" options={[['top', 'Above the number'], ['left', 'Beside the number']]} props={props} set={set} />
@@ -4619,6 +4635,8 @@ function TypeFields({
               emptyLabel="this layout's own"
               onChange={(gap: string | undefined) => set({ ...props, gap })}
             />
+            <LengthField label="On tablets" value={str(props, 'gapTablet') || undefined} emptyLabel="as above" onChange={(v: string | undefined) => set(withOpt(props, 'gapTablet', v))} />
+            <LengthField label="On phones" value={str(props, 'gapMobile') || undefined} emptyLabel="as on tablets" onChange={(v: string | undefined) => set(withOpt(props, 'gapMobile', v))} />
           </div>
           {(variant === 'cards' || variant === 'mediaRows') && (
             <div className="grid gap-3 sm:grid-cols-2">

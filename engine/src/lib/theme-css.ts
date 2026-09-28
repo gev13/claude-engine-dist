@@ -170,6 +170,23 @@ function adaptiveDecls(theme: Theme, breakpoint: BreakpointKey): Decl[] {
     push(out, `--he-${role}-tracking`, step.letterSpacing, isLength);
   }
 
+  // 3.13 — block text sizes on phones.
+  if (breakpoint === 'mobile') {
+    push(out, '--he-block-lead', theme.blockTextMobile?.lead, isLength);
+    push(out, '--he-block-text', theme.blockTextMobile?.text, isLength);
+    push(out, '--he-block-small', theme.blockTextMobile?.small, isLength);
+  }
+
+  // 3.13 — the site's gap on this tier.
+  if (breakpoint === 'tablet') push(out, '--he-gap', theme.gapTablet, isLength);
+  if (breakpoint === 'mobile') push(out, '--he-gap', theme.gapMobile, isLength);
+
+  // 3.13 — the buttons' padding and label size on this tier.
+  const buttons = theme.buttons?.[breakpoint];
+  push(out, '--he-btn-px', buttons?.paddingX, isLength);
+  push(out, '--he-btn-py', buttons?.paddingY, isLength);
+  push(out, '--he-btn-size', buttons?.fontSize, isLength);
+
   const brand = theme.brand ?? {};
   if (breakpoint === 'mobile') push(out, '--he-logo-height', brand.logoHeightMobile, isLength);
 

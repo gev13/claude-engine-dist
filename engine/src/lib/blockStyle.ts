@@ -349,6 +349,9 @@ export const blockStyleSchema = z.object({
    * by "space between items".
    */
   gap: length.optional(),
+  /** 3.13 — the space between items on tablets and on phones; each unset keeps the wider screen's. */
+  gapTablet: length.optional(),
+  gapMobile: length.optional(),
 
   /**
    * How fast this block animates, as a multiple of the drawn-in timings.

@@ -101,6 +101,7 @@
   .he-band__inner.has-text-box .he-actions { margin-top: var(--he-band-actions-gap, 28px); }
   @media (width <= 48rem) {
     .he-band__inner.has-text-box .he-band__text { margin-inline-start: 0; }
+    .he-band__inner.has-text-box { padding-block: var(--he-band-py-m, var(--he-band-py, 72px)); }
   }
   .he-band.is-center .he-band__inner { align-items: center; justify-content: center; text-align: center; }
   .he-band.is-center .he-band__text { max-width: 780px; }
@@ -322,6 +323,13 @@
   .he-figs__media { margin-top: 44px; aspect-ratio: 21 / 9; overflow: hidden; border-radius: 24px; background: var(--color-surface); }
   .he-figs__grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: var(--he-gap, 32px); margin-top: 52px; text-align: center; }
   .he-figs__value { font-family: var(--font-display); font-size: var(--he-figs-size, clamp(40px, 5vw, 72px)); font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  /* 3.13 — a size of their own on tablets and phones, falling back to the wider screen's. */
+  @media (width <= 1024px) {
+    .he-figs__value { font-size: var(--he-figs-size-tablet, var(--he-figs-size, clamp(40px, 5vw, 72px))); }
+  }
+  @media (width <= 768px) {
+    .he-figs__value { font-size: var(--he-figs-size-mobile, var(--he-figs-size-tablet, var(--he-figs-size, clamp(40px, 5vw, 72px)))); }
+  }
   .he-figs__value sup { margin-left: 3px; font-size: 0.38em; font-weight: 600; letter-spacing: 0; }
   .he-figs__label { max-width: 24ch; margin: 12px auto 0; font-size: 14px; color: var(--color-ash); }
   .he-figs__foot { margin: 32px 0 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; color: var(--color-smoke); }

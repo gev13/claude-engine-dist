@@ -547,6 +547,10 @@
   .he-ftr__mark { display: block; width: 32px; height: 32px; }
   /* 3.1 — the uploaded logo at the head of the footer. */
   .he-ftr__logo { display: block; width: auto; height: var(--he-ftr-logo-h, 40px); max-width: 100%; }
+  /* 3.13 — a height of its own on phones. */
+  @media (width <= 768px) {
+    .he-ftr__logo { height: var(--he-ftr-logo-h-m, var(--he-ftr-logo-h, 40px)); }
+  }
   /* 3.1 — the footer as a panel, like a section marked Panel. */
   .he-ftr.is-panel {
     margin: min(var(--he-panel-gap, 24px), 3vw) min(var(--he-panel-inset, 24px), 3vw);

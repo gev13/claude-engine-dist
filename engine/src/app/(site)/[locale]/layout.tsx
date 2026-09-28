@@ -329,10 +329,10 @@ function notchSpace(height: { base?: number; laptop?: number; tablet?: number; m
 }
 
 /** 3.1 — the footer's head: the uploaded logo when chosen and there is one, nothing, or (unset) the mark as before. */
-function footerLogo(footer: { logo: 'mark' | 'image' | 'none'; logoHeight?: number }, brand: Theme['brand']): FooterLogo {
+function footerLogo(footer: { logo: 'mark' | 'image' | 'none'; logoHeight?: number; logoHeightMobile?: number }, brand: Theme['brand']): FooterLogo {
   if (footer.logo === 'none') return { kind: 'none' };
   if (footer.logo === 'image' && brand?.logoType === 'image' && brand.logoUrl) {
-    return { kind: 'image', url: brand.logoUrl, height: footer.logoHeight };
+    return { kind: 'image', url: brand.logoUrl, height: footer.logoHeight, heightMobile: footer.logoHeightMobile };
   }
   return { kind: 'mark' };
 }

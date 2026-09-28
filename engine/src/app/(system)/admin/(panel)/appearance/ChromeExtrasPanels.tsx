@@ -263,6 +263,21 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
             />
           </Field>
         )}
+        {footer?.logo === 'image' && (
+          <Field label="Logo height on phones" hint="px — empty keeps the height above" htmlFor={`${id}-logo-hm`}>
+            <Input
+              id={`${id}-logo-hm`}
+              type="number"
+              min={16}
+              max={120}
+              placeholder="as above"
+              value={footer?.logoHeightMobile ?? ''}
+              onChange={(e) =>
+                set(['chrome', 'footer', 'logoHeightMobile'])(e.target.value === '' ? undefined : Math.min(120, Math.max(16, Math.round(Number(e.target.value) || 40))))
+              }
+            />
+          </Field>
+        )}
       </div>
       <div className="mt-4">
         <Check label="Draw the footer as a panel (Shape → Panels)" value={footer?.panel} onChange={set(['chrome', 'footer', 'panel'])} />

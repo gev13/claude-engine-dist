@@ -38,6 +38,9 @@ export const itemStyleSchema = z.object({
   align: z.enum(['left', 'center', 'right']).optional(),
   /** 3.6 — image cards: the text sits this much further in than the picture. */
   textInset: length.optional(),
+  /** 3.13 — on phones: the card's padding and text inset; each unset keeps the wider screen's. */
+  spacingMobile: box.optional(),
+  textInsetMobile: length.optional(),
   /**
    * A name to aim your own CSS at, the same escape hatch a block has.
    *
@@ -113,6 +116,11 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
 
   const own = decls.length ? `${selector}{${decls.map(([k, v]) => `${k}:${v}`).join(';')}}` : '';
 
+  // 3.13 — the padding and text inset on phones.
+  const phone: Decl[] = [...spacingDecls(style.spacingMobile)];
+  if (style.textInsetMobile && isLength(style.textInsetMobile)) phone.push(['--he-item-text-inset', style.textInsetMobile]);
+  const onPhones = phone.length ? `@media (max-width:768px){${selector}{${phone.map(([k, v]) => `${k}:${v}`).join(';')}}}` : '';
+
   /* Text colour has to reach the heading too. A card paints its title from
      the theme, so setting the item's colour and watching the title stay dark
      on a dark tile is the obvious first disappointment. */
@@ -121,7 +129,7 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
       ? `${selector},${selector} :is(h1,h2,h3,h4,h5,h6,p,li,span,a){color:${style.color}}`
       : '';
 
-  return own + text;
+  return own + text + onPhones;
 }
 
 /**

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { blockStyleSchema } from '@/lib/blockStyle';
-import { blockStyleToCss } from '@/lib/blockStyle-css';
+import { CARD_LABELS, blockStyleToCss } from '@/lib/blockStyle-css';
 
 /* 3.12 — a picture standing clear of an edge-to-edge hero's top and bottom,
    a section no wider than a set width (a document card), and card labels
@@ -36,7 +36,7 @@ describe('card labels and numbers', () => {
     const css = blockStyleToCss('c', blockStyleSchema.parse({ typography: { eyebrow: { color: '#e63946' }, cardLabel: { color: '#ffffff' } } }));
     const eyebrowAt = css.indexOf('{color:#e63946}');
     // As specific as the eyebrow rule (its :not() adds a class), and written after it.
-    const labelAt = css.indexOf('.he-b-c :is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow):not(.type-eyebrow){color:#ffffff}');
+    const labelAt = css.indexOf(`.he-b-c ${CARD_LABELS}{color:#ffffff}`);
     expect(eyebrowAt).toBeGreaterThan(-1);
     expect(labelAt).toBeGreaterThan(eyebrowAt);
   });

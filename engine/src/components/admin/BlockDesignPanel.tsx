@@ -269,6 +269,18 @@ export function BlockDesignPanel({
 
         {/* Not per breakpoint: these are one decision about the block, and
             four tabs of them would be four ways to be inconsistent. */}
+        {/* 3.13 — the gap has its own value on tablets and phones. */}
+        {(spacingTab === 'tablet' || spacingTab === 'mobile') && (
+          <div className="mb-4 grid gap-3 sm:grid-cols-2">
+            <LengthField
+              label="Space between items"
+              hint={spacingTab === 'tablet' ? 'on tablets' : 'on phones'}
+              value={spacingTab === 'tablet' ? current.gapTablet : current.gapMobile}
+              emptyLabel="the wider screen’s"
+              onChange={set([spacingTab === 'tablet' ? 'gapTablet' : 'gapMobile'])}
+            />
+          </div>
+        )}
         {spacingTab === 'base' && (
           <div className="mb-4 grid gap-3 sm:grid-cols-2">
             <LengthField
@@ -367,6 +379,26 @@ export function BlockDesignPanel({
             ]}
             onChange={set(['background', 'position'])}
           />
+          <ChoiceField
+            label="Image repeat"
+            value={get(['background', 'repeat']) as never}
+            options={[
+              { value: 'no-repeat', label: 'Once' },
+              { value: 'repeat', label: 'Tiled' },
+              { value: 'repeat-x', label: 'Across' },
+              { value: 'repeat-y', label: 'Down' },
+            ]}
+            onChange={set(['background', 'repeat'])}
+          />
+          <label className="flex items-end gap-2 pb-3 text-[14px] text-ash">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-flare"
+              checked={get(['background', 'attachment']) === 'fixed'}
+              onChange={(e) => set(['background', 'attachment'])(e.target.checked ? 'fixed' : undefined)}
+            />
+            Parallax — the picture stays put as the section scrolls
+          </label>
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -562,6 +594,20 @@ export function BlockDesignPanel({
                 value={get(['typography', role, 'letterSpacing'])}
                 inherited={band.type[role]?.letterSpacing}
                 onChange={set(['typography', role, 'letterSpacing'])}
+              />
+              <Field label="Line height" hint="e.g. 1.4 or 28px">
+                <Input value={get(['typography', role, 'lineHeight']) ?? ''} placeholder="the theme’s" onChange={(e) => set(['typography', role, 'lineHeight'])(e.target.value.trim() || undefined)} />
+              </Field>
+              <ChoiceField
+                label="Capitals"
+                value={get(['typography', role, 'transform']) as never}
+                options={[
+                  { value: 'none', label: 'As written' },
+                  { value: 'uppercase', label: 'ALL CAPITALS' },
+                  { value: 'lowercase', label: 'all lowercase' },
+                  { value: 'capitalize', label: 'Each Word' },
+                ]}
+                onChange={set(['typography', role, 'transform'])}
               />
               <ChoiceField
                 label="Alignment"
