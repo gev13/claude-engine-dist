@@ -466,6 +466,8 @@ export const themeSchema = z.object({
       weight: z.enum(['400', '500', '600', '700']).optional(),
       /** 2.22 — a "Read more" link's arrow as it is, or on a small circle; (3.6) or none. */
       more: z.enum(['arrow', 'circle', 'none']).optional(),
+      /** 3.17.1 — the "Read more" links' weight; unset is each block's own. */
+      moreWeight: z.enum(['400', '500', '600', '700', '800']).optional(),
       /** 3.6 — the buttons' arrow pointing right (as drawn) or up and to the right. */
       arrow: z.enum(['right', 'diagonal']).optional(),
     })

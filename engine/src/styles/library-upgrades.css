@@ -315,3 +315,9 @@
 .he-menu.is-services-rows .he-menu__services a:hover { color: var(--color-flare-soft); }
 /* 3.17 — a menu's own scrolling never carries on into the page. */
 .he-menu { overscroll-behavior: contain; }
+
+/* 3.17.1 — the notch header's tab staying at the top of a phone's screen as
+   the page scrolls: fixed at the same place it starts, over the content. */
+@media (width <= 768px) {
+  .he-hdr--notch.is-sticky-sm { position: fixed; }
+}

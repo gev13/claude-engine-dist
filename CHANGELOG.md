@@ -10,6 +10,17 @@ improvements.
 
 ---
 
+## 3.17.1 — 2026-09-28
+
+**Fixes and two small options.** Twenty-eight bundled variable fonts
+(Manrope, JetBrains Mono, Open Sans, Lora, Nunito and others — 147 faces)
+were declared as a 400 and a 700 on the same file, so medium and semibold text drew as regular; each is now declared once
+across its own weight range, which also leaves 4 MB fewer font files. The
+"Read more" links take a weight of their own, and a notch header can stay at
+the top of a phone's screen while the page scrolls.
+
+---
+
 ## 3.17.0 — 2026-09-28
 
 **The phone menu, and a few finishing touches.** The open phone menu can

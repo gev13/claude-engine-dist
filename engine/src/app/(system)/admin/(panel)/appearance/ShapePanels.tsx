@@ -154,6 +154,19 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           ]}
           onChange={set(['buttons', 'more'])}
         />
+        <ChoiceField
+          label="“Read more” weight"
+          value={buttons.moreWeight}
+          inherited="each block’s own"
+          options={[
+            { value: '400', label: 'Regular' },
+            { value: '500', label: 'Medium' },
+            { value: '600', label: 'Semibold' },
+            { value: '700', label: 'Bold' },
+            { value: '800', label: 'Extra bold' },
+          ]}
+          onChange={set(['buttons', 'moreWeight'])}
+        />
       </div>
     </Panel>
   );

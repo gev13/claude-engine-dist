@@ -694,6 +694,9 @@ function AppearanceScreenInner() {
                   </div>
                   <div className="grid gap-3 sm:grid-cols-2">
                     <Toggle label="Stick to the top while scrolling" value={theme.chrome?.header?.sticky} fallback onChange={set(['chrome', 'header', 'sticky'])} />
+                    {theme.chrome?.header?.variant === 'notch' && (
+                      <Toggle label="Notch header: stay at the top on phones while scrolling" value={theme.chrome?.header?.stickyMobile} onChange={set(['chrome', 'header', 'stickyMobile'])} />
+                    )}
                     <Toggle label="Transparent over a full-width hero" value={theme.chrome?.header?.overlay} onChange={set(['chrome', 'header', 'overlay'])} />
                     <Toggle label="Show a search control" value={theme.chrome?.header?.search} onChange={set(['chrome', 'header', 'search'])} />
                     <Toggle label="Keep the header button on phones" value={theme.chrome?.header?.ctaOnMobile} onChange={set(['chrome', 'header', 'ctaOnMobile'])} />

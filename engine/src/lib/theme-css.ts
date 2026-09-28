@@ -428,6 +428,8 @@ function shapeCss(theme: Theme, scope: string): string {
   }
   // 3.6 — "Read more" as words alone.
   if (buttons.more === 'none') parts.push(block(at('.he-more__icon'), [['display', 'none']]));
+  // 3.17.1 — the "Read more" links' own weight.
+  if (buttons.moreWeight && ['400', '500', '600', '700', '800'].includes(buttons.moreWeight)) parts.push(block(at('.he-more'), [['font-weight', buttons.moreWeight]]));
 
   // 2.22 — every "Read more" arrow (`.he-more__icon`, an svg or a text arrow) on a small tinted circle.
   if (buttons.more === 'circle') {

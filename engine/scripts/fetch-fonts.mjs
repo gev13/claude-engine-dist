@@ -26,6 +26,7 @@
 
 import { mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
+import { weightRange } from './lib/woff2-axes.mjs';
 
 /* A browser user agent, because the API serves .ttf to anything it does not
    recognise and .woff2 only to a modern browser. */
@@ -272,7 +273,13 @@ async function main() {
     const written = new Set();
     const subsets = new Set();
 
+    /* 3.17.1 — one variable file answered for several weights is written and
+       declared once, across the file's own weight range: two single-weight
+       faces on one variable file drew every weight between them as the lower. */
+    const seenUrls = new Set();
     for (const face of faces) {
+      if (seenUrls.has(face.url)) continue;
+      seenUrls.add(face.url);
       const res = await fetch(face.url, { headers: { 'user-agent': UA } });
       if (!res.ok) throw new Error(`${res.status} downloading ${face.url}`);
       const data = Buffer.from(await res.arrayBuffer());
@@ -284,6 +291,9 @@ async function main() {
       }
 
       const italic = face.style === 'italic';
+      const shared = faces.filter((other) => other.url === face.url).length > 1;
+      const range = shared ? weightRange(data) : null;
+      if (range) face.weight = `${range[0]} ${range[1]}`;
       const file = fileNameOf(family, italic ? 'italic' : 'normal', face.subset, face.weight);
       await writeFile(path.join(OUT_DIR, file), data);
       familyBytes += data.byteLength;

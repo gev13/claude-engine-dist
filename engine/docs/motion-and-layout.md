@@ -309,3 +309,8 @@ but not a button's own, which is exactly what was typed.
 - **Cards → Button colour**: a filled button in its own colour, glowing in it.
 - Fixed: a button's label sits centred between its edge and the arrow's
   divider; a contained FAQ cut like the cards keeps its border along the cuts.
+- 3.17.1: **Appearance → Buttons → “Read more” weight**; **Header → Notch
+  header: stay at the top on phones while scrolling**. Fixed: the bundled
+  variable Google fonts were declared as two single weights on one file, so
+  medium and semibold drew as regular; each is now declared once across its
+  own weight range (see `docs/fonts.md`).

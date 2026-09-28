@@ -136,3 +136,14 @@ Check it before adding a face. Most Google Fonts are OFL, which permits
 self-hosting and subsetting; a commercial licence often does not. The engine
 ships nothing it has not got a licence for, and neither should a site built on
 it.
+
+## Variable families (3.17.1)
+
+Many catalogue families are variable fonts: one file carries every weight.
+Google answers a request for 400 and 700 of such a family with that same file
+twice, each declared a single weight — and a face declared `font-weight: 400`
+then draws 500 and 600 as 400. `fetch-fonts` now writes a file once and
+declares it across the weight range read from its own `fvar` table
+(`scripts/lib/woff2-axes.mjs`), named `…-var-<subset>.woff2`.
+`tests/variableFonts.test.ts` fails if two weights of one face point at the
+same bytes again.
