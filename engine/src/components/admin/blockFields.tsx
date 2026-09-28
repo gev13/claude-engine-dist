@@ -29,6 +29,7 @@ import { ColorField, LengthField } from '@/components/admin/styleFields';
 import { CardHoverFields } from '@/components/admin/CardHoverFields';
 import type { CardHover } from '@/lib/cardHover';
 import type { ItemStyle } from '@/lib/itemStyle';
+import type { ButtonPad } from '@/lib/buttonPad';
 import { Wireframe } from '@/components/admin/Wireframe';
 import { CARD_GRID_WIREFRAMES, CAROUSEL_WIREFRAMES, HERO_WIREFRAMES, type Shape } from '@/lib/wireframes';
 import { CARD_GRID_LABELS, CAROUSEL_LABELS, HERO_LABELS } from '@/lib/blockNames';
@@ -392,7 +393,7 @@ function TitleBodyRepeater({ label, items, onChange }: { label: string; items: T
   );
 }
 
-type LinkItem = { label: string; href: string; variant?: string; arrow?: boolean };
+type LinkItem = { label: string; href: string; variant?: string; arrow?: boolean; pad?: ButtonPad };
 function LinksRepeater({ items, onChange }: { items: LinkItem[]; onChange: (n: LinkItem[]) => void }) {
   return (
     <Repeater
@@ -417,9 +418,46 @@ function LinksRepeater({ items, onChange }: { items: LinkItem[]; onChange: (n: L
             </Select>
           </Field>
           <ArrowChoice value={item.arrow} onChange={(arrow) => update({ arrow })} />
+          <ButtonPadFields value={item.pad} onChange={(pad) => update({ pad })} />
         </div>
       )}
     />
+  );
+}
+
+/**
+ * 3.14 — one button's own padding, per screen. Folded away, and shows what
+ * is set when closed, because most buttons use the site's (Appearance → Buttons).
+ */
+function ButtonPadFields({ value, onChange, label = 'Padding of this button' }: { value?: ButtonPad; onChange: (next: ButtonPad | undefined) => void; label?: string }) {
+  const current = value ?? {};
+  const setKey = (key: keyof NonNullable<ButtonPad>) => (next: string | undefined) => {
+    const updated: Record<string, string> = { ...(current as Record<string, string>) };
+    if (next) updated[key] = next;
+    else delete updated[key];
+    onChange(Object.keys(updated).length ? (updated as ButtonPad) : undefined);
+  };
+  const count = Object.keys(current).length;
+  const rows = [
+    ['All screens', 'y', 'x', 'the site’s'],
+    ['Tablets (≤1024px)', 'yTablet', 'xTablet', 'as above'],
+    ['Phones (≤768px)', 'yMobile', 'xMobile', 'as above'],
+  ] as const;
+  return (
+    <details className="col-span-full rounded-[10px] border border-hairline px-3 py-2" open={count > 0}>
+      <summary className="cursor-pointer text-[13px] text-ash">
+        {label}
+        {count > 0 ? ` — ${count} set` : ' — the site’s (Appearance → Buttons)'}
+      </summary>
+      <div className="mt-3 grid gap-3">
+        {rows.map(([title, y, x, empty]) => (
+          <div key={y} className="grid gap-3 sm:grid-cols-2">
+            <LengthField label={`${title} — top and bottom`} value={current[y]} emptyLabel={empty} onChange={setKey(y)} />
+            <LengthField label={`${title} — sides`} value={current[x]} emptyLabel={empty} onChange={setKey(x)} />
+          </div>
+        ))}
+      </div>
+    </details>
   );
 }
 
@@ -760,9 +798,9 @@ function LibLinksField({
   return (
     <Repeater
       label={`${label} (up to ${max})`}
-      items={arr<{ label: string; href: string; arrow?: boolean }>(props, k)}
+      items={arr<{ label: string; href: string; arrow?: boolean; pad?: ButtonPad }>(props, k)}
       onChange={(next) => set({ ...props, [k]: next.slice(0, max) })}
-      blank={(): { label: string; href: string; arrow?: boolean } => ({ label: '', href: '' })}
+      blank={(): { label: string; href: string; arrow?: boolean; pad?: ButtonPad } => ({ label: '', href: '' })}
       addLabel="Add"
       renderRow={(item, update) => (
         <div className={arrows ? 'grid gap-3 sm:grid-cols-3' : 'grid gap-3 sm:grid-cols-2'}>
@@ -773,6 +811,7 @@ function LibLinksField({
             <Input value={item.href ?? ''} placeholder="/path or https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
           </Field>
           {arrows && <ArrowChoice value={item.arrow} onChange={(arrow) => update({ arrow })} />}
+          <ButtonPadFields value={item.pad} onChange={(pad) => update({ pad })} />
         </div>
       )}
     />
@@ -822,7 +861,7 @@ type GridCard = { eyebrow?: string; title: string; titleAfter?: string; titleAft
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
-type ButtonItem = { label: string; href: string; style?: string; icon?: string; iconSide?: string; iconOnly?: boolean; shadow?: boolean };
+type ButtonItem = { label: string; href: string; style?: string; icon?: string; iconSide?: string; iconOnly?: boolean; shadow?: boolean; pad?: ButtonPad };
 type ProgressItem = { label: string; value: number; note?: string };
 type SocialItem = { network: string; href: string; short?: string };
 type PlanItem = {
@@ -2626,6 +2665,7 @@ function TypeFields({
                     Shadow
                   </label>
                 </div>
+                <ButtonPadFields value={item.pad} onChange={(pad) => update({ pad })} />
               </>
             )}
           />
@@ -3682,6 +3722,7 @@ function TypeFields({
           </label>
           <Text label="Space inside the card" k="cardPadding" props={props} set={set} placeholder="32px — or two values, e.g. 48px 56px" />
           <Text label="Space inside the card on phones" k="cardPaddingMobile" props={props} set={set} placeholder="22px 18px" />
+          <ButtonPadFields label="Padding of the send button" value={props.submitPad as ButtonPad | undefined} onChange={(pad) => set(withOpt(props, 'submitPad', pad))} />
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
         </>

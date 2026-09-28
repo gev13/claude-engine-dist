@@ -36,7 +36,7 @@ function Text({ p, align = 'left' }: { p: P; align?: 'left' | 'center' }) {
       {p.links.length > 0 && (
         <div className="he-hero__actions">
           {p.links.map((l, i) => (
-            <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined}>
+            <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined} pad={l.pad}>
               {l.label}
             </Button>
           ))}

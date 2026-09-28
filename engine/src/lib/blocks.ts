@@ -11,6 +11,7 @@ import {
   length,
   textTagSchema,
 } from './blockStyle';
+import { buttonPadSchema } from './buttonPad';
 import { itemStyleSchema } from './itemStyle';
 import { figureStyleSchema } from './figureStyle';
 import { isColor, isLength } from './theme';
@@ -36,6 +37,8 @@ const link = z.object({
   variant: z.enum(['primary', 'outline', 'ghost']).optional(),
   /** 3.1 — the arrow on this button; unset is what the block always did (the first button's arrow, where it had one). */
   arrow: z.boolean().optional(),
+  /** 3.14 — this button's own padding, per screen. */
+  pad: buttonPadSchema,
 });
 const tone = z.enum(['base', 'raised', 'flare']).optional();
 
@@ -52,6 +55,8 @@ const libraryLink = z.object({
   href: safeHref,
   /** 3.1 — an arrow on this button (in its own compartment when Appearance → Buttons says so). */
   arrow: z.boolean().optional(),
+  /** 3.14 — this button's own padding, per screen. */
+  pad: buttonPadSchema,
 });
 const text = (max: number) => z.string().max(max).optional();
 
@@ -1245,6 +1250,8 @@ export const blockSchemas = {
             iconSide: z.enum(['left', 'right']).default('right'),
             iconOnly: z.boolean().default(false),
             shadow: z.boolean().default(false),
+            /** 3.14 — this button's own padding, per screen. */
+            pad: buttonPadSchema,
           })
           .refine((b) => !b.iconOnly || b.icon !== 'none', 'An icon-only button needs an icon'),
       )
@@ -1704,6 +1711,8 @@ export const blockSchemas = {
         return parts.length <= 2 && parts.every(isLength);
       }, 'One or two CSS lengths')
       .optional(),
+    /** 3.14 — the send button's own padding, per screen. */
+    submitPad: buttonPadSchema,
     /** 3.13.1 — the card's space on phones (≤768px); unset keeps the compact 22px 18px. */
     cardPaddingMobile: z
       .string()

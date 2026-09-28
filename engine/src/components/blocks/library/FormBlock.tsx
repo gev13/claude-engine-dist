@@ -9,6 +9,7 @@ import { afterSubmit, hiddenValues, noteFirstTouch } from '@/components/site/for
 import type { blockSchemas } from '@/lib/blocks';
 import { type FormField, formSteps, validateAnswers, visibleFields } from '@/lib/forms';
 import { cn } from '@/lib/utils';
+import { buttonPadProps } from '@/lib/buttonPad';
 import { ArrowRight } from '@/components/ui/Button';
 import { BlockHead } from '../parts';
 
@@ -247,6 +248,7 @@ export function FormBlock(p: P) {
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
   const [trap, setTrap] = useState('');
+  const submitPad = buttonPadProps(p.submitPad);
   const challenge = useChallenge('form', p.captcha);
 
   /* A question whose condition does not hold is left out, and so is a step
@@ -366,7 +368,7 @@ export function FormBlock(p: P) {
               {t('form.back')}
             </button>
           )}
-          <button type="submit" className="he-cbtn is-medium is-primary" disabled={state === 'sending'}>
+          <button type="submit" className={cn('he-cbtn is-medium is-primary', submitPad.className)} style={submitPad.style} disabled={state === 'sending'}>
             {/* A span, so the theme's arrow compartment (which looks for the arrow after the label) applies. */}
             <span>{state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}</span>
             {p.submitArrow && <ArrowRight />}

@@ -15,6 +15,7 @@ import { ParallaxLayer } from './ParallaxLayer';
 import { QuoteMedia } from './QuoteMedia';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { gapTiers } from './gapTiers';
+import type { ButtonPad } from '@/lib/buttonPad';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Library content sections (CT1–CT5, CT8–CT10, CT14, CT16)
@@ -25,7 +26,7 @@ import { gapTiers } from './gapTiers';
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
-type LibLink = { label: string; href: string; arrow?: boolean };
+type LibLink = { label: string; href: string; arrow?: boolean; pad?: ButtonPad };
 
 const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
 const toneClass = (tone?: keyof typeof TONES) => TONES[tone ?? 'base'];
@@ -36,7 +37,7 @@ export function Actions({ links, className }: { links: LibLink[]; className?: st
   return (
     <div className={cn('he-actions', className)}>
       {links.map((l, i) => (
-        <Button key={l.href + i} href={l.href} variant={i === 0 ? 'primary' : 'outline'} withArrow={l.arrow === true || undefined}>
+        <Button key={l.href + i} href={l.href} variant={i === 0 ? 'primary' : 'outline'} withArrow={l.arrow === true || undefined} pad={l.pad}>
           {l.label}
         </Button>
       ))}

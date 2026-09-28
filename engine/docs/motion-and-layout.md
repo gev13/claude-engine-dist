@@ -245,3 +245,12 @@ All off until chosen, except two fixes.
   with it.
 - **Form → Space inside the card on phones:** the card's padding at 768px
   and below; empty keeps the compact 22px 18px.
+
+## One button's own padding (3.14)
+
+Every button's row in the editor — a hero's or a call to action's buttons,
+a band's, the Buttons block's, and a form's send button — has **Padding of
+this button**: top and bottom, and sides, for all screens, tablets
+(≤1024px) and phones (≤768px). Empty uses the site's buttons (Appearance →
+Buttons). A Buttons block's Small and Large sizes scale the site's padding
+but not a button's own, which is exactly what was typed.

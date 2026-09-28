@@ -3,6 +3,7 @@ import { Icon, SocialIcon } from '@/components/site/icons';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
 import { SOCIAL_LABELS, type SocialNetwork } from '@/lib/navigation';
+import { buttonPadProps } from '@/lib/buttonPad';
 import { cn } from '@/lib/utils';
 import { BlockHead, BlockTitle } from '../parts';
 import { RotatingWords, TeamSplit, TypingWords } from './elements-client';
@@ -122,12 +123,14 @@ export function ButtonsBlock(p: P<'buttons'>) {
       <div className={cn('shell he-btns', `is-${p.align}`, p.fullWidth && 'is-full')}>
         {p.items.map((b, i) => {
           const icon = b.icon === 'none' ? null : BUTTON_ICON[b.icon];
+          const own = buttonPadProps(b.pad);
           return (
             <SmartLink
               key={b.href + i}
               href={b.href}
               label={b.iconOnly ? b.label : undefined}
-              className={cn('he-cbtn', `is-${b.style}`, `is-${p.size}`, b.iconOnly && 'is-icon-only', b.shadow && 'has-shadow')}
+              className={cn('he-cbtn', `is-${b.style}`, `is-${p.size}`, b.iconOnly && 'is-icon-only', b.shadow && 'has-shadow', own.className)}
+              style={own.style}
             >
               {icon && b.iconSide === 'left' && icon}
               {!b.iconOnly && <span>{b.label}</span>}

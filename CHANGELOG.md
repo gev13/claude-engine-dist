@@ -10,6 +10,15 @@ improvements.
 
 ---
 
+## 3.14.0 — 2026-09-28
+
+**One button's own padding, per screen.** Any button in a block — hero, call
+to action, band, the Buttons block, a form's send button — can have its own
+top-and-bottom and side padding, for all screens, tablets and phones, over
+the site's. Empty until set.
+
+---
+
 ## 3.13.2 — 2026-09-28
 
 **Fix: a block hidden with the older "this size and smaller" setting can be

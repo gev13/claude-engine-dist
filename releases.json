@@ -1,6 +1,14 @@
 {
-  "latest": "3.13.2",
+  "latest": "3.14.0",
   "releases": [
+    {
+      "version": "3.14.0",
+      "date": "2026-09-28",
+      "summary": "Any button in a block (hero, call to action, band, Buttons block, a form's send button) can have its own padding for all screens, tablets and phones.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.13.2",
       "date": "2026-09-28",

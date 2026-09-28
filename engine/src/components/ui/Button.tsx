@@ -1,4 +1,5 @@
 import Link from '@/components/ui/SiteLink';
+import { type ButtonPad, buttonPadProps } from '@/lib/buttonPad';
 import { cn } from '@/lib/utils';
 
 type Variant = 'primary' | 'outline' | 'ghost' | 'onFlare';
@@ -39,6 +40,7 @@ export function Button({
   className,
   withArrow = false,
   type = 'button',
+  pad,
   ...rest
 }: {
   href?: string;
@@ -47,7 +49,11 @@ export function Button({
   className?: string;
   withArrow?: boolean;
   type?: 'button' | 'submit';
+  /** 3.14 — this button's own padding, over the theme's. */
+  pad?: ButtonPad;
 } & React.ButtonHTMLAttributes<HTMLButtonElement>) {
+  const own = buttonPadProps(pad);
+  const classes = cn(base, variants[variant], className, own.className);
   const content = (
     <>
       {children}
@@ -59,20 +65,20 @@ export function Button({
     const external = /^https?:\/\//i.test(href);
     if (external) {
       return (
-        <a href={href} rel="noopener noreferrer" target="_blank" className={cn(base, variants[variant], className)}>
+        <a href={href} rel="noopener noreferrer" target="_blank" className={classes} style={own.style}>
           {content}
         </a>
       );
     }
     return (
-      <Link href={href} className={cn(base, variants[variant], className)}>
+      <Link href={href} className={classes} style={own.style}>
         {content}
       </Link>
     );
   }
 
   return (
-    <button type={type} className={cn(base, variants[variant], className)} {...rest}>
+    <button type={type} className={classes} style={own.style} {...rest}>
       {content}
     </button>
   );

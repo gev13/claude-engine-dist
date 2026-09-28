@@ -242,3 +242,20 @@
 @media (width <= 768px) {
   .he-gap-tiers.has-gm { gap: var(--he-g-m); }
 }
+
+/* 3.14 — one button's own padding (buttonPad.ts): it redefines the two
+   properties every button's padding is drawn from, on itself only. */
+.he-own-py { --he-btn-py: var(--he-own-py); }
+.he-own-px { --he-btn-px: var(--he-own-px); }
+@media (width <= 1024px) {
+  .he-own-py-t { --he-btn-py: var(--he-own-py-t); }
+  .he-own-px-t { --he-btn-px: var(--he-own-px-t); }
+}
+@media (width <= 768px) {
+  .he-own-py-m { --he-btn-py: var(--he-own-py-m); }
+  .he-own-px-m { --he-btn-px: var(--he-own-px-m); }
+}
+/* A Buttons block's small and large sizes scale the padding; a button with
+   its own takes exactly what was typed. */
+.he-cbtn:is(.he-own-py, .he-own-px, .he-own-py-t, .he-own-px-t, .he-own-py-m, .he-own-px-m):not(.is-icon-only, .is-text) { padding: var(--he-btn-py) var(--he-btn-px); }
+.he-cbtn.is-icon-only:is(.he-own-py, .he-own-py-t, .he-own-py-m) { padding: var(--he-btn-py); }

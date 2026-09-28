@@ -48,7 +48,7 @@ export function HeroBlock(p: P<'hero'>) {
           {p.links.length > 0 && (
             <div className="flex flex-wrap gap-3">
               {p.links.map((l, i) => (
-                <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow ?? i === 0}>
+                <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow ?? i === 0} pad={l.pad}>
                   {l.label}
                 </Button>
               ))}
@@ -365,7 +365,7 @@ export function CtaBlock(p: P<'cta'>) {
   const buttons = p.links.length > 0 && (
     <div className="he-actions">
       {p.links.map((l, i) => (
-        <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined}>
+        <Button key={l.href + i} href={l.href} variant={l.variant ?? (i === 0 ? 'primary' : 'outline')} withArrow={l.arrow === true || undefined} pad={l.pad}>
           {l.label}
         </Button>
       ))}
@@ -439,7 +439,7 @@ export function CtaBlock(p: P<'cta'>) {
         {p.links.length > 0 && (
           <div className="mt-8 flex flex-wrap gap-3">
             {p.links.map((l, i) => (
-              <Button key={l.href + i} href={l.href} variant="onFlare" withArrow={l.arrow ?? i === 0}>
+              <Button key={l.href + i} href={l.href} variant="onFlare" withArrow={l.arrow ?? i === 0} pad={l.pad}>
                 {l.label}
               </Button>
             ))}
