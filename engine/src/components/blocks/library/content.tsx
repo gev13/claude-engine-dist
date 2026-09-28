@@ -89,7 +89,7 @@ export function OverlayCard(p: P<'overlayCard'>) {
 /* ── CT3: full-width media band ───────────────────────────────────────────── */
 
 export function MediaBand(p: P<'mediaBand'>) {
-  const media = <MediaFill imageUrl={p.imageUrl} videoUrl={p.videoUrl} alt={p.alt} className="he-band__bg" />;
+  const media = <MediaFill imageUrl={p.imageUrl} mobileImageUrl={p.imageUrlMobile} videoUrl={p.videoUrl} alt={p.alt} className="he-band__bg" />;
   const hasText = Boolean(p.eyebrow || p.title || p.body || p.links.length);
   // Checked again: the colour lands in a style attribute.
   const fade = p.fade && (!p.fade.color || isColor(p.fade.color)) ? p.fade : undefined;
@@ -103,6 +103,8 @@ export function MediaBand(p: P<'mediaBand'>) {
         p.parallax !== 'none' && `has-parallax is-plx-${p.parallax} is-plx-${p.strength}`,
         fade && `has-fade is-fade-${fade.side} is-text-${fade.text}`,
         fade?.accentArrow && 'is-arrow-accent',
+        // 3.15 — a phone picture of its own is shown whole there, without the fade.
+        p.imageUrlMobile && !p.videoUrl && 'has-mobile-media',
       )}
       style={fade ? ({ ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
     >
@@ -204,13 +206,22 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
           {head}
           <ul
             className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className)}
-            style={p.gap || p.gapTablet || p.gapMobile || p.mediaWidth ? ({ ...gapTiers(p).style, ...(p.mediaWidth ? { '--he-mrows-media': p.mediaWidth } : {}) } as React.CSSProperties) : undefined}
+            style={
+              p.gap || p.gapTablet || p.gapMobile || p.mediaWidth || p.mediaRatioMobile
+                ? ({
+                    ...gapTiers(p).style,
+                    ...(p.mediaWidth ? { '--he-mrows-media': p.mediaWidth } : {}),
+                    // 3.15 — the pictures' shape on phones.
+                    ...(p.mediaRatioMobile ? { '--he-mrows-ratio-m': p.mediaRatioMobile.replace(/\s*\/\s*/, ' / ') } : {}),
+                  } as React.CSSProperties)
+                : undefined
+            }
           >
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-mrows__item', !c.imageUrl && 'no-media', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
                   <div className="he-mrows__media">
-                    <MediaFill imageUrl={c.imageUrl} alt={c.alt ?? ''} className="he-fill" sizes="half" />
+                    <MediaFill imageUrl={c.imageUrl} mobileImageUrl={c.imageUrlMobile} alt={c.alt ?? ''} className="he-fill" sizes="half" />
                   </div>
                 )}
                 <div className="he-mrows__body">
@@ -359,7 +370,7 @@ export function StatsFigures(p: P<'stats'>) {
   if (p.variant === 'counters') return <StatsCounters {...p} />;
   return (
     <section
-      className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}
+      className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers', p.dividers && p.dividersMobile === 'cross' && 'is-cross-sm')}
       style={figureSizes(p)}
     >
       <div className="shell">
@@ -390,7 +401,7 @@ export function StatsFigures(p: P<'stats'>) {
 
 function StatsCounters(p: P<'stats'>) {
   return (
-    <section className={cn('he-lsec he-counters', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers')}>
+    <section className={cn('he-lsec he-counters', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers', p.dividers && p.dividersMobile === 'cross' && 'is-cross-sm')}>
       <div className="shell">
         {(p.title || p.eyebrow || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />}
         <ul className={cn('he-counters__grid', `is-icon-${p.iconPosition}`)} style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>

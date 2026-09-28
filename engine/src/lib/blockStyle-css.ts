@@ -288,7 +288,9 @@ export function blockStyleToCss(
   const panel: Decl[] = style.panel
     ? [
         ['margin-inline', 'min(var(--he-panel-inset,24px),3vw)'],
-        ['margin-block', 'min(var(--he-panel-gap,24px),3vw)'],
+        // 3.15 — the phone gap between sections reaches a panel through these two.
+        ['margin-top', 'var(--he-panel-mt,min(var(--he-panel-gap,24px),3vw))'],
+        ['margin-bottom', 'var(--he-panel-mb,min(var(--he-panel-gap,24px),3vw))'],
         ['background-color', 'var(--he-panel-bg,var(--color-surface))'],
         ['clip-path', 'var(--he-panel-clip,none)'],
       ]
@@ -394,6 +396,19 @@ export function blockStyleToCss(
   for (const tier of style.hideAt ?? []) {
     const range = TIER_RANGE[tier];
     if (range) parts.push(`@media ${range}{${root}{display:none}}`);
+  }
+
+  /* 3.15 — the section's buttons on phones, stacked 12px apart. A row of
+     buttons is any box whose children are buttons, which covers every
+     block's own class for it. */
+  if (style.buttonsMobile === 'fit' || style.buttonsMobile === 'full') {
+    const row = `${root} :where(div,section):has(>:is(.he-btn,.he-cbtn))`;
+    const button = `${row}>:is(.he-btn,.he-cbtn)`;
+    parts.push(
+      style.buttonsMobile === 'fit'
+        ? `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}}`
+        : `@media (max-width:768px){${row}{flex-direction:column;align-items:stretch;gap:12px}${button}{flex:0 0 auto;width:100%;justify-content:space-between;text-align:left;white-space:normal;line-height:1.35}}`,
+    );
   }
 
   /* A fixed background is the parallax effect, and it has two well-known

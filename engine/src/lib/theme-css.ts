@@ -10,7 +10,7 @@ import {
   isUsableLength as isLength,
   isLineHeight,
 } from './theme';
-import { CUT_BUTTON_BACKGROUND, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
+import { CUT_BUTTON_BACKGROUND, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme → CSS
@@ -319,7 +319,31 @@ function shapeCss(theme: Theme, scope: string): string {
   // Buttons are painted, so the glow below follows the cut instead of being clipped by it.
   const button = cutLegs(shape.buttons, CUT_SIZES.buttons);
   if (button) {
-    parts.push(block(at(BUTTON_SELECTOR), [...cutVars(button), ['background', CUT_BUTTON_BACKGROUND], ['border-color', 'transparent'], ['border-radius', '0']]));
+    parts.push(
+      block(at(BUTTON_SELECTOR), [
+        ...cutVars(button),
+        ['background', CUT_BUTTON_BACKGROUND],
+        ['border-color', 'transparent'],
+        ['border-radius', '0'],
+        // 3.15 — the edge is a ring behind the label (CUT_BUTTON_RING), as thick as the real border.
+        ['position', 'relative'],
+        ['isolation', 'isolate'],
+        ['--he-bx', 'var(--he-bw,0px)'],
+      ]),
+    );
+    // A library button's border is always 2px, whatever its variant's width says.
+    parts.push(block(at('.he-cbtn:not(.is-text)'), [['--he-bx', '2px']]));
+    parts.push(
+      block(at(`${BUTTON_SELECTOR}::before`), [
+        ['content', "''"],
+        ['position', 'absolute'],
+        ['inset', 'calc(-1 * var(--he-bx,0px))'],
+        ['z-index', '-1'],
+        ['background', 'var(--he-bl)'],
+        ['clip-path', CUT_BUTTON_RING],
+        ['pointer-events', 'none'],
+      ]),
+    );
     for (const [variant, classes] of [
       ['primary', ['.he-btn-primary', '.he-cbtn.is-primary']],
       ['outline', ['.he-btn-outline', '.he-cbtn.is-outline']],
@@ -523,10 +547,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   if (theme.panel?.alignContent === true && safeSelector === ':root') {
     const shells = '.he-panel>.shell,.he-panel>*>.shell,.he-ftr.is-panel>.shell';
     const inset = 'min(var(--he-panel-inset,24px),3vw)';
-    parts.push(`${shells}{padding-inline:max(12px,calc(20px - ${inset}))}`);
+    parts.push(`${shells}{padding-inline:max(12px,calc(var(--he-gutter-m,20px) - ${inset}))}`);
     parts.push(`@media (width>=48rem){${shells}{padding-inline:calc(32px - ${inset})}}`);
     parts.push(`@media (width>=64rem){${shells}{padding-inline:max(16px,calc(var(--spacing-gutter) - ${inset}))}}`);
   }
+
+  if (safeSelector === ':root') parts.push(phoneLayoutCss(theme));
 
   /* 3.1 — no line under each section or above the footer. A section is a
      child of main, or the first thing inside its styled wrapper or row. */
@@ -544,4 +570,45 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   }
 
   return parts.filter(Boolean).join('');
+}
+
+/**
+ * 3.15 — the phone layout rules from Appearance → Layout. Each is written
+ * only when set, and each loses to a section's own spacing in its Design tab:
+ * the rules that could clash are `:where()` (no weight) or custom properties.
+ *
+ * - The side padding is `--he-gutter-m`, read by every shell (and, with
+ *   aligned panels, by a panel's shell less the panel's inset), so all
+ *   content lines up.
+ * - The space between sections is a margin on every section after the
+ *   first; the sections' own padding above and below goes, except a panel's,
+ *   which is the room inside its box. A panel takes the space through
+ *   `--he-panel-mt`/`--he-panel-mb`, which its margins read.
+ * - The space between a section's parts is the gap under its heading, the
+ *   intro's gap and `--he-gap`.
+ */
+function phoneLayoutCss(theme: Theme): string {
+  const layout = theme.layout ?? {};
+  const rules: string[] = [];
+  const gutter = layout.gutterMobile;
+  if (gutter && isLength(gutter)) rules.push(`:root{--he-gutter-m:${gutter}}`);
+  const gap = layout.sectionGapMobile;
+  if (gap && isLength(gap)) {
+    rules.push(
+      `:where(#main>*+*){margin-top:${gap}}`,
+      ':where(#main>:not(.he-panel)),:where(#main>:not(.he-panel)>section){padding-block:0}',
+      `#main>*{--he-panel-mt:${gap};--he-panel-mb:0px}`,
+      '#main>:first-child{--he-panel-mt:initial}#main>:last-child{--he-panel-mb:initial}#main>* *{--he-panel-mt:initial;--he-panel-mb:initial}',
+    );
+  }
+  const item = layout.itemGapMobile;
+  if (item && isLength(item)) {
+    // A gap set for phones on its own (3.13) keeps the cards' gap.
+    rules.push(`:root{${theme.gapMobile ? '' : `--he-gap:${item};`}--he-intro-gap:${item}}`, `.he-head{margin-bottom:0}.he-head+*{margin-top:${item}}`,
+      // A heading that shares a grid with its content (the FAQ) has only the space above; two columns and several lists stack this far apart.
+      ':is(div,section):has(>.he-head+*){row-gap:0}',
+      `:is(.he-cols2,.he-lists){row-gap:${item}}`,
+    );
+  }
+  return rules.length ? `@media (max-width:768px){${rules.join('')}}` : '';
 }

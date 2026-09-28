@@ -792,6 +792,15 @@ export function BlockDesignPanel({
           })}
         </div>
 
+        {/* 3.15 — this section's buttons on phones. */}
+        <Field label="Buttons on phones" hint="768px and below">
+          <Select value={current.buttonsMobile ?? ''} onChange={(e) => set(['buttonsMobile'])(e.target.value || undefined)}>
+            <option value="">As the block lays them out</option>
+            <option value="fit">Stacked, each as wide as its label</option>
+            <option value="full">Stacked, full width — label at the start, arrow at the end</option>
+          </Select>
+        </Field>
+
         <label className="mt-4 flex items-center gap-2 text-[13px] text-ash">
           <input
             type="checkbox"

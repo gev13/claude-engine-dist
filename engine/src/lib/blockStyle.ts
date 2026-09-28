@@ -378,6 +378,14 @@ export const blockStyleSchema = z.object({
    */
   hideAt: z.array(z.enum(VISIBILITY_TIERS)).max(4).optional(),
 
+  /**
+   * 3.15 — this section's buttons on phones (≤768px): `fit`, stacked and each
+   * as wide as its label; `full`, the width of the column with the label at
+   * the start and the arrow at the end. Unset is the block's own (most
+   * stretch to fill the row).
+   */
+  buttonsMobile: z.enum(['fit', 'full']).optional(),
+
   /** Kept out of the render entirely, without being deleted. */
   disabled: z.boolean().optional(),
 

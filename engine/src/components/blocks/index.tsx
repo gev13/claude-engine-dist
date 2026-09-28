@@ -99,7 +99,7 @@ export function ProseBlock(p: P<'prose'>) {
     <Section tone={p.tone ?? 'base'} size="lg">
       <div
         className={cn(
-          p.columns === 'two' && 'grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16',
+          p.columns === 'two' && 'he-cols2 grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16',
           p.columns === 'two' && p.alignWithTitle && p.eyebrow && 'he-align-title',
           p.variant === 'footnotes' && 'he-footnotes',
         )}
@@ -290,7 +290,7 @@ export function CheckListsBlock(p: P<'checkLists'>) {
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
-      <div className={p.lists.length > 1 ? 'grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16' : ''}>
+      <div className={p.lists.length > 1 ? 'he-lists grid grid-cols-1 gap-10 lg:grid-cols-2 lg:gap-16' : ''}>
         {p.lists.map((list, li) => (
           <div
             key={li}

@@ -1,6 +1,14 @@
 {
-  "latest": "3.14.0",
+  "latest": "3.15.0",
   "releases": [
+    {
+      "version": "3.15.0",
+      "date": "2026-09-28",
+      "summary": "Phones: side padding, space between sections and parts; a phone picture for heroes, picture rows and bands; buttons laid out for phones; a cross for ruled figures. Fixes: picture rows invisible on iPhones; see-through cut buttons drawn filled.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.14.0",
       "date": "2026-09-28",

@@ -259,3 +259,18 @@
    its own takes exactly what was typed. */
 .he-cbtn:is(.he-own-py, .he-own-px, .he-own-py-t, .he-own-px-t, .he-own-py-m, .he-own-px-m):not(.is-icon-only, .is-text) { padding: var(--he-btn-py) var(--he-btn-px); }
 .he-cbtn.is-icon-only:is(.he-own-py, .he-own-py-t, .he-own-py-m) { padding: var(--he-btn-py); }
+
+/* 3.15 — a picture with a phone version of its own (SiteImg mobileSrc):
+   the wrapper takes no box, so the <img> is laid out as if unwrapped. */
+.he-pic { display: contents; }
+/* 3.15 — a band's phone picture is drawn to be seen whole: no fade over it there. */
+@media (width <= 768px) {
+  .he-band.has-mobile-media.has-fade::after { background: none; }
+}
+/* 3.15 — ruled figures on phones: two by two, a cross of lines between them. */
+@media (width <= 768px) {
+  .has-dividers.is-cross-sm :is(.he-figs__grid, .he-counters__grid) { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0; row-gap: 0; }
+  .has-dividers.is-cross-sm :is(.he-figs__item, .he-counter) { padding: 20px 16px 20px 0; border: 0; }
+  .has-dividers.is-cross-sm :is(.he-figs__item, .he-counter):nth-child(even) { padding: 20px 0 20px 16px; border-left: 1px solid var(--color-hairline); }
+  .has-dividers.is-cross-sm :is(.he-figs__item, .he-counter):nth-child(n + 3) { border-top: 1px solid var(--color-hairline); }
+}

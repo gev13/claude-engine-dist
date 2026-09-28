@@ -531,6 +531,12 @@ export const themeSchema = z.object({
       /** 3.8 — the space between a section's heading and its introduction, and how wide the introduction runs. */
       introGap: length.optional(),
       introWidth: length.optional(),
+      /** 3.15 — phones (≤768px): the space from the screen's edges to the content; unset is 20px. */
+      gutterMobile: length.optional(),
+      /** 3.15 — phones: the space between one section and the next; unset is each block's own padding. */
+      sectionGapMobile: length.optional(),
+      /** 3.15 — phones: the space between a section's parts — heading, intro, list — and between its cards. */
+      itemGapMobile: length.optional(),
     })
     .optional(),
 

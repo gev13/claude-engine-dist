@@ -544,6 +544,15 @@ function AppearanceScreenInner() {
               </label>
             </Panel>
 
+            {/* 3.15 — the phone layout; a section's own spacing in its Design tab still wins. */}
+            <Panel title="On phones (768px and below)">
+              <div className="grid gap-4 sm:grid-cols-3">
+                <LengthField label="Side padding" hint="from the screen’s edges to the content" placeholder="20px" value={get(['layout', 'gutterMobile'])} onChange={set(['layout', 'gutterMobile'])} />
+                <LengthField label="Space between sections" hint="replaces the sections’ own; boxed sections keep the room inside" emptyLabel="each section’s own" value={get(['layout', 'sectionGapMobile'])} onChange={set(['layout', 'sectionGapMobile'])} />
+                <LengthField label="Space between a section’s parts" hint="heading, introduction, list, and between cards" emptyLabel="each block’s own" value={get(['layout', 'itemGapMobile'])} onChange={set(['layout', 'itemGapMobile'])} />
+              </div>
+            </Panel>
+
             {/* Site-wide versions of two controls each block also has in its
                 own Design tab, which override these. */}
             <Panel title="Spacing and motion">

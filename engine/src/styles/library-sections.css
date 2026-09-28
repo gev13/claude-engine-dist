@@ -129,7 +129,10 @@
   @media (width <= 768px) {
     .he-mrows__item, .he-featpost { grid-template-columns: minmax(0, 1fr); padding-right: 0; }
     .he-mrows.has-media-width .he-mrows__item { grid-template-columns: minmax(0, 1fr); }
-    .he-mrows__media { min-height: 0; }
+    /* 3.15 — sized from its own width: stretched to its grid row, WebKit gave
+       the picture a 0px row (the picture is absolutely placed, so the row is
+       empty) and it never showed on iPhones. */
+    .he-mrows__media { min-height: 0; align-self: start; width: 100%; aspect-ratio: var(--he-mrows-ratio-m, 50 / 33); }
     .he-mrows__body { padding: 20px 20px 28px; }
     .he-bento__cell { grid-column: 1 / -1; }
     .he-catidx { grid-template-columns: minmax(0, 1fr); }

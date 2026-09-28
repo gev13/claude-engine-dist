@@ -123,8 +123,11 @@ export function MediaFill({
   paused,
   showControl,
   sizes,
+  mobileImageUrl,
 }: {
   imageUrl?: string;
+  /** 3.15 — the picture shown on phones instead (≤768px); a video ignores it. */
+  mobileImageUrl?: string;
   videoUrl?: string;
   alt?: string;
   className?: string;
@@ -138,7 +141,7 @@ export function MediaFill({
     return <BgVideo src={videoUrl} poster={imageUrl} className={className} paused={paused} showControl={showControl} />;
   }
   if (imageUrl) {
-    return <SiteImg src={imageUrl} alt={alt} className={className} loading={eager ? 'eager' : 'lazy'} decoding="async" sizes={sizes} priority={eager} />;
+    return <SiteImg src={imageUrl} mobileSrc={mobileImageUrl} alt={alt} className={className} loading={eager ? 'eager' : 'lazy'} decoding="async" sizes={sizes} priority={eager} />;
   }
   return <div className={cn(className, 'he-media-empty')} aria-hidden="true" />;
 }

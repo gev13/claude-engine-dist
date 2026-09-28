@@ -50,7 +50,7 @@ export function BlockHead({
 }) {
   if (!eyebrow && !title && !intro) return null;
   return (
-    <div className={cn(align === 'center' && 'mx-auto max-w-[62ch] text-center', className)}>
+    <div className={cn('he-head', align === 'center' && 'mx-auto max-w-[62ch] text-center', className)}>
       {eyebrow && <Eyebrow className={align === 'center' ? 'justify-center' : undefined}>{eyebrow}</Eyebrow>}
       {title && (
         <BlockTitle as={titleAs} className="max-w-[var(--he-title-measure,24ch)]">

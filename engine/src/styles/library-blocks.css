@@ -840,11 +840,13 @@
 
     .he-hero__split { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 32px); }
     .he-hero--split.is-media-left .he-hero__visual { order: 0; }
-    .he-hero__visual { aspect-ratio: 4 / 3; }
+    .he-hero__visual { aspect-ratio: var(--he-hero-ratio-m, 4 / 3); }
     /* A phone has no side to stand the text on: the picture goes back above it. */
     .he-hero--split.is-bleed { display: block; min-height: 0 !important; }
     .he-hero--split.is-bleed .he-hero__split { grid-template-columns: minmax(0, 1fr); }
-    .he-hero--split.is-bleed .he-hero__visual { position: relative; inset: auto; z-index: auto; width: auto; aspect-ratio: 1 / 1; }
+    .he-hero--split.is-bleed .he-hero__visual { position: relative; inset: auto; z-index: auto; width: auto; aspect-ratio: var(--he-hero-ratio-m, 1 / 1); }
+    /* 3.15 — a picture made for phones fills its box, whatever the desktop fit. */
+    .he-hero--split.has-mobile-media .he-hero__visualmedia { object-fit: cover; object-position: center; }
     /* 3.6 — the picture first; run to the edges, it spans the section and
        reaches up into a notch header's clearance, the tab sitting on it. */
     .he-hero--split.is-media-first-sm .he-hero__visual { order: -1; }

@@ -10,6 +10,19 @@ improvements.
 
 ---
 
+## 3.15.0 — 2026-09-28
+
+**Phones.** Appearance → Layout gains the phone side padding, the space
+between sections and the space between a section's parts. Heroes, picture
+rows and media bands take a picture of their own for phones, with the box
+shape it fills; a section can lay its buttons out for phones (as wide as
+their labels, or full width); ruled figures can keep a cross on phones.
+Two fixes: picture rows showed no pictures on iPhones, and see-through
+buttons with cut corners were drawn filled with their edge colour. All new
+options are empty until set.
+
+---
+
 ## 3.14.0 — 2026-09-28
 
 **One button's own padding, per screen.** Any button in a block — hero, call

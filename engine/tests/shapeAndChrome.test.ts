@@ -106,7 +106,7 @@ describe('button extras, the eyebrow marker and header links', () => {
 describe('panels and a block’s own corners', () => {
   it('set a section on the page as a panel, and let a hand-set margin win', () => {
     const out = blockStyleToCss('p1', blockStyleSchema.parse({ panel: true, spacing: { base: { marginTop: '0px' } } }));
-    expect(out).toMatch(/^\.he-b-p1\{margin-inline:min\(var\(--he-panel-inset,24px\),3vw\);margin-block:min\(var\(--he-panel-gap,24px\),3vw\);background-color:var\(--he-panel-bg,var\(--color-surface\)\);clip-path:var\(--he-panel-clip,none\);margin-top:0px/);
+    expect(out).toMatch(/^\.he-b-p1\{margin-inline:min\(var\(--he-panel-inset,24px\),3vw\);margin-top:var\(--he-panel-mt,min\(var\(--he-panel-gap,24px\),3vw\)\);margin-bottom:var\(--he-panel-mb,min\(var\(--he-panel-gap,24px\),3vw\)\);background-color:var\(--he-panel-bg,var\(--color-surface\)\);clip-path:var\(--he-panel-clip,none\);margin-top:0px/);
     expect(out).toContain('.he-b-p1>*{background:transparent}');
     expect(out).toContain('.he-b-p1>*{border-bottom-width:0}');
   });

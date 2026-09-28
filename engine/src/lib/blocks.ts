@@ -149,6 +149,9 @@ const videoSource = z
   .max(300)
   .refine((v) => parseVideoUrl(v) !== null, 'Use a YouTube or Vimeo link, or a video uploaded to the media library');
 const mediaRatio = z.enum(['16/9', '4/3', '1/1', '3/4', '21/9']);
+/** 3.15 — a picture box's shape as width / height ("366/364"), for phones; it lands in a style attribute. */
+export const RATIO_PATTERN = /^\d{1,4}(?:\.\d{1,3})?\s*\/\s*\d{1,4}(?:\.\d{1,3})?$/;
+const phoneRatio = z.string().trim().max(20).regex(RATIO_PATTERN, 'Width / height, e.g. 366/364').optional();
 const showcaseHead = { tone, eyebrow: text(80), title: text(200), titleAs: textTagSchema.optional(), intro: text(4000) };
 
 /* ── Package 3 widgets (P3-A1 – P3-A11) ────────────────────────────────────── */
@@ -191,6 +194,10 @@ export const blockSchemas = {
     /** Which hero from the library; `classic` is the original block. */
     variant: z.enum(HERO_VARIANTS).default('classic'),
     imageUrl: mediaUrl.optional(),
+    /** 3.15 — a picture of its own on phones (≤768px); it fills its box there. */
+    imageUrlMobile: mediaUrl.optional(),
+    /** 3.15 — split hero: the picture box's shape on phones (e.g. 366/364); unset is square (run to the edges) or 4:3. */
+    mediaRatioMobile: phoneRatio,
     /** Background or framed video; the image becomes its poster. */
     videoUrl: mediaUrl.optional(),
     alt: text(200),
@@ -275,6 +282,8 @@ export const blockSchemas = {
     glow: z.boolean().optional(),
     /** 2.22 — thin rules between the figures, which then sit to the left. */
     dividers: z.boolean().optional(),
+    /** 3.15 — with the rules: on phones, two by two with a cross between them (unset drops the rules there, as before). */
+    dividersMobile: z.enum(['cross']).optional(),
   }),
 
   /**
@@ -346,6 +355,8 @@ export const blockSchemas = {
     mediaWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.8 — image cards: the picture's shape; unset is 4:3. */
     mediaRatio: z.enum(['4/3', '5/4', '1/1', '3/2', '16/9']).optional(),
+    /** 3.15 — picture rows: the picture's shape on phones (e.g. 326/154); unset keeps 50:33. */
+    mediaRatioMobile: phoneRatio,
     /**
      * 2.22 — cards: how many cards each row holds, in turn — "2-3" is two,
      * then three, then two… A bento of mixed widths; unset is the even grid.
@@ -364,6 +375,8 @@ export const blockSchemas = {
         href: z.string().optional(),
         /** The tile's background, the card's picture, or the feature's icon. */
         imageUrl: mediaUrl.optional(),
+        /** 3.15 — picture rows: a picture of its own on phones. */
+        imageUrlMobile: mediaUrl.optional(),
         alt: text(200),
         buttonLabel: text(40),
         /**
@@ -932,6 +945,8 @@ export const blockSchemas = {
    */
   mediaBand: z.object({
     imageUrl: mediaUrl.optional(),
+    /** 3.15 — a picture of its own on phones (≤768px). */
+    imageUrlMobile: mediaUrl.optional(),
     videoUrl: mediaUrl.optional(),
     alt: text(200),
     position: z.enum(MEDIA_BAND_POSITIONS).default('bottomLeft'),

@@ -254,3 +254,25 @@ this button**: top and bottom, and sides, for all screens, tablets
 (≤1024px) and phones (≤768px). Empty uses the site's buttons (Appearance →
 Buttons). A Buttons block's Small and Large sizes scale the site's padding
 but not a button's own, which is exactly what was typed.
+
+## Phones (3.15)
+
+- **Appearance → Layout → On phones:** *Side padding* (from the screen's
+  edges to the content; boxed sections line up with it when their content is
+  aligned), *Space between sections* (replaces the sections' own padding;
+  boxed sections keep the room inside them), and *Space between a section's
+  parts* (under the heading, above the introduction, and between cards). A
+  section's own spacing in its Design tab still wins over all three, so one
+  section can sit closer (a button under a list, say).
+- **A picture of its own on phones:** heroes, picture rows and media bands
+  take an *Image on phones*, shown instead at 768px and below; the browser
+  fetches only the one it shows. A hero's and a picture row's *Picture shape
+  on phones* (width / height, e.g. 366/324) sets the box it fills. A band's
+  phone picture shows without the side fade.
+- **A section's Design tab → Buttons on phones:** stacked and each as wide as
+  its label, or stacked full width with the label at the start and the
+  arrow at the end.
+- **Stats with lines → Lines on phones:** a cross, two by two.
+- Fixed: picture rows showed no pictures on iPhones (the picture's box
+  collapsed in WebKit), and an outlined or ghost button with cut corners was
+  drawn filled with its edge colour.

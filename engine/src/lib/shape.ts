@@ -81,11 +81,15 @@ export function cutLines(legs: CutLegs, width = 1): { image: string; position: s
 }
 
 /**
- * Buttons, painted rather than clipped: four quarter layers of the border
- * colour, four of the fill inside them, each transparent across its own
- * corner's cut. A glow (`filter: drop-shadow`) then follows the painted
- * shape, which a clip-path would have cut off. The fill and line colours are
- * `--he-bf` and `--he-bl`, set per variant and per state.
+ * Buttons, painted rather than clipped: four quarter layers of the fill,
+ * each transparent across its own corner's cut. A glow (`filter:
+ * drop-shadow`) then follows the painted shape, which a clip-path would have
+ * cut off. The fill and edge colours are `--he-bf` and `--he-bl`, set per
+ * variant and per state.
+ *
+ * 3.15 — the edge used to be four more layers, of the whole border box,
+ * under the fill; a see-through fill (a ghost or outlined button) then showed
+ * the edge colour across the whole button. The edge is `CUT_BUTTON_RING` now.
  */
 export const CUT_BUTTON_BACKGROUND = (() => {
   const corner = (angle: number, leg: string, colour: string, box: 'padding-box' | 'border-box', place: string) =>
@@ -98,5 +102,40 @@ export const CUT_BUTTON_BACKGROUND = (() => {
       corner(45, `max(0px,var(--he-cut-bl,0px) - ${inset})`, colour, box, 'bottom left'),
     ].join(',');
   // The fill sits inside the border; its cut is shorter by the border's share of the diagonal.
-  return `${layers('var(--he-bf)', 'padding-box', 'var(--he-bw,0px) * .4142')},${layers('var(--he-bl)', 'border-box', '0px')}`;
+  return layers('var(--he-bf)', 'padding-box', 'var(--he-bw,0px) * .4142');
+})();
+
+/**
+ * 3.15 — a cut button's edge: a `::before` over the border box, clipped to
+ * the border box's cut shape with the fill's own shape taken out (evenodd),
+ * so only the ring between them is painted. `--he-bx` is the button's real
+ * border width, the ring's thickness.
+ */
+export const CUT_BUTTON_RING = (() => {
+  const leg = (c: string) => `var(--he-cut-${c},0px)`;
+  const inner = (c: string) => `max(0px,var(--he-cut-${c},0px) - var(--he-bw,0px) * .4142)`;
+  const b = 'var(--he-bx,0px)';
+  const outer = [
+    `${leg('tl')} 0`,
+    `calc(100% - ${leg('tr')}) 0`,
+    `100% ${leg('tr')}`,
+    `100% calc(100% - ${leg('br')})`,
+    `calc(100% - ${leg('br')}) 100%`,
+    `${leg('bl')} 100%`,
+    `0 calc(100% - ${leg('bl')})`,
+    `0 ${leg('tl')}`,
+    `${leg('tl')} 0`,
+  ];
+  const hole = [
+    `calc(${b} + ${inner('tl')}) ${b}`,
+    `calc(100% - ${b} - ${inner('tr')}) ${b}`,
+    `calc(100% - ${b}) calc(${b} + ${inner('tr')})`,
+    `calc(100% - ${b}) calc(100% - ${b} - ${inner('br')})`,
+    `calc(100% - ${b} - ${inner('br')}) calc(100% - ${b})`,
+    `calc(${b} + ${inner('bl')}) calc(100% - ${b})`,
+    `${b} calc(100% - ${b} - ${inner('bl')})`,
+    `${b} calc(${b} + ${inner('tl')})`,
+    `calc(${b} + ${inner('tl')}) ${b}`,
+  ];
+  return `polygon(evenodd,${[...outer, ...hole].join(',')})`;
 })();

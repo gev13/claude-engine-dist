@@ -857,7 +857,7 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type GridCard = { eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
+type GridCard = { imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -2220,6 +2220,12 @@ function TypeFields({
           {variant !== 'classic' && (
             <>
               <MediaInput label="Image" hint={variant === 'split' ? 'the visual beside the text' : 'fills the hero'} value={str(props, 'imageUrl') || undefined} onChange={(v) => set(withOpt(props, 'imageUrl', v))} />
+              <MediaInput label="Image on phones" hint="optional; shown instead at 768px and below, filling its box" value={str(props, 'imageUrlMobile') || undefined} onChange={(v) => set(withOpt(props, 'imageUrlMobile', v))} />
+              {variant === 'split' && (
+                <Field label="Picture shape on phones" hint="width / height, e.g. 366/364 — empty is square (run to the edges) or 4:3">
+                  <Input value={str(props, 'mediaRatioMobile')} placeholder="366/364" onChange={(e) => set(withOpt(props, 'mediaRatioMobile', e.target.value.trim() || undefined))} />
+                </Field>
+              )}
               <MediaInput label="Video" hint="optional; plays muted in a loop, with a pause button" accept="video" value={str(props, 'videoUrl') || undefined} onChange={(v) => set(withOpt(props, 'videoUrl', v))} />
               <Text label="Image description" k="alt" props={props} set={set} hint="for screen readers" />
               <OptLink label="Announcement pill" props={props} set={set} k="announcement" />
@@ -4172,6 +4178,7 @@ function TypeFields({
       return (
         <>
           <PropMedia label="Image" k="imageUrl" props={props} set={set} />
+          <PropMedia label="Image on phones" k="imageUrlMobile" hint="optional; shown instead at 768px and below" props={props} set={set} />
           <PropMedia label="Video" k="videoUrl" accept="video" hint="optional; plays muted in a loop, with a pause button" props={props} set={set} />
           <Text label="Image description" k="alt" props={props} set={set} hint="for screen readers" />
           <div className="grid gap-3 sm:grid-cols-3">
@@ -4542,6 +4549,14 @@ function TypeFields({
               <Input value={str(props, 'valueSizeMobile')} placeholder="32px" onChange={(e) => set(withOpt(props, 'valueSizeMobile', e.target.value.trim() || undefined))} />
             </Field>
           </div>
+          {props.dividers === true && variant !== 'tiles' && (
+            <Field label="Lines on phones" hint="768px and below">
+              <Select value={str(props, 'dividersMobile')} onChange={(e) => set(withOpt(props, 'dividersMobile', e.target.value || undefined))}>
+                <option value="">None — the figures in two columns</option>
+                <option value="cross">A cross — two by two, a line between each</option>
+              </Select>
+            </Field>
+          )}
           {variant === 'counters' && (
             <div className="grid gap-3 sm:grid-cols-2">
               <PropSelect label="Icons" k="iconPosition" fallback="top" options={[['top', 'Above the number'], ['left', 'Beside the number']]} props={props} set={set} />
@@ -4702,6 +4717,11 @@ function TypeFields({
                   <Input value={str(props, 'mediaWidth')} placeholder="400px" onChange={(e) => set(withOpt(props, 'mediaWidth', e.target.value.trim() || undefined))} />
                 </Field>
               )}
+              {variant === 'mediaRows' && (
+                <Field label="Picture shape on phones" hint="width / height, e.g. 326/154 — empty is 50/33">
+                  <Input value={str(props, 'mediaRatioMobile')} placeholder="326/154" onChange={(e) => set(withOpt(props, 'mediaRatioMobile', e.target.value.trim() || undefined))} />
+                </Field>
+              )}
               {((variant === 'cards' && props.numbered === true) || (variant === 'mediaRows' && props.numbered !== false)) && (
                 <PropSelect label="Number reads" k="numberStyle" fallback="plain" options={[['plain', '01'], ['slash', '/01']]} props={props} set={set} />
               )}
@@ -4793,6 +4813,9 @@ function TypeFields({
                 {variant !== 'cards' && (
                   <>
                     <MediaInput label={variant === 'icons' || variant === 'rows' ? 'Icon' : 'Image'} value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
+                    {variant === 'mediaRows' && (
+                      <MediaInput label="Image on phones" hint="optional; shown instead at 768px and below" value={item.imageUrlMobile} onChange={(imageUrlMobile) => update({ imageUrlMobile })} />
+                    )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {variant !== 'icons' && variant !== 'rows' && (
                         <Field label="Image description">

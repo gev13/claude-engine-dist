@@ -15,6 +15,22 @@ import { responsiveAttrs, responsiveImages, type SizesHint } from '@/lib/respons
  * the same way on both sides (lib/responsive.ts), so hydration agrees.
  */
 export function SiteImg({
+  mobileSrc,
+  ...rest
+}: ImgHTMLAttributes<HTMLImageElement> & { sizes?: SizesHint | string; priority?: boolean; mobileSrc?: string }) {
+  if (!mobileSrc) return <Img {...rest} />;
+  /* 3.15 — a picture of its own on phones: the browser fetches only the one
+     it shows. `display: contents` keeps the <img> laid out as if unwrapped. */
+  const phone = responsiveAttrs(mobileSrc, rest.sizes ?? 'full');
+  return (
+    <picture className="he-pic">
+      <source media="(max-width: 768px)" srcSet={phone.srcSet ?? mobileSrc} sizes={phone.sizes} />
+      <Img {...rest} />
+    </picture>
+  );
+}
+
+function Img({
   sizes = 'full',
   priority = false,
   ...props
