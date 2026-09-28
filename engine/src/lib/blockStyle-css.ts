@@ -153,7 +153,7 @@ function typeDecls(override: TypeOverride | undefined): Decl[] {
   push(out, 'font-size', override.size, isLength);
   push(out, 'font-weight', override.weight, isKeyword(['100', '200', '300', '400', '500', '600', '700', '800', '900']));
   push(out, 'color', override.color, isColor);
-  push(out, 'line-height', override.lineHeight, (v) => /^(?:\d*\.?\d+|\d*\.?\d+(?:px|rem|em))$/.test(v));
+  push(out, 'line-height', override.lineHeight, isLineHeight);
   push(out, 'letter-spacing', override.letterSpacing, isLength);
   push(out, 'text-transform', override.transform, isKeyword(['none', 'uppercase', 'lowercase', 'capitalize']));
   push(out, 'text-align', override.align, isKeyword(['left', 'center', 'right']));
@@ -161,9 +161,15 @@ function typeDecls(override: TypeOverride | undefined): Decl[] {
   return out;
 }
 
-function sizeDecl(value: string | undefined): Decl[] {
+const isLineHeight = (v: string) => /^(?:\d*\.?\d+|\d*\.?\d+(?:px|rem|em))$/.test(v);
+
+/** A role's size, line height and letter spacing on one tier (3.3; the last two 3.13.1). */
+function tierDecls(override: TypeOverride | undefined, tier: 'tablet' | 'mobile'): Decl[] {
   const out: Decl[] = [];
-  push(out, 'font-size', value, isLength);
+  if (!override) return out;
+  push(out, 'font-size', tier === 'tablet' ? override.sizeTablet : override.sizeMobile, isLength);
+  push(out, 'line-height', tier === 'tablet' ? override.lineHeightTablet : override.lineHeightMobile, isLineHeight);
+  push(out, 'letter-spacing', tier === 'tablet' ? override.letterSpacingTablet : override.letterSpacingMobile, isLength);
   return out;
 }
 
@@ -352,15 +358,15 @@ export function blockStyleToCss(
 
   /* 3.3 — a section's own sizes on tablets and phones, so a 56px heading
      set for a desktop is not 56px on a phone. */
-  for (const [tier, key] of [['tablet', 'sizeTablet'], ['mobile', 'sizeMobile']] as const) {
+  for (const tier of ['tablet', 'mobile'] as const) {
     const maxWidth = BREAKPOINTS.find((b) => b.key === tier)!.maxWidth;
     const tierGap = safe(tier === 'tablet' ? style.gapTablet : style.gapMobile);
     const inner = [
-      block(`${root} ${HEADINGS}`, sizeDecl(style.typography?.heading?.[key])),
-      block(`${root} ${BODY}`, sizeDecl(style.typography?.body?.[key])),
-      block(`${root} ${SUBHEADINGS}`, sizeDecl(style.typography?.subheading?.[key])),
-      block(`${root} ${EYEBROWS}`, sizeDecl(style.typography?.eyebrow?.[key])),
-      block(`${root} ${CARD_LABELS}`, sizeDecl(style.typography?.cardLabel?.[key])),
+      block(`${root} ${HEADINGS}`, tierDecls(style.typography?.heading, tier)),
+      block(`${root} ${BODY}`, tierDecls(style.typography?.body, tier)),
+      block(`${root} ${SUBHEADINGS}`, tierDecls(style.typography?.subheading, tier)),
+      block(`${root} ${EYEBROWS}`, tierDecls(style.typography?.eyebrow, tier)),
+      block(`${root} ${CARD_LABELS}`, tierDecls(style.typography?.cardLabel, tier)),
       // 3.13 — the section's gap on this tier.
       block(root, tierGap && isLength(tierGap) ? [['--he-gap', tierGap]] : []),
     ].join('');

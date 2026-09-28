@@ -144,6 +144,11 @@ const typeOverride = z.object({
   /** 3.3 — the size on tablets and below, and on phones; unset keeps the size above. */
   sizeTablet: length.optional(),
   sizeMobile: length.optional(),
+  /** 3.13.1 — line height and letter spacing on tablets and on phones; unset keeps the value above. */
+  lineHeightTablet: z.string().trim().optional(),
+  lineHeightMobile: z.string().trim().optional(),
+  letterSpacingTablet: length.optional(),
+  letterSpacingMobile: length.optional(),
 });
 
 export type TypeOverride = z.infer<typeof typeOverride>;

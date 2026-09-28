@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.13.1 — 2026-09-28
+
+**Line height with the size, and a form card's padding on phones.** A
+section's typography roles take a line height and letter spacing on tablets
+and phones, so a fixed line height no longer stays desktop-tall under a
+smaller phone size; a form card takes its own padding on phones. Both empty
+until set.
+
+---
+
 ## 3.13.0 — 2026-09-28
 
 **Per-device values across the admin.** Buttons' padding and text size per

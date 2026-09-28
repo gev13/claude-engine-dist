@@ -598,6 +598,26 @@ export function BlockDesignPanel({
               <Field label="Line height" hint="e.g. 1.4 or 28px">
                 <Input value={get(['typography', role, 'lineHeight']) ?? ''} placeholder="the theme’s" onChange={(e) => set(['typography', role, 'lineHeight'])(e.target.value.trim() || undefined)} />
               </Field>
+              <Field label="Line height on tablets" hint="≤1024px">
+                <Input value={get(['typography', role, 'lineHeightTablet']) ?? ''} placeholder="as above" onChange={(e) => set(['typography', role, 'lineHeightTablet'])(e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Line height on phones" hint="≤768px">
+                <Input value={get(['typography', role, 'lineHeightMobile']) ?? ''} placeholder="as above" onChange={(e) => set(['typography', role, 'lineHeightMobile'])(e.target.value.trim() || undefined)} />
+              </Field>
+              <LengthField
+                label="Letter spacing on tablets"
+                hint="≤1024px"
+                value={get(['typography', role, 'letterSpacingTablet'])}
+                placeholder="as above"
+                onChange={set(['typography', role, 'letterSpacingTablet'])}
+              />
+              <LengthField
+                label="Letter spacing on phones"
+                hint="≤768px"
+                value={get(['typography', role, 'letterSpacingMobile'])}
+                placeholder="as above"
+                onChange={set(['typography', role, 'letterSpacingMobile'])}
+              />
               <ChoiceField
                 label="Capitals"
                 value={get(['typography', role, 'transform']) as never}

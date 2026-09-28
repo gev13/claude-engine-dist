@@ -74,7 +74,7 @@
   .he-captcha__invisible { display: none; }
 
   @media (width <= 48rem) {
-    .he-fb.is-card .he-fb__box { padding: 22px 18px; }
+    .he-fb.is-card .he-fb__box { padding: var(--he-fb-pad-m, 22px 18px); }
     .he-fb__grid { grid-template-columns: minmax(0, 1fr); }
     .he-fb__field.is-half { grid-column: 1 / -1; }
     .he-fb__actions > * { flex: 1 1 auto; }

@@ -381,7 +381,7 @@ export function FormBlock(p: P) {
     <section className={cn('he-lsec he-fb', TONES[p.tone ?? 'base'], `is-${p.layout}`, center && 'is-center', p.wide && 'is-wide', p.compactChoices && 'is-compact')}>
       <div className="shell">
         {(p.eyebrow || p.title || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.align} className="mb-9" />}
-        <div className="he-fb__box" style={p.cardPadding ? ({ '--he-fb-pad': p.cardPadding } as React.CSSProperties) : undefined}>
+        <div className="he-fb__box" style={p.cardPadding || p.cardPaddingMobile ? ({ ...(p.cardPadding ? { '--he-fb-pad': p.cardPadding } : {}), ...(p.cardPaddingMobile ? { '--he-fb-pad-m': p.cardPaddingMobile } : {}) } as React.CSSProperties) : undefined}>
           {body}
         </div>
       </div>

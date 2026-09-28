@@ -1704,6 +1704,17 @@ export const blockSchemas = {
         return parts.length <= 2 && parts.every(isLength);
       }, 'One or two CSS lengths')
       .optional(),
+    /** 3.13.1 — the card's space on phones (≤768px); unset keeps the compact 22px 18px. */
+    cardPaddingMobile: z
+      .string()
+      .trim()
+      .max(40)
+      .refine((v) => {
+        if (v === '') return true;
+        const parts = v.split(/\s+/);
+        return parts.length <= 2 && parts.every(isLength);
+      }, 'One or two CSS lengths')
+      .optional(),
     /** Choice chips sized to their text instead of the page's line height. */
     compactChoices: z.boolean().optional(),
     successTitle: text(120),

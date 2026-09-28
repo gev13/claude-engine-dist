@@ -236,3 +236,12 @@ All off until chosen, except two fixes.
   every typography role.
 - **Typography now reaches** FAQ questions (subheadings), the classic hero's
   kicker (eyebrow) and stat labels (body text).
+
+## Line height on smaller screens, form cards on phones (3.13.1)
+
+- **A section's Design tab → Typography:** every role also takes a line
+  height and a letter spacing on tablets and on phones. A heading set to
+  44px on 50px lines that drops to 28px on phones can drop to 32px lines
+  with it.
+- **Form → Space inside the card on phones:** the card's padding at 768px
+  and below; empty keeps the compact 22px 18px.

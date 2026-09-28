@@ -3681,6 +3681,7 @@ function TypeFields({
             Compact choice chips, sized to their text
           </label>
           <Text label="Space inside the card" k="cardPadding" props={props} set={set} placeholder="32px — or two values, e.g. 48px 56px" />
+          <Text label="Space inside the card on phones" k="cardPaddingMobile" props={props} set={set} placeholder="22px 18px" />
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
         </>
