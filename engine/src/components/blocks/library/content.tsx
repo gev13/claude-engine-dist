@@ -355,6 +355,14 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                     {c.buttonLabel} ›
                   </span>
                 )}
+                {/* 3.16 — a button of its own under the text (an outside address opens in a new tab). */}
+                {c.button && (
+                  <div className="he-fgrid__actions">
+                    <Button href={c.button.href} variant={c.button.variant ?? 'primary'} withArrow={c.button.arrow === true || undefined}>
+                      {c.button.label}
+                    </Button>
+                  </div>
+                )}
               </li>
             );
           })}

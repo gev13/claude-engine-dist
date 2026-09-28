@@ -623,6 +623,8 @@ function phoneLayoutCss(theme: Theme): string {
       `:is(.he-cols2,.he-lists){row-gap:${item}}`,
       // 3.15.1 — the heading column's last line keeps no margin of its own, so the gap is exactly the setting.
       '.he-cols2>:first-child>:last-child{margin-bottom:0}',
+      // 3.16 — a list's small title is a heading too: the same space under it.
+      `.he-ilist__title{margin-bottom:${item}}`,
     );
   }
   return rules.length ? `@media (max-width:768px){${rules.join('')}}` : '';

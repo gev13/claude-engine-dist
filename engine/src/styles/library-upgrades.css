@@ -274,3 +274,32 @@
   .has-dividers.is-cross-sm :is(.he-figs__item, .he-counter):nth-child(even) { padding: 20px 0 20px 16px; border-left: 1px solid var(--color-hairline); }
   .has-dividers.is-cross-sm :is(.he-figs__item, .he-counter):nth-child(n + 3) { border-top: 1px solid var(--color-hairline); }
 }
+
+/* 3.16 — each part of a section entering on its own (SiteReveal with
+   `items`). A keyframe animation of the individual `translate`/`scale`/
+   `filter` properties, so a part's own transform and transitions stay its own. */
+.he-reveal-on .he-ri:not(.is-in) { opacity: 0; }
+.he-ri.is-anim { animation: he-ri-fade calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.he-ri--rise.is-anim { animation-name: he-ri-rise; }
+.he-ri--zoom.is-anim { animation-name: he-ri-zoom; }
+.he-ri--left.is-anim { animation-name: he-ri-left; }
+.he-ri--right.is-anim { animation-name: he-ri-right; }
+.he-ri--blur.is-anim { animation-name: he-ri-blur; }
+@keyframes he-ri-fade { from { opacity: 0; } }
+@keyframes he-ri-rise { from { opacity: 0; translate: 0 28px; } }
+@keyframes he-ri-zoom { from { opacity: 0; scale: 0.94; } }
+@keyframes he-ri-left { from { opacity: 0; translate: -40px 0; } }
+@keyframes he-ri-right { from { opacity: 0; translate: 40px 0; } }
+@keyframes he-ri-blur { from { opacity: 0; filter: blur(12px); } }
+@media (prefers-reduced-motion: reduce) {
+  .he-ri { opacity: 1 !important; animation: none !important; }
+}
+.he-reduce-motion .he-ri { opacity: 1 !important; animation: none !important; }
+
+/* 3.16 — an edge-to-edge hero picture keeping its shape: its width follows
+   the hero's height, never past the width chosen. Wider than a phone only. */
+@media (width > 48rem) {
+  .he-hero--split.is-bleed.has-bleed-ratio .he-hero__visual { width: auto; aspect-ratio: var(--he-bleed-ratio); max-width: min(var(--he-bleed-w, 72%), 1100px); }
+}
+/* 3.16 — a card's own button, under its text, level with the text. */
+.he-fgrid__actions { position: relative; z-index: 1; margin-top: 24px; padding-inline: var(--he-item-text-inset, 0); }

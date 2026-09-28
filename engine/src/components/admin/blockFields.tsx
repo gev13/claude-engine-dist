@@ -461,6 +461,38 @@ function ButtonPadFields({ value, onChange, label = 'Padding of this button' }: 
   );
 }
 
+/** 3.16 — a card's own button under its text: empty label and link leave it off. */
+function CardButtonFields({ value, onChange }: { value?: CardButton; onChange: (next: CardButton | undefined) => void }) {
+  const current = value ?? { label: '', href: '' };
+  const update = (patch: Partial<CardButton>) => {
+    const next = { ...current, ...patch };
+    onChange(next.label || next.href ? next : undefined);
+  };
+  return (
+    <div className="grid gap-3 sm:grid-cols-4">
+      <Field label="Button under the text" hint="label">
+        <Input value={current.label} placeholder="Visit the site" onChange={(e) => update({ label: e.target.value })} />
+      </Field>
+      <Field label="Button link" hint="an outside address opens in a new tab">
+        <Input value={current.href} placeholder="https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
+      </Field>
+      <Field label="Button style">
+        <Select value={current.variant ?? 'primary'} onChange={(e) => update({ variant: e.target.value as CardButton['variant'] })}>
+          <option value="primary">Primary</option>
+          <option value="outline">Outline</option>
+          <option value="ghost">Ghost</option>
+        </Select>
+      </Field>
+      <Field label="Arrow">
+        <Select value={current.arrow ? 'yes' : ''} onChange={(e) => update({ arrow: e.target.value === 'yes' || undefined })}>
+          <option value="">No arrow</option>
+          <option value="yes">With an arrow</option>
+        </Select>
+      </Field>
+    </div>
+  );
+}
+
 /** 3.1 — the arrow on one button: as the block draws it (unset), always, or never. */
 function ArrowChoice({ value, onChange }: { value?: boolean; onChange: (next: boolean | undefined) => void }) {
   return (
@@ -857,7 +889,8 @@ type LogoItem = { name: string; imageUrl?: string; href?: string };
 type ColourItem = { name: string; color: string; imageUrl?: string; alt?: string };
 type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
-type GridCard = { imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
+type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean };
+type GridCard = { button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -2265,6 +2298,11 @@ function TypeFields({
                 {variant === 'split' && props.bleed === true && (
                   <Field label="Space around the picture" hint="above and below, e.g. 5% — empty runs it full height">
                     <Input value={str(props, 'bleedInset')} placeholder="5%" onChange={(e) => set(withOpt(props, 'bleedInset', e.target.value.trim() || undefined))} />
+                  </Field>
+                )}
+                {variant === 'split' && props.bleed === true && (
+                  <Field label="Picture shape" hint="width / height, e.g. 1002/960 — its width then follows the hero's height, so a short screen keeps it clear of the text">
+                    <Input value={str(props, 'bleedRatio')} placeholder="1002/960" onChange={(e) => set(withOpt(props, 'bleedRatio', e.target.value.trim() || undefined))} />
                   </Field>
                 )}
                 {variant === 'split' && props.bleed === true && (
@@ -4809,6 +4847,7 @@ function TypeFields({
                 {variant === 'rows' && (
                   <StringListRepeater label="Checklist (up to 8)" items={item.points ?? []} onChange={(points) => update({ points: points.slice(0, 8) })} />
                 )}
+                {['cards', 'imageCards', 'icons'].includes(variant) && <CardButtonFields value={item.button} onChange={(button) => update({ button })} />}
                 <ItemStylePanel value={item.style} onChange={(style) => update({ style })} />
                 {variant !== 'cards' && (
                   <>

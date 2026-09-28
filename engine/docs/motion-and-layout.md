@@ -279,3 +279,19 @@ but not a button's own, which is exactly what was typed.
 - 3.15.1: *Space between sections* also reaches the classic blocks, whose
   padding sits on their inner column, and a two-column block's heading keeps
   no margin of its own under *Space between a section's parts*.
+
+## Parts entering on their own, a hero picture's shape, card buttons (3.16)
+
+- **Appearance → Spacing and motion → Every section enters with**, then
+  *Each part enters on its own*: headings, text, cards, list items, pictures
+  and buttons each play the entrance as they scroll into view, parts arriving
+  together one after another. What is on screen when the page opens shows at
+  once. A section with its own entrance (Design tab) keeps it.
+- **Hero, run to the edges → Picture shape** (width / height, e.g.
+  1002/960): the picture's width follows the hero's height, up to the
+  picture width, so a short laptop screen does not slide it under the text.
+  Wider than a phone only.
+- **Cards → Button under the text**: a label, a link (an outside address
+  opens in a new tab), a style and an arrow, apart from the card's own link.
+- **On phones → Space between a section's parts** also sets the space under
+  a list's small title.

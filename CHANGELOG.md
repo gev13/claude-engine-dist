@@ -10,6 +10,19 @@ improvements.
 
 ---
 
+## 3.16.0 — 2026-09-28
+
+**Parts that enter on their own, hero pictures that keep their shape, and
+card buttons.** With a site-wide entrance chosen, each part of a section —
+heading, text, card, list item, picture, buttons — can enter on its own as
+it scrolls into view. An edge-to-edge hero picture can keep its shape, its
+width following the hero's height, so short laptop screens no longer slide
+it under the text. Cards take a button of their own under the text. The
+phone space between a section's parts also reaches a list's title. All off
+until chosen.
+
+---
+
 ## 3.15.1 — 2026-09-28
 
 **Fixes.** The phone space between sections now also replaces the padding

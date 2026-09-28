@@ -228,6 +228,13 @@ export const blockSchemas = {
      * Wide screens only; the least height then counts the tab's space too.
      */
     bleedCentre: z.enum(['below', 'panel']).optional(),
+    /**
+     * 3.16 — run to the edges, wider than a phone: the picture box's shape
+     * (width / height, e.g. 1002/960). Its width then follows the hero's
+     * height, up to the picture width above, so a short screen does not
+     * slide the picture under the text.
+     */
+    bleedRatio: phoneRatio,
     /** 3.12 — run to the edges: space above and below the picture (e.g. 5%), so it stands smaller than the panel. */
     bleedInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.9 — how wide the paragraphs under the heading run (e.g. 580px); the text column's width when unset. */
@@ -377,6 +384,15 @@ export const blockSchemas = {
         imageUrl: mediaUrl.optional(),
         /** 3.15 — picture rows: a picture of its own on phones. */
         imageUrlMobile: mediaUrl.optional(),
+        /** 3.16 — cards: a button under the text, apart from the card's own link. */
+        button: z
+          .object({
+            label: z.string().trim().min(1).max(60),
+            href: safeHref,
+            variant: z.enum(['primary', 'outline', 'ghost']).optional(),
+            arrow: z.boolean().optional(),
+          })
+          .optional(),
         alt: text(200),
         buttonLabel: text(40),
         /**

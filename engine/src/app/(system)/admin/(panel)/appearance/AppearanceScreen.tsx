@@ -601,6 +601,17 @@ function AppearanceScreenInner() {
                   </Select>
                 </Field>
               </div>
+              {theme.reveal && (
+                <label className="mt-4 flex items-center gap-2.5 text-[14px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={theme.revealItems === true}
+                    onChange={(e) => setTheme((c) => ({ ...c, revealItems: e.target.checked || undefined }))}
+                  />
+                  Each part enters on its own — headings, text, cards, list items, pictures and buttons, one after another
+                </label>
+              )}
             </Panel>
             </>
           )}

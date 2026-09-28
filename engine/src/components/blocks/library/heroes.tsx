@@ -106,6 +106,7 @@ export function LibraryHero(p: P) {
           p.bleed && p.bleedInset && 'has-bleed-inset',
           // 3.15 — a phone picture of its own fills its box there.
           p.imageUrlMobile && !p.videoUrl && 'has-mobile-media',
+          p.bleed && p.bleedRatio && 'has-bleed-ratio',
         )}
         style={splitStyle(p)}
       >
@@ -156,6 +157,8 @@ function splitStyle(p: P): React.CSSProperties | undefined {
   if (p.textWidth) style['--he-hero-text'] = p.textWidth;
   if (p.bleed && p.bleedInset) style['--he-bleed-inset'] = p.bleedInset;
   // 3.15 — the picture box's shape on phones.
+  // 3.16 — the edge-to-edge picture's shape on wider screens.
+  if (p.bleed && p.bleedRatio) style['--he-bleed-ratio'] = p.bleedRatio.replace(/\s*\/\s*/, ' / ');
   if (p.mediaRatioMobile) style['--he-hero-ratio-m'] = p.mediaRatioMobile.replace(/\s*\/\s*/, ' / ');
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }

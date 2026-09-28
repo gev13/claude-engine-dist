@@ -271,7 +271,7 @@ export default async function SiteLayout({
           {/* 2.19 — motion and chrome extras, each only when switched on. */}
           {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} />}
           {/* 3.5 — every section's entrance, when the site sets one. */}
-          {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} />}
+          {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
           {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
           {chrome.transition.style !== 'off' && !chrome.reduceMotion && <PageTransition style={chrome.transition.style} />}

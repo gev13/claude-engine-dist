@@ -392,6 +392,12 @@ export const themeSchema = z.object({
    * sections that ask for one move, as before.
    */
   reveal: z.enum(SECTION_REVEALS).optional(),
+  /**
+   * 3.16 — with `reveal`: each part of a section enters on its own —
+   * headings, text, cards, list items, pictures, buttons — instead of the
+   * section as one piece; parts arriving together follow one another.
+   */
+  revealItems: z.boolean().optional(),
   gap: length.optional(),
   /** 3.13 — the site's space between items on tablets and on phones. */
   gapTablet: length.optional(),
