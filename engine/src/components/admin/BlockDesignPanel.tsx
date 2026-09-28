@@ -777,8 +777,11 @@ export function BlockDesignPanel({
                     if (e.target.checked) next.add(tier);
                     else next.delete(tier);
                     const ordered = VISIBILITY_TIERS.filter((t) => next.has(t));
-                    set(['hideOn'])(undefined);
-                    set(['hideAt'])(ordered.length ? ordered : undefined);
+                    /* One change, not two: each `set` starts from the same `current`, so a
+                       second call would put the old `hideOn` back — and with every tier
+                       unticked, that old value would keep the block hidden (3.13.2). */
+                    const updated = setIn(setIn(current, ['hideOn'], undefined), ['hideAt'], ordered.length ? ordered : undefined);
+                    onChange(Object.keys(updated).length === 0 ? undefined : (updated as BlockStyle));
                   }}
                   className="h-4 w-4 accent-flare"
                 />

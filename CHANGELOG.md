@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.13.2 — 2026-09-28
+
+**Fix: a block hidden with the older "this size and smaller" setting can be
+shown again.** Its visibility boxes showed ticked, but unticking one saved
+nothing — the editor cleared the old setting and wrote the new one as two
+changes from the same starting point, so the old setting came back and kept
+the block hidden.
+
+---
+
 ## 3.13.1 — 2026-09-28
 
 **Line height with the size, and a form card's padding on phones.** A

@@ -1,6 +1,14 @@
 {
-  "latest": "3.13.1",
+  "latest": "3.13.2",
   "releases": [
+    {
+      "version": "3.13.2",
+      "date": "2026-09-28",
+      "summary": "Fix: a block hidden with the older per-size setting can be unticked in its Design tab and shown again.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.13.1",
       "date": "2026-09-28",
