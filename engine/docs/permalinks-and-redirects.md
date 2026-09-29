@@ -103,3 +103,24 @@ line by line — and writes nothing until you import.
 Redirects answered by a route are 308/307 (Next.js's permanent and temporary
 redirects), which search engines treat exactly as 301/302. The trailing-slash
 redirect and query rules are answered earlier, by the middleware, as true 301s.
+
+## www to the bare domain (3.21)
+
+**Settings → Redirect www to the bare domain.** Every request to
+`www.yoursite.com` — pages, pictures, files, the sitemaps — answers with a
+permanent redirect (301; 308 for a form or other non-GET request) to the same
+path and query on the site's own address, `yoursite.com`. Two conditions:
+
+- The www address has to reach this server: a DNS record for `www` and a
+  certificate that covers it (with Cloudflare in front, a proxied `www`
+  record does both). Without them the request never arrives, and a DNS-level
+  redirect at the provider is the tool instead.
+- The site's own address (`NEXT_PUBLIC_SITE_URL`) must be the one without
+  `www`. When it is the www form, the switch does nothing rather than send
+  visitors round in a loop against the canonical links.
+
+Only the www form of the site's own domain is ever redirected, and always to
+the site's own address — a request cannot choose where it is sent. The
+setting belongs to the server's domain, so it is not carried by a content
+export: switch it on on the live site.
+

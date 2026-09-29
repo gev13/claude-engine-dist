@@ -90,6 +90,10 @@ export const siteSettingsSchema = z.object({
   bingVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
   yandexVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
 
+  /* 3.21 — www.example.com answers with a permanent redirect to the site's own
+     address (example.com). Never exported: it belongs to the server's domain. */
+  wwwRedirect: z.boolean().optional(),
+
   /* 3.19 — the sitemaps. Both off until switched on, so an untouched site's XML is unchanged. */
   /** Opened in a browser, the sitemaps show as a table with links (an XSL stylesheet); search engines read the same XML. */
   sitemapStyle: z.boolean().optional(),
@@ -183,6 +187,7 @@ export const SITE_SETTING_FIELDS = {
   'seo.yandexVerification': 'yandexVerification',
   'seo.sitemapStyle': 'sitemapStyle',
   'seo.sitemapImages': 'sitemapImages',
+  'seo.wwwRedirect': 'wwwRedirect',
   'pages.notFoundPageId': 'notFoundPageId',
   'pages.notFoundLinkLabel': 'notFoundLinkLabel',
   'pages.notFoundLinkHref': 'notFoundLinkHref',

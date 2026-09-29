@@ -40,6 +40,8 @@ export type RoutingConfig = {
   csp: string;
   /** Whether engine images carry a `srcset` (2.17, Settings → Media). */
   responsiveImages: boolean;
+  /** 3.21 — Settings → "Redirect www to the bare domain". */
+  wwwRedirect: boolean;
 };
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -64,7 +66,8 @@ const RETRY_MS = 3_000;
 type Cache = { value: RoutingConfig; expires: number; pending?: Promise<RoutingConfig> };
 const holder = globalThis as unknown as { __heRouting?: Cache };
 
-const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }), responsiveImages: false };
+const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }), responsiveImages: false, wwwRedirect: false };
+const WWW_SETTING_KEY = 'seo.wwwRedirect';
 
 async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
   try {
@@ -72,7 +75,7 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       db
         .select({ key: settings.key, value: settings.value })
         .from(settings)
-        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY, MEDIA_SETTING_KEY])),
+        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY, MEDIA_SETTING_KEY, WWW_SETTING_KEY])),
       db
         .select({
           id: redirects.id,
@@ -100,6 +103,7 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       value: {
         csp: publicCsp(byKey),
         responsiveImages: resolveMediaSettings(byKey.get(MEDIA_SETTING_KEY)).responsive,
+        wwwRedirect: byKey.get(WWW_SETTING_KEY) === true,
         permalinks: resolvePermalinks(byKey.get(PERMALINKS_SETTING_KEY)),
         queryRules: shaped.filter((rule) => rule.matchQuery !== ''),
         pathRules: shaped.filter((rule) => rule.matchQuery === ''),

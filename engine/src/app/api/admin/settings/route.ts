@@ -5,6 +5,7 @@ import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import { revalidateEverything } from '@/server/content/revalidate';
+import { invalidateRouting } from '@/server/routing/config';
 import { db } from '@/server/db';
 import { settings } from '@/server/db/schema';
 
@@ -58,6 +59,8 @@ export async function PATCH(request: Request) {
     // shared layout (header, footer, title template, JSON-LD) and in the route
     // handlers, so a rename must reach every page — not only the home page.
     revalidateEverything();
+    // 3.21 — the www redirect is read by the middleware from the routing cache.
+    invalidateRouting();
 
     const rows = await db.select().from(settings).orderBy(asc(settings.key));
     return ok({ items: rows });

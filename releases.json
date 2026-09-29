@@ -1,6 +1,14 @@
 {
-  "latest": "3.20.1",
+  "latest": "3.21.0",
   "releases": [
+    {
+      "version": "3.21.0",
+      "date": "2026-09-29",
+      "summary": "Settings: redirect www to the bare domain — every page and file, permanently. Off until switched on; set on each server.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.20.1",
       "date": "2026-09-29",

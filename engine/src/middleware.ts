@@ -5,6 +5,7 @@ import { localeConfig, splitLocale } from '@/lib/locales';
 import { withSlash, feedTarget } from '@/lib/permalinks';
 import { pickRule } from '@/lib/redirectRules';
 import { routingConfig } from '@/server/routing/config';
+import { requestHost, wwwRedirectTarget } from '@/lib/host';
 import { countHit } from '@/server/routing/hits';
 import { CONSENT_COUNTRIES, REGION_COOKIE } from '@/lib/cookies';
 
@@ -36,6 +37,9 @@ const PUBLIC_ADMIN_PATHS = ['/admin/login', '/admin/two-factor', '/admin/forgot'
  */
 const RESERVED_PREFIXES = ['/admin', '/api', '/install', '/preview', '/media', '/_next', '/sitemaps'];
 const RESERVED_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/manifest.webmanifest', '/favicon.ico'];
+
+/** 3.21 — what the public matcher leaves out (Next's assets, media, files): here only for the www redirect. */
+const OUTSIDE_SITE = /^\/(?:_next|media)\/|\.[A-Za-z0-9]+$/;
 
 function isReserved(pathname: string): boolean {
   if (RESERVED_FILES.includes(pathname)) return true;
@@ -94,6 +98,28 @@ function markRegion(request: NextRequest, response: NextResponse) {
 
 export async function middleware(request: NextRequest) {
   const { pathname, search } = request.nextUrl;
+
+  /* 3.21 — www → the site's own address, before anything else, for every
+     page and file (the second and third matchers bring www requests for
+     files here too). A GET keeps 301; anything else 308, so a method and
+     body are not turned into a GET. */
+  const host = requestHost(request.headers);
+  if (host.startsWith('www.')) {
+    const target = wwwRedirectTarget({
+      enabled: (await routingConfig()).wwwRedirect,
+      host,
+      siteUrl: process.env.NEXT_PUBLIC_SITE_URL ?? '',
+      path: pathname,
+      search,
+    });
+    /* The Location written as is: NextResponse.redirect passes the address
+       through Next's own URL handling, which rewrites a localhost address. */
+    if (target) return new NextResponse(null, { status: request.method === 'GET' || request.method === 'HEAD' ? 301 : 308, headers: { Location: target } });
+  }
+  /* A file or Next's own asset only reaches this function through the www
+     matchers; with nothing to redirect it is served untouched, exactly as a
+     request the first matchers never see. */
+  if (OUTSIDE_SITE.test(pathname)) return NextResponse.next();
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set('x-request-id', crypto.randomUUID());
@@ -207,5 +233,10 @@ export const config = {
        Next's internals, the API, uploaded media, and anything with a file
        extension (robots.txt, the sitemaps, images). */
     '/((?!_next/|api/|media/|.*\\.[A-Za-z0-9]+$).*)',
+    /* 3.21 — and every request on a www host, files and media included, so
+       the www redirect covers them. The API stays out even there (see
+       above); a www host never reaches it once the redirect is on. */
+    { source: '/((?!api/).*)', has: [{ type: 'header', key: 'host', value: 'www\\..*' }] },
+    { source: '/((?!api/).*)', has: [{ type: 'header', key: 'x-forwarded-host', value: 'www\\..*' }] },
   ],
 };

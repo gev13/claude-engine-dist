@@ -10,6 +10,18 @@ improvements.
 
 ---
 
+## 3.21.0 — 2026-09-29
+
+**www to the bare domain.** Settings → *Redirect www to the bare domain*:
+every request to www.yoursite.com — pages, pictures, files, sitemaps —
+answers with a permanent redirect to the same address without www. Only the
+site's own domain is redirected, always to the site's own address; it does
+nothing when the site's address is itself the www form. Off until switched
+on, and set per server (not exported). Saving Settings now also refreshes
+the routing cache at once.
+
+---
+
 ## 3.20.1 — 2026-09-29
 
 **The whole status bar takes the pinned menu's colour on iPhone.** The strip

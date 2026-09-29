@@ -94,6 +94,13 @@ const KNOWN: KnownField[] = [
   { key: 'seo.googleVerification', label: 'Google Search Console code', kind: 'text', hint: 'the content="…" of its HTML tag' },
   { key: 'seo.bingVerification', label: 'Bing Webmaster code', kind: 'text', hint: 'the content="…" of its msvalidate.01 tag' },
   { key: 'seo.yandexVerification', label: 'Yandex Webmaster code', kind: 'text', hint: 'the content="…" of its tag' },
+  // 3.21
+  {
+    key: 'seo.wwwRedirect',
+    label: 'Redirect www to the bare domain',
+    kind: 'boolean',
+    hint: 'www.yoursite.com → yoursite.com, every page and file, permanently (301). Needs the www address to reach this server (a DNS record, and a certificate covering it); the site address must be the one without www. Set on each server — it is not exported',
+  },
   // 3.19
   {
     key: 'seo.sitemapStyle',
