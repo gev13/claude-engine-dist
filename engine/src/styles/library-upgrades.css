@@ -326,33 +326,35 @@
   .he-hdr--notch.is-sticky-lg { position: fixed; }
 }
 
-/* 3.19.2, narrowed in 3.19.3 — once the page has scrolled, a pinned notch
-   tab keeps its own shape and width, curves included; only the space above
-   it is filled with its colour, up past the screen's top edge — under a
-   phone's status bar, which Safari otherwise leaves see-through, and over
-   the gap the tab starts at. A pseudo-element above the header's box, so it
-   adds nothing to the page's width and never covers the tab's corners. */
-@media (width <= 768px) {
-  .he-hdr--notch.is-sticky-sm.is-pinned::before {
-    content: '';
+/* 3.19.4 — the fill above a pinned notch tab. iPhone Safari draws page
+   content under its status bar but never a fixed element, so nothing on the
+   header itself can cover that strip (3.19.2 and 3.19.3 tried). The cap is
+   page content at the tab's width, kept just above the tab by a scroll-driven
+   animation from 200px above the top of the screen down to the tab's top;
+   the header publishes the numbers. Elsewhere it is always off-screen, and a
+   browser without scroll timelines never shows it. */
+.he-notch-cap { display: none; }
+@supports (animation-timeline: scroll()) {
+  .he-notch-cap {
     position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 100vmax;
+    top: 0;
+    left: var(--he-cap-l, 0px);
+    width: var(--he-cap-w, 0px);
+    height: calc(200px + var(--he-cap-top, 0px));
     background: var(--he-notch-bg, var(--color-ink));
+    z-index: 59;
     pointer-events: none;
+    animation: he-notch-cap linear both;
+    animation-timeline: scroll(root block);
+  }
+  @media (width <= 768px) {
+    .he-notch-cap.is-sm { display: block; }
+  }
+  @media (width > 768px) {
+    .he-notch-cap.is-lg { display: block; }
   }
 }
-@media (width > 768px) {
-  .he-hdr--notch.is-sticky-lg.is-pinned::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 100%;
-    height: 100vmax;
-    background: var(--he-notch-bg, var(--color-ink));
-    pointer-events: none;
-  }
+@keyframes he-notch-cap {
+  from { transform: translateY(calc(-200px - var(--he-cap-o, 0px))); }
+  to { transform: translateY(calc(var(--he-scroll-max, 0px) - 200px - var(--he-cap-o, 0px))); }
 }

@@ -125,6 +125,8 @@ export function Header(props: HeaderProps) {
   const [announcementHidden, setAnnouncementHidden] = useState(false);
 
   const wrapRef = useRef<HTMLDivElement>(null);
+  /** 3.19.4 — the fill above a pinned notch tab (see `pinnedCap`). */
+  const capRef = useRef<HTMLDivElement>(null);
   const toggleRef = useRef<HTMLButtonElement>(null);
   const hoverTimer = useRef<number | undefined>(undefined);
 
@@ -145,6 +147,42 @@ export function Header(props: HeaderProps) {
     setMenuOpen(false);
     setOpenId(null);
   }, [pathname]);
+
+  /* 3.19.4 — iPhone Safari (26) draws the page, never a fixed element, under
+     its status bar, so a pinned notch tab showed the content scrolling past
+     above it. The cap is page content: a strip of the tab's colour and width,
+     kept exactly above the tab by a scroll-driven animation (so it moves with
+     the scroll itself, not a frame behind it). It needs only the scroll range
+     and where the tab sits, published here. Nowhere else can anything see it —
+     it is always just above the top of the screen. */
+  const pinnedCap = h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop);
+  useEffect(() => {
+    const cap = capRef.current;
+    const wrap = wrapRef.current;
+    if (!pinnedCap || !cap || !wrap) return;
+    const root = document.documentElement;
+    // Never shortened by the reduced-motion rule: this follows the scroll, it does not animate.
+    cap.style.setProperty('animation-duration', 'auto', 'important');
+    const place = () => {
+      const tab = wrap.getBoundingClientRect();
+      const parent = cap.offsetParent instanceof HTMLElement ? cap.offsetParent.getBoundingClientRect().top + window.scrollY : 0;
+      cap.style.setProperty('--he-cap-l', `${Math.round(tab.left)}px`);
+      cap.style.setProperty('--he-cap-w', `${Math.round(tab.width)}px`);
+      cap.style.setProperty('--he-cap-top', `${Math.max(0, Math.round(wrap.offsetTop - (getComputedStyle(wrap).position === 'fixed' ? 0 : window.scrollY)))}px`);
+      cap.style.setProperty('--he-cap-o', `${Math.round(parent)}px`);
+      cap.style.setProperty('--he-scroll-max', `${Math.max(0, root.scrollHeight - root.clientHeight)}px`);
+    };
+    place();
+    const observer = new ResizeObserver(place);
+    observer.observe(wrap);
+    observer.observe(document.body);
+    window.addEventListener('resize', place);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', place);
+    };
+  }, [pinnedCap]);
+
 
   useEffect(() => {
     let last = window.scrollY;
@@ -357,6 +395,15 @@ export function Header(props: HeaderProps) {
   ].filter((group) => group.links.length > 0);
 
   return (
+    <>
+    {pinnedCap && (
+      <div
+        ref={capRef}
+        className={cn('he-notch-cap', h.stickyMobile && 'is-sm', h.stickyDesktop && 'is-lg')}
+        style={h.notchBackground ? ({ '--he-notch-bg': h.notchBackground } as React.CSSProperties) : undefined}
+        aria-hidden="true"
+      />
+    )}
     <div
       ref={wrapRef}
       className={cn(
@@ -365,8 +412,6 @@ export function Header(props: HeaderProps) {
         h.sticky && 'is-sticky',
         h.stickyMobile && 'is-sticky-sm',
         h.stickyDesktop && 'is-sticky-lg',
-        // 3.19.2 — a pinned notch tab gets a solid band behind it once the page has moved.
-        h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop) && scrolled && 'is-pinned',
         h.overlay && 'is-overlay',
         solid && 'is-solid',
         h.variant === 'rail' && `is-rail-${h.railButton}`,
@@ -525,6 +570,7 @@ export function Header(props: HeaderProps) {
         contact={props.contact ?? { social: [] }}
       />
     </div>
+    </>
   );
 }
 

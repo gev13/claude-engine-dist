@@ -1,6 +1,14 @@
 {
-  "latest": "3.19.3",
+  "latest": "3.19.4",
   "releases": [
+    {
+      "version": "3.19.4",
+      "date": "2026-09-29",
+      "summary": "Fix: on iPhone, the space above a pinned notch header (under the status bar) shows the tab's colour at the tab's width instead of the page scrolling past.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.19.3",
       "date": "2026-09-29",

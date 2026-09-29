@@ -35,9 +35,10 @@ of the first section, the page colour showing through, with curved inner
 corners. Make the first section a **Panel**. The curve and the tab's colour
 are yours to set. By default it scrolls away with the page; **Stay on top
 on phones** (3.17.1) and **on wider screens** (3.17.2) pin it instead. A pinned
-tab keeps its own width and curves; once the page has moved, the space above
-it — a phone's status bar, the gap it starts at — is filled with its colour,
-so the page never shows over the top of it (3.19.3).
+tab keeps its own width and curves, and the space above it — the gap it
+starts at, and an iPhone's status bar, where Safari shows the page scrolling
+past — is filled with its colour at its width, so the page never shows over
+the top of it (3.19.4).
 
 **Header links** — font, size, weight, case, letter spacing, the space
 between them, and their colour and the current page's colour.

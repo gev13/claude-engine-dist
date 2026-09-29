@@ -36,23 +36,25 @@ describe('a notch header on wider screens (3.17.2)', () => {
   });
 });
 
-describe('a pinned notch tab filled above, in its own shape (3.19.2, 3.19.3)', () => {
+describe('the fill above a pinned notch tab (3.19.4)', () => {
   const css = readFileSync(path.join(__dirname, '../src/styles/library-upgrades.css'), 'utf8');
   const header = readFileSync(path.join(__dirname, '../src/components/site/Header.tsx'), 'utf8');
 
-  it('is marked only for a notch header that stays on top, once the page has moved', () => {
-    expect(header).toContain("h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop) && scrolled && 'is-pinned'");
+  it('exists only for a notch header that stays on top', () => {
+    expect(header).toContain("const pinnedCap = h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop);");
+    expect(header).toContain("className={cn('he-notch-cap', h.stickyMobile && 'is-sm', h.stickyDesktop && 'is-lg')}");
+    // The 3.19.2 band (full width) and 3.19.3 fill on the header itself are gone.
+    expect(header).not.toContain("'is-pinned'");
+    expect(css).not.toContain('.is-pinned');
   });
 
-  it('fills only the space above the tab, at the tab’s width, and keeps its curves', () => {
-    for (const tier of ['sm', 'lg']) {
-      const rule = new RegExp(`\\.he-hdr--notch\\.is-sticky-${tier}\\.is-pinned::before \\{([^}]*)\\}`).exec(css)?.[1] ?? '';
-      expect(rule).toContain('bottom: 100%;');
-      expect(rule).toContain('left: 0;');
-      expect(rule).toContain('right: 0;');
-      expect(rule).toContain('background: var(--he-notch-bg, var(--color-ink));');
-      expect(rule).not.toContain('box-shadow');
-    }
-    expect(css).not.toContain('.is-pinned .he-hdr__bar::after');
+  it('is page content kept above the tab by the scroll itself, only where scroll timelines exist', () => {
+    const block = css.slice(css.indexOf('@supports (animation-timeline: scroll())'));
+    expect(block).toMatch(/\.he-notch-cap \{[^}]*position: absolute;[^}]*left: var\(--he-cap-l, 0px\);[^}]*width: var\(--he-cap-w, 0px\);/);
+    expect(block).toContain('animation-timeline: scroll(root block);');
+    expect(css).toContain('.he-notch-cap { display: none; }');
+    expect(css).toMatch(/@keyframes he-notch-cap \{\s*from \{ transform: translateY\(calc\(-200px - var\(--he-cap-o, 0px\)\)\); \}\s*to \{ transform: translateY\(calc\(var\(--he-scroll-max, 0px\) - 200px - var\(--he-cap-o, 0px\)\)\); \}/);
+    // Reduced motion shortens every animation's duration; this one follows the scroll, so it keeps its own.
+    expect(header).toContain("cap.style.setProperty('animation-duration', 'auto', 'important');");
   });
 });

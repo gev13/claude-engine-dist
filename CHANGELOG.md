@@ -10,6 +10,17 @@ improvements.
 
 ---
 
+## 3.19.4 — 2026-09-29
+
+**Fix: nothing shows above a pinned notch header on iPhone.** Safari on
+iPhone shows the page scrolling past under its status bar and never draws a
+pinned element there, so 3.19.2 and 3.19.3 could not cover it. A strip of
+the tab's colour, at the tab's width, now travels with the scroll just above
+the tab — under the status bar, and over any gap above the tab. Nothing is
+added beside the tab.
+
+---
+
 ## 3.19.3 — 2026-09-29
 
 **Fix: a pinned notch header keeps its shape.** 3.19.2 put the pinned tab on
