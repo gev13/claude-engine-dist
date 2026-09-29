@@ -61,6 +61,8 @@ export const chromeSchema = z.object({
       sticky: z.boolean().optional(),
       /** 3.17.1 — the notch header: its tab stays at the top of the screen on phones while the page scrolls. */
       stickyMobile: z.boolean().optional(),
+      /** 3.17.2 — the notch header's tab stays at the top of wider screens (above 768px) too. */
+      stickyDesktop: z.boolean().optional(),
       /** Sits transparent over a full-bleed hero and turns solid on scroll. */
       overlay: z.boolean().optional(),
       collapseAt: z.enum(COLLAPSE_TIERS).optional(),
@@ -241,6 +243,7 @@ export type ResolvedChrome = {
     variant: HeaderVariant;
     sticky: boolean;
     stickyMobile: boolean;
+    stickyDesktop: boolean;
     overlay: boolean;
     collapseAt: CollapseTier;
     search: boolean;
@@ -329,6 +332,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       variant,
       sticky: notch ? false : (c.header?.sticky ?? true),
       stickyMobile: notch ? (c.header?.stickyMobile ?? false) : false,
+      stickyDesktop: notch ? (c.header?.stickyDesktop ?? false) : false,
       overlay: beside || notch ? false : (c.header?.overlay ?? false),
       collapseAt: c.header?.collapseAt ?? 'tablet',
       search: c.header?.search ?? false,

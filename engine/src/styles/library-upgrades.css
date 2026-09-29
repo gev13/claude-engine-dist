@@ -321,3 +321,7 @@
 @media (width <= 768px) {
   .he-hdr--notch.is-sticky-sm { position: fixed; }
 }
+/* 3.17.2 — and on wider screens. */
+@media (width > 768px) {
+  .he-hdr--notch.is-sticky-lg { position: fixed; }
+}

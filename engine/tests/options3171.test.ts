@@ -25,3 +25,13 @@ describe('a notch header on phones', () => {
     expect(css).toMatch(/@media \(width <= 768px\) \{\s*\.he-hdr--notch\.is-sticky-sm \{ position: fixed; \}/);
   });
 });
+
+describe('a notch header on wider screens (3.17.2)', () => {
+  it('stays put unless chosen, and only a notch header can', () => {
+    expect(resolveChrome(chromeSchema.parse({ header: { variant: 'notch' } })).header.stickyDesktop).toBe(false);
+    expect(resolveChrome(chromeSchema.parse({ header: { variant: 'notch', stickyDesktop: true } })).header.stickyDesktop).toBe(true);
+    expect(resolveChrome(chromeSchema.parse({ header: { variant: 'classic', stickyDesktop: true } })).header.stickyDesktop).toBe(false);
+    const css = readFileSync(path.join(__dirname, '../src/styles/library-upgrades.css'), 'utf8');
+    expect(css).toMatch(/@media \(width > 768px\) \{\s*\.he-hdr--notch\.is-sticky-lg \{ position: fixed; \}/);
+  });
+});

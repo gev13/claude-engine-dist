@@ -314,3 +314,5 @@ but not a button's own, which is exactly what was typed.
   variable Google fonts were declared as two single weights on one file, so
   medium and semibold drew as regular; each is now declared once across its
   own weight range (see `docs/fonts.md`).
+- 3.17.2: **Header → Notch header: stay at the top on wider screens while
+  scrolling** — the same for desktops and tablets.

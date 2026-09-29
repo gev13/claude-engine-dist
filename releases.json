@@ -1,6 +1,14 @@
 {
-  "latest": "3.17.1",
+  "latest": "3.17.2",
   "releases": [
+    {
+      "version": "3.17.2",
+      "date": "2026-09-29",
+      "summary": "A notch header can stay at the top of desktop and tablet screens while the page scrolls.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.17.1",
       "date": "2026-09-28",

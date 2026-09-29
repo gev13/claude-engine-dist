@@ -364,6 +364,7 @@ export function Header(props: HeaderProps) {
         `he-hdr--${h.variant}`,
         h.sticky && 'is-sticky',
         h.stickyMobile && 'is-sticky-sm',
+        h.stickyDesktop && 'is-sticky-lg',
         h.overlay && 'is-overlay',
         solid && 'is-solid',
         h.variant === 'rail' && `is-rail-${h.railButton}`,

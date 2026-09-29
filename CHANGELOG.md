@@ -10,6 +10,14 @@ improvements.
 
 ---
 
+## 3.17.2 — 2026-09-29
+
+**A notch header that stays on top on wider screens too.** Beside the phone
+option from 3.17.1, a notch header's tab can stay at the top of desktop and
+tablet screens while the page scrolls. Off until chosen.
+
+---
+
 ## 3.17.1 — 2026-09-28
 
 **Fixes and two small options.** Twenty-eight bundled variable fonts
