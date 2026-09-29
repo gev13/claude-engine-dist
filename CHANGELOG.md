@@ -10,6 +10,15 @@ improvements.
 
 ---
 
+## 3.19.3 — 2026-09-29
+
+**Fix: a pinned notch header keeps its shape.** 3.19.2 put the pinned tab on
+a full-width band, which squared off the notch design. The tab now keeps
+its own width and curves while the page scrolls; only the space above it
+(a phone's status bar, the gap it starts at) is filled with its colour.
+
+---
+
 ## 3.19.2 — 2026-09-29
 
 **Fix: a pinned notch header no longer shows the page around it.** Once the

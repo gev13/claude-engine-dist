@@ -36,7 +36,7 @@ describe('a notch header on wider screens (3.17.2)', () => {
   });
 });
 
-describe('a pinned notch tab on a solid band (3.19.2)', () => {
+describe('a pinned notch tab filled above, in its own shape (3.19.2, 3.19.3)', () => {
   const css = readFileSync(path.join(__dirname, '../src/styles/library-upgrades.css'), 'utf8');
   const header = readFileSync(path.join(__dirname, '../src/components/site/Header.tsx'), 'utf8');
 
@@ -44,13 +44,15 @@ describe('a pinned notch tab on a solid band (3.19.2)', () => {
     expect(header).toContain("h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop) && scrolled && 'is-pinned'");
   });
 
-  it('paints a filled band at each width it is pinned at, clipped at the tab’s bottom edge', () => {
+  it('fills only the space above the tab, at the tab’s width, and keeps its curves', () => {
     for (const tier of ['sm', 'lg']) {
       const rule = new RegExp(`\\.he-hdr--notch\\.is-sticky-${tier}\\.is-pinned::before \\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+      expect(rule).toContain('bottom: 100%;');
+      expect(rule).toContain('left: 0;');
+      expect(rule).toContain('right: 0;');
       expect(rule).toContain('background: var(--he-notch-bg, var(--color-ink));');
-      expect(rule).toContain('box-shadow: 0 0 0 100vmax var(--he-notch-bg, var(--color-ink));');
-      expect(rule).toContain('clip-path: inset(-100vmax -100vmax 0 -100vmax);');
-      expect(css).toContain(`.he-hdr--notch.is-sticky-${tier}.is-pinned .he-hdr__bar::after { display: none; }`);
+      expect(rule).not.toContain('box-shadow');
     }
+    expect(css).not.toContain('.is-pinned .he-hdr__bar::after');
   });
 });

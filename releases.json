@@ -1,6 +1,14 @@
 {
-  "latest": "3.19.2",
+  "latest": "3.19.3",
   "releases": [
+    {
+      "version": "3.19.3",
+      "date": "2026-09-29",
+      "summary": "Fix: a pinned notch header keeps its own width and curves while scrolling; only the space above it is filled.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.19.2",
       "date": "2026-09-29",

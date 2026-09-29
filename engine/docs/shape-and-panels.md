@@ -34,10 +34,10 @@ The **Notch** layout puts the logo and links in a tab cut into the top-left
 of the first section, the page colour showing through, with curved inner
 corners. Make the first section a **Panel**. The curve and the tab's colour
 are yours to set. By default it scrolls away with the page; **Stay on top
-on phones** (3.17.1) and **on wider screens** (3.17.2) pin it instead. Once
-the page has moved, a pinned tab stands on a solid band in its own colour,
-across the full width and up under a phone's status bar, so the page never
-shows around or above it (3.19.2).
+on phones** (3.17.1) and **on wider screens** (3.17.2) pin it instead. A pinned
+tab keeps its own width and curves; once the page has moved, the space above
+it — a phone's status bar, the gap it starts at — is filled with its colour,
+so the page never shows over the top of it (3.19.3).
 
 **Header links** — font, size, weight, case, letter spacing, the space
 between them, and their colour and the current page's colour.
