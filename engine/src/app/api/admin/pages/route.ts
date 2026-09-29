@@ -5,7 +5,7 @@ import { and, asc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from 'drizz
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { toPath, toSlug, uniqueSlug } from '@/lib/slug';
 import { badRequest, conflict, created, handle, ok, readJson } from '@/server/api/respond';
-import { blockInput } from '@/server/api/schemas';
+import { blockInput, seoSchema } from '@/server/api/schemas';
 import { captureRevision } from '@/server/content/revisions';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
@@ -20,21 +20,6 @@ export const dynamic = 'force-dynamic';
 
 const statusEnum = z.enum(['draft', 'published', 'archived']);
 
-const seoSchema = z.object({
-  title: z.string().max(300).optional(),
-  description: z.string().max(1000).optional(),
-  canonicalUrl: z.string().max(500).optional(),
-  robots: z.string().max(120).optional(),
-  ogTitle: z.string().max(300).optional(),
-  ogDescription: z.string().max(1000).optional(),
-  ogImageId: z.string().max(64).optional(),
-  twitterCard: z.enum(['summary', 'summary_large_image']).optional(),
-  jsonLd: z.array(z.unknown()).max(20).optional(),
-  extraMeta: z
-    .array(z.object({ name: z.string().optional(), property: z.string().optional(), content: z.string() }))
-    .max(40)
-    .optional(),
-});
 
 const createSchema = z.object({
   slug: z.string().min(1).max(180).optional(),

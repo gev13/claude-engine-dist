@@ -5,7 +5,7 @@ import { and, eq, ne } from 'drizzle-orm';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { toPath, toSlug } from '@/lib/slug';
 import { badRequest, conflict, forbidden, handle, notFound, ok, readJson } from '@/server/api/respond';
-import { blockInput } from '@/server/api/schemas';
+import { blockInput, seoSchema } from '@/server/api/schemas';
 import { captureRevision, deleteRevisionsFor } from '@/server/content/revisions';
 import { requireUser } from '@/server/api/guard';
 import { audit } from '@/server/auth/audit';
@@ -25,21 +25,6 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 const statusEnum = z.enum(['draft', 'published', 'archived']);
 
-const seoSchema = z.object({
-  title: z.string().max(300).optional(),
-  description: z.string().max(1000).optional(),
-  canonicalUrl: z.string().max(500).optional(),
-  robots: z.string().max(120).optional(),
-  ogTitle: z.string().max(300).optional(),
-  ogDescription: z.string().max(1000).optional(),
-  ogImageId: z.string().max(64).optional(),
-  twitterCard: z.enum(['summary', 'summary_large_image']).optional(),
-  jsonLd: z.array(z.unknown()).max(20).optional(),
-  extraMeta: z
-    .array(z.object({ name: z.string().optional(), property: z.string().optional(), content: z.string() }))
-    .max(40)
-    .optional(),
-});
 
 const updateSchema = z.object({
   slug: z.string().min(1).max(180).optional(),

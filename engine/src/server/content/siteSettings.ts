@@ -1,5 +1,5 @@
 import 'server-only';
-import { type SiteSettings, parseSiteSettings } from '@/lib/siteSettings';
+import { SITE_SETTING_FIELDS, type SiteSettings, parseSiteSettings } from '@/lib/siteSettings';
 import { site } from '@/lib/site';
 import type { Locale } from '@/lib/locales';
 import { readLocalisedMany } from './localisedSettings';
@@ -9,39 +9,9 @@ import { readLocalisedMany } from './localisedSettings';
  * than as a single blob, because that is the shape the screen already uses and
  * the shape an individual `settings:write` PATCH expects.
  */
-export const SITE_SETTING_KEYS = [
-  'site.name',
-  'site.tagline',
-  'site.description',
-  'site.contactEmail',
-  'site.dateFormat',
-  'site.timeZone',
-  'seo.discourageSearchEngines',
-  'seo.defaultRobots',
-  'seo.titleSeparator',
-  'seo.titleFormat',
-  'seo.ogImageUrl',
-  'pages.notFoundPageId',
-  'pages.notFoundLinkLabel',
-  'pages.notFoundLinkHref',
-] as const;
+export const SITE_SETTING_KEYS = Object.keys(SITE_SETTING_FIELDS) as (keyof typeof SITE_SETTING_FIELDS)[];
 
-const KEY_TO_FIELD: Record<string, keyof SiteSettings> = {
-  'site.name': 'name',
-  'site.tagline': 'tagline',
-  'site.description': 'description',
-  'site.contactEmail': 'contactEmail',
-  'site.dateFormat': 'dateFormat',
-  'site.timeZone': 'timeZone',
-  'seo.discourageSearchEngines': 'discourageSearchEngines',
-  'seo.defaultRobots': 'defaultRobots',
-  'seo.titleSeparator': 'titleSeparator',
-  'seo.titleFormat': 'titleFormat',
-  'seo.ogImageUrl': 'ogImageUrl',
-  'pages.notFoundPageId': 'notFoundPageId',
-  'pages.notFoundLinkLabel': 'notFoundLinkLabel',
-  'pages.notFoundLinkHref': 'notFoundLinkHref',
-};
+const KEY_TO_FIELD: Record<string, keyof SiteSettings> = SITE_SETTING_FIELDS;
 
 export type ResolvedSiteSettings = Required<Pick<SiteSettings, 'name' | 'tagline' | 'description' | 'contactEmail'>> &
   SiteSettings;

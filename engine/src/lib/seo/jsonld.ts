@@ -29,6 +29,18 @@ export type SiteIdentity = {
   sameAs?: string[];
   /** 2.18 — the brand logo from Appearance, when one is set; the bundled mark otherwise. */
   logoUrl?: string;
+  /** 3.18 — Settings → Organization: each left out while empty. */
+  legalName?: string;
+  alternateName?: string;
+  foundingDate?: string;
+  phone?: string;
+  addressStreet?: string;
+  addressLocality?: string;
+  addressRegion?: string;
+  addressPostalCode?: string;
+  addressCountry?: string;
+  /** A raster logo for search engines; preferred over `logoUrl`, which may be an SVG they do not accept. */
+  searchLogoUrl?: string;
 };
 
 export function organization(s: SiteIdentity): Node {
@@ -39,33 +51,62 @@ export function organization(s: SiteIdentity): Node {
     url: `${SITE_URL}/`,
     description: s.description,
     ...(s.tagline ? { slogan: s.tagline } : {}),
-    logo: s.logoUrl
-      ? { '@type': 'ImageObject', url: abs(s.logoUrl) }
-      : { '@type': 'ImageObject', url: `${SITE_URL}/icon.svg`, width: 512, height: 512 },
+    ...(s.legalName ? { legalName: s.legalName } : {}),
+    ...(s.alternateName ? { alternateName: s.alternateName } : {}),
+    ...(s.foundingDate ? { foundingDate: s.foundingDate } : {}),
+    logo: s.searchLogoUrl
+      ? { '@type': 'ImageObject', url: abs(s.searchLogoUrl) }
+      : s.logoUrl
+        ? { '@type': 'ImageObject', url: abs(s.logoUrl) }
+        : { '@type': 'ImageObject', url: `${SITE_URL}/icon.svg`, width: 512, height: 512 },
+    ...(s.searchLogoUrl ? { image: abs(s.searchLogoUrl) } : {}),
+    ...(s.phone ? { telephone: s.phone } : {}),
+    ...(s.addressStreet || s.addressLocality || s.addressCountry
+      ? {
+          address: {
+            '@type': 'PostalAddress',
+            ...(s.addressStreet ? { streetAddress: s.addressStreet } : {}),
+            ...(s.addressLocality ? { addressLocality: s.addressLocality } : {}),
+            ...(s.addressRegion ? { addressRegion: s.addressRegion } : {}),
+            ...(s.addressPostalCode ? { postalCode: s.addressPostalCode } : {}),
+            ...(s.addressCountry ? { addressCountry: s.addressCountry } : {}),
+          },
+        }
+      : {}),
     ...(s.sameAs && s.sameAs.length ? { sameAs: s.sameAs } : {}),
     ...(s.contactEmail
       ? {
           email: s.contactEmail,
-          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support', email: s.contactEmail }],
+          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support', email: s.contactEmail, ...(s.phone ? { telephone: s.phone } : {}) }],
         }
       : {}),
   };
 }
 
-export function website(s: Pick<SiteIdentity, 'name' | 'description'> & { searchPath?: string }): Node {
+/**
+ * The site. 3.18 — the search box search engines may show (`SearchAction`)
+ * only when the site has a search to send it to: `searchPath` is the blog's
+ * index, and a site with its blog switched off passes none.
+ */
+export function website(s: Pick<SiteIdentity, 'name' | 'description' | 'alternateName'> & { searchPath?: string }): Node {
   return {
     '@type': 'WebSite',
     '@id': SITE_ID,
     url: `${SITE_URL}/`,
     name: s.name,
     description: s.description,
+    ...(s.alternateName ? { alternateName: s.alternateName } : {}),
     publisher: { '@id': ORG_ID },
     inLanguage: 'en',
-    potentialAction: {
-      '@type': 'SearchAction',
-      target: { '@type': 'EntryPoint', urlTemplate: `${abs(s.searchPath ?? '/blog')}?q={search_term_string}` },
-      'query-input': 'required name=search_term_string',
-    },
+    ...(s.searchPath
+      ? {
+          potentialAction: {
+            '@type': 'SearchAction',
+            target: { '@type': 'EntryPoint', urlTemplate: `${abs(s.searchPath)}?q={search_term_string}` },
+            'query-input': 'required name=search_term_string',
+          },
+        }
+      : {}),
   };
 }
 

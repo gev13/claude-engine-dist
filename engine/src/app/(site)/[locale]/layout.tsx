@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import type { Theme } from '@/lib/theme';
+import { type Theme, isColor } from '@/lib/theme';
 import { notFound, redirect } from 'next/navigation';
 import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
@@ -38,6 +38,7 @@ import { Popups } from '@/components/site/Popups';
 import { CookieNotice } from '@/components/site/CookieNotice';
 import { getPermalinks } from '@/server/routing/config';
 import { blogIndexPath } from '@/lib/permalinks';
+import { resolveBlog } from '@/lib/blog';
 import '@/styles/globals.css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -75,20 +76,39 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     ...PLATFORM_META,
     publisher: settings.name,
     formatDetection: { telephone: false, address: false, email: false },
+    // 3.18 — the site's own icon on a phone's home screen too, not the engine's.
     icons: favicon
-      ? { icon: [{ url: favicon }] }
+      ? { icon: [{ url: favicon }], apple: [{ url: favicon }] }
       : { icon: [{ url: '/icon.svg', type: 'image/svg+xml' }], apple: [{ url: '/apple-icon.png' }] },
     ...(settings.discourageSearchEngines ? { robots: { index: false, follow: false } } : {}),
-    other: { 'content-language': locale },
+    // 3.18 — Settings → Search consoles.
+    ...(settings.googleVerification || settings.bingVerification || settings.yandexVerification
+      ? {
+          verification: {
+            ...(settings.googleVerification ? { google: settings.googleVerification } : {}),
+            ...(settings.yandexVerification ? { yandex: settings.yandexVerification } : {}),
+            ...(settings.bingVerification ? { other: { 'msvalidate.01': settings.bingVerification } } : {}),
+          },
+        }
+      : {}),
+    other: {
+      'content-language': locale,
+      ...(settings.twitterHandle ? { 'twitter:site': `@${settings.twitterHandle.replace(/^@/, '')}` } : {}),
+    },
   };
 }
 
-export const viewport: Viewport = {
-  themeColor: '#201e1d',
-  colorScheme: 'dark',
-  width: 'device-width',
-  initialScale: 1,
-};
+/** 3.18 — the browser's own bar in the site's page colour (Appearance → Colours). */
+export async function generateViewport(): Promise<Viewport> {
+  const theme = await getTheme().catch(() => null);
+  const background = theme?.colors?.background;
+  return {
+    themeColor: background && isColor(background) ? background : '#201e1d',
+    colorScheme: 'dark',
+    width: 'device-width',
+    initialScale: 1,
+  };
+}
 
 export default async function SiteLayout({
   children,
@@ -306,7 +326,8 @@ export default async function SiteLayout({
                 sameAs: (navigation.social ?? []).filter(isProfile).map((link) => link.href),
                 logoUrl: theme.brand?.logoUrl && /^\/[A-Za-z0-9._~\-/%]*$/.test(theme.brand.logoUrl) ? theme.brand.logoUrl : undefined,
               }),
-              website({ ...settings, searchPath: blogIndexPath(permalinks) }),
+              // 3.18 — no search box to offer while the blog is switched off.
+              website({ ...settings, searchPath: resolveBlog(theme.blog).off ? undefined : blogIndexPath(permalinks) }),
               siteNavigation(navLinks),
             ])}
           />

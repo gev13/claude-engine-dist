@@ -59,6 +59,37 @@ export const siteSettingsSchema = z.object({
     .regex(/^(|\/[A-Za-z0-9._~\-/%]*)$/, 'A picture from the media library')
     .optional(),
 
+  /* 3.18 — the organization behind the site, for search engines (Organization JSON-LD). Each is left out while empty. */
+  /** The registered company name, when it differs from the site name. */
+  legalName: z.string().trim().max(160).optional(),
+  /** Another name people search for (e.g. a spelling without the brand's styling). */
+  alternateName: z.string().trim().max(120).optional(),
+  /** The year (or date) it was founded: 2024, 2024-05 or 2024-05-01. */
+  foundingDate: z.string().trim().regex(/^(|\d{4}(-\d{2}(-\d{2})?)?)$/, 'A year, or a date as 2024-05-01').optional(),
+  /** A contact telephone number, with its country code. */
+  phone: z.string().trim().max(40).regex(/^(|\+?[0-9 ()./-]{4,40})$/, 'A phone number').optional(),
+  addressStreet: z.string().trim().max(160).optional(),
+  addressLocality: z.string().trim().max(120).optional(),
+  addressRegion: z.string().trim().max(120).optional(),
+  addressPostalCode: z.string().trim().max(20).optional(),
+  /** A country name or its two-letter code. */
+  addressCountry: z.string().trim().max(60).optional(),
+  /** The logo search engines show: a PNG, JPG or WebP, square, at least 112px — an SVG is not accepted there. */
+  searchLogoUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^(|\/[A-Za-z0-9._~\-/%]*\.(png|jpe?g|webp))$/i, 'A PNG, JPG or WebP from the media library')
+    .optional(),
+
+  /* 3.18 — search consoles and social cards. */
+  /** The site's X (Twitter) account, as twitter:site. */
+  twitterHandle: z.string().trim().regex(/^(|@?[A-Za-z0-9_]{1,15})$/, 'An X handle, e.g. @yourcompany').optional(),
+  /** The content of each console's verification meta tag. */
+  googleVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
+  bingVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
+  yandexVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
+
   /* 2.18 — the page shown for an address that does not exist. */
   notFoundPageId: z.string().uuid().or(z.literal('')).optional(),
   /** A second button on the built-in 404, beside "Back to the homepage". */
@@ -111,3 +142,54 @@ export function formatDate(date: Date, settings: SiteSettings): string {
       return new Intl.DateTimeFormat('en-GB', { ...opts, day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   }
 }
+
+/**
+ * 3.18 — where each setting is stored, by key. `site.*` keys and the SEO and
+ * missing-page keys below travel with a content export; the switch that hides
+ * a site from search engines and the default robots rule never do, so a
+ * staging site's "noindex" cannot reach a live one.
+ */
+export const SITE_SETTING_FIELDS = {
+  'site.name': 'name',
+  'site.tagline': 'tagline',
+  'site.description': 'description',
+  'site.contactEmail': 'contactEmail',
+  'site.dateFormat': 'dateFormat',
+  'site.timeZone': 'timeZone',
+  'site.legalName': 'legalName',
+  'site.alternateName': 'alternateName',
+  'site.foundingDate': 'foundingDate',
+  'site.phone': 'phone',
+  'site.addressStreet': 'addressStreet',
+  'site.addressLocality': 'addressLocality',
+  'site.addressRegion': 'addressRegion',
+  'site.addressPostalCode': 'addressPostalCode',
+  'site.addressCountry': 'addressCountry',
+  'site.searchLogoUrl': 'searchLogoUrl',
+  'seo.discourageSearchEngines': 'discourageSearchEngines',
+  'seo.defaultRobots': 'defaultRobots',
+  'seo.titleSeparator': 'titleSeparator',
+  'seo.titleFormat': 'titleFormat',
+  'seo.ogImageUrl': 'ogImageUrl',
+  'seo.twitterHandle': 'twitterHandle',
+  'seo.googleVerification': 'googleVerification',
+  'seo.bingVerification': 'bingVerification',
+  'seo.yandexVerification': 'yandexVerification',
+  'pages.notFoundPageId': 'notFoundPageId',
+  'pages.notFoundLinkLabel': 'notFoundLinkLabel',
+  'pages.notFoundLinkHref': 'notFoundLinkHref',
+} as const satisfies Record<string, keyof SiteSettings>;
+
+/** 3.18 — settings outside `site.*` that travel with a content export. */
+export const PORTABLE_SEO_KEYS = [
+  'seo.titleSeparator',
+  'seo.titleFormat',
+  'seo.ogImageUrl',
+  'seo.twitterHandle',
+  'seo.googleVerification',
+  'seo.bingVerification',
+  'seo.yandexVerification',
+  'pages.notFoundPageId',
+  'pages.notFoundLinkLabel',
+  'pages.notFoundLinkHref',
+] as const;

@@ -10,6 +10,20 @@ improvements.
 
 ---
 
+## 3.18.0 — 2026-09-29
+
+**Search engines.** Settings gain the organization's details for structured
+data (legal name, other name, founding year, phone, address, and a raster
+logo search engines accept), the Google, Bing and Yandex verification codes,
+and the site's X account. The WebSite search box is offered only while the
+blog is on; the manifest and home-screen icon use the site's favicon and
+page colour. A content export now carries the title format, the default
+share picture, the search-console codes and the missing-page settings —
+never "discourage search engines". Fixed: "Use exactly this title" on a page
+never saved.
+
+---
+
 ## 3.17.2 — 2026-09-29
 
 **A notch header that stays on top on wider screens too.** Beside the phone

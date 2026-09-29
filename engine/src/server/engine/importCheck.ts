@@ -15,7 +15,7 @@ import { permalinksSchema } from '@/lib/permalinks';
 import { popupsSchema } from '@/lib/popups';
 import { projectOptionsSchema, projectTemplateSchema } from '@/lib/projects';
 import { normalisePath } from '@/lib/redirectRules';
-import { siteSettingsSchema } from '@/lib/siteSettings';
+import { PORTABLE_SEO_KEYS, SITE_SETTING_FIELDS, siteSettingsSchema } from '@/lib/siteSettings';
 import { themeSchema } from '@/lib/theme';
 import { readingMinutes } from '@/lib/utils';
 import { seoSchema } from '@/server/api/schemas';
@@ -291,6 +291,12 @@ export function checkSetting(key: string, value: unknown): { ok: true; value: un
     const schema = siteSettingsSchema.shape[field];
     if (!schema) return { ok: false, reason: `${key} is not a setting this engine knows.` };
     const parsed = schema.safeParse(value);
+    return parsed.success ? { ok: true, value: parsed.data } : { ok: false, reason: `${key}: ${parsed.error.issues[0]?.message ?? 'not valid'}.` };
+  }
+  // 3.18 — the SEO and missing-page settings that travel, against their own fields.
+  if ((PORTABLE_SEO_KEYS as readonly string[]).includes(base)) {
+    const field = SITE_SETTING_FIELDS[base as keyof typeof SITE_SETTING_FIELDS];
+    const parsed = siteSettingsSchema.shape[field].safeParse(value);
     return parsed.success ? { ok: true, value: parsed.data } : { ok: false, reason: `${key}: ${parsed.error.issues[0]?.message ?? 'not valid'}.` };
   }
   const schema = SETTING_SCHEMAS[base];

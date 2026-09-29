@@ -92,3 +92,26 @@ Appearance → Blog → *Switch the blog off*. Its index, categories, research,
 posts, search and feeds answer "not found", and its sitemap is empty, until
 it is switched back on. Nothing is deleted, and pages elsewhere on the site
 are untouched — take links to the blog out of the menus yourself.
+
+## The organization, search consoles and exports (3.18)
+
+- **Settings → Organization** (each left out of the structured data while
+  empty): legal company name, another name people search for, founding year,
+  phone, postal address, and a **logo for search engines** — a square PNG,
+  JPG or WebP of at least 112px, because search engines do not take the SVG
+  logo a header usually uses.
+- **Settings → Search consoles**: the Google, Bing and Yandex verification
+  codes (the `content="…"` of each tag), and the site's **X account** for
+  shared cards (`twitter:site`). Social profiles for `sameAs` stay in
+  Menus → Social links.
+- The **search box** in the WebSite structured data is offered only while the
+  blog is switched on — it pointed at a page that answered "not found".
+- The **app manifest and home-screen icon** use the site's favicon
+  (Appearance → Brand) and the browser bar follows the page colour, rather
+  than the engine's own mark and colour.
+- A **content export** now carries the title format and separator, the
+  default share picture, the search-console codes, the X account and the
+  missing-page settings. "Discourage search engines" and the default robots
+  rule never travel, so a staging site's `noindex` cannot reach a live one.
+- Fixed: a page's **"Use exactly this title"** never saved — the page routes
+  kept a copy of the SEO rules without it.

@@ -1,4 +1,5 @@
 import 'server-only';
+import { PORTABLE_SEO_KEYS } from '@/lib/siteSettings';
 import { execFile } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { createWriteStream, existsSync } from 'node:fs';
@@ -136,6 +137,8 @@ export const NEVER_EXPORTED_SETTING_KEYS = [
 export function isPortableSettingKey(key: string): boolean {
   if ((NEVER_EXPORTED_SETTING_KEYS as readonly string[]).includes(key)) return false;
   if ((PORTABLE_SETTING_KEYS as readonly string[]).includes(key)) return true;
+  // 3.18 — titles, the default share picture, search consoles and the missing-page settings travel too.
+  if ((PORTABLE_SEO_KEYS as readonly string[]).includes(key.split(':')[0]!)) return true;
   return key.startsWith(PORTABLE_SETTING_PREFIX);
 }
 
