@@ -1,6 +1,14 @@
 {
-  "latest": "3.19.1",
+  "latest": "3.19.2",
   "releases": [
+    {
+      "version": "3.19.2",
+      "date": "2026-09-29",
+      "summary": "Fix: a notch header pinned to the top stands on a solid band once the page scrolls, so the page no longer shows around it or under an iPhone's status bar.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.19.1",
       "date": "2026-09-29",

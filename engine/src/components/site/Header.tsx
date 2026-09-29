@@ -365,6 +365,8 @@ export function Header(props: HeaderProps) {
         h.sticky && 'is-sticky',
         h.stickyMobile && 'is-sticky-sm',
         h.stickyDesktop && 'is-sticky-lg',
+        // 3.19.2 — a pinned notch tab gets a solid band behind it once the page has moved.
+        h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop) && scrolled && 'is-pinned',
         h.overlay && 'is-overlay',
         solid && 'is-solid',
         h.variant === 'rail' && `is-rail-${h.railButton}`,

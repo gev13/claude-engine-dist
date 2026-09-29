@@ -35,3 +35,22 @@ describe('a notch header on wider screens (3.17.2)', () => {
     expect(css).toMatch(/@media \(width > 768px\) \{\s*\.he-hdr--notch\.is-sticky-lg \{ position: fixed; \}/);
   });
 });
+
+describe('a pinned notch tab on a solid band (3.19.2)', () => {
+  const css = readFileSync(path.join(__dirname, '../src/styles/library-upgrades.css'), 'utf8');
+  const header = readFileSync(path.join(__dirname, '../src/components/site/Header.tsx'), 'utf8');
+
+  it('is marked only for a notch header that stays on top, once the page has moved', () => {
+    expect(header).toContain("h.variant === 'notch' && (h.stickyMobile || h.stickyDesktop) && scrolled && 'is-pinned'");
+  });
+
+  it('paints a filled band at each width it is pinned at, clipped at the tab’s bottom edge', () => {
+    for (const tier of ['sm', 'lg']) {
+      const rule = new RegExp(`\\.he-hdr--notch\\.is-sticky-${tier}\\.is-pinned::before \\{([^}]*)\\}`).exec(css)?.[1] ?? '';
+      expect(rule).toContain('background: var(--he-notch-bg, var(--color-ink));');
+      expect(rule).toContain('box-shadow: 0 0 0 100vmax var(--he-notch-bg, var(--color-ink));');
+      expect(rule).toContain('clip-path: inset(-100vmax -100vmax 0 -100vmax);');
+      expect(css).toContain(`.he-hdr--notch.is-sticky-${tier}.is-pinned .he-hdr__bar::after { display: none; }`);
+    }
+  });
+});

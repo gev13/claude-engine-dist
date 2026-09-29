@@ -10,6 +10,15 @@ improvements.
 
 ---
 
+## 3.19.2 — 2026-09-29
+
+**Fix: a pinned notch header no longer shows the page around it.** Once the
+page has scrolled, a notch header set to stay on top stands on a solid band
+in its own colour — across the full width and up under a phone's status
+bar, where Safari on iPhone showed the content through.
+
+---
+
 ## 3.19.1 — 2026-09-29
 
 **Fix: a setting that looks like a number kept its value.** A value saved

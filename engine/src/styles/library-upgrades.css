@@ -325,3 +325,39 @@
 @media (width > 768px) {
   .he-hdr--notch.is-sticky-lg { position: fixed; }
 }
+
+/* 3.19.2 — once the page has scrolled, a pinned notch tab stands on a solid
+   band of its own colour: full width, from above the screen's top edge (under
+   a phone's status bar, which Safari otherwise leaves see-through) down to
+   the tab's bottom. A spread shadow on the header's own ::before, clipped at
+   its bottom edge, so it adds nothing to the page's width and the dropdowns
+   inside the bar are not clipped. The tab's lower curve would hang over the
+   content, so it goes while pinned. */
+@media (width <= 768px) {
+  .he-hdr--notch.is-sticky-sm.is-pinned::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    /* A shadow is never drawn inside its own box: the fill covers the tab's rounded corner. */
+    background: var(--he-notch-bg, var(--color-ink));
+    box-shadow: 0 0 0 100vmax var(--he-notch-bg, var(--color-ink));
+    clip-path: inset(-100vmax -100vmax 0 -100vmax);
+    pointer-events: none;
+  }
+  .he-hdr--notch.is-sticky-sm.is-pinned .he-hdr__bar::after { display: none; }
+}
+@media (width > 768px) {
+  .he-hdr--notch.is-sticky-lg.is-pinned::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    /* A shadow is never drawn inside its own box: the fill covers the tab's rounded corner. */
+    background: var(--he-notch-bg, var(--color-ink));
+    box-shadow: 0 0 0 100vmax var(--he-notch-bg, var(--color-ink));
+    clip-path: inset(-100vmax -100vmax 0 -100vmax);
+    pointer-events: none;
+  }
+  .he-hdr--notch.is-sticky-lg.is-pinned .he-hdr__bar::after { display: none; }
+}
