@@ -43,6 +43,8 @@ import { getPermalinks } from '@/server/routing/config';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { localeConfig } from '@/lib/locales';
 import { getSiteSettings } from '@/server/content/siteSettings';
+import { getSiteSchema } from '@/server/content/structuredData';
+import { parsePageSchema, resolveService } from '@/lib/structuredData';
 import { pageTrail } from '@/server/content/trail';
 import { isoDate } from '@/lib/utils';
 import type { SeoFields } from '@/server/db/schema';
@@ -295,36 +297,62 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
   const crumbs = breadcrumbs(trail);
   const modified = isoDate(page.updatedAt);
 
+  /* 3.20 — the page's Schema panel over the site's Structured data. Every
+     choice left unset resolves to what the engine emitted before. */
+  const [pageSettings, siteSchema, catalogue, expanded] = await Promise.all([
+    getSiteSettings(),
+    getSiteSchema(locale),
+    getServices(),
+    expandSavedBlocks(page.blocks, locale),
+  ]);
+  const own = parsePageSchema(page.seo.schema);
+  const speakable = siteSchema.speakable !== false;
+  const shared = await shareImage({ ogImageId: page.seo.ogImageId, fallbackUrl: heroImage(page.blocks), siteDefault: pageSettings.ogImageUrl || undefined });
+  const pagePath = paging ? pagedPath(paging.base, paging.number, permalinks) : path;
+
+  // Service pages describe a Service + Offer; the services index is an ItemList.
+  const svc = page.template === 'service' && own.service?.enabled !== false ? await getServiceByPage(page.id) : null;
+  const service = svc
+    ? serviceNode({
+        slug: svc.slug,
+        path: svc.path,
+        name: svc.title,
+        description: page.excerpt || svc.blurb,
+        details: resolveService(own.service, siteSchema.serviceDefaults),
+        imageUrl: shared?.url,
+      })
+    : null;
+  /* Whatever page lists the services is the services index, at whatever
+     address: one with the services block, or (3.20) the parent the service
+     pages live under — unless its Schema panel says otherwise. */
+  const listsServices =
+    own.listServices === 'on' ||
+    (own.listServices !== 'off' &&
+      (page.blocks.some((block) => block?.type === 'servicesIndex') ||
+        (path !== '/' && catalogue.some((s) => s.path.startsWith(`${path}/`)))));
+  const services = listsServices
+    ? itemList({ path, name: page.title, items: catalogue.map((s) => ({ name: s.title, path: s.path })), itemType: 'Service' })
+    : null;
+
   const nodes = [
     webPage({
-      path: paging ? pagedPath(paging.base, paging.number, permalinks) : path,
+      path: pagePath,
       name: page.seo.title ?? page.title,
       description: page.seo.description ?? page.excerpt,
       modified,
-      breadcrumbId: crumbs['@id'] as string,
-      speakableSelectors: ['h1', 'main p'],
+      published: isoDate(page.publishedAt),
+      breadcrumbId: own.breadcrumbs === false ? undefined : (crumbs['@id'] as string),
+      speakableSelectors: speakable ? ['h1', 'main p'] : undefined,
+      type: own.pageType ?? (services ? 'CollectionPage' : undefined),
+      inLanguage: locale,
+      imageUrl: shared?.url,
+      mainEntityId: service ? (service['@id'] as string) : services ? (services['@id'] as string) : undefined,
     }),
-    crumbs,
-    faqFromBlocks(await expandSavedBlocks(page.blocks, locale), path),
+    own.breadcrumbs === false ? null : crumbs,
+    own.faq === false ? null : faqFromBlocks(expanded, path, { speakable }),
+    service,
+    services,
   ];
-
-  // Service pages describe a Service + Offer; the services index is an ItemList.
-  if (page.template === 'service') {
-    // By the page itself, wherever its path puts it (2.18) — not by guessing a slug from /services/.
-    const svc = await getServiceByPage(page.id);
-    if (svc) nodes.push(serviceNode({ slug: svc.slug, path: svc.path, name: svc.title, description: page.excerpt || svc.blurb }));
-  }
-  // Whatever page lists the services is the services index, at whatever address.
-  if (page.blocks.some((block) => block?.type === 'servicesIndex')) {
-    const catalogue = await getServices();
-    nodes.push(
-      itemList({
-        path,
-        name: page.title,
-        items: catalogue.map((s) => ({ name: s.title, path: s.path })),
-      }),
-    );
-  }
 
   return (
     <>

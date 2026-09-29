@@ -362,8 +362,10 @@ export async function BlogIndexView({
             name: page?.seo.title ?? site.blogLabel,
             description,
             breadcrumbId: crumbs['@id'] as string,
+            type: 'CollectionPage',
+            inLanguage: locale,
           }),
-          blogNode({ path: indexPath, name: site.blogLabel, description }),
+          blogNode({ path: indexPath, name: site.blogLabel, description, inLanguage: locale }),
           crumbs,
         ])}
       />
@@ -535,9 +537,9 @@ export async function ArchiveView({
       <FeedLink href={kind === 'category' && category ? feedPath(permalinks, category.slug) : feedPath(permalinks)} title={title} />
       <JsonLd
         data={graph([
-          webPage({ path, name: title, description, breadcrumbId: crumbs['@id'] as string }),
+          webPage({ path, name: title, description, breadcrumbId: crumbs['@id'] as string, type: 'CollectionPage', inLanguage: locale }),
           ...(kind === 'research'
-            ? [blogNode({ path: base, name: `${settings.name} ${t('blog.research').toLowerCase()}`, description })]
+            ? [blogNode({ path: base, name: `${settings.name} ${t('blog.research').toLowerCase()}`, description, inLanguage: locale })]
             : []),
           itemList({ path, name: title, items: posts.map((p) => ({ name: p.title, path: postUrl(permalinks, p) })) }),
           crumbs,

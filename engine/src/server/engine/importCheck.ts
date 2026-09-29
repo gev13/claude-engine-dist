@@ -1,6 +1,7 @@
 import 'server-only';
 import { randomUUID } from 'node:crypto';
 import { getTableColumns } from 'drizzle-orm';
+import { siteSchemaSchema } from '@/lib/structuredData';
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
@@ -277,6 +278,8 @@ const SETTING_SCHEMAS: Record<string, z.ZodType> = {
   projects: projectTemplateSchema,
   cookies: cookieNoticeSchema,
   integrations: integrationsSchema,
+  // 3.20 — Admin → Structured data.
+  schema: siteSchemaSchema,
 };
 
 /**

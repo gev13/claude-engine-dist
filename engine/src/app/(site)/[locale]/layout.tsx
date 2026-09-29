@@ -23,6 +23,7 @@ import { getSiteCode } from '@/server/content/code';
 import { safeCss } from '@/lib/customCode';
 import { PRESETS, activePresets, activeSnippets } from '@/lib/integrations';
 import { getIntegrations, getPublicCaptcha } from '@/server/integrations/settings';
+import { getSiteSchema } from '@/server/content/structuredData';
 import { CaptchaProvider } from '@/components/site/Captcha';
 import { CustomCursor } from '@/components/site/CustomCursor';
 import { PageTransition, Preloader } from '@/components/site/PageTransition';
@@ -131,7 +132,7 @@ export default async function SiteLayout({
 
   /* Menus, the site's own details and popups all follow the language, each
      falling back to the shared value when nobody has translated it. */
-  const [theme, navigation, catalogue, settings, popups, messages, cookies, code, permalinks, integrations, captcha] = await Promise.all([
+  const [theme, navigation, catalogue, settings, popups, messages, cookies, code, permalinks, integrations, captcha, siteSchema] = await Promise.all([
     getTheme(),
     getNavigation(locale),
     getServiceCatalogue(),
@@ -143,6 +144,7 @@ export default async function SiteLayout({
     getPermalinks(),
     getIntegrations(),
     getPublicCaptcha(),
+    getSiteSchema(locale),
   ]);
   /* Any tag switched on loads through /integrations.js, which also holds each
      one back until its consent category is granted (2.16). */
@@ -325,10 +327,13 @@ export default async function SiteLayout({
                 ...settings,
                 sameAs: (navigation.social ?? []).filter(isProfile).map((link) => link.href),
                 logoUrl: theme.brand?.logoUrl && /^\/[A-Za-z0-9._~\-/%]*$/.test(theme.brand.logoUrl) ? theme.brand.logoUrl : undefined,
+                // 3.20 — Admin → Structured data, and the services for its offer catalogue.
+                schema: siteSchema,
+                services: catalogue.all.map((service) => ({ name: service.title, path: service.path })),
               }),
               // 3.18 — no search box to offer while the blog is switched off.
-              website({ ...settings, searchPath: resolveBlog(theme.blog).off ? undefined : blogIndexPath(permalinks) }),
-              siteNavigation(navLinks),
+              website({ ...settings, searchPath: resolveBlog(theme.blog).off ? undefined : blogIndexPath(permalinks), inLanguage: locale }),
+              siteSchema.navigation === false ? null : siteNavigation(navLinks),
             ])}
           />
         </div>

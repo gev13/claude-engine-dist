@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { blockStyleSchema } from '@/lib/blockStyle';
+import { pageSchemaSchema } from '@/lib/structuredData';
 
 /** Shared request-shape vocabulary for the admin API. */
 
@@ -17,6 +18,8 @@ export const seoSchema = z.object({
   twitterCard: z.enum(['summary', 'summary_large_image']).optional(),
   /** Objects only, each a schema.org node; rendered into the page's graph (2.18). */
   jsonLd: z.array(z.record(z.string(), z.unknown())).max(20).optional(),
+  /** 3.20 — the Schema panel: page type, service, services list, what to switch off. */
+  schema: pageSchemaSchema.optional(),
   extraMeta: z
     .array(z.object({ name: z.string().optional(), property: z.string().optional(), content: z.string() }))
     .max(40)

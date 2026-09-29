@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { SeoPanel } from '@/components/admin/SeoPanel';
+import { SchemaSection } from '@/components/admin/SchemaPanel';
 import { PageTemplatePicker, type PickedTemplate } from '@/components/admin/TemplatePickers';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
 import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
@@ -528,6 +529,7 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
                 fallbackTitle={value.title || 'Untitled page'}
                 fallbackDescription={value.excerpt}
                 path={previewPath}
+                jsonLd={false}
               />
             ) : (
               <p className="m-0 text-[13px] leading-relaxed text-ash">
@@ -537,6 +539,16 @@ export function PageEditor({ record }: { record?: PageEditorRecord }) {
               </p>
             )}
           </Panel>
+
+          {/* 3.20 — structured data, a panel of its own rather than an advanced corner of SEO. */}
+          <SchemaSection
+            value={value.seo}
+            onChange={(next) => set('seo', next)}
+            kind="page"
+            isService={value.template === 'service'}
+            path={previewPath}
+            published={Boolean(pageId) && value.status === 'published'}
+          />
 
           <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="page" />
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="page" />

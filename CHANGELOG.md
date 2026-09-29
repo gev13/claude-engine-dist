@@ -10,6 +10,25 @@ improvements.
 
 ---
 
+## 3.20.0 — 2026-09-29
+
+**Structured data you manage.** A new **Structured data** screen for the
+whole site: the organization's type, topics, areas served, other profiles,
+contact points and registration numbers; service defaults (category,
+audience, areas, currency) and an offer catalogue listing every service;
+switches for site navigation and speakable hints; the default article type;
+and a preview of any published page's structured data with a copy button for
+validators that cannot fetch the site. A **Schema panel** in every page,
+post and project editor: page type (About, Contact, Collection…), the
+page's Service with price and audience, the services list, the article type
+and byline, breadcrumbs and FAQ switches, and the page's own JSON-LD (moved
+out of SEO → Advanced). Pages now state their language, share picture and
+main entity; the page the service pages sit under lists them; the site
+navigation names each link. Untouched sites emit what they did, apart from
+those three additions and the navigation's clearer shape.
+
+---
+
 ## 3.19.4 — 2026-09-29
 
 **Fix: nothing shows above a pinned notch header on iPhone.** Safari on

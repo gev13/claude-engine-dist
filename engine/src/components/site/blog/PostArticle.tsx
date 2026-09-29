@@ -12,7 +12,10 @@ import { safeCss } from '@/lib/customCode';
 import { countHeadingOnes } from '@/lib/headings';
 import type { Locale } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
-import { blogIndexPath, categoryPath, type Permalinks } from '@/lib/permalinks';
+import { absoluteWithSlash, blogIndexPath, categoryPath, type Permalinks } from '@/lib/permalinks';
+import { SITE_URL } from '@/lib/env';
+import { parsePageSchema } from '@/lib/structuredData';
+import { getSiteSchema } from '@/server/content/structuredData';
 import { articleNode, breadcrumbs, customNodes, faqFromBlocks, graph, webPage, type Crumb } from '@/lib/seo/jsonld';
 import { site } from '@/lib/site';
 import { cn, formatDate, isoDate } from '@/lib/utils';
@@ -176,6 +179,9 @@ export async function PostArticle({
   const postBlocks = blocks.length > 0 && <BlockRenderer blocks={blocks} trail={trail} locale={locale} />;
 
   const crumbs = breadcrumbs(trail);
+  // 3.20 — the post's Schema panel, and the site's default article type.
+  const postSchema = parsePageSchema((post.seo as { schema?: unknown } | null)?.schema);
+  const siteSchema = await getSiteSchema(locale);
 
   return (
     <>
@@ -253,7 +259,12 @@ export async function PostArticle({
               name: post.title,
               description: post.excerpt,
               modified: isoDate(post.updatedAt),
-              breadcrumbId: crumbs['@id'] as string,
+              published: isoDate(post.publishedAt),
+              breadcrumbId: postSchema.breadcrumbs === false ? undefined : (crumbs['@id'] as string),
+              type: postSchema.pageType,
+              inLanguage: locale,
+              imageUrl: post.coverUrl ?? undefined,
+              mainEntityId: `${absoluteWithSlash(SITE_URL, path)}#article`,
             }),
             articleNode({
               path,
@@ -261,14 +272,18 @@ export async function PostArticle({
               description: post.excerpt,
               published: isoDate(post.publishedAt),
               modified: isoDate(post.updatedAt),
-              author: post.authorName,
+              // 3.20 — the Schema panel's byline wins over the account's name.
+              author: postSchema.authorName || post.authorName,
+              authorUrl: postSchema.authorUrl,
+              type: postSchema.articleType ?? siteSchema.articleType,
+              inLanguage: locale,
               section: post.categoryName,
               imageUrl: post.coverUrl,
               wordCount: post.body.replace(/<[^>]+>/g, ' ').split(/\s+/).filter(Boolean).length,
               blogPath: indexPath,
             }),
-            crumbs,
-            faqFromBlocks(await expandSavedBlocks(blocks, locale), path),
+            postSchema.breadcrumbs === false ? null : crumbs,
+            postSchema.faq === false ? null : faqFromBlocks(await expandSavedBlocks(blocks, locale), path, { speakable: siteSchema.speakable !== false }),
             ...customNodes((post.seo as { jsonLd?: unknown } | null)?.jsonLd),
           ])}
         />

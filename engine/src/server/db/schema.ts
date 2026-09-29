@@ -240,6 +240,8 @@ export type SeoFields = {
   twitterCard?: 'summary' | 'summary_large_image';
   /** Raw JSON-LD blobs appended to the page's generated graph. */
   jsonLd?: unknown[];
+  /** 3.20 — the Schema panel (`lib/structuredData.ts`, `PageSchema`). */
+  schema?: import('../../lib/structuredData').PageSchema;
   /** Arbitrary extra <meta> tags, editable from the admin panel. */
   extraMeta?: { name?: string; property?: string; content: string }[];
 };

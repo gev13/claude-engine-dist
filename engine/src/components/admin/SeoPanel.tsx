@@ -33,7 +33,10 @@ export function SeoPanel({
   fallbackDescription,
   path,
   siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? '',
+  jsonLd = true,
 }: {
+  /** 3.20 — false where the Schema panel holds the JSON-LD field instead. */
+  jsonLd?: boolean;
   value: SeoFields;
   onChange: (next: SeoFields) => void;
   fallbackTitle: string;
@@ -184,7 +187,7 @@ export function SeoPanel({
             </Select>
           </Field>
 
-          <JsonLdField value={value.jsonLd} onChange={(next) => set('jsonLd', next)} />
+          {jsonLd && <JsonLdField value={value.jsonLd} onChange={(next) => set('jsonLd', next)} />}
 
           <div>
             <div className="mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Extra meta tags</div>
@@ -253,7 +256,7 @@ export function SeoPanel({
  * as text while it is being typed, and only handed up once it is valid — an
  * object or a list of objects — so a half-typed brace never saves.
  */
-function JsonLdField({ value, onChange }: { value: unknown[] | undefined; onChange: (next: Record<string, unknown>[] | undefined) => void }) {
+export function JsonLdField({ value, onChange }: { value: unknown[] | undefined; onChange: (next: Record<string, unknown>[] | undefined) => void }) {
   const [text, setText] = useState(() => (value && value.length ? JSON.stringify(value.length === 1 ? value[0] : value, null, 2) : ''));
   const [problem, setProblem] = useState('');
   return (

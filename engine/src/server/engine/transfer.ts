@@ -121,7 +121,7 @@ const USER_COLUMNS: Partial<Record<ContentTable | 'settings', string[]>> = {
    site behaves, not whose server it is. CAPTCHA and webhooks do not: their
    secrets are encrypted with this server's key, so elsewhere they would be
    unreadable, and a webhook is an address this server was trusted to call. */
-export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks', 'projects', 'cookies', 'integrations'] as const;
+export const PORTABLE_SETTING_KEYS = ['theme', 'navigation', 'popups', 'permalinks', 'projects', 'cookies', 'integrations', 'schema'] as const;
 const PORTABLE_SETTING_PREFIX = 'site.';
 
 export const NEVER_EXPORTED_SETTING_KEYS = [

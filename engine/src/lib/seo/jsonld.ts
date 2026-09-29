@@ -2,9 +2,12 @@ import { SITE_URL } from '@/lib/env';
 import { servicePath } from '@/lib/site';
 import type { AnyBlock } from '@/lib/blocks';
 import { absoluteWithSlash } from '@/lib/permalinks';
+import { LOCAL_TYPES, type ArticleType, type PageService, type PageType, type SiteSchema } from '@/lib/structuredData';
 
 /** An absolute URL for a site path, in the site's trailing-slash form. */
 const abs = (path: string) => absoluteWithSlash(SITE_URL, path || '/');
+/** A file's absolute URL (no trailing-slash rules — it is a file). */
+const absUrl = (url: string) => (/^https?:\/\//i.test(url) ? url : `${SITE_URL}${url.startsWith('/') ? '' : '/'}${url}`);
 
 /* Every graph node this site emits. Rendered by <JsonLd> as a single
    @graph script per page, which is what search engines prefer. */
@@ -41,11 +44,35 @@ export type SiteIdentity = {
   addressCountry?: string;
   /** A raster logo for search engines; preferred over `logoUrl`, which may be an SVG they do not accept. */
   searchLogoUrl?: string;
+  /** 3.20 — Admin → Structured data. */
+  schema?: SiteSchema;
+  /** 3.20 — the service catalogue, for the offer catalogue when it is switched on. */
+  services?: { name: string; path: string }[];
 };
 
+/** 3.20 — a service's own @id, shared by its page, the services list and the offer catalogue. */
+export const serviceId = (path: string) => `${abs(path)}#service`;
+
 export function organization(s: SiteIdentity): Node {
+  const schema = s.schema ?? {};
+  const type = schema.organizationType ?? 'Organization';
+  const sameAs = [...new Set([...(s.sameAs ?? []), ...(schema.sameAs ?? [])])];
+  const contactPoints = [
+    ...(s.contactEmail
+      ? [{ '@type': 'ContactPoint', contactType: 'customer support', email: s.contactEmail, ...(s.phone ? { telephone: s.phone } : {}) }]
+      : []),
+    ...(schema.contactPoints ?? []).map((point) => ({
+      '@type': 'ContactPoint',
+      contactType: point.contactType,
+      ...(point.email ? { email: point.email } : {}),
+      ...(point.telephone ? { telephone: point.telephone } : {}),
+      ...(point.url ? { url: point.url } : {}),
+      ...(point.areaServed?.length ? { areaServed: point.areaServed } : {}),
+      ...(point.availableLanguage?.length ? { availableLanguage: point.availableLanguage } : {}),
+    })),
+  ];
   return {
-    '@type': 'Organization',
+    '@type': type,
     '@id': ORG_ID,
     name: s.name,
     url: `${SITE_URL}/`,
@@ -73,11 +100,24 @@ export function organization(s: SiteIdentity): Node {
           },
         }
       : {}),
-    ...(s.sameAs && s.sameAs.length ? { sameAs: s.sameAs } : {}),
-    ...(s.contactEmail
+    ...(sameAs.length ? { sameAs } : {}),
+    ...(s.contactEmail ? { email: s.contactEmail } : {}),
+    ...(contactPoints.length ? { contactPoint: contactPoints } : {}),
+    ...(schema.knowsAbout?.length ? { knowsAbout: schema.knowsAbout } : {}),
+    ...(schema.areaServed?.length ? { areaServed: schema.areaServed } : {}),
+    ...(schema.vatId ? { vatID: schema.vatId } : {}),
+    ...(schema.taxId ? { taxID: schema.taxId } : {}),
+    ...(schema.priceRange && LOCAL_TYPES.includes(type) ? { priceRange: schema.priceRange } : {}),
+    ...(schema.offerCatalog && s.services?.length
       ? {
-          email: s.contactEmail,
-          contactPoint: [{ '@type': 'ContactPoint', contactType: 'customer support', email: s.contactEmail, ...(s.phone ? { telephone: s.phone } : {}) }],
+          hasOfferCatalog: {
+            '@type': 'OfferCatalog',
+            name: 'Services',
+            itemListElement: s.services.map((service) => ({
+              '@type': 'Offer',
+              itemOffered: { '@type': 'Service', '@id': serviceId(service.path), name: service.name, url: abs(service.path) },
+            })),
+          },
         }
       : {}),
   };
@@ -88,7 +128,7 @@ export function organization(s: SiteIdentity): Node {
  * only when the site has a search to send it to: `searchPath` is the blog's
  * index, and a site with its blog switched off passes none.
  */
-export function website(s: Pick<SiteIdentity, 'name' | 'description' | 'alternateName'> & { searchPath?: string }): Node {
+export function website(s: Pick<SiteIdentity, 'name' | 'description' | 'alternateName'> & { searchPath?: string; inLanguage?: string }): Node {
   return {
     '@type': 'WebSite',
     '@id': SITE_ID,
@@ -97,7 +137,7 @@ export function website(s: Pick<SiteIdentity, 'name' | 'description' | 'alternat
     description: s.description,
     ...(s.alternateName ? { alternateName: s.alternateName } : {}),
     publisher: { '@id': ORG_ID },
-    inLanguage: 'en',
+    inLanguage: s.inLanguage ?? 'en',
     ...(s.searchPath
       ? {
           potentialAction: {
@@ -117,17 +157,28 @@ export function webPage(opts: {
   modified?: string;
   breadcrumbId?: string;
   speakableSelectors?: string[];
+  /** 3.20 — AboutPage, ContactPage, CollectionPage…; WebPage when unset. */
+  type?: PageType;
+  inLanguage?: string;
+  published?: string;
+  /** The picture the page is shared with. */
+  imageUrl?: string;
+  /** The node the page is about — its Service, the services list. */
+  mainEntityId?: string;
 }): Node {
   const url = abs(opts.path);
   return {
-    '@type': 'WebPage',
+    '@type': opts.type ?? 'WebPage',
     '@id': `${url}#webpage`,
     url,
     name: opts.name,
     description: opts.description,
     isPartOf: { '@id': SITE_ID },
     about: { '@id': ORG_ID },
-    inLanguage: 'en',
+    inLanguage: opts.inLanguage ?? 'en',
+    ...(opts.imageUrl ? { primaryImageOfPage: { '@type': 'ImageObject', url: absUrl(opts.imageUrl) } } : {}),
+    ...(opts.mainEntityId ? { mainEntity: { '@id': opts.mainEntityId } } : {}),
+    ...(opts.published ? { datePublished: opts.published } : {}),
     ...(opts.modified ? { dateModified: opts.modified } : {}),
     ...(opts.breadcrumbId ? { breadcrumb: { '@id': opts.breadcrumbId } } : {}),
     ...(opts.speakableSelectors
@@ -157,36 +208,70 @@ export function breadcrumbs(trail: Crumb[]): Node {
  *  "Products (for services)" requirement. Only facts the page itself carries
  *  go in — audience, category and pricing differ per site and are added
  *  through the page's own JSON-LD additions when a site has them. */
-export function serviceNode(opts: { slug: string; name: string; description: string; path?: string }): Node {
-  const url = abs(opts.path ?? servicePath(opts.slug));
+export function serviceNode(opts: {
+  slug: string;
+  name: string;
+  description: string;
+  path?: string;
+  /** 3.20 — the page's Schema panel over Structured data's service defaults (`resolveService`). */
+  details?: PageService;
+  imageUrl?: string;
+}): Node {
+  const path = opts.path ?? servicePath(opts.slug);
+  const url = abs(path);
+  const d = opts.details ?? {};
+  const offerPrice = d.price
+    ? {
+        price: d.price,
+        ...(d.priceCurrency ? { priceCurrency: d.priceCurrency } : {}),
+        ...(d.priceKind === 'from'
+          ? { priceSpecification: { '@type': 'PriceSpecification', minPrice: d.price, ...(d.priceCurrency ? { priceCurrency: d.priceCurrency } : {}) } }
+          : {}),
+      }
+    : {};
   return {
     '@type': 'Service',
-    '@id': `${url}#service`,
-    name: opts.name,
-    description: opts.description,
-    serviceType: opts.name,
+    '@id': serviceId(path),
+    name: d.name || opts.name,
+    description: d.description || opts.description,
+    serviceType: d.serviceType || opts.name,
+    ...(d.category ? { category: d.category } : {}),
     provider: { '@id': ORG_ID },
     url,
-    offers: { '@type': 'Offer', url, availability: 'https://schema.org/InStock' },
+    ...(d.areaServed?.length ? { areaServed: d.areaServed } : {}),
+    ...(d.audience ? { audience: { '@type': 'BusinessAudience', audienceType: d.audience } } : {}),
+    ...(opts.imageUrl ? { image: absUrl(opts.imageUrl) } : {}),
+    offers: {
+      '@type': 'Offer',
+      url,
+      availability: 'https://schema.org/InStock',
+      ...offerPrice,
+      ...(d.offerDescription ? { description: d.offerDescription } : {}),
+    },
   };
 }
 
-export function itemList(opts: { path: string; name: string; items: { name: string; path: string }[] }): Node {
+export function itemList(opts: {
+  path: string;
+  name: string;
+  items: { name: string; path: string }[];
+  /** 3.20 — each entry names the node it is (a Service's @id), not just its address. */
+  itemType?: 'Service';
+}): Node {
   return {
     '@type': 'ItemList',
     '@id': `${abs(opts.path)}#list`,
     name: opts.name,
     numberOfItems: opts.items.length,
-    itemListElement: opts.items.map((it, i) => ({
-      '@type': 'ListItem',
-      position: i + 1,
-      name: it.name,
-      url: abs(it.path),
-    })),
+    itemListElement: opts.items.map((it, i) =>
+      opts.itemType === 'Service'
+        ? { '@type': 'ListItem', position: i + 1, item: { '@type': 'Service', '@id': serviceId(it.path), name: it.name, url: abs(it.path) } }
+        : { '@type': 'ListItem', position: i + 1, name: it.name, url: abs(it.path) },
+    ),
   };
 }
 
-export function blogNode(opts: { path: string; name: string; description: string }): Node {
+export function blogNode(opts: { path: string; name: string; description: string; inLanguage?: string }): Node {
   return {
     '@type': 'Blog',
     '@id': `${abs(opts.path)}#blog`,
@@ -194,7 +279,7 @@ export function blogNode(opts: { path: string; name: string; description: string
     description: opts.description,
     url: abs(opts.path),
     publisher: { '@id': ORG_ID },
-    inLanguage: 'en',
+    inLanguage: opts.inLanguage ?? 'en',
   };
 }
 
@@ -210,10 +295,14 @@ export function articleNode(opts: {
   wordCount?: number;
   /** The blog index this article belongs to — a setting since 2.13. */
   blogPath?: string;
+  /** 3.20 — BlogPosting, NewsArticle…; Article when unset. */
+  type?: ArticleType;
+  authorUrl?: string;
+  inLanguage?: string;
 }): Node {
   const url = abs(opts.path);
   return {
-    '@type': 'Article',
+    '@type': opts.type ?? 'Article',
     '@id': `${url}#article`,
     headline: opts.headline,
     description: opts.description,
@@ -222,9 +311,9 @@ export function articleNode(opts: {
     isPartOf: { '@id': `${abs(opts.blogPath ?? '/blog')}#blog` },
     publisher: { '@id': ORG_ID },
     author: opts.author
-      ? { '@type': 'Person', name: opts.author }
+      ? { '@type': 'Person', name: opts.author, ...(opts.authorUrl ? { url: opts.authorUrl } : {}) }
       : { '@id': ORG_ID },
-    inLanguage: 'en',
+    inLanguage: opts.inLanguage ?? 'en',
     ...(opts.published ? { datePublished: opts.published } : {}),
     ...(opts.modified ? { dateModified: opts.modified } : {}),
     ...(opts.section ? { articleSection: opts.section } : {}),
@@ -328,7 +417,7 @@ function findFaq(blocks: AnyBlock[] | null | undefined): AnyBlock | undefined {
  * one inside a row, and one in a post's own blocks (2.13), where it sits
  * beside the Article node in the same graph.
  */
-export function faqFromBlocks(blocks: AnyBlock[] | null | undefined, path: string): Node | null {
+export function faqFromBlocks(blocks: AnyBlock[] | null | undefined, path: string, options: { speakable?: boolean } = {}): Node | null {
   const faq = findFaq(blocks);
   if (!faq) return null;
   const items = (faq.props?.items ?? []) as { question: string; answer: string }[];
@@ -342,7 +431,7 @@ export function faqFromBlocks(blocks: AnyBlock[] | null | undefined, path: strin
       name: i.question,
       acceptedAnswer: { '@type': 'Answer', text: i.answer },
     })),
-    speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#faq h2', '#faq [role="region"]'] },
+    ...(options.speakable === false ? {} : { speakable: { '@type': 'SpeakableSpecification', cssSelector: ['#faq h2', '#faq [role="region"]'] } }),
   };
 }
 
@@ -364,11 +453,14 @@ export function siteNavigation(links: readonly { name: string; path: string }[] 
   });
   if (nav.length === 0) return null;
 
+  /* 3.20 — one element per link, as parts of the menu, rather than two
+     parallel lists of names and addresses: validators show each link, and
+     nothing has to pair them back up by position. */
   return {
     '@type': 'SiteNavigationElement',
     '@id': `${SITE_URL}/#navigation`,
-    name: nav.map((n) => n.name),
-    url: nav.map((n) => abs(n.path)),
+    name: 'Site navigation',
+    hasPart: nav.map((n) => ({ '@type': 'SiteNavigationElement', name: n.name, url: abs(n.path) })),
   };
 }
 

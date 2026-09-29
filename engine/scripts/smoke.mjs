@@ -390,6 +390,7 @@ async function main() {
     '/api/admin/cookies',
     '/api/admin/code',
     '/api/admin/permalinks',
+    '/api/admin/schema',
     '/api/admin/projects',
     '/api/admin/projects/terms',
     '/api/admin/projects/settings',

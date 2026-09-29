@@ -9,6 +9,7 @@ import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { SeoPanel } from '@/components/admin/SeoPanel';
+import { SchemaSection } from '@/components/admin/SchemaPanel';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
 import { CustomCssPanel } from '@/components/admin/CustomCssPanel';
 import { PageAppearanceFields, type PageAppearanceValue } from '@/components/admin/PageAppearanceFields';
@@ -682,6 +683,7 @@ export function PostEditor({
                 fallbackTitle={value.title || 'Untitled post'}
                 fallbackDescription={value.excerpt}
                 path={viewPath}
+                jsonLd={false}
               />
             ) : (
               <p className="m-0 text-[13px] leading-relaxed text-ash">
@@ -691,6 +693,8 @@ export function PostEditor({
               </p>
             )}
           </Panel>
+
+          <SchemaSection value={value.seo} onChange={(next) => set('seo', next)} kind="post" path={viewPath} published={Boolean(postId) && value.status === 'published'} />
 
           <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="post" />
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="post" />

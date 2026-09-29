@@ -70,6 +70,8 @@ export const ADMIN_NAV: { section?: string; items: NavItem[] }[] = [
       { label: 'Audit log', href: '/admin/audit', roles: ['admin'] },
       { label: 'Languages', href: '/admin/languages', roles: ['admin'] },
       { label: 'Site translations', href: '/admin/translations', roles: ['admin'] },
+      // 3.20 — `settings:*`: the organization as search engines are told it.
+      { label: 'Structured data', href: '/admin/schema', roles: ['admin'] },
       { label: 'Settings', href: '/admin/settings', roles: ['admin'] },
       { label: 'Profile', href: '/admin/profile' },
     ],

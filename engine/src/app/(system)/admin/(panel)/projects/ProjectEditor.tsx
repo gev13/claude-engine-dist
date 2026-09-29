@@ -12,6 +12,7 @@ import { PreviewButton } from '@/components/admin/PreviewButton';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
 import type { RichTextPick } from '@/components/admin/RichTextEditor';
 import { SeoPanel } from '@/components/admin/SeoPanel';
+import { SchemaSection } from '@/components/admin/SchemaPanel';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Textarea } from '@/components/admin/ui';
 import { useToast } from '@/components/admin/useToast';
 import { api } from '@/lib/admin/client';
@@ -520,6 +521,7 @@ export function ProjectEditor({
                 fallbackTitle={value.title || 'Untitled project'}
                 fallbackDescription={value.excerpt || value.summary}
                 path={publicPath ?? ''}
+                jsonLd={false}
               />
             ) : (
               <p className="m-0 text-[13px] leading-relaxed text-ash">
@@ -527,6 +529,8 @@ export function ProjectEditor({
               </p>
             )}
           </Panel>
+
+          <SchemaSection value={value.seo} onChange={(next) => set('seo', next)} kind="project" path={publicPath ?? '/'} published={Boolean(projectId) && Boolean(publicPath) && value.status === 'published'} />
 
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="project" />
 

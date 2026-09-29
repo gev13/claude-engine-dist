@@ -237,6 +237,114 @@
                       "additionalProperties": {}
                     }
                   },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
+                    }
+                  },
                   "extraMeta": {
                     "maxItems": 40,
                     "type": "array",
@@ -395,6 +503,114 @@
                         "type": "string"
                       },
                       "additionalProperties": {}
+                    }
+                  },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
                     }
                   },
                   "extraMeta": {
@@ -608,6 +824,114 @@
                         "type": "string"
                       },
                       "additionalProperties": {}
+                    }
+                  },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
                     }
                   },
                   "extraMeta": {
@@ -859,6 +1183,114 @@
                       "additionalProperties": {}
                     }
                   },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
+                    }
+                  },
                   "extraMeta": {
                     "maxItems": 40,
                     "type": "array",
@@ -1032,6 +1464,114 @@
                         "type": "string"
                       },
                       "additionalProperties": {}
+                    }
+                  },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
                     }
                   },
                   "extraMeta": {
@@ -1305,6 +1845,114 @@
                         "type": "string"
                       },
                       "additionalProperties": {}
+                    }
+                  },
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "pageType": {
+                        "type": "string",
+                        "enum": [
+                          "WebPage",
+                          "AboutPage",
+                          "ContactPage",
+                          "CollectionPage",
+                          "ItemPage",
+                          "FAQPage",
+                          "ProfilePage",
+                          "SearchResultsPage",
+                          "CheckoutPage"
+                        ]
+                      },
+                      "service": {
+                        "type": "object",
+                        "properties": {
+                          "enabled": {
+                            "type": "boolean"
+                          },
+                          "name": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "serviceType": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "category": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "description": {
+                            "type": "string",
+                            "maxLength": 1000
+                          },
+                          "areaServed": {
+                            "maxItems": 30,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "minLength": 1,
+                              "maxLength": 160
+                            }
+                          },
+                          "audience": {
+                            "type": "string",
+                            "maxLength": 160
+                          },
+                          "price": {
+                            "type": "string",
+                            "pattern": "^\\d{1,9}(\\.\\d{1,2})?$"
+                          },
+                          "priceKind": {
+                            "type": "string",
+                            "enum": [
+                              "from",
+                              "fixed"
+                            ]
+                          },
+                          "priceCurrency": {
+                            "type": "string",
+                            "pattern": "^[A-Z]{3}$"
+                          },
+                          "offerDescription": {
+                            "type": "string",
+                            "maxLength": 300
+                          }
+                        }
+                      },
+                      "listServices": {
+                        "type": "string",
+                        "enum": [
+                          "on",
+                          "off"
+                        ]
+                      },
+                      "breadcrumbs": {
+                        "type": "boolean"
+                      },
+                      "faq": {
+                        "type": "boolean"
+                      },
+                      "articleType": {
+                        "type": "string",
+                        "enum": [
+                          "Article",
+                          "BlogPosting",
+                          "NewsArticle",
+                          "TechArticle",
+                          "Report",
+                          "ScholarlyArticle"
+                        ]
+                      },
+                      "authorName": {
+                        "type": "string",
+                        "maxLength": 160
+                      },
+                      "authorUrl": {
+                        "type": "string",
+                        "maxLength": 500,
+                        "pattern": "^https?:\\/\\/[^\\s\"<>]+$"
+                      }
                     }
                   },
                   "extraMeta": {

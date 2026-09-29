@@ -63,6 +63,7 @@ const GATE: Record<string, keyof typeof PERMISSIONS> = {
   '/admin/languages': 'settings:write',
   '/admin/translations': 'settings:write',
   '/admin/settings': 'settings:write',
+  '/admin/schema': 'settings:write',
   '/admin/profile': 'profile:write',
 };
 

@@ -1,6 +1,14 @@
 {
-  "latest": "3.19.4",
+  "latest": "3.20.0",
   "releases": [
+    {
+      "version": "3.20.0",
+      "date": "2026-09-29",
+      "summary": "Structured data you manage: a Structured data screen (organization type, topics, areas, contact points, service defaults, offer catalogue, preview) and a Schema panel on every page, post and project (page type, service with price, services list, article type, JSON-LD).",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.19.4",
       "date": "2026-09-29",

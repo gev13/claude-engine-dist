@@ -12,6 +12,7 @@ import { blockSchemas, type AnyBlock } from '@/lib/blocks';
 import { safeCss } from '@/lib/customCode';
 import { SITE_URL } from '@/lib/env';
 import type { Locale } from '@/lib/locales';
+import { parsePageSchema } from '@/lib/structuredData';
 import { messageReader } from '@/lib/messages';
 import { absoluteWithSlash, pagedPath, projectPath, projectTermPath, type Permalinks } from '@/lib/permalinks';
 import { projectItem, type ProjectTemplate } from '@/lib/projects';
@@ -103,6 +104,7 @@ export async function ProjectArticle({
   preview?: boolean;
 }) {
   const t = messageReader(await getMessages(locale));
+  const projectSchema = parsePageSchema((project.seo as { schema?: unknown } | null)?.schema);
   const path = projectPath(permalinks, project.slug);
   const trail: Crumb[] = preview ? [] : await pageTrail(path, project.title);
   const primary = project.categories.find((c) => c.primary) ?? project.categories[0];
@@ -183,7 +185,17 @@ export async function ProjectArticle({
       {!preview && (
         <JsonLd
           data={graph([
-            webPage({ path, name: project.title, description: project.excerpt, modified: isoDate(project.updatedAt), breadcrumbId: trail.length ? `${absoluteWithSlash(SITE_URL, path)}#breadcrumb` : undefined }),
+            webPage({
+              path,
+              name: project.title,
+              description: project.excerpt,
+              modified: isoDate(project.updatedAt),
+              breadcrumbId: trail.length && projectSchema.breadcrumbs !== false ? `${absoluteWithSlash(SITE_URL, path)}#breadcrumb` : undefined,
+              // 3.20 — the project's Schema panel.
+              type: projectSchema.pageType,
+              inLanguage: locale,
+              mainEntityId: `${absoluteWithSlash(SITE_URL, path)}#work`,
+            }),
             {
               '@type': 'CreativeWork',
               '@id': `${absoluteWithSlash(SITE_URL, path)}#work`,
@@ -200,7 +212,7 @@ export async function ProjectArticle({
               ...(project.categories.length ? { about: project.categories.map((c) => ({ '@type': 'Thing', name: c.name })) } : {}),
               ...(project.tags.length ? { keywords: project.tags.map((tag) => tag.name).join(', ') } : {}),
             },
-            trail.length ? breadcrumbs(trail) : null,
+            trail.length && projectSchema.breadcrumbs !== false ? breadcrumbs(trail) : null,
             ...customNodes((project.seo as { jsonLd?: unknown } | null)?.jsonLd),
           ])}
         />

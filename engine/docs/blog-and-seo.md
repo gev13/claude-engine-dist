@@ -93,6 +93,52 @@ posts, search and feeds answer "not found", and its sitemap is empty, until
 it is switched back on. Nothing is deleted, and pages elsewhere on the site
 are untouched — take links to the blog out of the menus yourself.
 
+## Structured data you manage (3.20)
+
+Two places, and everything left empty keeps what the engine works out by
+itself.
+
+**Admin → Structured data** (administrators) — the whole site:
+
+- **Organization**: its type (Organization, Corporation, Online business,
+  Professional service, Local business, and others), the topics it *knows
+  about*, the *areas it serves*, other profiles beyond Menus → Social links
+  (a directory, a registry, Wikidata), VAT and registration numbers, and a
+  price range for the local-business types. Name, address, phone, founding
+  year and logo stay in **Settings**.
+- **Contact points**: sales, support, security… each with an email, phone,
+  page and languages. The Settings contact email is always listed as
+  customer support.
+- **Services**: the defaults every service page starts from (category,
+  audience, areas, currency), and *List every service on the Organization*,
+  which adds an offer catalogue naming each service.
+- **Every page**: the menus as site navigation, speakable hints, and the type
+  posts are published as (Article, BlogPosting, NewsArticle…).
+- **Preview**: any published page's structured data as search engines read
+  it, with **Copy for a validator** — paste it into the Schema validator's
+  or Google's code tab when they cannot fetch the site (bot protection or a
+  firewall in front of it answers them instead of the page).
+
+**The Schema panel** — beside SEO in the page, post and project editors:
+
+- **Page type**: About, Contact, Collection, Item, FAQ, Profile… Automatic
+  is a web page, and a page listing the services is a collection.
+- **List of services**: an ItemList naming every service by its Service.
+  Automatic puts it on the page with the services block, or on the page the
+  service pages sit under (`/services` for `/services/…`).
+- **Service** (service pages): name, service type, category, description,
+  audience, areas served, a price or starting price with its currency, and
+  an offer note — over the defaults above.
+- **Posts**: the article type and a byline with a profile link.
+- **Breadcrumbs** and the **FAQ** from the page's FAQ block can be switched
+  off, and the page's own **JSON-LD** is here (it moved out of SEO →
+  Advanced).
+
+Every page also says its language (`inLanguage`), the picture it is shared
+with (`primaryImageOfPage`) and what it is about (`mainEntity` — its Service,
+its list). The menus are one `SiteNavigationElement` with a part per link.
+The settings travel with a content export.
+
 ## Sitemaps in a browser, and their pictures (3.19)
 
 Two switches in **Settings**, both off until turned on, and both carried by a
