@@ -94,6 +94,19 @@ const KNOWN: KnownField[] = [
   { key: 'seo.googleVerification', label: 'Google Search Console code', kind: 'text', hint: 'the content="…" of its HTML tag' },
   { key: 'seo.bingVerification', label: 'Bing Webmaster code', kind: 'text', hint: 'the content="…" of its msvalidate.01 tag' },
   { key: 'seo.yandexVerification', label: 'Yandex Webmaster code', kind: 'text', hint: 'the content="…" of its tag' },
+  // 3.19
+  {
+    key: 'seo.sitemapStyle',
+    label: 'Readable sitemap in browsers',
+    kind: 'boolean',
+    hint: 'opened in a browser, /sitemap.xml shows as a table with links; search engines read the same XML. Its words are under Site translations',
+  },
+  {
+    key: 'seo.sitemapImages',
+    label: 'List pictures in the sitemap',
+    kind: 'boolean',
+    hint: 'each address names the pictures on it, which helps them appear in image search',
+  },
   { key: 'pages.notFoundPageId', label: 'Page shown for a missing address', kind: 'page', hint: 'any published page; it keeps the 404 status, is never indexed and is left out of the sitemap' },
   { key: 'pages.notFoundLinkLabel', label: 'Built-in 404: second button', kind: 'text', hint: 'e.g. Read the blog — with no page chosen above' },
   { key: 'pages.notFoundLinkHref', label: 'Built-in 404: second button link', kind: 'text', hint: 'a path such as /blog; empty links to the services index where there is one' },

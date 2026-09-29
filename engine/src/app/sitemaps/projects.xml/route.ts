@@ -2,6 +2,8 @@ import { getPermalinks } from '@/server/routing/config';
 import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { projectPath, projectTermPath } from '@/lib/permalinks';
 import { allPublishedProjects, termsWithProjects } from '@/server/content/projects';
+import { imageKey, projectImages, sitemapSetup } from '@/server/seo/sitemap';
+import { localeConfig } from '@/lib/locales';
 
 export const revalidate = 3600;
 
@@ -11,7 +13,8 @@ export const revalidate = 3600;
  */
 export async function GET() {
   const permalinks = await getPermalinks();
-  const [projects, terms] = await Promise.all([allPublishedProjects(), termsWithProjects()]);
+  const [projects, terms, setup] = await Promise.all([allPublishedProjects(), termsWithProjects(), sitemapSetup()]);
+  const images = setup.images ? await projectImages() : null;
 
   const alternates = new Map<string, { locale: string; path: string }[]>();
   for (const project of projects) {
@@ -29,6 +32,7 @@ export async function GET() {
         lastModified: project.updatedAt,
         changeFrequency: 'monthly' as const,
         priority: 0.7,
+        images: images?.get(imageKey(project.locale, project.slug)),
       })),
       ...terms.map((term) => ({
         path: projectTermPath(permalinks, term.taxonomy, term.slug),
@@ -36,7 +40,7 @@ export async function GET() {
         changeFrequency: 'weekly' as const,
         priority: 0.5,
       })),
-    ]),
+    ], localeConfig(), setup.options),
     { headers: XML_HEADERS },
   );
 }

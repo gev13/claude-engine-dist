@@ -2,6 +2,8 @@ import { getPermalinks } from '@/server/routing/config';
 import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { CAREERS_PATH } from '@/lib/careers';
 import { allPublishedJobsByGroup } from '@/server/content/jobs';
+import { sitemapSetup } from '@/server/seo/sitemap';
+import { localeConfig } from '@/lib/locales';
 
 export const revalidate = 3600;
 
@@ -16,10 +18,10 @@ export const revalidate = 3600;
  */
 export async function GET() {
   // The trailing-slash form every URL below is written in is a setting; load it first.
-  await getPermalinks();
+  const [, setup] = await Promise.all([getPermalinks(), sitemapSetup()]);
   const jobs = (await allPublishedJobsByGroup()).filter((job) => job.isOpen);
   // 3.15.1 — with no open role the section has nothing to offer a crawler.
-  if (jobs.length === 0) return new Response(urlSet([]), { headers: XML_HEADERS });
+  if (jobs.length === 0) return new Response(urlSet([], localeConfig(), setup.options), { headers: XML_HEADERS });
 
   return new Response(
     urlSet([
@@ -34,7 +36,7 @@ export async function GET() {
         changeFrequency: 'weekly' as const,
         priority: 0.6,
       })),
-    ]),
+    ], localeConfig(), setup.options),
     { headers: XML_HEADERS },
   );
 }

@@ -90,6 +90,12 @@ export const siteSettingsSchema = z.object({
   bingVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
   yandexVerification: z.string().trim().regex(/^(|[A-Za-z0-9_\-=.:]{6,120})$/, 'The code from the verification tag').optional(),
 
+  /* 3.19 — the sitemaps. Both off until switched on, so an untouched site's XML is unchanged. */
+  /** Opened in a browser, the sitemaps show as a table with links (an XSL stylesheet); search engines read the same XML. */
+  sitemapStyle: z.boolean().optional(),
+  /** Each address lists the pictures on it (image sitemap), read from its blocks, body and cover. */
+  sitemapImages: z.boolean().optional(),
+
   /* 2.18 — the page shown for an address that does not exist. */
   notFoundPageId: z.string().uuid().or(z.literal('')).optional(),
   /** A second button on the built-in 404, beside "Back to the homepage". */
@@ -175,12 +181,14 @@ export const SITE_SETTING_FIELDS = {
   'seo.googleVerification': 'googleVerification',
   'seo.bingVerification': 'bingVerification',
   'seo.yandexVerification': 'yandexVerification',
+  'seo.sitemapStyle': 'sitemapStyle',
+  'seo.sitemapImages': 'sitemapImages',
   'pages.notFoundPageId': 'notFoundPageId',
   'pages.notFoundLinkLabel': 'notFoundLinkLabel',
   'pages.notFoundLinkHref': 'notFoundLinkHref',
 } as const satisfies Record<string, keyof SiteSettings>;
 
-/** 3.18 — settings outside `site.*` that travel with a content export. */
+/** 3.18 — settings outside `site.*` that travel with a content export (3.19: the sitemap switches too). */
 export const PORTABLE_SEO_KEYS = [
   'seo.titleSeparator',
   'seo.titleFormat',
@@ -189,6 +197,8 @@ export const PORTABLE_SEO_KEYS = [
   'seo.googleVerification',
   'seo.bingVerification',
   'seo.yandexVerification',
+  'seo.sitemapStyle',
+  'seo.sitemapImages',
   'pages.notFoundPageId',
   'pages.notFoundLinkLabel',
   'pages.notFoundLinkHref',

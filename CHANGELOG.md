@@ -10,6 +10,20 @@ improvements.
 
 ---
 
+## 3.19.0 — 2026-09-29
+
+**Sitemaps.** Two switches in Settings, both off until turned on. *Readable
+sitemap in browsers* gives the sitemaps an XSL stylesheet: opened in a
+browser, the index is a table of sitemaps and each sitemap a table of its
+addresses, picture counts and last changes, in the theme's primary colour,
+with its words under Site translations. Search engines read the same XML.
+*List pictures in the sitemap* adds an image sitemap entry for every picture
+on each page, post and project, found in its blocks, body and cover. Both
+travel with a content export. Chrome is removing XSLT (version 158), after
+which Chrome shows the plain XML; Firefox and Safari keep the table.
+
+---
+
 ## 3.18.0 — 2026-09-29
 
 **Search engines.** Settings gain the organization's details for structured

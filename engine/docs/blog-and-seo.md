@@ -93,6 +93,26 @@ posts, search and feeds answer "not found", and its sitemap is empty, until
 it is switched back on. Nothing is deleted, and pages elsewhere on the site
 are untouched — take links to the blog out of the menus yourself.
 
+## Sitemaps in a browser, and their pictures (3.19)
+
+Two switches in **Settings**, both off until turned on, and both carried by a
+content export:
+
+- **Readable sitemap in browsers.** Every sitemap names an XSL stylesheet
+  (`/sitemaps/style.xsl`). Opened in a browser, `/sitemap.xml` shows as a
+  table of its sitemaps and each sitemap as a table of addresses — with the
+  number of pictures on each and when it last changed. The header row takes
+  the theme's primary colour; the words are the `sitemap.*` entries under
+  **Site translations**. Search engines ignore the stylesheet and read the
+  same XML. Chrome is removing XSLT (announced for version 158), after which
+  Chrome shows the plain XML; Firefox and Safari keep the table. Nothing a
+  search engine reads depends on it.
+- **List pictures in the sitemap.** Each address lists the pictures shown on
+  it (Google's image sitemap): a page's blocks (synced blocks included,
+  switched-off blocks left out), a post's cover and the body or blocks its
+  layout shows, a project's cover and blocks. Only this site's own media
+  library pictures, up to 1,000 per address.
+
 ## The organization, search consoles and exports (3.18)
 
 - **Settings → Organization** (each left out of the structured data while

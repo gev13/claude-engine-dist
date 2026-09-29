@@ -3,6 +3,8 @@ import { XML_HEADERS, urlSet } from '@/lib/seo/sitemap';
 import { CAREERS_PATH } from '@/lib/careers';
 import { allPublishedPagesByGroup } from '@/server/content/pages';
 import { getSiteSettings } from '@/server/content/siteSettings';
+import { imageKey, pageImages, sitemapSetup } from '@/server/seo/sitemap';
+import { localeConfig } from '@/lib/locales';
 
 export const revalidate = 3600;
 
@@ -16,7 +18,9 @@ export const revalidate = 3600;
  */
 export async function GET() {
   // The trailing-slash form every URL below is written in is a setting; load it first.
-  const [, settings] = await Promise.all([getPermalinks(), getSiteSettings()]);
+  const [, settings, setup] = await Promise.all([getPermalinks(), getSiteSettings(), sitemapSetup()]);
+  // 3.19 — the pictures on each page, when Settings asks for them.
+  const images = setup.images ? await pageImages() : null;
   /* Services have their own sitemap; library pages are noindex reference
      pages; and `/careers` belongs to the careers sitemap, which lists it
      whether or not an editor has written a landing page for it — listing it
@@ -40,7 +44,10 @@ export async function GET() {
         lastModified: p.updatedAt,
         changeFrequency: p.path === '/' ? 'weekly' : 'monthly',
         priority: p.path === '/' ? 1.0 : p.template === 'legal' ? 0.3 : 0.8,
+        images: images?.get(imageKey(p.locale, p.path)),
       })),
+      localeConfig(),
+      setup.options,
     ),
     { headers: XML_HEADERS },
   );

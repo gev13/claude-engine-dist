@@ -4,6 +4,7 @@ import { getTheme } from '@/server/content/theme';
 import { allPublishedPostsByGroup } from '@/server/content/posts';
 import { allPublishedJobsByGroup } from '@/server/content/jobs';
 import { allPublishedProjects } from '@/server/content/projects';
+import { sitemapSetup } from '@/server/seo/sitemap';
 
 export const revalidate = 3600;
 
@@ -18,7 +19,7 @@ export const revalidate = 3600;
  */
 export async function GET() {
   const now = new Date();
-  const [theme, posts, jobs, projects] = await Promise.all([getTheme(), allPublishedPostsByGroup(), allPublishedJobsByGroup(), allPublishedProjects()]);
+  const [theme, posts, jobs, projects, setup] = await Promise.all([getTheme(), allPublishedPostsByGroup(), allPublishedJobsByGroup(), allPublishedProjects(), sitemapSetup()]);
   const blog = !resolveBlog(theme.blog).off && posts.some((p) => p.indexable);
   const careers = jobs.some((job) => job.isOpen);
   const work = projects.some((project) => project.indexable);
@@ -29,7 +30,7 @@ export async function GET() {
       ...(blog ? [{ path: '/sitemaps/blog.xml', lastModified: now }] : []),
       ...(careers ? [{ path: '/sitemaps/careers.xml', lastModified: now }] : []),
       ...(work ? [{ path: '/sitemaps/projects.xml', lastModified: now }] : []),
-    ]),
+    ], setup.options),
     { headers: XML_HEADERS },
   );
 }

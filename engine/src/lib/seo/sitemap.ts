@@ -16,7 +16,17 @@ export type SitemapEntry = {
   lastModified?: Date | string | null;
   changeFrequency?: 'always' | 'hourly' | 'daily' | 'weekly' | 'monthly' | 'yearly' | 'never';
   priority?: number;
+  /** 3.19 — the pictures on this address, as site paths or absolute URLs (image sitemap). */
+  images?: string[];
 };
+
+/** 3.19 — what Settings adds to every sitemap document. */
+export type SitemapOptions = {
+  /** A same-site XSL stylesheet that browsers apply; search engines ignore it. */
+  stylesheet?: string;
+};
+
+const IMAGE_NS = 'http://www.google.com/schemas/sitemap-image/1.1';
 
 const absolute = (locale: Locale, path: string, config: LocaleConfig) => {
   const withLocale = withSlash(localePath(locale, path, config));
@@ -27,7 +37,20 @@ function esc(s: string) {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
-export function urlSet(entries: SitemapEntry[], config: LocaleConfig = localeConfig()): string {
+/* Only a same-site path may be a stylesheet (`//host` is another site): a browser refuses a cross-origin one anyway. */
+const SHEET_PATH = /^\/(?!\/)[A-Za-z0-9._~\-/]*$/;
+
+/** The XML declaration, and the stylesheet instruction when one is asked for. */
+function prolog(options: SitemapOptions): string {
+  const decl = '<?xml version="1.0" encoding="UTF-8"?>';
+  return options.stylesheet && SHEET_PATH.test(options.stylesheet)
+    ? `${decl}\n<?xml-stylesheet type="text/xsl" href="${esc(options.stylesheet)}"?>`
+    : decl;
+}
+
+const absoluteUrl = (value: string) => (/^https?:\/\//i.test(value) ? value : `${SITE_URL}${value.startsWith('/') ? '' : '/'}${value}`);
+
+export function urlSet(entries: SitemapEntry[], config: LocaleConfig = localeConfig(), options: SitemapOptions = {}): string {
   const body = entries
     .map((e) => {
       const locale = e.locale ?? config.defaultLocale;
@@ -52,6 +75,7 @@ export function urlSet(entries: SitemapEntry[], config: LocaleConfig = localeCon
         e.changeFrequency ? `    <changefreq>${e.changeFrequency}</changefreq>` : '',
         e.priority !== undefined ? `    <priority>${e.priority.toFixed(1)}</priority>` : '',
         ...links,
+        ...(e.images ?? []).map((image) => `    <image:image>\n      <image:loc>${esc(absoluteUrl(image))}</image:loc>\n    </image:image>`),
         '  </url>',
       ]
         .filter(Boolean)
@@ -59,13 +83,15 @@ export function urlSet(entries: SitemapEntry[], config: LocaleConfig = localeCon
     })
     .join('\n');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  // The image namespace is declared only when a picture is listed, so a sitemap without them is byte-for-byte as before.
+  const imageNs = entries.some((e) => e.images?.length) ? ` xmlns:image="${IMAGE_NS}"` : '';
+  return `${prolog(options)}
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml"${imageNs}>
 ${body}
 </urlset>`;
 }
 
-export function sitemapIndex(maps: { path: string; lastModified?: Date | null }[]): string {
+export function sitemapIndex(maps: { path: string; lastModified?: Date | null }[], options: SitemapOptions = {}): string {
   const body = maps
     .map((m) =>
       [
@@ -79,7 +105,7 @@ export function sitemapIndex(maps: { path: string; lastModified?: Date | null }[
     )
     .join('\n');
 
-  return `<?xml version="1.0" encoding="UTF-8"?>
+  return `${prolog(options)}
 <sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${body}
 </sitemapindex>`;

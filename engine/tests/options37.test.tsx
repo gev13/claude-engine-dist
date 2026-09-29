@@ -59,7 +59,7 @@ describe('the blog switched off', () => {
     expect(read('src/server/content/resolve.ts')).toContain("if (blog.off && BLOG_KINDS.has(match.kind)) continue;");
     expect(read('src/app/(site)/[locale]/%5Fsearch/page.tsx')).toContain('.off) notFound();');
     expect(read('src/app/(site)/[locale]/%5Ffeed/[[...category]]/route.ts')).toMatch(/\.off\) return new Response\('Not found', \{ status: 404 \}\)/);
-    expect(read('src/app/sitemaps/blog.xml/route.ts')).toContain('.off) return new Response(urlSet([])');
+    expect(read('src/app/sitemaps/blog.xml/route.ts')).toContain('.off) return new Response(urlSet([], localeConfig(), setup.options)');
   });
 });
 

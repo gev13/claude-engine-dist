@@ -140,6 +140,18 @@ export const MESSAGES = {
   'notFound.home': 'Back to the homepage',
   'notFound.services': 'All services',
 
+  /* ── The sitemap, opened in a browser (3.19, with Settings → Readable sitemap) ── */
+  'sitemap.title': 'XML Sitemap',
+  'sitemap.intro': 'This is the XML sitemap of {site}. Search engines read it to find every page.',
+  'sitemap.more': 'More about XML sitemaps',
+  'sitemap.indexCount': 'This sitemap index lists {n} sitemaps.',
+  'sitemap.urlCount': 'This sitemap lists {n} addresses.',
+  'sitemap.sitemap': 'Sitemap',
+  'sitemap.url': 'URL',
+  'sitemap.images': 'Images',
+  'sitemap.lastModified': 'Last modified',
+  'sitemap.back': 'All sitemaps',
+
   /* ── Inside the blocks ────────────────────────────────────────────────
      Controls a visitor operates rather than content an editor writes: the
      arrows on a slider, the close button on a lightbox, the label a screen
