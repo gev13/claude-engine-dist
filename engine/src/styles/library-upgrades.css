@@ -329,17 +329,19 @@
 /* 3.19.4 — the fill above a pinned notch tab. iPhone Safari draws page
    content under its status bar but never a fixed element, so nothing on the
    header itself can cover that strip (3.19.2 and 3.19.3 tried). The cap is
-   page content at the tab's width, kept just above the tab by a scroll-driven
-   animation from 200px above the top of the screen down to the tab's top;
-   the header publishes the numbers. Elsewhere it is always off-screen, and a
+   page content, kept just above the tab by a scroll-driven animation from
+   200px above the top of the screen down to the tab's top; the header
+   publishes the numbers. 3.20.1 — the full width of the screen, so the whole
+   status bar takes the tab's colour; it still ends at the tab's top, so
+   nothing beside the tab is covered. Elsewhere it is always off-screen, and a
    browser without scroll timelines never shows it. */
 .he-notch-cap { display: none; }
 @supports (animation-timeline: scroll()) {
   .he-notch-cap {
     position: absolute;
     top: 0;
-    left: var(--he-cap-l, 0px);
-    width: var(--he-cap-w, 0px);
+    left: 0;
+    right: 0;
     height: calc(200px + var(--he-cap-top, 0px));
     background: var(--he-notch-bg, var(--color-ink));
     z-index: 59;

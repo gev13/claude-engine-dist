@@ -50,7 +50,8 @@ describe('the fill above a pinned notch tab (3.19.4)', () => {
 
   it('is page content kept above the tab by the scroll itself, only where scroll timelines exist', () => {
     const block = css.slice(css.indexOf('@supports (animation-timeline: scroll())'));
-    expect(block).toMatch(/\.he-notch-cap \{[^}]*position: absolute;[^}]*left: var\(--he-cap-l, 0px\);[^}]*width: var\(--he-cap-w, 0px\);/);
+    // 3.20.1 — the full width, so the whole status bar takes the tab's colour.
+    expect(block).toMatch(/\.he-notch-cap \{[^}]*position: absolute;[^}]*left: 0;[^}]*right: 0;[^}]*height: calc\(200px \+ var\(--he-cap-top, 0px\)\);/);
     expect(block).toContain('animation-timeline: scroll(root block);');
     expect(css).toContain('.he-notch-cap { display: none; }');
     expect(css).toMatch(/@keyframes he-notch-cap \{\s*from \{ transform: translateY\(calc\(-200px - var\(--he-cap-o, 0px\)\)\); \}\s*to \{ transform: translateY\(calc\(var\(--he-scroll-max, 0px\) - 200px - var\(--he-cap-o, 0px\)\)\); \}/);

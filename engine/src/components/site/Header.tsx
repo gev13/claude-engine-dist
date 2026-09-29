@@ -150,7 +150,7 @@ export function Header(props: HeaderProps) {
 
   /* 3.19.4 — iPhone Safari (26) draws the page, never a fixed element, under
      its status bar, so a pinned notch tab showed the content scrolling past
-     above it. The cap is page content: a strip of the tab's colour and width,
+     above it. The cap is page content: a full-width strip of the tab's colour,
      kept exactly above the tab by a scroll-driven animation (so it moves with
      the scroll itself, not a frame behind it). It needs only the scroll range
      and where the tab sits, published here. Nowhere else can anything see it —
@@ -164,10 +164,7 @@ export function Header(props: HeaderProps) {
     // Never shortened by the reduced-motion rule: this follows the scroll, it does not animate.
     cap.style.setProperty('animation-duration', 'auto', 'important');
     const place = () => {
-      const tab = wrap.getBoundingClientRect();
       const parent = cap.offsetParent instanceof HTMLElement ? cap.offsetParent.getBoundingClientRect().top + window.scrollY : 0;
-      cap.style.setProperty('--he-cap-l', `${Math.round(tab.left)}px`);
-      cap.style.setProperty('--he-cap-w', `${Math.round(tab.width)}px`);
       cap.style.setProperty('--he-cap-top', `${Math.max(0, Math.round(wrap.offsetTop - (getComputedStyle(wrap).position === 'fixed' ? 0 : window.scrollY)))}px`);
       cap.style.setProperty('--he-cap-o', `${Math.round(parent)}px`);
       cap.style.setProperty('--he-scroll-max', `${Math.max(0, root.scrollHeight - root.clientHeight)}px`);

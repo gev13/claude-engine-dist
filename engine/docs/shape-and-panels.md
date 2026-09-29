@@ -37,8 +37,8 @@ are yours to set. By default it scrolls away with the page; **Stay on top
 on phones** (3.17.1) and **on wider screens** (3.17.2) pin it instead. A pinned
 tab keeps its own width and curves, and the space above it — the gap it
 starts at, and an iPhone's status bar, where Safari shows the page scrolling
-past — is filled with its colour at its width, so the page never shows over
-the top of it (3.19.4).
+past — is filled with its colour — across the whole status bar since 3.20.1 — so
+the page never shows over the top of it.
 
 **Header links** — font, size, weight, case, letter spacing, the space
 between them, and their colour and the current page's colour.

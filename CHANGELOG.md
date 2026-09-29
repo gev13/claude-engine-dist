@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.20.1 — 2026-09-29
+
+**The whole status bar takes the pinned menu's colour on iPhone.** The strip
+that 3.19.4 kept above a pinned notch header was only as wide as the tab, so
+the signal and battery side still showed the page. It now spans the screen;
+it still ends at the top of the tab, so the notch's shape beside it is
+unchanged.
+
+---
+
 ## 3.20.0 — 2026-09-29
 
 **Structured data you manage.** A new **Structured data** screen for the
