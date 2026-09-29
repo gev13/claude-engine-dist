@@ -1,6 +1,14 @@
 {
-  "latest": "3.19.0",
+  "latest": "3.19.1",
   "releases": [
+    {
+      "version": "3.19.1",
+      "date": "2026-09-29",
+      "summary": "Fix: a setting saved as text that looks like a number or a boolean (a founding year, a postcode) is read back as text rather than dropped.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.19.0",
       "date": "2026-09-29",

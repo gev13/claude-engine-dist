@@ -10,6 +10,16 @@ improvements.
 
 ---
 
+## 3.19.1 — 2026-09-29
+
+**Fix: a setting that looks like a number kept its value.** A value saved
+as text that is also valid JSON — a founding year such as "2026", a postcode
+such as "75008", the word "true" — was read back as a number or a boolean
+and then thrown away as invalid, so it never reached the page. JSON from the
+database is now decoded once.
+
+---
+
 ## 3.19.0 — 2026-09-29
 
 **Sitemaps.** Two switches in Settings, both off until turned on. *Readable
