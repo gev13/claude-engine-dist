@@ -516,6 +516,7 @@ function FilmstripSlider(p: P) {
 /* ── Cards, products, promo cards ─────────────────────────────────────────── */
 
 function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
+  const t = useMessages();
   if (mode === 'heroCards') {
     return (
       <div className="he-hcard">
@@ -527,7 +528,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
           </div>
           {s.href && (
             <Link href={s.href} className="he-btn he-btn-primary he-hcard__cta">
-              {s.buttonLabel || 'Learn more'}
+              {s.buttonLabel || t('block.learnMore')}
             </Link>
           )}
         </div>
@@ -559,7 +560,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
         {s.price && <div className="he-card__price">{s.price}</div>}
         {s.href && (
           <span className="he-card__more">
-            {s.buttonLabel || 'Learn more'} <span aria-hidden="true">›</span>
+            {s.buttonLabel || t('block.learnMore')} <span aria-hidden="true">›</span>
           </span>
         )}
       </div>
@@ -638,7 +639,18 @@ function TrackCarousel(p: P) {
   return (
     <section
       ref={rootRef}
-      className={cn('he-car', `he-car--${mode}`, TONES[p.tone ?? 'base'], p.drag && 'is-draggable', p.kenBurns && 'is-kenburns')}
+      className={cn(
+        'he-car',
+        `he-car--${mode}`,
+        TONES[p.tone ?? 'base'],
+        p.drag && 'is-draggable',
+        p.kenBurns && 'is-kenburns',
+        // 3.24 — the slides' own picture shape and corners, words centred, no box behind.
+        p.slideRatio && 'has-slide-ratio',
+        typeof p.slideRadius === 'number' && 'has-slide-radius',
+        p.slideAlign === 'center' && 'is-slide-center',
+        p.slidePlain && 'is-slide-plain',
+      )}
       aria-roledescription="carousel"
       aria-label={p.title || 'Carousel'}
       style={
@@ -647,6 +659,8 @@ function TrackCarousel(p: P) {
           '--pv-laptop': view.laptop,
           '--pv-tablet': view.tablet,
           '--pv-mobile': view.mobile,
+          ...(p.slideRatio ? { '--he-car-ratio': p.slideRatio.replace('/', ' / ') } : {}),
+          ...(typeof p.slideRadius === 'number' ? { '--he-car-radius': `${p.slideRadius}px` } : {}),
         } as React.CSSProperties
       }
       {...auto.hold}
@@ -676,8 +690,9 @@ function TrackCarousel(p: P) {
         </div>
       </div>
 
-      {(p.indicator !== 'none' || p.autoplay) && count > 1 && (
-        <div className="shell he-car__foot">
+      {(p.indicator !== 'none' || p.autoplay || p.arrows === 'bottom') && count > 1 && (
+        // 3.24 — `bottom`: the arrows on the right of this row, the indicator on its left.
+        <div className={cn('shell he-car__foot', p.arrows === 'bottom' && 'has-arrows')}>
           <Indicator
             kind={p.indicator}
             count={count}
@@ -691,6 +706,7 @@ function TrackCarousel(p: P) {
             counter={p.counter}
           />
           {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
+          {p.arrows === 'bottom' && arrows}
         </div>
       )}
     </section>

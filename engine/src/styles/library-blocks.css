@@ -462,6 +462,17 @@
   .he-car__viewport.is-edge .he-car__slide { scroll-snap-align: center; }
 
   .he-car__foot { display: flex; align-items: center; justify-content: center; gap: 16px; margin-top: 32px; }
+  /* 3.24 — the indicator on the left and the arrows on the right, under the slides. */
+  .he-car__foot.has-arrows { justify-content: space-between; }
+  .he-car__foot.has-arrows > .he-arrows { margin-left: auto; }
+  /* 3.24 — card slides: their own picture shape and corners, the words centred, no box behind. */
+  .he-car.has-slide-ratio .he-card__media { aspect-ratio: var(--he-car-ratio); }
+  .he-car.is-slide-plain .he-card { overflow: visible; border-radius: 0; background: transparent; clip-path: none; }
+  .he-car.is-slide-plain .he-card__media { overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); }
+  .he-car.is-slide-plain .he-card__body { padding: 16px 0 0; }
+  .he-car.has-slide-radius .he-card__media { border-radius: var(--he-car-radius); clip-path: none; }
+  .he-car.has-slide-radius:not(.is-slide-plain) .he-card { border-radius: var(--he-car-radius); clip-path: none; }
+  .he-car.is-slide-center .he-card__body { align-items: center; text-align: center; }
 
   .he-card {
     display: flex;

@@ -353,6 +353,13 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
               options={[['', 'As the layout draws it'], ['16/9', 'Wide 16:9'], ['3/2', '3:2'], ['4/3', '4:3'], ['1/1', 'Square']]}
               onChange={(value) => setCard('ratio', value || undefined)}
             />
+            {/* 3.24 */}
+            <Choice
+              label="Titles"
+              value={card.titleLines ? String(card.titleLines) : undefined}
+              options={[['', 'Every line'], ['2', 'Two lines at most, then …'], ['3', 'Three lines at most, then …']]}
+              onChange={(value) => setCard('titleLines', value === '2' ? 2 : value === '3' ? 3 : undefined)}
+            />
           </div>
           <div className="mt-4 max-w-[600px]">
             <CardHoverFields value={card.hover} onChange={(hover) => setCard('hover', hover)} />

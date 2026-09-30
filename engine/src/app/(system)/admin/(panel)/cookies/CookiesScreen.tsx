@@ -258,6 +258,31 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
                   A ✕ to close it instead of the buttons
                 </label>
               )}
+              {/* 3.24 — the ✕'s look, a cookie before the text, the policy link's weight. */}
+              {form.mode === 'notice' && form.closeButton && (
+                <Field label="The ✕" htmlFor="cookie-close-style">
+                  <Select id="cookie-close-style" value={form.closeStyle ?? 'ring'} disabled={!canWrite} onChange={(e) => set('closeStyle', e.target.value === 'plain' ? 'plain' : undefined)}>
+                    <option value="ring">In a circle on hover</option>
+                    <option value="plain">Plain</option>
+                  </Select>
+                </Field>
+              )}
+              <Field label="Before the text" htmlFor="cookie-icon">
+                <Select id="cookie-icon" value={form.icon ?? 'none'} disabled={!canWrite} onChange={(e) => set('icon', e.target.value === 'cookie' ? 'cookie' : undefined)}>
+                  <option value="none">Nothing</option>
+                  <option value="cookie">A cookie</option>
+                </Select>
+              </Field>
+              <Field label="The policy link’s weight" htmlFor="cookie-link-weight">
+                <Select id="cookie-link-weight" value={form.linkWeight ?? ''} disabled={!canWrite} onChange={(e) => set('linkWeight', (e.target.value || undefined) as typeof form.linkWeight)}>
+                  <option value="">As the text</option>
+                  {['400', '500', '600', '700', '800'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
             </div>
 
             <div>

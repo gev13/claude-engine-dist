@@ -69,6 +69,9 @@ A link to `#cookie-settings` anywhere on the site reopens the notice.
 text and link side by side; *A card at the bottom, centred* as a position;
 its width, background, text colour and corners; and, in notice mode, a ✕ to
 close it instead of the buttons (it counts as OK).
+*(3.24)* The ✕ can be plain — no circle on hover, and it takes no focus when
+the notice appears — a cookie can stand before the text, and the policy link
+can have its own weight.
 
 ## Bot protection — Security → Bot protection
 

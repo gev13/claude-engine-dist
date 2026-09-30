@@ -27,6 +27,8 @@ import { FigureStylePanel } from '@/components/admin/FigureStylePanel';
 import type { FigureStyle } from '@/lib/figureStyle';
 import { ColorField, LengthField } from '@/components/admin/styleFields';
 import { CardHoverFields } from '@/components/admin/CardHoverFields';
+import { ProjectCardFields } from '@/components/admin/ProjectCardFields';
+import type { ProjectCardOptions } from '@/lib/projectCard';
 import type { CardHover } from '@/lib/cardHover';
 import type { ItemStyle } from '@/lib/itemStyle';
 import type { ButtonPad } from '@/lib/buttonPad';
@@ -1392,6 +1394,7 @@ const ARROW_LABELS: Record<(typeof CAROUSEL_ARROWS)[number], string> = {
   corner: 'Top right, beside the heading',
   side: 'On the sides',
   edge: 'At the screen edges, cards peeking both sides',
+  bottom: 'Under the slides, beside the indicator (card sliders)',
   none: 'None — swipe and indicators only',
 };
 
@@ -1710,6 +1713,17 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
                 ))}
               </div>
             </Field>
+          )}
+          {/* 3.24 — every card slide's picture shape and corners, the words centred, no box behind. */}
+          {(mode === 'cards' || mode === 'products') && (
+            <div className="grid gap-3 sm:grid-cols-4">
+              <PropSelect label="Picture shape" k="slideRatio" fallback="" options={[['', 'As drawn (4:3)'], ['1/1', 'Square'], ['3/4', 'Portrait 3:4'], ['16/9', '16:9']]} props={props} set={(next) => set(withOpt(next, 'slideRatio', next.slideRatio))} />
+              <OptNumber label="Picture corners" hint="px" step="1" k="slideRadius" props={props} set={set} />
+              <PropSelect label="The words" k="slideAlign" fallback="left" options={[['left', 'From the left'], ['center', 'Centred under the picture']]} props={props} set={set} />
+              <div className="flex items-end pb-3">
+                <PropCheck label="No box behind a slide" k="slidePlain" props={props} set={set} />
+              </div>
+            </div>
           )}
         </div>
       </details>
@@ -3492,6 +3506,10 @@ function TypeFields({
           {str(props, 'layout') !== 'list' && str(props, 'layout') !== 'carousel' && (
             <CardHoverFields zoom={false} value={props.cardHover as CardHover | undefined} onChange={(cardHover) => set({ ...props, cardHover })} />
           )}
+          {/* 3.24 — the cards' own look. */}
+          {str(props, 'layout') !== 'list' && str(props, 'layout') !== 'carousel' && (
+            <ProjectCardFields value={props.card as ProjectCardOptions | undefined} onChange={(card) => set(withOpt(props, 'card', card))} />
+          )}
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-end gap-2 pb-3 text-[14px] text-ash">
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.filter !== false} onChange={(e) => set({ ...props, filter: e.target.checked })} />
@@ -5068,6 +5086,26 @@ function TypeFields({
               )}
             </div>
           )}
+          {/* 3.24 — the space between a card's parts, the title under the pointer, and the link's mark. */}
+          {['icons', 'imageCards', 'overlay'].includes(variant) && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              {variant !== 'overlay' && (
+                <>
+                  <Field label="Space between a card’s parts" hint="picture, title, text, link — e.g. 40px; empty keeps each part’s own">
+                    <Input value={str(props, 'partGap')} placeholder="as drawn" onChange={(e) => set(withOpt(props, 'partGap', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="— on tablets" hint="empty keeps the one above">
+                    <Input value={str(props, 'partGapTablet')} placeholder="as above" onChange={(e) => set(withOpt(props, 'partGapTablet', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="— on phones" hint="empty keeps the one above">
+                    <Input value={str(props, 'partGapMobile')} placeholder="as above" onChange={(e) => set(withOpt(props, 'partGapMobile', e.target.value.trim() || undefined))} />
+                  </Field>
+                </>
+              )}
+              <PropSelect label="A linked title, pointed at" k="titleHover" fallback="underline" options={[['underline', 'Underlined'], ['none', 'Stays as it is']]} props={props} set={set} />
+              <PropSelect label="The card link’s mark" k="moreArrow" fallback="chevron" options={[['chevron', 'A chevron ›'], ['theme', 'The theme’s “Read more” arrow']]} props={props} set={set} />
+            </div>
+          )}
           <Repeater
             label="Cards"
             items={arr<GridCard>(props, 'cards')}
@@ -5522,6 +5560,14 @@ function TypeFields({
             <PropSelect label="Alignment" k="align" fallback="left" options={[['left', 'Left'], ['center', 'Centre']]} hint="for a narrower picture" props={props} set={set} />
           </div>
           {!lead && (str(props, 'mask') || 'none') === 'none' && <PropCheck label="Rounded corners" k="rounded" props={props} set={set} />}
+          {/* 3.24 — the whole picture as a link. */}
+          <PropHref label="Link (optional)" k="href" props={props} set={set} hint="the whole picture links here; an outside address opens in a new tab" />
+          {str(props, 'href') && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <PropCheck label="Open in a new tab" k="newTab" props={props} set={set} />
+              <PropSelect label="When pointed at" k="hover" fallback="none" options={[['none', 'Nothing'], ['zoom', 'A slow zoom']]} props={props} set={set} />
+            </div>
+          )}
         </>
       );
     }
@@ -5751,6 +5797,7 @@ function PostCardFields({ props, set }: { props: Props; set: Setter }) {
             <option value="1/1">Square</option>
           </Select>
         </Field>
+        <TitleLinesField value={card.titleLines} onChange={(v) => setCard('titleLines', v)} />
       </div>
       <div className="border-t-2 border-hairline pt-3 pb-1">
         <CardHoverFields value={card.hover as CardHover | undefined} onChange={(hover) => setCard('hover', hover)} />
@@ -5796,7 +5843,21 @@ function PostCoverFields({ props, set }: { props: Props; set: Setter }) {
         <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.readMore !== false} onChange={(e) => setCard('readMore', e.target.checked ? undefined : false)} />
         “Read more” under each card
       </label>
+      <TitleLinesField value={card.titleLines} onChange={(v) => setCard('titleLines', v)} />
     </div>
+  );
+}
+
+/** 3.24 — a card's title cut to two or three lines. */
+function TitleLinesField({ value, onChange }: { value: unknown; onChange: (next: 2 | 3 | undefined) => void }) {
+  return (
+    <Field label="Titles">
+      <Select value={value === 2 || value === 3 ? String(value) : ''} onChange={(e) => onChange(e.target.value === '2' ? 2 : e.target.value === '3' ? 3 : undefined)}>
+        <option value="">Every line</option>
+        <option value="2">Two lines at most, then …</option>
+        <option value="3">Three lines at most, then …</option>
+      </Select>
+    </Field>
   );
 }
 

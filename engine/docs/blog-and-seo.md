@@ -260,3 +260,9 @@ Every option below is off, or draws what it drew before, until it is set.
 - **Post list → How many** is *Posts on each page* when the list pages on
   the server. It never capped the total there; the pages go on until the
   posts run out.
+
+## Card titles (3.24)
+
+- **Appearance → Blog → Each card shows → Titles**, and the same in a Post
+  list's cards: every line (as before), or two or three lines at most with an
+  ellipsis.

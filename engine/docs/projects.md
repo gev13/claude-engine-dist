@@ -55,6 +55,18 @@ trash, like posts. An author writes projects; an editor publishes them.
 - **After every project**: blocks shown at the end of every project page —
   usually a call to action.
 
+## The cards' own look (3.24)
+
+The projects block and the archives (Page template → Archives) share one set
+of card options, each unset as before: the picture's shape (square, 4:3, 3:2,
+16:9, portrait, or each file's own) and corners; how far it zooms on hover
+(e.g. 1.06); the categories as chips or plain text; and **On hover, the
+category line slides away and a link line slides in** — its words (empty is
+the Site translation “View project”), its colour and a short line after it.
+The drawn link goes to the same address as the card and is kept out of the
+tab order and away from screen readers, which already have the card's own
+link.
+
 ## Listing projects anywhere
 
 A **Projects** block's *Where the projects come from* can be **From Projects**:

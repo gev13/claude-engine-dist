@@ -18,7 +18,7 @@ import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
-import type { PostCardOptions } from '@/lib/blog';
+import { titleClamp, type PostCardOptions } from '@/lib/blog';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
 import { CardTilt } from '@/components/site/CardTilt';
 
@@ -101,6 +101,9 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
   const view = { ...p, pagination: server ? ('none' as const) : p.pagination };
   const indexHref = blogIndexPath(permalinks);
 
+  // 3.24 — titles cut to two or three lines.
+  const clamp = titleClamp(p.card);
+
   if (p.variant === 'news') {
     // CT13 — cover image with a type chip, title, date and excerpt.
     return (
@@ -111,7 +114,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
         ) : (
           <>
             {count}
-            <ul className="he-news he-swipe-track" id={listId} style={{ '--cols': p.columns } as React.CSSProperties}>
+            <ul className={cn('he-news he-swipe-track', clamp.className)} id={listId} style={{ '--cols': p.columns, ...clamp.style } as React.CSSProperties}>
               {posts.map((post) => (
                 <li key={post.id} {...cardHoverProps(p.card?.hover)}>
                   <Link href={postPath(permalinks, post)} className="he-news__card">
@@ -171,7 +174,14 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
           <CardGrid
             cols={p.columns}
             id={listId}
-            style={p.card?.image && p.card.ratio ? ({ '--he-ucard-ratio': p.card.ratio.replace('/', ' / ') } as React.CSSProperties) : undefined}
+            className={clamp.className}
+            style={
+              p.card?.image && p.card.ratio
+                ? ({ '--he-ucard-ratio': p.card.ratio.replace('/', ' / '), ...clamp.style } as React.CSSProperties)
+                : clamp.className
+                  ? (clamp.style as React.CSSProperties)
+                  : undefined
+            }
           >
             {posts.map((post) => (
               <Card
@@ -384,8 +394,9 @@ export function PostCollection({
     );
   });
 
-  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio');
-  const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}) } as React.CSSProperties;
+  const clamp = titleClamp(card);
+  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio', clamp.className);
+  const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}), ...clamp.style } as React.CSSProperties;
 
   const tilt = wantsTilt(card.hover) && <CardTilt />;
   if (pagination === 'none') {

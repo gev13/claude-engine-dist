@@ -588,6 +588,15 @@ export const themeSchema = z.object({
     })
     .optional(),
 
+  /** 3.24 — text links under the pointer (header, footer, card links, the menu's sub-links): their colour only (as before), an underline, or a line that sweeps out and back in. */
+  links: z
+    .object({
+      hover: z.enum(['color', 'underline', 'sweep']).optional(),
+      /** The line's thickness, e.g. 0.18em; unset is a hairline. */
+      lineWidth: length.optional(),
+    })
+    .optional(),
+
   /** 3.2 — the fill, edge and text of every text field and every unchosen choice chip. */
   fields: z
     .object({

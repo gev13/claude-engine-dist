@@ -586,6 +586,7 @@ export function Header(props: HeaderProps) {
         config={chrome.mobileMenu}
         toggleRef={toggleRef}
         nav={chrome.mobileMenu.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
+        phoneNav={chrome.mobileMenu.onPhones?.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
         cta={cta}
         secondaryCta={secondaryCta}
         services={services}
@@ -836,6 +837,7 @@ function MobileMenu({
   onClose,
   config,
   nav,
+  phoneNav,
   cta,
   secondaryCta,
   services,
@@ -850,6 +852,8 @@ function MobileMenu({
   /** 3.17 — the menu button, whose place the close button can take. */
   toggleRef?: React.RefObject<HTMLButtonElement | null>;
   nav: NavItem[];
+  /** 3.24 — the links on phones, when phones have a menu of their own. */
+  phoneNav?: NavItem[];
   cta: Cta;
   secondaryCta: Cta;
   services: { title: string; links: readonly ServiceLink[] }[];
@@ -863,16 +867,33 @@ function MobileMenu({
   const [pointed, setPointed] = useState<string | null>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
-  /** 3.17 — where the menu button and the header's logo are, when both are on screen. */
-  const [mirror, setMirror] = useState<{ close: DOMRect; logo: DOMRect } | null>(null);
+  /** 3.17 — where the menu button and the header's logo are, when both are on screen. (3.24) With the header hidden, the button's own look too. */
+  const [mirror, setMirror] = useState<{ close: DOMRect; logo: DOMRect; look?: React.CSSProperties } | null>(null);
+  /** 3.24 — phones (or tablets too) get a menu of their own when one is set. */
+  const [onPhone, setOnPhone] = useState(false);
+  const upTo = config.onPhones?.upTo;
+
+  useEffect(() => {
+    if (!upTo) return setOnPhone(false);
+    const query = window.matchMedia(`(max-width: ${upTo === 'tablet' ? 1024 : 768}px)`);
+    const sync = () => setOnPhone(query.matches);
+    sync();
+    query.addEventListener('change', sync);
+    return () => query.removeEventListener('change', sync);
+  }, [upTo]);
 
   useEffect(() => {
     if (!open || !config.closeAtToggle) return setMirror(null);
-    const close = toggleRef?.current?.getBoundingClientRect();
-    const logo = toggleRef?.current?.closest('header')?.querySelector('.he-hdr__logo')?.getBoundingClientRect();
+    const toggle = toggleRef?.current;
+    const close = toggle?.getBoundingClientRect();
+    const logo = toggle?.closest('header')?.querySelector('.he-hdr__logo')?.getBoundingClientRect();
     const onScreen = (r?: DOMRect) => r && r.width > 0 && r.top >= 0 && r.bottom <= window.innerHeight;
-    setMirror(onScreen(close) && onScreen(logo) ? { close: close!, logo: logo! } : null);
-  }, [open, config.closeAtToggle, toggleRef]);
+    // 3.24 — the header is about to go; the close button keeps the menu button's circle.
+    const drawn = config.hideHeader && toggle ? getComputedStyle(toggle) : null;
+    const look = drawn ? { background: drawn.backgroundColor, color: drawn.color, borderRadius: drawn.borderRadius } : undefined;
+    setMirror(onScreen(close) && onScreen(logo) ? { close: close!, logo: logo!, look } : null);
+  }, [open, config.closeAtToggle, config.hideHeader, toggleRef]);
+
 
   useEffect(() => {
     if (open) closeRef.current?.focus();
@@ -907,21 +928,45 @@ function MobileMenu({
     return () => document.removeEventListener('keydown', onKey);
   }, [open]);
 
-  const drawer = config.variant === 'drawer' || config.variant === 'push';
+  // 3.24 — on phones, the phones' own menu: its style, side, links and type.
+  const phone = onPhone ? config.onPhones : undefined;
+  const variant = phone?.variant ?? config.variant;
+  const side = phone?.side ?? config.side;
+  const items = phone && phoneNav ? phoneNav : nav;
+  const drawer = variant === 'drawer' || variant === 'push';
   // MN5–MN7 open sub-items in place, like the accordions, in much larger type.
-  const fullscreen = config.variant.startsWith('fullscreen');
+  const fullscreen = variant.startsWith('fullscreen');
+  // 3.24 — the full-screen menu as a column beside the dimmed page (not on phones with a menu of their own).
+  const column = fullscreen && !phone && Boolean(config.columnWidth);
+  // 3.24 — the site's header out of sight while a full-screen menu is open.
+  const hidesHeader = config.hideHeader && fullscreen;
+
+  useEffect(() => {
+    if (!hidesHeader) return;
+    const root = document.documentElement;
+    root.classList.toggle('he-menu-hides-header', open);
+    return () => root.classList.remove('he-menu-hides-header');
+  }, [open, hidesHeader]);
   const t = useMessages();
   // 3.22 — only the details asked for; a row at the bottom of any full-screen menu, or the creative menu's column.
   const email = config.contactEmail ? contact.email : undefined;
   const address = config.contactAddress ? contact.address : undefined;
-  const social = config.contactSocial ? contact.social : [];
+  // 3.24 — the menu's own choice of networks, in its own order.
+  const social = !config.contactSocial
+    ? []
+    : config.socialNetworks
+      ? config.socialNetworks.flatMap((network) => contact.social.filter((s) => s.network === network))
+      : contact.social;
+  const socialStyle = config.socialStyle ?? contact.socialStyle ?? 'icon';
   const hasContact = Boolean(email || address || social.length || config.phone);
   const contactRow = fullscreen && config.contactPosition === 'row' && hasContact;
-  const showContact = config.variant === 'fullscreenCreative' && config.contactPosition === 'column' && hasContact;
-  const picture = config.hoverImages && fullscreen ? nav.find((item) => item.id === pointed)?.imageUrl : undefined;
-  const drilled = config.variant === 'drilldown' ? nav.find((i) => i.id === drill) : undefined;
+  const showContact = variant === 'fullscreenCreative' && config.contactPosition === 'column' && hasContact;
+  const picture = config.hoverImages && fullscreen ? items.find((item) => item.id === pointed)?.imageUrl : undefined;
+  const drilled = variant === 'drilldown' ? items.find((i) => i.id === drill) : undefined;
+  // 3.24 — on phones, the header button can be the list's last link instead of a button.
+  const ctaInList = Boolean(phone?.ctaInList && cta);
 
-  const ctas = config.ctaPosition !== 'off' && (cta || secondaryCta) && (
+  const ctas = config.ctaPosition !== 'off' && !ctaInList && (cta || secondaryCta) && (
     <div className={cn('he-menu__cta', config.ctaPosition === 'bottom' && 'is-bottom')}>
       {cta && (
         <Link href={cta.href} className="he-btn he-btn-primary" onClick={onClose}>
@@ -971,7 +1016,7 @@ function MobileMenu({
 
   return (
     <>
-      {drawer && open && <div className="he-menu-backdrop" onClick={onClose} aria-hidden="true" />}
+      {(drawer || column) && open && <div className="he-menu-backdrop" onClick={onClose} aria-hidden="true" />}
       <div
         id="he-menu"
         ref={panelRef}
@@ -981,8 +1026,8 @@ function MobileMenu({
         aria-label={t('chrome.menu')}
         className={cn(
           'he-menu',
-          `he-menu--${config.variant}`,
-          `is-${config.variant === 'push' ? 'left' : config.side}`,
+          `he-menu--${variant}`,
+          `is-${variant === 'push' ? 'left' : side}`,
           config.align === 'center' && 'is-center',
           config.largeType && 'is-large',
           fullscreen && 'is-fullscreen',
@@ -1001,9 +1046,16 @@ function MobileMenu({
           fullscreen && config.expandIcon !== 'circle' && `is-expand-${config.expandIcon}`,
           config.background && 'has-bg',
           contactRow && 'has-contact-row',
+          // 3.24 — a column beside the dimmed page, the links centred up and down, the + beside the words, no logo while the header is hidden; the phones' own sizes.
+          column && 'has-column',
+          fullscreen && config.verticalAlign === 'center' && 'is-v-center',
+          config.expandAt === 'beside' && 'is-expand-beside',
+          hidesHeader && 'is-no-brand',
+          phone?.itemSize && 'has-phone-size',
+          phone?.itemWeight && 'has-phone-weight',
         )}
         style={
-          config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking
+          config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || column || phone
             ? ({
                 ...(config.opacity < 100 ? { '--he-menu-alpha': `${config.opacity}%` } : {}),
                 ...(config.background ? { '--he-menu-bg': config.background } : {}),
@@ -1011,6 +1063,10 @@ function MobileMenu({
                 ...(config.itemSizeMobile ? { '--he-menu-size-m': config.itemSizeMobile } : {}),
                 ...(config.itemWeight ? { '--he-menu-weight': config.itemWeight } : {}),
                 ...(config.itemTracking ? { '--he-menu-tracking': config.itemTracking } : {}),
+                ...(column ? { '--he-menu-col-w': config.columnWidth } : {}),
+                ...(phone?.width ? { '--he-drawer-w': `min(${phone.width}, 100vw)` } : {}),
+                ...(phone?.itemSize ? { '--he-menu-psize': phone.itemSize } : {}),
+                ...(phone?.itemWeight ? { '--he-menu-pweight': phone.itemWeight } : {}),
               } as React.CSSProperties)
             : undefined
         }
@@ -1028,7 +1084,11 @@ function MobileMenu({
             className="he-menu__close"
             onClick={onClose}
             aria-label={t('chrome.closeMenu')}
-            style={mirror ? { position: 'absolute', left: mirror.close.left - 20, top: mirror.close.top, width: mirror.close.width, height: mirror.close.height, margin: 0 } : undefined}
+            style={
+              mirror
+                ? { position: 'absolute', left: mirror.close.left - 20, top: mirror.close.top, width: mirror.close.width, height: mirror.close.height, margin: 0, ...mirror.look }
+                : undefined
+            }
           >
             <Icon.Close size={22} />
           </button>
@@ -1050,7 +1110,7 @@ function MobileMenu({
             </>
           ) : (
             <ul className="he-menu__list">
-              {nav.map((item) => {
+              {items.map((item) => {
                 if (!hasChildren(item)) {
                   return (
                     <li key={item.id} onPointerEnter={config.hoverImages ? () => setPointed(item.id) : undefined}>
@@ -1060,7 +1120,7 @@ function MobileMenu({
                     </li>
                   );
                 }
-                if (config.variant === 'drilldown') {
+                if (variant === 'drilldown') {
                   return (
                     <li key={item.id}>
                       <button type="button" className="he-menu__row" onClick={() => setDrill(item.id)}>
@@ -1101,6 +1161,13 @@ function MobileMenu({
                   </li>
                 );
               })}
+              {ctaInList && cta && (
+                <li>
+                  <Link href={cta.href} className="he-menu__row is-cta" onClick={onClose}>
+                    {cta.label}
+                  </Link>
+                </li>
+              )}
             </ul>
           )}
 
@@ -1134,7 +1201,7 @@ function MobileMenu({
               <div className="he-menu__heading">{config.contactTitle || t('menu.getInTouch')}</div>
               {config.phone && (
                 <a href={`tel:${config.phone.replace(/[^+0-9]/g, '')}`} className="he-menu__email">
-                  {config.phone}
+                  {config.phoneLabel ? `${config.phoneLabel} ${config.phone}` : config.phone}
                 </a>
               )}
               {email && (
@@ -1149,7 +1216,7 @@ function MobileMenu({
                 {social.map((s) => (
                   <li key={s.network + s.href}>
                     <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
-                      {socialText(s, contact.socialStyle ?? 'icon') ?? <SocialIcon network={s.network} />}
+                      {socialText(s, socialStyle) ?? <SocialIcon network={s.network} />}
                     </a>
                   </li>
                 ))}

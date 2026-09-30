@@ -21,6 +21,7 @@ import { TIME_PATTERN, WEEKDAYS, isTimeZone } from './hours';
 import { SHARE_NETWORKS } from './share';
 import { formAfterSchema, formAutoresponderSchema, formFieldSchema, formHiddenSchema, formNotifySchema } from './forms';
 import { LOTTIE_PATH, LOTTIE_PLAY } from './lottie';
+import { projectCardSchema } from './projectCard';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Block vocabulary
@@ -71,7 +72,7 @@ export const CAROUSEL_MODES = ['cards', 'products', 'heroCards', 'hero', 'media'
 /** SL5 — the indicator styles every slider shares. */
 /** P4-A2 adds `thumbs` (a filmstrip of the slides) and `chapters` (their titles as a list). */
 export const CAROUSEL_INDICATORS = ['dots', 'pill', 'ring', 'progress', 'capsule', 'counter', 'numbers', 'thumbs', 'chapters', 'none'] as const;
-export const CAROUSEL_ARROWS = ['corner', 'side', 'edge', 'none'] as const;
+export const CAROUSEL_ARROWS = ['corner', 'side', 'edge', 'bottom', 'none'] as const;
 
 const slide = z.object({
   eyebrow: text(80),
@@ -373,6 +374,14 @@ export const blockSchemas = {
     mediaMaxHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.22 — icon features: the icon's height (e.g. 200px), its width following the file's proportions; unset is the drawn 28px in its box. */
     iconSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.24 — the space between a card's parts (picture, title, text, link), and on tablets and phones; unset keeps each part's own. */
+    partGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    partGapTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    partGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.24 — a linked card's title underlined under the pointer (unset, as before) or left as it is. */
+    titleHover: z.enum(['underline', 'none']).optional(),
+    /** 3.24 — the card link's mark: the chevron (unset, as before) or the theme's "Read more" arrow. */
+    moreArrow: z.enum(['chevron', 'theme']).optional(),
     /** 3.15 — picture rows: the picture's shape on phones (e.g. 326/154); unset keeps 50:33. */
     mediaRatioMobile: phoneRatio,
     /**
@@ -549,6 +558,8 @@ export const blockSchemas = {
     hover: z.enum(['zoom', 'greyscale', 'swap', 'none']).default('zoom'),
     /** 2.19 — how the whole card moves under the pointer (lift, tilt…), beside the picture's own `hover`. */
     cardHover: cardHoverSchema.optional(),
+    /** 3.24 — the card's picture shape and corners, plain categories, the "View project" line on hover, the zoom. */
+    card: projectCardSchema.optional(),
     filter: z.boolean().default(true),
     allLabel: z.string().trim().max(30).default('All'),
     /**
@@ -749,6 +760,8 @@ export const blockSchemas = {
         /** 3.23 — the excerpt shown or left out, and the category as a chip under the title; unset is as each layout draws it. */
         excerpt: z.boolean().optional(),
         categoryPlace: z.enum(['line', 'under']).optional(),
+        /** 3.24 — the title cut to two or three lines, with an ellipsis; unset is every line. */
+        titleLines: z.union([z.literal(2), z.literal(3)]).optional(),
       })
       .optional(),
   }),
@@ -793,6 +806,11 @@ export const blockSchemas = {
     /** How wide the picture may grow, and where a narrower one sits. */
     size: z.enum(['full', 'large', 'medium', 'small']).default('full'),
     align: z.enum(['left', 'center']).default('left'),
+    /** 3.24 — the whole picture as a link; an outside address, or `newTab`, opens in a new tab. */
+    href: safeHref.optional(),
+    newTab: z.boolean().optional(),
+    /** 3.24 — what pointing at a linked picture does: nothing (unset) or a slow zoom. */
+    hover: z.enum(['none', 'zoom']).optional(),
   }),
 
   /**
@@ -927,6 +945,11 @@ export const blockSchemas = {
     drag: z.boolean().default(false),
     /** HR6 — category links attached to the bottom of a full-screen slider. */
     strip: z.array(libraryLink).max(6).default([]),
+    /** 3.24 — card sliders: every slide's picture shape and corners, the words centred under it, and no box behind. */
+    slideRatio: z.enum(['4/3', '1/1', '3/4', '16/9']).optional(),
+    slideRadius: z.number().int().min(0).max(48).optional(),
+    slideAlign: z.enum(['left', 'center']).optional(),
+    slidePlain: z.boolean().optional(),
   }),
 
   /** SL3 — an endless strip of logos, quotes or tags. */

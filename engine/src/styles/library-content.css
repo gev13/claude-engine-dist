@@ -219,6 +219,19 @@
   .he-fgrid__link { text-decoration: underline; text-decoration-color: transparent; text-underline-offset: 4px; transition: text-decoration-color calc(150ms * var(--he-motion, 1)); }
   .he-fgrid__item:hover .he-fgrid__link { text-decoration-color: currentColor; }
   .he-fgrid__body { margin: 8px 0 0; font-size: 15px; color: var(--color-ash); }
+  /* 3.24 — the space between a card's parts, per tier, in place of each part's own margin; and a title that stays as it is under the pointer. */
+  .he-fgrid.has-pg .he-fgrid__item { row-gap: var(--he-fgrid-pg); }
+  .he-fgrid.has-pg .he-fgrid__item > * { margin-top: 0; margin-bottom: 0; }
+  @media (width <= 64rem) {
+    .he-fgrid.has-pg-t .he-fgrid__item { row-gap: var(--he-fgrid-pg-t); }
+    .he-fgrid.has-pg-t .he-fgrid__item > * { margin-top: 0; margin-bottom: 0; }
+  }
+  @media (width <= 48rem) {
+    .he-fgrid.has-pg-m .he-fgrid__item { row-gap: var(--he-fgrid-pg-m); }
+    .he-fgrid.has-pg-m .he-fgrid__item > * { margin-top: 0; margin-bottom: 0; }
+  }
+  .he-fgrid.no-title-line .he-fgrid__link { text-decoration: none; }
+  .he-fgrid__more.he-more, .he-ocard__more.he-more { display: inline-flex; align-items: center; gap: 8px; }
   /* 3.6 — an item's text inset (item style), beyond the card's own padding. */
   .he-fgrid__item > :is(.he-fgrid__eyebrow, .he-fgrid__title, .he-fgrid__body, .he-fgrid__more) { padding-inline: var(--he-item-text-inset, 0); }
   .he-fgrid__more { margin-top: 14px; font-family: var(--he-card-link-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-card-link-size, var(--he-label-size, 11px)); letter-spacing: var(--he-card-link-tracking, var(--he-label-tracking, 0.12em)); text-transform: var(--he-card-link-transform, var(--he-label-transform, uppercase)); color: var(--he-card-link-color, var(--he-label-color, var(--he-link))); font-weight: var(--he-card-link-weight, var(--he-label-weight, revert-layer)); line-height: var(--he-card-link-line, var(--he-label-line, revert-layer)); }

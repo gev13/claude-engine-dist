@@ -88,6 +88,12 @@ export const cookieNoticeSchema = z.object({
   look: z.enum(['card', 'pill']).optional(),
   /** 3.23 — notice mode: a ✕ that closes it (and counts as the answer) instead of the buttons. */
   closeButton: z.boolean().optional(),
+  /** 3.24 — that ✕ in a ring on hover (as before) or plain, never ringed or focused on arrival. */
+  closeStyle: z.enum(['ring', 'plain']).optional(),
+  /** 3.24 — a cookie drawn before the text. */
+  icon: z.enum(['none', 'cookie']).optional(),
+  /** 3.24 — the policy link's weight; unset is the text's. */
+  linkWeight: z.enum(['400', '500', '600', '700', '800']).optional(),
   /** 3.23 — its own colours and corners; unset is the surface, the text colour and the stylesheet's. */
   background: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
   textColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),

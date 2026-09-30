@@ -17,6 +17,7 @@ import {
   videoEmbedUrl,
 } from '@/lib/embeds';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
+import { projectCardLook } from '@/lib/projectCard';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
@@ -637,6 +638,9 @@ function ProjectsGrid(p: ProjectsProps) {
     cursor.style.setProperty('--y', `${e.clientY - box.top}px`);
   };
 
+  // 3.24 — the card's own look; nothing for an untouched block.
+  const look = projectCardLook(p.card);
+
   const meta = (item: ProjectItem) =>
     [item.chips?.length ? null : item.category, item.year].filter(Boolean).join(' · ') || null;
 
@@ -691,29 +695,37 @@ function ProjectsGrid(p: ProjectsProps) {
           </div>
         ) : (
           <div className="he-cq">
-            <ul className={cn('he-proj he-swipe-track', `is-${p.layout}`, `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as CSSProperties}>
+            <ul
+              className={cn('he-proj he-swipe-track', `is-${p.layout}`, `is-hover-${p.hover}`, ...look.className)}
+              style={{ '--cols': p.columns, ...look.style } as CSSProperties}
+            >
               {shown.map(({ item, i }) => {
+                const onPicture = p.layout === 'overlay' || p.layout === 'metro';
+                // 3.24 — the category line gives way to a link line under the pointer; the category moves out of the card's text into it.
+                const reveal = p.card?.reveal === 'link' && !onPicture;
+                const hasChips = Boolean(item.chips && item.chips.length > 0);
+                const metaText = reveal ? item.year || null : meta(item);
                 const text = (
                   <>
                     <h3 className="he-proj__title">{item.title}</h3>
-                    {meta(item) && <p className="he-proj__meta">{meta(item)}</p>}
+                    {metaText && <p className="he-proj__meta">{metaText}</p>}
                   </>
                 );
-                const onPicture = p.layout === 'overlay' || p.layout === 'metro';
+                const chips = hasChips && !onPicture && (
+                  <ul className="he-proj__chips">
+                    {item.chips!.map((chip) => (
+                      <li key={chip.href}>
+                        <SmartLink href={chip.href} className="he-proj__chip-link">
+                          {chip.label}
+                        </SmartLink>
+                      </li>
+                    ))}
+                  </ul>
+                );
                 return (
                   <li key={`${item.title}-${i}`} className={cn('he-proj__item', moves.className)} style={moves.style}>
                     {/* Linked category chips sit beside the card's own link, never inside it. */}
-                    {item.chips && item.chips.length > 0 && !onPicture && (
-                      <ul className="he-proj__chips">
-                        {item.chips.map((chip) => (
-                          <li key={chip.href}>
-                            <SmartLink href={chip.href} className="he-proj__chip-link">
-                              {chip.label}
-                            </SmartLink>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
+                    {!reveal && chips}
                     <MaybeLink href={item.href} className="he-proj__link">
                       <div className="he-proj__media">
                         <MediaFill imageUrl={item.imageUrl} alt={item.alt} className="he-fill" sizes="third" />
@@ -729,6 +741,18 @@ function ProjectsGrid(p: ProjectsProps) {
                         </div>
                       )}
                     </MaybeLink>
+                    {reveal && (
+                      <div className="he-proj__line">
+                        {chips || (item.category ? <p className="he-proj__meta he-proj__cat">{item.category}</p> : <span className="he-proj__cat" />)}
+                        {item.href && (
+                          /* The card's own link already names the project; this is the same address, drawn, and kept out of the tab order. */
+                          <SmartLink href={item.href} className="he-proj__reveal" tabIndex={-1} hidden>
+                            {p.card?.revealLabel || t('project.view')}
+                            {p.card?.revealLine !== false && <span className="he-proj__reveal-line" />}
+                          </SmartLink>
+                        )}
+                      </div>
+                    )}
                   </li>
                 );
               })}

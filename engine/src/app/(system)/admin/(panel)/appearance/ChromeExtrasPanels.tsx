@@ -3,8 +3,8 @@
 import { useId } from 'react';
 import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
-import type { Chrome } from '@/lib/chrome';
-import { SOCIAL_LABELS, SOCIAL_NETWORKS } from '@/lib/navigation';
+import { MOBILE_MENU_LABELS, MOBILE_MENU_VARIANTS, type Chrome } from '@/lib/chrome';
+import { SOCIAL_LABELS, SOCIAL_NETWORKS, type SocialNetwork } from '@/lib/navigation';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Appearance: the 2.19 header, menu, footer and site-wide motion options
@@ -313,10 +313,140 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
           </div>
         )}
         <Check label="List the service pages under the links" value={menu?.services} fallback onChange={set(at('services'))} />
+        {/* 3.24 — the menu as a column beside the dimmed page, and its own contact row. */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TextField label="Width" hint="e.g. 380px — a column beside the dimmed page; empty is the whole screen" value={menu?.columnWidth} maxLength={40} placeholder="the whole screen" onChange={set(at('columnWidth'))} />
+          <ChoiceField
+            label="The links stand"
+            value={menu?.verticalAlign}
+            inherited="top"
+            options={[
+              { value: 'top', label: 'From the top' },
+              { value: 'center', label: 'Centred up and down' },
+            ]}
+            onChange={set(at('verticalAlign'))}
+          />
+          <ChoiceField
+            label="The + for sub-items"
+            value={menu?.expandAt}
+            inherited="end"
+            options={[
+              { value: 'end', label: 'At the row’s far end' },
+              { value: 'beside', label: 'Beside the words' },
+            ]}
+            onChange={set(at('expandAt'))}
+          />
+        </div>
+        <Check label="Hide the site’s header while the menu is open (the close button stays)" value={menu?.hideHeader} onChange={set(at('hideHeader'))} />
+        {menu?.contactPosition !== 'off' && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <TextField label="Before the phone number" hint="e.g. Ph:" value={menu?.phoneLabel} maxLength={20} placeholder="nothing" onChange={set(at('phoneLabel'))} />
+            <ChoiceField
+              label="Social links in the menu"
+              value={menu?.socialStyle}
+              options={[
+                { value: 'icon', label: 'Icons' },
+                { value: 'name', label: 'Names' },
+                { value: 'short', label: 'Short labels' },
+              ]}
+              onChange={set(at('socialStyle'))}
+            />
+            <NetworkChecks label="Which networks" hint="none ticked shows every social link" value={menu?.socialNetworks} onChange={set(at('socialNetworks'))} />
+          </div>
+        )}
         <p className="m-0 text-[12px] text-smoke">
           For the full-screen menus. The pictures are set on each link in Menus; links without one show none. Arriving
-          effects are skipped for anyone who asks for less motion.
+          effects are skipped for anyone who asks for less motion. An empty choice for the social links follows Menus.
         </p>
+      </div>
+    </Panel>
+  );
+}
+
+/** 3.24 — networks to show, in the order ticked; none ticked writes nothing (every link, as before). */
+function NetworkChecks({ label, hint, value, onChange }: { label: string; hint?: string; value: SocialNetwork[] | undefined; onChange: (next: SocialNetwork[] | undefined) => void }) {
+  const list = value ?? [];
+  return (
+    <Field label={label} hint={hint}>
+      <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+        {SOCIAL_NETWORKS.map((network) => (
+          <label key={network} className="flex items-center gap-1.5 text-[13px] text-ash">
+            <input
+              type="checkbox"
+              className="h-4 w-4 accent-flare"
+              checked={list.includes(network)}
+              onChange={(e) => {
+                const next = e.target.checked ? [...list, network] : list.filter((n) => n !== network);
+                onChange(next.length ? next : undefined);
+              }}
+            />
+            {SOCIAL_LABELS[network]}
+          </label>
+        ))}
+      </div>
+    </Field>
+  );
+}
+
+/** 3.24 — phones (or tablets too) with a menu of their own: its style, side, width, type, links and button. */
+export function PhoneMenuPanel({ chrome, set }: Props) {
+  const phone = chrome?.mobileMenu?.onPhones;
+  const at = (key: string) => ['chrome', 'mobileMenu', 'onPhones', key] as const;
+  return (
+    <Panel title="Menu on phones">
+      <div className="space-y-5">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <ChoiceField
+            label="On phones, the menu button opens"
+            value={phone?.variant}
+            options={MOBILE_MENU_VARIANTS.map((value) => ({ value, label: MOBILE_MENU_LABELS[value].label }))}
+            onChange={set(at('variant'))}
+          />
+          {phone?.variant && (
+            <>
+              <ChoiceField
+                label="Up to"
+                value={phone?.upTo}
+                inherited="mobile"
+                options={[
+                  { value: 'mobile', label: 'Phones — 768px' },
+                  { value: 'tablet', label: 'Tablets too — 1024px' },
+                ]}
+                onChange={set(at('upTo'))}
+              />
+              <ChoiceField
+                label="Lists"
+                value={phone?.source}
+                inherited="main"
+                options={[
+                  { value: 'main', label: 'The header’s menu' },
+                  { value: 'overlay', label: 'The Overlay menu (Menus)' },
+                ]}
+                onChange={set(at('source'))}
+              />
+            </>
+          )}
+        </div>
+        {phone?.variant && (
+          <>
+            <div className="grid gap-4 sm:grid-cols-4">
+              <ChoiceField
+                label="A drawer’s side"
+                value={phone?.side}
+                options={[
+                  { value: 'left', label: 'Left' },
+                  { value: 'right', label: 'Right' },
+                ]}
+                onChange={set(at('side'))}
+              />
+              <TextField label="A drawer’s width" hint="e.g. 320px" value={phone?.width} maxLength={40} placeholder="as drawn" onChange={set(at('width'))} />
+              <TextField label="Link size" hint="e.g. 18px" value={phone?.itemSize} maxLength={40} placeholder="as drawn" onChange={set(at('itemSize'))} />
+              <ChoiceField label="Link weight" value={phone?.itemWeight} options={['300', '400', '500', '600', '700', '800'].map((value) => ({ value, label: value }))} onChange={set(at('itemWeight'))} />
+            </div>
+            <Check label="The header button as the list’s last link" value={phone?.ctaInList} onChange={set(at('ctaInList'))} />
+          </>
+        )}
+        <p className="m-0 text-[12px] text-smoke">Empty uses the menu above at every width, as before. The empty drawer side follows the one above.</p>
       </div>
     </Panel>
   );
@@ -482,6 +612,24 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
             onChange={set(['chrome', 'cursor', 'style'])}
           />
           <TextField label="Word over pictures" hint="empty shows none" value={chrome?.cursor?.mediaLabel} maxLength={16} placeholder="View" onChange={set(['chrome', 'cursor', 'mediaLabel'])} />
+          {/* 3.24 — over a picture that is a link. */}
+          <ChoiceField
+            label="Over a linked picture"
+            value={chrome?.cursor?.linkedMedia}
+            inherited="off"
+            options={[
+              { value: 'off', label: 'As over any link' },
+              { value: 'word', label: 'The word above' },
+              { value: 'arrow', label: 'A disc with an arrow' },
+            ]}
+            onChange={set(['chrome', 'cursor', 'linkedMedia'])}
+          />
+          {chrome?.cursor?.linkedMedia === 'arrow' && (
+            <>
+              <NumberField label="The disc’s size" hint="px" min={24} max={160} placeholder="64" value={chrome?.cursor?.discSize} onChange={set(['chrome', 'cursor', 'discSize'])} />
+              <TextField label="The disc’s colour" hint="a colour — empty is the text colour at 20%" value={chrome?.cursor?.discColor} maxLength={60} placeholder="rgba(255,255,255,0.2)" onChange={set(['chrome', 'cursor', 'discColor'])} />
+            </>
+          )}
         </div>
       </Panel>
 

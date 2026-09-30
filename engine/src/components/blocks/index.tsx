@@ -495,21 +495,36 @@ export function PagerBlock(p: P<'pager'>) {
 export function ImageBlock(p: P<'image'>) {
   const masked = p.mask !== 'none';
   const narrow = p.size !== 'full';
+  const rounded = !masked && (p.rounded || p.captionStyle === 'lead');
+  const img = (
+    <SiteImg
+      src={p.url}
+      alt={p.alt}
+      width={p.width}
+      height={p.height}
+      className={cn('block h-auto w-full', rounded && 'he-rounded', masked && `he-img-mask is-${p.mask}`)}
+      loading="lazy"
+    />
+  );
+  // 3.24 — the whole picture as a link, with nothing added around it; an unlinked picture renders as before.
+  const outside = p.href ? /^https?:/i.test(p.href) : false;
+  const linked = p.href ? (
+    outside || p.newTab ? (
+      <a href={p.href} target="_blank" rel="noopener noreferrer" className={cn('he-img-link', rounded && 'he-rounded', p.hover === 'zoom' && 'is-zoom')}>
+        {img}
+      </a>
+    ) : (
+      <Link href={p.href} className={cn('he-img-link', rounded && 'he-rounded', p.hover === 'zoom' && 'is-zoom')}>
+        {img}
+      </Link>
+    )
+  ) : (
+    img
+  );
   return (
     <Section size="md">
       <figure className={cn(narrow && `he-img-size is-${p.size}`, narrow && p.align === 'center' ? 'mx-auto my-0' : 'm-0')}>
-        <SiteImg
-          src={p.url}
-          alt={p.alt}
-          width={p.width}
-          height={p.height}
-          className={cn(
-            'block h-auto w-full',
-            !masked && (p.rounded || p.captionStyle === 'lead') && 'he-rounded',
-            masked && `he-img-mask is-${p.mask}`,
-          )}
-          loading="lazy"
-        />
+        {linked}
         {p.captionStyle === 'lead'
           ? (p.captionLead || p.caption) && (
               <figcaption className="he-imgcap">

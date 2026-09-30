@@ -190,3 +190,7 @@
    toolbar: the rule inside the layer above lost to `.shell`'s utility, so
    they stood a page-gutter in from the title they belong to. */
 .he-arch-crumbs .shell { padding: 0; max-width: none; }
+
+/* 3.24 — a card list whose titles stop at two or three lines, with an ellipsis. Outside the layer: a card's
+   title is drawn with utilities. */
+.has-title-lines :is(h2, h3) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--he-card-lines); line-clamp: var(--he-card-lines); overflow: hidden; }

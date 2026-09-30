@@ -281,6 +281,7 @@ export async function ProjectArchiveView({
   const grid = blockSchemas.projects.safeParse({
     layout: template.archive.layout,
     columns: template.archive.columns,
+    ...(template.archive.card ? { card: template.archive.card } : {}),
     filter: false,
     source: 'collection',
   });

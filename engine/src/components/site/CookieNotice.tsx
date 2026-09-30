@@ -67,6 +67,7 @@ function lookStyle(notice: Notice): React.CSSProperties | undefined {
   if (notice.textColor && isColor(notice.textColor)) style['--he-cookie-text'] = notice.textColor;
   if (typeof notice.radius === 'number') style['--he-cookie-radius'] = `${notice.radius}px`;
   if (typeof notice.width === 'number') style['--he-cookie-w'] = `${notice.width}px`;
+  if (notice.linkWeight) style['--he-cookie-link-w'] = notice.linkWeight;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
 
@@ -142,19 +143,34 @@ function NoticeBanner({ notice }: { notice: Notice }) {
         aria-label={notice.title || 'Cookies'}
         style={lookStyle(notice)}
       >
+        {notice.icon === 'cookie' && (
+          // 3.24 — a cookie before the words, drawn in the text colour.
+          <svg className="he-cookie__icon" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M21 12.5A9 9 0 1 1 11.5 3a3 3 0 0 0 3.5 3.5 3 3 0 0 0 3.5 3.5 3 3 0 0 0 2.5 2.5Z" />
+            <circle cx="8.5" cy="10" r="1" fill="currentColor" />
+            <circle cx="14" cy="15" r="1" fill="currentColor" />
+            <circle cx="9" cy="16" r="1" fill="currentColor" />
+          </svg>
+        )}
         <div className="he-cookie__text">
           {notice.title && <p className="he-cookie__title">{notice.title}</p>}
           {notice.body && <p className="he-cookie__body">{notice.body}</p>}
           {notice.policyHref && (
-            <Link href={notice.policyHref} className="he-cookie__link">
+            <Link href={notice.policyHref} className={cn('he-cookie__link', notice.linkWeight && 'has-weight')}>
               {notice.policyLabel || 'Cookie policy'}
             </Link>
           )}
         </div>
 
         {notice.closeButton ? (
-          // 3.23 — a notice that only informs: one ✕, which records the answer as the Accept button did.
-          <button type="button" className="he-cookie__close" onClick={() => answer('accepted')} aria-label={t('block.close')} autoFocus>
+          // 3.23 — a notice that only informs: one ✕, which records the answer as the Accept button did. (3.24) A plain one takes no focus on arrival.
+          <button
+            type="button"
+            className={cn('he-cookie__close', notice.closeStyle === 'plain' && 'is-plain')}
+            onClick={() => answer('accepted')}
+            aria-label={t('block.close')}
+            autoFocus={notice.closeStyle !== 'plain'}
+          >
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
               <path d="M6 6l12 12M18 6L6 18" />
             </svg>

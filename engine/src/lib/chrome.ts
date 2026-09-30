@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SOCIAL_NETWORKS, isSafeHref, type SocialNetwork } from './navigation';
+import { SOCIAL_LABEL_STYLES, SOCIAL_NETWORKS, isSafeHref, type SocialLabelStyle, type SocialNetwork } from './navigation';
 
 /** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
@@ -180,6 +180,40 @@ export const chromeSchema = z.object({
       contactEmail: z.boolean().optional(),
       contactAddress: z.boolean().optional(),
       contactSocial: z.boolean().optional(),
+
+      /* ── 3.24 — the full-screen menu as a column beside the dimmed page ── */
+      /** How wide the menu is, e.g. 380px; unset is the whole screen (as before). The page beside it is dimmed. */
+      columnWidth: z.string().trim().max(40).regex(LENGTH, 'A size such as 380px').optional(),
+      /** The links from the top (as before) or centred up and down. */
+      verticalAlign: z.enum(['top', 'center']).optional(),
+      /** The + at the row's far end (as before) or beside the words. */
+      expandAt: z.enum(['end', 'beside']).optional(),
+      /** The site's header out of sight while the menu is open; the close button stays. */
+      hideHeader: z.boolean().optional(),
+      /** The contact row's social links: icons, names or short labels, and which networks; unset follows Menus. */
+      socialStyle: z.enum(SOCIAL_LABEL_STYLES).optional(),
+      socialNetworks: z.array(z.enum(SOCIAL_NETWORKS)).max(20).optional(),
+      /** Words before the phone number, e.g. "Ph:". */
+      phoneLabel: z.string().trim().max(20).optional(),
+
+      /* ── 3.24 — phones: a menu of their own ── */
+      onPhones: z
+        .object({
+          /** The menu style on phones; unset uses the one above at every width (as before). */
+          variant: z.enum(MOBILE_MENU_VARIANTS).optional(),
+          /** Up to which width: phones (768px, unset) or tablets too (1024px). */
+          upTo: z.enum(['mobile', 'tablet']).optional(),
+          side: z.enum(['left', 'right']).optional(),
+          /** A drawer's width, e.g. 320px. */
+          width: z.string().trim().max(40).regex(LENGTH, 'A size such as 320px').optional(),
+          itemSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 18px').optional(),
+          itemWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
+          /** Which menu: the header's (unset) or the Overlay menu from Menus. */
+          source: z.enum(['main', 'overlay']).optional(),
+          /** The header button as the last link of the list, instead of a button. */
+          ctaInList: z.boolean().optional(),
+        })
+        .optional(),
     })
     .optional(),
 
@@ -221,6 +255,11 @@ export const chromeSchema = z.object({
       style: z.enum(['off', 'dotRing', 'dot', 'ring', 'blend']).optional(),
       /** The word over pictures and films ("View"); empty shows none. */
       mediaLabel: z.string().trim().max(16).optional(),
+      /** 3.24 — over a picture that is a link: nothing more (as before), the word above, or a disc with an arrow. */
+      linkedMedia: z.enum(['off', 'word', 'arrow']).optional(),
+      /** 3.24 — that disc's size, px, and colour. */
+      discSize: z.number().int().min(24).max(160).optional(),
+      discColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
     })
     .optional(),
 
@@ -370,6 +409,23 @@ export type ResolvedChrome = {
     phone?: string;
     closeAtToggle: boolean;
     servicesLook: 'list' | 'rows';
+    columnWidth?: string;
+    verticalAlign: 'top' | 'center';
+    expandAt: 'end' | 'beside';
+    hideHeader: boolean;
+    socialStyle?: SocialLabelStyle;
+    socialNetworks?: SocialNetwork[];
+    phoneLabel?: string;
+    onPhones?: {
+      variant: MobileMenuVariant;
+      upTo: 'mobile' | 'tablet';
+      side: 'left' | 'right';
+      width?: string;
+      itemSize?: string;
+      itemWeight?: string;
+      source: 'main' | 'overlay';
+      ctaInList: boolean;
+    };
   };
   footer: {
     variant: FooterVariant;
@@ -387,7 +443,7 @@ export type ResolvedChrome = {
     legalSeparator: 'none' | 'bar' | 'slash' | 'dot';
     contactLinks: SocialNetwork[];
   };
-  cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
+  cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string; linkedMedia: 'off' | 'word' | 'arrow'; discSize?: number; discColor?: string };
   transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean; firstLoad: boolean; leave: 'fade' | 'fadeUp' };
   rails: {
     scrollSide: 'left' | 'right' | 'none';
@@ -491,6 +547,25 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       contactEmail: c.mobileMenu?.contactEmail !== false,
       contactAddress: c.mobileMenu?.contactAddress !== false,
       contactSocial: c.mobileMenu?.contactSocial !== false,
+      columnWidth: c.mobileMenu?.columnWidth && LENGTH.test(c.mobileMenu.columnWidth) ? c.mobileMenu.columnWidth : undefined,
+      verticalAlign: c.mobileMenu?.verticalAlign ?? 'top',
+      expandAt: c.mobileMenu?.expandAt ?? 'end',
+      hideHeader: c.mobileMenu?.hideHeader ?? false,
+      socialStyle: c.mobileMenu?.socialStyle,
+      socialNetworks: c.mobileMenu?.socialNetworks?.length ? c.mobileMenu.socialNetworks : undefined,
+      phoneLabel: c.mobileMenu?.phoneLabel || undefined,
+      onPhones: c.mobileMenu?.onPhones?.variant
+        ? {
+            variant: c.mobileMenu.onPhones.variant,
+            upTo: c.mobileMenu.onPhones.upTo ?? 'mobile',
+            side: c.mobileMenu.onPhones.side ?? c.mobileMenu?.side ?? 'right',
+            width: c.mobileMenu.onPhones.width && LENGTH.test(c.mobileMenu.onPhones.width) ? c.mobileMenu.onPhones.width : undefined,
+            itemSize: c.mobileMenu.onPhones.itemSize && LENGTH.test(c.mobileMenu.onPhones.itemSize) ? c.mobileMenu.onPhones.itemSize : undefined,
+            itemWeight: c.mobileMenu.onPhones.itemWeight,
+            source: c.mobileMenu.onPhones.source ?? 'main',
+            ctaInList: c.mobileMenu.onPhones.ctaInList ?? false,
+          }
+        : undefined,
     },
     footer: {
       variant: c.footer?.variant ?? 'sitemap',
@@ -508,7 +583,13 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       legalSeparator: c.footer?.legalSeparator ?? 'none',
       contactLinks: c.footer?.contactLinks ?? [],
     },
-    cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
+    cursor: {
+      style: c.cursor?.style ?? 'off',
+      mediaLabel: c.cursor?.mediaLabel || undefined,
+      linkedMedia: c.cursor?.linkedMedia ?? 'off',
+      discSize: c.cursor?.discSize,
+      discColor: c.cursor?.discColor && COLOR.test(c.cursor.discColor) ? c.cursor.discColor : undefined,
+    },
     transition: {
       style: c.transition?.style ?? 'off',
       preloader: c.transition?.preloader ?? false,

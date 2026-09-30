@@ -301,7 +301,7 @@ export default async function SiteLayout({
           {/* 3.5 — every section's entrance, when the site sets one. */}
           {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
-          {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
+          {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} linkedMedia={chrome.cursor.linkedMedia} discSize={chrome.cursor.discSize} discColor={chrome.cursor.discColor} />}
           {chrome.transition.style !== 'off' && !chrome.reduceMotion && chrome.transition.firstLoad && (
             // 3.22 — the first page arrives like the others: marked before paint, so it never shows and then vanishes.
             <script dangerouslySetInnerHTML={{ __html: FIRST_ENTER_SCRIPT }} />

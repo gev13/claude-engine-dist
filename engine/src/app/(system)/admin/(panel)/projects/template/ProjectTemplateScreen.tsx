@@ -6,6 +6,7 @@ import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Field, Input, Panel, Select, Spinner } from '@/components/admin/ui';
 import { useToast } from '@/components/admin/useToast';
+import { ProjectCardFields } from '@/components/admin/ProjectCardFields';
 import { ColorField } from '@/components/admin/styleFields';
 import { api, fetcher } from '@/lib/admin/client';
 import type { AnyBlock } from '@/lib/blocks';
@@ -204,6 +205,12 @@ export function ProjectTemplateScreen() {
               />
             </Field>
           </div>
+          {form.archive.layout !== 'list' && (
+            <div className="mt-4">
+              {/* 3.24 — the archive cards' own look, as the projects block has it. */}
+              <ProjectCardFields value={form.archive.card} onChange={(card) => setArchive('card', card)} />
+            </div>
+          )}
           <p className="m-0 mt-3 text-[12px] text-smoke">
             Category and tag archives page on the server — /portfolio-category/branding/page/2.
           </p>

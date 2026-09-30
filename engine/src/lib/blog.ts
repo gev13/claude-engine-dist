@@ -167,6 +167,8 @@ export const blogSchema = z.object({
       excerpt: z.boolean().optional(),
       /** 3.23 — the category in the line with the date (as the card grid has it), or as a chip under the title. */
       categoryPlace: z.enum(['line', 'under']).optional(),
+      /** 3.24 — the title cut to two or three lines, with an ellipsis; unset is every line. */
+      titleLines: z.union([z.literal(2), z.literal(3)]).optional(),
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -200,7 +202,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under' }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3 }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';
@@ -361,4 +363,10 @@ export type BlogArchiveTemplate = { before: unknown[]; after: unknown[] };
 export function resolveBlogArchive(stored: unknown): BlogArchiveTemplate {
   const parsed = blogArchiveSchema.safeParse(stored ?? {});
   return parsed.success ? parsed.data : { before: [], after: [] };
+}
+
+/** 3.24 — a card list whose titles stop at two or three lines: its class and custom property, or nothing. */
+export function titleClamp(card: { titleLines?: 2 | 3 } | undefined): { className?: string; style: Record<string, number> } {
+  const lines = card?.titleLines;
+  return lines === 2 || lines === 3 ? { className: 'has-title-lines', style: { '--he-card-lines': lines } } : { style: {} };
 }

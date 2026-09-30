@@ -1,6 +1,6 @@
 import { PostCollection } from '@/components/blocks/dynamic';
 import { Card, CardGrid } from '@/components/ui/Card';
-import type { ResolvedBlog } from '@/lib/blog';
+import { titleClamp, type ResolvedBlog } from '@/lib/blog';
 import { wantsTilt } from '@/lib/cardHover';
 import { formatDate } from '@/lib/utils';
 import { CardTilt } from './CardTilt';
@@ -36,6 +36,8 @@ export function BlogList({
   if (blog.index === 'grid') {
     /* The card grid's line above the title: its date, as always — or what the
        site picked (2.18), joined with a middle dot. */
+    // 3.24 — titles cut to two or three lines.
+    const clamp = titleClamp(card);
     const category = (p: PostRow) => (p.kind === 'research' ? labels?.research : (p.categoryName ?? labels?.article));
     const eyebrow = (p: PostRow) => {
       const parts = [
@@ -49,7 +51,14 @@ export function BlogList({
       <CardGrid
         cols={3}
         id={listId}
-        style={card.image && card.ratio ? ({ '--he-ucard-ratio': card.ratio.replace('/', ' / ') } as React.CSSProperties) : undefined}
+        className={clamp.className}
+        style={
+          card.image && card.ratio
+            ? ({ '--he-ucard-ratio': card.ratio.replace('/', ' / '), ...clamp.style } as React.CSSProperties)
+            : clamp.className
+              ? (clamp.style as React.CSSProperties)
+              : undefined
+        }
       >
         {posts.map((p) => (
           <Card

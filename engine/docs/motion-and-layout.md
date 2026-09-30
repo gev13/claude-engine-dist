@@ -427,3 +427,42 @@ Every option below is off, or draws what it drew before, until it is set.
 - **Footer → Between the legal links**: a bar, a slash or a dot.
 - **Side rails → Networks on the rail**: which social links the rail shows,
   in the order ticked. None ticked shows every link, as before.
+
+## Linked pictures, card grids, menus and links (3.24)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Image → Link**: the whole picture is the link, with nothing added around
+  it; an outside address, or *Open in a new tab*, opens a new tab. *When
+  pointed at*: nothing, or a slow zoom.
+- **Card grid** (icon features, image cards, pictures with text over them):
+  *Space between a card's parts* (picture, title, text, link), and on tablets
+  and phones; *A linked title, pointed at*: underlined (as before) or left
+  as it is; *The card link's mark*: the chevron (as before) or the theme's
+  “Read more” arrow, which Appearance → Buttons styles like every other
+  card's.
+- **Carousel → Arrows → Under the slides, beside the indicator**: the counter
+  or dots on the left and the arrows on the right. Card sliders also take a
+  picture shape, the pictures' corners, the words centred under the picture
+  and no box behind a slide.
+- **Appearance → Colours → Header, footer and card links, pointed at**: their
+  colour changes (as before), an underline, or a line that sweeps out to the
+  left and back in from the right; with the line's thickness. Held still for
+  anyone who asks for less motion.
+- **Appearance → Motion → Pointer → Over a linked picture**: as over any link
+  (as before), the word, or a translucent disc with an arrow, with its size
+  and colour.
+
+### Menus
+
+- **Full-screen menu → Width** (e.g. 380px): the menu becomes a column beside
+  the dimmed page. *The links stand* from the top or centred up and down; *The
+  + for sub-items* at the row's far end or beside the words; *Hide the site's
+  header while the menu is open* (the close button stays, in the menu
+  button's own circle when it takes its place). The contact row's social
+  links can be icons, names or short labels, with a choice of networks, and
+  words before the phone number (“Ph:”).
+- **Menu on phones**: phones (or tablets too) can open a different menu — a
+  drawer from the left at 320px, say — with its own link size and weight, its
+  own list (the header's menu or the Overlay menu) and the header button as
+  the list's last link. Empty uses the menu above at every width, as before.

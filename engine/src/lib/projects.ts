@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isColor, isLength } from './theme';
+import { projectCardSchema } from './projectCard';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Projects (2.14) — what a project page looks like, and what a project can
@@ -61,6 +62,8 @@ export const projectTemplateSchema = z.object({
       layout: z.enum(['classic', 'overlay', 'minimal', 'metro', 'list']).default('classic'),
       columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
       perPage: z.number().int().min(1).max(48).default(12),
+      /** 3.24 — the cards' own look, as the projects block has it. */
+      card: projectCardSchema.optional(),
     })
     .prefault({}),
   /** Include published projects in the site's search results. */

@@ -643,6 +643,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
   }
 
+  // 3.24 — text links under the pointer: an underline, or a line that sweeps out to the left and back in from the right.
+  if (safeSelector === ':root') {
+    const links = linkHoverCss(theme.links);
+    if (links) parts.push(links);
+  }
+
   if (theme.layout?.sectionRules === false && safeSelector === ':root') {
     // 3.23 — and the sections inside a project's or a post's article, which sit one level deeper.
     parts.push('#main>*,#main>[class*="he-b-"]>*,#main>article>*,#main>article>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}.he-ftr{border-top-width:0}');
@@ -704,4 +710,39 @@ function phoneLayoutCss(theme: Theme): string {
     );
   }
   return rules.length ? `@media (max-width:768px){${rules.join('')}}` : '';
+}
+
+/* 3.24 — the text links a "link hover" reaches, each with what counts as pointing at it: a card's
+   link line answers the whole card, which is the link. */
+const LINK_TARGETS: readonly [target: string, hover: string][] = [
+  ['.he-hdr__link', '.he-hdr__link:hover'],
+  ['.he-ftr__links a', '.he-ftr__links a:hover'],
+  ['.he-ftr__legal a', '.he-ftr__legal a:hover'],
+  ['.he-menu__sub a', '.he-menu__sub a:hover'],
+  ['.he-more', 'a:hover .he-more,.he-more:hover'],
+  ['.he-fgrid__more', '.he-fgrid__item:hover .he-fgrid__more'],
+  ['.he-card__more', 'a.he-card:hover .he-card__more'],
+];
+
+export function linkHoverCss(links: Theme['links']): string {
+  const hover = links?.hover;
+  if (hover !== 'underline' && hover !== 'sweep') return '';
+  const width = links?.lineWidth && isLength(links.lineWidth) ? links.lineWidth : 'max(1px,0.08em)';
+  const targets = LINK_TARGETS.map(([target]) => target).join(',');
+  const hovers = LINK_TARGETS.map(([, on]) => on).join(',');
+  if (hover === 'underline') {
+    return `${hovers}{text-decoration:underline;text-decoration-thickness:${width};text-underline-offset:0.25em}`;
+  }
+  const still = hovers
+    .split(',')
+    .map((on) => `.he-reduce-motion ${on}`)
+    .join(',');
+  return (
+    `:root{--he-sweep-w:${width}}` +
+    `${targets}{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-origin:content-box;background-position:0 100%;background-size:0% var(--he-sweep-w)}` +
+    `${hovers}{animation:he-link-sweep calc(400ms * var(--he-motion,1)) cubic-bezier(0.58,0.3,0.005,1) forwards}` +
+    '@keyframes he-link-sweep{0%{background-size:100% var(--he-sweep-w);background-position:0 100%}50%{background-size:0% var(--he-sweep-w);background-position:0 100%}50.01%{background-size:0% var(--he-sweep-w);background-position:100% 100%}100%{background-size:100% var(--he-sweep-w);background-position:100% 100%}}' +
+    `@media (prefers-reduced-motion:reduce){${hovers}{animation:none;background-size:100% var(--he-sweep-w)}}` +
+    `${still}{animation:none;background-size:100% var(--he-sweep-w)}`
+  );
 }

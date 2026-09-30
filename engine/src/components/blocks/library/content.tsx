@@ -176,7 +176,20 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     ...(p.mediaFit === 'contain' ? { '--he-icard-fit': 'contain' } : {}),
     ...(p.mediaMaxHeight ? { '--he-icard-max': p.mediaMaxHeight } : {}),
     ...(p.iconSize ? { '--he-feat-size': p.iconSize } : {}),
+    // 3.24 — the space between a card's parts, per tier.
+    ...(p.partGap ? { '--he-fgrid-pg': p.partGap } : {}),
+    ...(p.partGapTablet ? { '--he-fgrid-pg-t': p.partGapTablet } : {}),
+    ...(p.partGapMobile ? { '--he-fgrid-pg-m': p.partGapMobile } : {}),
   } as React.CSSProperties;
+  // 3.24 — the card link's mark: the chevron as before, or the theme's "Read more" arrow (which Appearance → Buttons styles).
+  const moreMark =
+    p.moreArrow === 'theme' ? (
+      <span className="he-more__icon" aria-hidden="true">
+        →
+      </span>
+    ) : (
+      '›'
+    );
 
   /* The mosaic is the tile grid with two tile sizes, not a second component:
      same markup, same fields, same editor — the difference is which cells the
@@ -321,6 +334,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     icons && `is-icon-${p.iconStyle} is-pos-${p.iconPosition}`,
     icons && p.iconSize && 'has-icon-size',
     !icons && p.mediaRatio === 'auto' && 'is-media-auto',
+    p.partGap && 'has-pg',
+    p.partGapTablet && 'has-pg-t',
+    p.partGapMobile && 'has-pg-m',
+    p.titleHover === 'none' && 'no-title-line',
   );
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
@@ -356,8 +373,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                     <h3 className="he-ocard__title">{title}</h3>
                     {c.body && <p className="he-ocard__body">{c.body}</p>}
                     {c.href && c.buttonLabel && (
-                      <span className="he-ocard__more" aria-hidden="true">
-                        {c.buttonLabel} ›
+                      <span className={cn('he-ocard__more', p.moreArrow === 'theme' && 'he-more')} aria-hidden="true">
+                        {c.buttonLabel} {moreMark}
                       </span>
                     )}
                   </div>
@@ -374,8 +391,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 <h3 className="he-fgrid__title">{title}</h3>
                 {c.body && <p className="he-fgrid__body">{c.body}</p>}
                 {c.href && c.buttonLabel && (
-                  <span className="he-fgrid__more" aria-hidden="true">
-                    {c.buttonLabel} ›
+                  <span className={cn('he-fgrid__more', p.moreArrow === 'theme' && 'he-more')} aria-hidden="true">
+                    {c.buttonLabel} {moreMark}
                   </span>
                 )}
                 {/* 3.16 — a button of its own under the text (an outside address opens in a new tab). */}

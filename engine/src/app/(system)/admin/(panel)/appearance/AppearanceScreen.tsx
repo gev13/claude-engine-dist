@@ -42,7 +42,7 @@ import {
 } from '@/lib/chrome';
 import { isSafeHref } from '@/lib/navigation';
 import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
-import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel } from './ChromeExtrasPanels';
+import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel, PhoneMenuPanel } from './ChromeExtrasPanels';
 import { ButtonExtrasPanel, EyebrowMarkerPanel, NavTypePanel, PanelSettingsPanel, ShapePanel } from './ShapePanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
@@ -344,6 +344,24 @@ function AppearanceScreenInner() {
                   />
                   Underline links in rich text
                 </label>
+                {/* 3.24 — the header, footer, card and menu links under the pointer. */}
+                <div className="mt-5 grid gap-4 sm:grid-cols-2">
+                  <ChoiceField
+                    label="Header, footer and card links, pointed at"
+                    hint="the site’s own links, not the ones in rich text"
+                    value={theme.links?.hover}
+                    inherited="color"
+                    options={[
+                      { value: 'color', label: 'Their colour changes (as before)' },
+                      { value: 'underline', label: 'An underline' },
+                      { value: 'sweep', label: 'A line sweeping out and back in' },
+                    ]}
+                    onChange={set(['links', 'hover'])}
+                  />
+                  {theme.links?.hover && theme.links.hover !== 'color' && (
+                    <LengthField label="That line’s thickness" placeholder="e.g. 0.18em" emptyLabel="a hairline" value={get(['links', 'lineWidth'])} onChange={set(['links', 'lineWidth'])} />
+                  )}
+                </div>
               </Panel>
 
               {/* Kept apart from the palette on purpose: these carry meaning
@@ -829,6 +847,7 @@ function AppearanceScreenInner() {
               </Panel>
 
               <MenuExtrasPanel chrome={theme.chrome} set={set} />
+              <PhoneMenuPanel chrome={theme.chrome} set={set} />
 
               <Panel title="Announcement ribbon">
                 <div className="space-y-4">

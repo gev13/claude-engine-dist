@@ -35,6 +35,12 @@ html.he-cursor-down .he-cursor__dot { transform-origin: center; scale: 0.8; }
 html.he-cursor-link .he-cursor.is-blend .he-cursor__dot { width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: 1; }
 .he-cursor__label { position: absolute; top: 50%; left: 50%; translate: -50% -50%; padding: 6px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-bone); font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); white-space: nowrap; font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 .he-cursor__dot:has(.he-cursor__label) { width: 0; height: 0; margin: 0; background: transparent; opacity: 1; }
+/* 3.24 — over a linked picture: a translucent disc with an arrow, in place of the dot and the ring. */
+.he-cursor__dot.is-carrier { width: 0; height: 0; margin: 0; background: transparent; }
+.he-cursor .he-cursor__dot:has(.he-cursor__disc) { width: 0; height: 0; margin: 0; background: transparent; opacity: 1; mix-blend-mode: normal; }
+html.he-cursor-media .he-cursor__ring { opacity: 0; }
+.he-cursor__disc { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: var(--he-cursor-disc, 64px); height: var(--he-cursor-disc, 64px); translate: -50% -50%; border-radius: 50%; background: var(--he-cursor-disc-bg, color-mix(in srgb, var(--color-bone) 20%, transparent)); color: var(--color-bone); backdrop-filter: blur(2px); animation: he-cursor-disc calc(200ms * var(--he-motion, 1)) ease-out; }
+@keyframes he-cursor-disc { from { scale: 0.4; opacity: 0; } }
 
 /* ── T28: page transitions ───────────────────────────────────────────────── */
 

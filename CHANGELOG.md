@@ -10,6 +10,40 @@ improvements.
 
 ---
 
+## 3.24.0 — 2026-09-30
+
+**Pictures, cards and menus, closer: linked pictures, project cards, a menu
+column and a menu for phones.** Every option is off, or draws what it drew
+before, until it is set.
+
+- **Image → Link**: the whole picture links, with an optional slow zoom.
+- **Project cards** (the block and the archives): picture shape and corners,
+  zoom amount, plain categories, and a hover that slides the category line
+  away and a “View project” line in, with a short line after it.
+- **Pointer over a linked picture**: the word, or a translucent disc with an
+  arrow, with its size and colour.
+- **Card grid**: space between a card's parts per screen size, a title that
+  stays as it is under the pointer, and the theme's “Read more” arrow for the
+  card link.
+- **Full-screen menu**: a column beside the dimmed page, links centred up and
+  down, the + beside the words, the header hidden while it is open, its own
+  social style and networks, words before the phone number.
+- **Menu on phones**: its own style (a left drawer, say), width, link size
+  and weight, list, and the header button as the last link.
+- **Cookie notice**: a cookie before the text, a plain ✕, the policy link's
+  weight.
+- **Links, pointed at**: an underline, or a line sweeping out and back in.
+- **Card titles**: at most two or three lines, with an ellipsis.
+- **Card sliders**: the arrows under the slides beside the indicator, the
+  picture shape and corners, centred words, no box behind a slide.
+- A card slide's “Learn more” is a Site translation now.
+
+Checked with a computed-style diff against 3.23.0 of 28 pages and the 26
+block library and template pages at 1440 and 375px, and of a copy of a live
+site's 14 pages at 1440, 1024 and 375px: no change.
+
+---
+
 ## 3.23.0 — 2026-09-30
 
 **The main pages, closer: the blog index with a page, headers, pagers and

@@ -58,6 +58,10 @@
 
   /* ── P3-B2: image masks and widths ───────────────────────────────────── */
 
+  /* 3.24 — a linked picture: the link is the picture's own box, nothing added around it. */
+  .he-img-link { display: block; overflow: hidden; color: inherit; }
+  .he-img-link.is-zoom img { transition: transform calc(600ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
+  .he-img-link.is-zoom:is(:hover, :focus-visible) img { transform: scale(1.04); }
   .he-img-size.is-large { max-width: 900px; }
   .he-img-size.is-medium { max-width: 640px; }
   .he-img-size.is-small { max-width: 420px; }

@@ -207,6 +207,11 @@
   .he-cookie.is-pill .he-cookie__link { margin: 0; text-decoration: underline; text-underline-offset: 3px; }
   .he-cookie__close { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; margin-left: auto; padding: 0; border: 0; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
   .he-cookie__close:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+  /* 3.24 — a plain ✕, a cookie before the words, the policy link's own weight. */
+  .he-cookie__close.is-plain { width: auto; height: auto; padding: 4px; }
+  .he-cookie__close.is-plain:hover { background: transparent; opacity: 0.75; }
+  .he-cookie__icon { flex-shrink: 0; align-self: center; }
+  .he-cookie__link.has-weight { font-weight: var(--he-cookie-link-w); }
 
   .he-cookie.is-bottom-bar { inset: auto 0 0 0; border-inline: 0; border-bottom: 0; justify-content: center; }
   .he-cookie.is-bottom-left { inset: auto auto 24px 24px; max-width: 420px; border-radius: 16px; }
