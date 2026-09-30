@@ -950,6 +950,11 @@ export const blockSchemas = {
     slideRadius: z.number().int().min(0).max(48).optional(),
     slideAlign: z.enum(['left', 'center']).optional(),
     slidePlain: z.boolean().optional(),
+    /** 3.25 — card slides: the "Learn more" line under a linked slide (unset, shown) or none — the whole slide is still the link. */
+    slideMore: z.boolean().optional(),
+    /** 3.25 — the arrows in circles (as before) or as bare arrows, and their size in px. */
+    arrowStyle: z.enum(['circle', 'plain']).optional(),
+    arrowSize: z.number().int().min(12).max(64).optional(),
   }),
 
   /** SL3 — an endless strip of logos, quotes or tags. */

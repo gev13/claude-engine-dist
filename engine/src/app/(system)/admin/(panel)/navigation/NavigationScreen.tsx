@@ -26,6 +26,7 @@ type Cta = { label: string; href: string };
 type Resolved = {
   header: NavItem[];
   overlay?: NavItem[];
+  phone?: NavItem[];
   /** Null when there is no header button. */
   headerCta: Cta | null;
   headerSecondaryCta: Cta | null;
@@ -66,10 +67,11 @@ function NavigationScreenInner() {
   const [socialStyle, setSocialStyle] = useState<SocialLabelStyle>('icon');
   const [saved, setSaved] = useState('');
   const [saving, setSaving] = useState(false);
-  const [tab, setTab] = useState<'header' | 'footer' | 'overlay'>('header');
+  const [tab, setTab] = useState<'header' | 'footer' | 'overlay' | 'phone'>('header');
   const [overlay, setOverlay] = useState<NavItem[]>([]);
+  const [phone, setPhone] = useState<NavItem[]>([]);
 
-  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[]; ss: SocialLabelStyle; ov?: NavItem[] }) =>
+  const snapshot = (s: { h: NavItem[]; c: Cta; s2: Cta; f: FooterColumn[]; n: string; a: string; so: SocialLink[]; ss: SocialLabelStyle; ov?: NavItem[]; ph?: NavItem[] }) =>
     JSON.stringify(s);
 
   useEffect(() => {
@@ -88,10 +90,11 @@ function NavigationScreenInner() {
     setSocial(n.social ?? []);
     setSocialStyle(n.socialStyle ?? 'icon');
     setOverlay(n.overlay ?? []);
-    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [], ss: n.socialStyle ?? 'icon', ov: n.overlay ?? [] }));
+    setPhone(n.phone ?? []);
+    setSaved(snapshot({ h: n.header, c, s2, f: n.footer, n: n.footerNote ?? '', a: n.footerAddress ?? '', so: n.social ?? [], ss: n.socialStyle ?? 'icon', ov: n.overlay ?? [], ph: n.phone ?? [] }));
   }, [data]);
 
-  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social, ss: socialStyle, ov: overlay }) !== saved;
+  const dirty = snapshot({ h: header, c: cta, s2: secondary, f: footer, n: note, a: address, so: social, ss: socialStyle, ov: overlay, ph: phone }) !== saved;
 
   async function save() {
     const pair = (value: Cta, name: string) => {
@@ -127,6 +130,7 @@ function NavigationScreenInner() {
         // Icons are the default and are left out, so an untouched site saves what it always did.
         ...(socialStyle !== 'icon' ? { socialStyle } : {}),
         ...(overlay.length ? { overlay } : {}),
+        ...(phone.length ? { phone } : {}),
       };
       const result = await api<Response>('/api/admin/navigation', { method: 'PUT', json: body });
       await mutate(result, { revalidate: false });
@@ -180,7 +184,7 @@ function NavigationScreenInner() {
       )}
 
       <nav className="mb-6 flex gap-1 border-b-2 border-hairline">
-        {(['header', 'overlay', 'footer'] as const).map((t) => (
+        {(['header', 'overlay', 'phone', 'footer'] as const).map((t) => (
           <button
             key={t}
             type="button"
@@ -190,12 +194,20 @@ function NavigationScreenInner() {
               tab === t ? 'border-flare text-bone' : 'border-transparent text-smoke hover:text-bone',
             )}
           >
-            {t === 'header' ? 'Header menu' : t === 'overlay' ? 'Overlay menu' : 'Footer menu'}
+            {t === 'header' ? 'Header menu' : t === 'overlay' ? 'Overlay menu' : t === 'phone' ? 'Phone menu' : 'Footer menu'}
           </button>
         ))}
       </nav>
 
-      {tab === 'overlay' ? (
+      {tab === 'phone' ? (
+        <Panel title="Phone menu">
+          <p className="m-0 mb-4 text-[13px] text-smoke">
+            The list on phones, when it should differ from the header’s and the overlay’s — another order, or fewer items. Used when Appearance → Menus → Menu on
+            phones takes its items from here; empty uses the header’s menu.
+          </p>
+          <ItemList items={phone} onChange={setPhone} pages={pages?.items ?? []} allowChildren />
+        </Panel>
+      ) : tab === 'overlay' ? (
         <Panel title="Overlay menu">
           <p className="m-0 mb-4 text-[13px] text-smoke">
             The full-screen menu’s own list, when it should differ from the header’s — another order, or an item such as “Request a quote”. Used when Appearance → Menus

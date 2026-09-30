@@ -58,6 +58,8 @@ export type ResolvedNavigation = {
   header: NavItem[];
   /** 2.19 — the Overlay menu; empty when none is saved (the header's is used). */
   overlay: NavItem[];
+  /** 3.25 — the Phone menu; empty when none is saved. */
+  phone: NavItem[];
   /** Null when there is no button: none saved, and none bundled. */
   headerCta: HeaderCta | null;
   headerSecondaryCta: HeaderCta | null;
@@ -106,6 +108,7 @@ export async function getNavigation(locale?: Locale): Promise<ResolvedNavigation
     footerNote: saved.footerNote,
     footerAddress: saved.footerAddress,
     overlay: saved.overlay ?? [],
+    phone: saved.phone ?? [],
     social: saved.social ?? [],
     socialStyle: saved.socialStyle,
     fallback,

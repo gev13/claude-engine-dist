@@ -337,6 +337,22 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
             onChange={set(at('expandAt'))}
           />
         </div>
+        {/* 3.25 — the page beside a column, and the column's own colour. */}
+        {menu?.columnWidth && (
+          <div className="grid gap-4 sm:grid-cols-3">
+            <NumberField label="The page beside it" hint="% dark — 0 is the page as it is; empty is 50" min={0} max={100} placeholder="50" value={menu?.dim} onChange={set(at('dim'))} />
+            <ChoiceField
+              label="The column"
+              value={menu?.columnPanel}
+              inherited="panel"
+              options={[
+                { value: 'panel', label: 'In the menu’s colour' },
+                { value: 'none', label: 'No colour — the links on the dimmed page' },
+              ]}
+              onChange={set(at('columnPanel'))}
+            />
+          </div>
+        )}
         <Check label="Hide the site’s header while the menu is open (the close button stays)" value={menu?.hideHeader} onChange={set(at('hideHeader'))} />
         {menu?.contactPosition !== 'off' && (
           <div className="grid gap-4 sm:grid-cols-3">
@@ -352,6 +368,27 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
               onChange={set(at('socialStyle'))}
             />
             <NetworkChecks label="Which networks" hint="none ticked shows every social link" value={menu?.socialNetworks} onChange={set(at('socialNetworks'))} />
+            {/* 3.25 */}
+            <ChoiceField
+              label="Stands out"
+              value={menu?.contactEmphasis}
+              inherited="value"
+              options={[
+                { value: 'value', label: 'The details (the heading small)' },
+                { value: 'title', label: 'The heading (the details muted)' },
+              ]}
+              onChange={set(at('contactEmphasis'))}
+            />
+            <ChoiceField
+              label="The social links drawn"
+              value={menu?.socialLook}
+              inherited="circle"
+              options={[
+                { value: 'circle', label: 'In circles' },
+                { value: 'plain', label: 'Bare' },
+              ]}
+              onChange={set(at('socialLook'))}
+            />
           </div>
         )}
         <p className="m-0 text-[12px] text-smoke">
@@ -421,6 +458,7 @@ export function PhoneMenuPanel({ chrome, set }: Props) {
                 options={[
                   { value: 'main', label: 'The header’s menu' },
                   { value: 'overlay', label: 'The Overlay menu (Menus)' },
+                  { value: 'phone', label: 'The Phone menu (Menus)' },
                 ]}
                 onChange={set(at('source'))}
               />
@@ -443,7 +481,24 @@ export function PhoneMenuPanel({ chrome, set }: Props) {
               <TextField label="Link size" hint="e.g. 18px" value={phone?.itemSize} maxLength={40} placeholder="as drawn" onChange={set(at('itemSize'))} />
               <ChoiceField label="Link weight" value={phone?.itemWeight} options={['300', '400', '500', '600', '700', '800'].map((value) => ({ value, label: value }))} onChange={set(at('itemWeight'))} />
             </div>
-            <Check label="The header button as the list’s last link" value={phone?.ctaInList} onChange={set(at('ctaInList'))} />
+            <div className="flex flex-wrap gap-x-6 gap-y-2">
+              <Check label="The header button as the list’s last link" value={phone?.ctaInList} onChange={set(at('ctaInList'))} />
+              {/* 3.25 */}
+              <Check label="The logo at the top" value={phone?.logo} fallback onChange={set(at('logo'))} />
+              <Check label="Lines between the links" value={phone?.dividers} fallback onChange={set(at('dividers'))} />
+            </div>
+            <div className="max-w-[260px]">
+              <ChoiceField
+                label="Opens a link’s sub-items"
+                value={phone?.expandIcon}
+                inherited="chevron"
+                options={[
+                  { value: 'chevron', label: 'A chevron' },
+                  { value: 'plus', label: 'A plain +' },
+                ]}
+                onChange={set(at('expandIcon'))}
+              />
+            </div>
           </>
         )}
         <p className="m-0 text-[12px] text-smoke">Empty uses the menu above at every width, as before. The empty drawer side follows the one above.</p>

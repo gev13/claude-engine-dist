@@ -10,6 +10,30 @@ improvements.
 
 ---
 
+## 3.25.0 — 2026-09-30
+
+**Menus and sliders, the details.** Every option is off, or draws what it
+drew before, until it is set.
+
+Fixed: a project card's “View project” line sat below its card, over the
+next row's space; it now sits inside the card, right under the title.
+
+Added:
+
+- **Full-screen menu as a column**: how dark the page beside it is, and a
+  column with no colour of its own (the links on the dimmed page).
+- **Contact row**: the heading or the details stand out; bare social icons.
+- **Menu on phones**: no logo, no lines between links, a plain + for
+  sub-items, and its own list — **Menus → Phone menu**.
+- **Card sliders**: no “Learn more” line under linked slides; bare arrows
+  ← → at a size of their own.
+
+Checked with a computed-style diff against 3.24.0 of 28 pages and the 26
+block library and template pages at 1440 and 375px, and of a copy of a live
+site's 14 pages at 1440, 1024 and 375px: no change.
+
+---
+
 ## 3.24.0 — 2026-09-30
 
 **Pictures, cards and menus, closer: linked pictures, project cards, a menu

@@ -185,6 +185,8 @@ export const navigationSchema = z.object({
   header: z.array(navItem).max(12).optional(),
   /** 2.19 (T26) — the full-screen menu's own list, when it should differ from the header's. */
   overlay: z.array(navItem).max(12).optional(),
+  /** 3.25 — the phones' own list, for a menu on phones that takes its items from here. */
+  phone: z.array(navItem).max(12).optional(),
   headerCta: cta.optional(),
   /** A quieter second button beside the first ("Log in"). */
   headerSecondaryCta: cta.optional(),

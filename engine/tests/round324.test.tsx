@@ -89,7 +89,7 @@ describe('N3/N5/N6 — the pointer and the menus, off until chosen', () => {
   it('gives phones their own menu only when a style is chosen', () => {
     expect(resolveChrome({ mobileMenu: { onPhones: { width: '320px' } } } as never).mobileMenu.onPhones).toBeUndefined();
     const phones = resolveChrome({ mobileMenu: { variant: 'fullscreen', side: 'left', onPhones: { variant: 'drawer', width: '320px', itemSize: '18px', itemWeight: '400', ctaInList: true } } } as never).mobileMenu.onPhones;
-    expect(phones).toEqual({ variant: 'drawer', upTo: 'mobile', side: 'left', width: '320px', itemSize: '18px', itemWeight: '400', source: 'main', ctaInList: true });
+    expect(phones).toEqual({ variant: 'drawer', upTo: 'mobile', side: 'left', width: '320px', itemSize: '18px', itemWeight: '400', source: 'main', ctaInList: true, logo: true, dividers: true, expandIcon: 'chevron' });
   });
 
   it('checks sizes, colours and networks as values', () => {

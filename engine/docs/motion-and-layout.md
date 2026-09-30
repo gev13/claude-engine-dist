@@ -466,3 +466,22 @@ Every option below is off, or draws what it drew before, until it is set.
   drawer from the left at 320px, say — with its own link size and weight, its
   own list (the header's menu or the Overlay menu) and the header button as
   the list's last link. Empty uses the menu above at every width, as before.
+
+## Menus and card sliders, the details (3.25)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Full-screen menu with a width → The page beside it**: how dark the page
+  is, 0–100 (empty is 50, as before). **The column**: in the menu's colour
+  (as before), or no colour — the links stand on the dimmed page, which then
+  covers the whole screen.
+- **The contact row → Stands out**: the details (as before), or the heading —
+  white and bold — with the details muted. **The social links drawn**: in
+  circles (as before) or bare.
+- **Menu on phones**: the logo at the top and the lines between the links can
+  be switched off, and sub-items can open with a plain + instead of a
+  chevron. **Lists → The Phone menu**: Menus has a fourth list, Phone menu,
+  for a phone menu with its own order and items; empty uses the header's.
+- **Carousel (card sliders)**: *“Learn more” under a linked slide* can be
+  switched off — the whole slide is still the link; *Arrows drawn*: chevrons
+  in circles (as before) or bare arrows ← →, with *Arrow size*.

@@ -367,7 +367,10 @@
   .he-proj.is-cats-plain .he-proj__chips { gap: 0; }
   .he-proj.is-cats-plain .he-proj__chip-link { padding: 0; border: 0; border-radius: 0; }
   .he-proj.is-cats-plain .he-proj__chips li + li::before { content: ', '; color: var(--he-label-color, var(--color-ash)); }
-  .he-proj__line { position: relative; margin-top: 10px; overflow: hidden; }
+  /* 3.25 — the card and its line are one column: the link keeps its own height (not the whole cell's), so the line sits right under the title, inside the card. */
+  .he-proj__item:has(> .he-proj__line) { display: flex; flex-direction: column; }
+  .he-proj__item:has(> .he-proj__line) > .he-proj__link { flex: 0 0 auto; height: auto; }
+  .he-proj__line { position: relative; margin-top: 0.4rem; overflow: hidden; }
   .he-proj__line .he-proj__chips { margin: 0; }
   .he-proj__line .he-proj__cat { display: block; min-height: 1em; margin: 0; }
   .he-proj__line > * { transition: transform calc(350ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1), opacity calc(350ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }

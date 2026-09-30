@@ -67,6 +67,9 @@ The drawn link goes to the same address as the card and is kept out of the
 tab order and away from screen readers, which already have the card's own
 link.
 
+*(3.25)* The link line sits inside its card, right under the title and a
+year or summary when the layout shows them; it used to overlap the next row.
+
 ## Listing projects anywhere
 
 A **Projects** block's *Where the projects come from* can be **From Projects**:

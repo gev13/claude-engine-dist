@@ -259,21 +259,28 @@ function Arrows({
   atStart,
   atEnd,
   className,
+  look,
+  size,
 }: {
   onPrev: () => void;
   onNext: () => void;
   atStart: boolean;
   atEnd: boolean;
   className?: string;
+  /** 3.25 — bare arrows (← →) instead of chevrons in circles, at a size of their own. */
+  look?: 'circle' | 'plain';
+  size?: number;
 }) {
   const t = useMessages();
+  const plain = look === 'plain';
+  const glyph = size ?? (plain ? 24 : 20);
   return (
-    <div className={cn('he-arrows', className)}>
+    <div className={cn('he-arrows', className, plain && 'is-plain')}>
       <button type="button" className="he-arrow is-prev" aria-label={t('block.previousSlide')} onClick={onPrev} disabled={atStart}>
-        <Icon.Chevron dir="left" size={20} />
+        {plain ? <Icon.ArrowRight size={glyph} className="he-arrow__flip" /> : <Icon.Chevron dir="left" size={glyph} />}
       </button>
       <button type="button" className="he-arrow is-next" aria-label={t('block.nextSlide')} onClick={onNext} disabled={atEnd}>
-        <Icon.Chevron dir="right" size={20} />
+        {plain ? <Icon.ArrowRight size={glyph} /> : <Icon.Chevron dir="right" size={glyph} />}
       </button>
     </div>
   );
@@ -515,7 +522,7 @@ function FilmstripSlider(p: P) {
 
 /* ── Cards, products, promo cards ─────────────────────────────────────────── */
 
-function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
+function CardSlide({ s, mode, more = true }: { s: CarouselSlide; mode: P['mode']; more?: boolean }) {
   const t = useMessages();
   if (mode === 'heroCards') {
     return (
@@ -558,7 +565,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
           </ul>
         )}
         {s.price && <div className="he-card__price">{s.price}</div>}
-        {s.href && (
+        {s.href && more && (
           <span className="he-card__more">
             {s.buttonLabel || t('block.learnMore')} <span aria-hidden="true">›</span>
           </span>
@@ -634,7 +641,9 @@ function TrackCarousel(p: P) {
 
   const auto = useAutoplay(p.autoplay, p.interval, next, rootRef);
   useDrag(p.drag, trackRef);
-  const arrows = <Arrows onPrev={prev} onNext={next} atStart={!p.loop && edges.start} atEnd={!p.loop && edges.end} className={`is-${p.arrows}`} />;
+  const arrows = (
+    <Arrows onPrev={prev} onNext={next} atStart={!p.loop && edges.start} atEnd={!p.loop && edges.end} className={`is-${p.arrows}`} look={p.arrowStyle} size={p.arrowSize} />
+  );
 
   return (
     <section
@@ -684,7 +693,7 @@ function TrackCarousel(p: P) {
         <div ref={trackRef} className="he-car__track" onScroll={onScroll} tabIndex={0} aria-label={t('block.slidesScroll')}>
           {p.slides.map((s, i) => (
             <div key={i} className="he-car__slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${count}`}>
-              <CardSlide s={s} mode={mode} />
+              <CardSlide s={s} mode={mode} more={p.slideMore !== false} />
             </div>
           ))}
         </div>

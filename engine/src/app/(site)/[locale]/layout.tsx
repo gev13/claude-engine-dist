@@ -259,6 +259,7 @@ export default async function SiteLayout({
             secondaryCta={navigation.headerSecondaryCta}
             searchHref={blogIndexPath(permalinks)}
             overlayNav={navigation.overlay}
+            phoneMenuNav={navigation.phone}
             primaryServices={catalogue.primary}
             secondaryServices={catalogue.secondary}
             contact={{

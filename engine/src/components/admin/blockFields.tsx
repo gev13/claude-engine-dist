@@ -1723,6 +1723,12 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
               <div className="flex items-end pb-3">
                 <PropCheck label="No box behind a slide" k="slidePlain" props={props} set={set} />
               </div>
+              {/* 3.25 — the link line under a slide, and the arrows' look and size. */}
+              <div className="flex items-end pb-3">
+                <PropCheckOn label="“Learn more” under a linked slide" k="slideMore" props={props} set={(next) => set(withOpt(next, 'slideMore', next.slideMore === false ? false : undefined))} />
+              </div>
+              <PropSelect label="Arrows drawn" k="arrowStyle" fallback="circle" options={[['circle', 'Chevrons in circles'], ['plain', 'Bare arrows ← →']]} props={props} set={set} />
+              <OptNumber label="Arrow size" hint="px; empty is 20 (24 bare)" step="1" k="arrowSize" props={props} set={set} />
             </div>
           )}
         </div>

@@ -42,6 +42,8 @@ export type HeaderProps = {
   secondaryCta: Cta;
   /** 2.19 — the Overlay menu (Menus), used by the full-screen menu when chosen. */
   overlayNav?: NavItem[];
+  /** 3.25 — Menus → Phone menu, for a menu on phones that takes its items from there. */
+  phoneMenuNav?: NavItem[];
   primaryServices: readonly ServiceLink[];
   secondaryServices: readonly ServiceLink[];
   /** The contact column of the MN7 menu. */
@@ -586,7 +588,13 @@ export function Header(props: HeaderProps) {
         config={chrome.mobileMenu}
         toggleRef={toggleRef}
         nav={chrome.mobileMenu.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
-        phoneNav={chrome.mobileMenu.onPhones?.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
+        phoneNav={
+          chrome.mobileMenu.onPhones?.source === 'phone' && props.phoneMenuNav && props.phoneMenuNav.length > 0
+            ? props.phoneMenuNav
+            : chrome.mobileMenu.onPhones?.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0
+              ? props.overlayNav
+              : nav
+        }
         cta={cta}
         secondaryCta={secondaryCta}
         services={services}
@@ -1016,7 +1024,15 @@ function MobileMenu({
 
   return (
     <>
-      {(drawer || column) && open && <div className="he-menu-backdrop" onClick={onClose} aria-hidden="true" />}
+      {(drawer || column) && open && (
+        <div
+          className="he-menu-backdrop"
+          onClick={onClose}
+          aria-hidden="true"
+          // 3.25 — how dark the page beside a column menu is.
+          style={column && typeof config.dim === 'number' ? { background: `rgb(0 0 0 / ${config.dim}%)` } : undefined}
+        />
+      )}
       <div
         id="he-menu"
         ref={panelRef}
@@ -1053,6 +1069,11 @@ function MobileMenu({
           hidesHeader && 'is-no-brand',
           phone?.itemSize && 'has-phone-size',
           phone?.itemWeight && 'has-phone-weight',
+          // 3.25 — a column with no colour of its own; the phones' menu without its logo, its lines, with a plain +.
+          column && config.columnPanel === 'none' && 'is-column-bare',
+          phone && !phone.logo && 'is-no-brand',
+          phone && !phone.dividers && 'no-dividers',
+          !fullscreen && phone?.expandIcon === 'plus' && 'is-expand-plus',
         )}
         style={
           config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || column || phone
@@ -1149,7 +1170,7 @@ function MobileMenu({
                       {item.label}
                       {fullscreen && config.expandIcon === 'chevron' ? (
                         <Icon.Chevron dir={isOpen ? 'up' : 'down'} size={22} />
-                      ) : fullscreen ? (
+                      ) : fullscreen || phone?.expandIcon === 'plus' ? (
                         <span className={cn('he-menu__plus', isOpen && 'is-open')} aria-hidden="true">
                           <Icon.Plus size={22} />
                         </span>
@@ -1196,7 +1217,10 @@ function MobileMenu({
         )}
 
         {(showContact || contactRow) && (
-          <aside className={cn('he-menu__aside', contactRow && 'is-row')} aria-label={t('menu.contact')}>
+          <aside
+            className={cn('he-menu__aside', contactRow && 'is-row', config.contactEmphasis === 'title' && 'is-title-strong', config.socialLook === 'plain' && 'is-social-plain')}
+            aria-label={t('menu.contact')}
+          >
             <div className="he-menu__contact">
               <div className="he-menu__heading">{config.contactTitle || t('menu.getInTouch')}</div>
               {config.phone && (

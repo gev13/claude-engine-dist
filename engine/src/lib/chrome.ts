@@ -195,6 +195,14 @@ export const chromeSchema = z.object({
       socialNetworks: z.array(z.enum(SOCIAL_NETWORKS)).max(20).optional(),
       /** Words before the phone number, e.g. "Ph:". */
       phoneLabel: z.string().trim().max(20).optional(),
+      /** 3.25 — with a width: how dark the page beside the column is, 0–100 (unset is 50). */
+      dim: z.number().int().min(0).max(100).optional(),
+      /** 3.25 — with a width: the column in the menu's colour (as before) or none — the links stand on the dimmed page. */
+      columnPanel: z.enum(['panel', 'none']).optional(),
+      /** 3.25 — the contact row: the heading small and muted, the details large (as before), or the heading strong and the details muted. */
+      contactEmphasis: z.enum(['value', 'title']).optional(),
+      /** 3.25 — the social links in circles (as before) or as bare icons. */
+      socialLook: z.enum(['circle', 'plain']).optional(),
 
       /* ── 3.24 — phones: a menu of their own ── */
       onPhones: z
@@ -208,10 +216,14 @@ export const chromeSchema = z.object({
           width: z.string().trim().max(40).regex(LENGTH, 'A size such as 320px').optional(),
           itemSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 18px').optional(),
           itemWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
-          /** Which menu: the header's (unset) or the Overlay menu from Menus. */
-          source: z.enum(['main', 'overlay']).optional(),
+          /** Which menu: the header's (unset), the Overlay menu or (3.25) the Phone menu from Menus. */
+          source: z.enum(['main', 'overlay', 'phone']).optional(),
           /** The header button as the last link of the list, instead of a button. */
           ctaInList: z.boolean().optional(),
+          /** 3.25 — the logo at the top (unset, shown), the lines between the links (unset, shown), what opens sub-items. */
+          logo: z.boolean().optional(),
+          dividers: z.boolean().optional(),
+          expandIcon: z.enum(['chevron', 'plus']).optional(),
         })
         .optional(),
     })
@@ -416,6 +428,10 @@ export type ResolvedChrome = {
     socialStyle?: SocialLabelStyle;
     socialNetworks?: SocialNetwork[];
     phoneLabel?: string;
+    dim?: number;
+    columnPanel: 'panel' | 'none';
+    contactEmphasis: 'value' | 'title';
+    socialLook: 'circle' | 'plain';
     onPhones?: {
       variant: MobileMenuVariant;
       upTo: 'mobile' | 'tablet';
@@ -423,8 +439,11 @@ export type ResolvedChrome = {
       width?: string;
       itemSize?: string;
       itemWeight?: string;
-      source: 'main' | 'overlay';
+      source: 'main' | 'overlay' | 'phone';
       ctaInList: boolean;
+      logo: boolean;
+      dividers: boolean;
+      expandIcon: 'chevron' | 'plus';
     };
   };
   footer: {
@@ -554,6 +573,10 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       socialStyle: c.mobileMenu?.socialStyle,
       socialNetworks: c.mobileMenu?.socialNetworks?.length ? c.mobileMenu.socialNetworks : undefined,
       phoneLabel: c.mobileMenu?.phoneLabel || undefined,
+      dim: c.mobileMenu?.dim,
+      columnPanel: c.mobileMenu?.columnPanel ?? 'panel',
+      contactEmphasis: c.mobileMenu?.contactEmphasis ?? 'value',
+      socialLook: c.mobileMenu?.socialLook ?? 'circle',
       onPhones: c.mobileMenu?.onPhones?.variant
         ? {
             variant: c.mobileMenu.onPhones.variant,
@@ -564,6 +587,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
             itemWeight: c.mobileMenu.onPhones.itemWeight,
             source: c.mobileMenu.onPhones.source ?? 'main',
             ctaInList: c.mobileMenu.onPhones.ctaInList ?? false,
+            logo: c.mobileMenu.onPhones.logo !== false,
+            dividers: c.mobileMenu.onPhones.dividers !== false,
+            expandIcon: c.mobileMenu.onPhones.expandIcon ?? 'chevron',
           }
         : undefined,
     },

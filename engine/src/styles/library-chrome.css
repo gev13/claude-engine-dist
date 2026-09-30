@@ -200,6 +200,13 @@
   html.he-menu-hides-header .he-hdr :is(#he-menu, .he-menu-backdrop) { visibility: visible; }
   .he-menu.has-phone-size .he-menu__list .he-menu__row { font-size: var(--he-menu-psize); }
   .he-menu.has-phone-weight .he-menu__list .he-menu__row { font-weight: var(--he-menu-pweight); }
+  /* ── 3.25: a column with no colour of its own, the contact row's emphasis and bare icons, a phone menu without lines ── */
+  .he-menu.is-column-bare, .he-menu.is-column-bare[style] { background: transparent; backdrop-filter: none; box-shadow: none; }
+  .he-menu__aside.is-title-strong .he-menu__heading { color: var(--color-bone); font-weight: 700; }
+  .he-menu__aside.is-title-strong .he-menu__email { font-family: inherit; font-size: inherit; font-weight: 400; color: var(--color-ash); text-decoration: none; }
+  .he-menu__aside.is-social-plain .he-menu__social { gap: 18px; }
+  .he-menu__aside.is-social-plain .he-menu__social a { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; }
+  .he-menu.no-dividers .he-menu__row { border-bottom: 0; }
 
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }
