@@ -77,3 +77,21 @@ export function countServerLists(blocks: AnyBlock[] | null | undefined): number 
   }
   return count;
 }
+
+/**
+ * 3.23 — whether a tree holds a post list of any kind (rows included). A Blog
+ * page with none gets the built-in archive under its own blocks, on every
+ * page; one with its own list keeps it.
+ */
+export function hasPostList(blocks: AnyBlock[] | null | undefined): boolean {
+  for (const block of blocks ?? []) {
+    if (!block || (block as { style?: { disabled?: boolean } }).style?.disabled) continue;
+    if (block.type === 'postList') return true;
+    if (block.type === 'row') {
+      for (const column of ((block.props ?? {}) as { columns?: { blocks?: AnyBlock[] }[] }).columns ?? []) {
+        if (hasPostList(column.blocks)) return true;
+      }
+    }
+  }
+  return false;
+}

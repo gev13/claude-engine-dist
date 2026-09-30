@@ -352,7 +352,15 @@ export function GalleryBlock(p: P<'gallery'>) {
           {rowOrder && <MasonryRows />}
           <ul
             className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows')}
-            style={{ '--cols': p.columns } as CSSProperties}
+            style={
+              {
+                '--cols': p.columns,
+                // 3.23 — per tier, and the pictures' corners.
+                ...(p.columnsTablet ? { '--cols-t': p.columnsTablet } : {}),
+                ...(p.columnsMobile ? { '--cols-m': p.columnsMobile } : {}),
+                ...(typeof p.radius === 'number' ? { '--he-gal-radius': `${p.radius}px` } : {}),
+              } as CSSProperties
+            }
             data-masonry-rows={rowOrder ? '' : undefined}
           >
             {visible.map((image, i) => {

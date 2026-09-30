@@ -284,6 +284,7 @@ export default async function SiteLayout({
               social={navigation.social}
               socialStyle={navigation.socialStyle}
               socialSeparator={chrome.footer.socialSeparator}
+              legalSeparator={chrome.footer.legalSeparator}
               contactLinks={chrome.footer.contactLinks}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}

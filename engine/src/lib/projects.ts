@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isColor } from './theme';
+import { isColor, isLength } from './theme';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Projects (2.14) — what a project page looks like, and what a project can
@@ -65,6 +65,13 @@ export const projectTemplateSchema = z.object({
     .prefault({}),
   /** Include published projects in the site's search results. */
   inSearch: z.boolean().default(false),
+  /** 3.23 — the full-width hero's height (e.g. 640px), and on phones; unset is the picture's 16:9 (4:3 on phones). */
+  heroHeight: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  heroHeightMobile: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  /** 3.23 — how wide the title and the intro run (e.g. 520px or 40%); unset is 20ch for the title and 62ch for the intro. */
+  headWidth: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  /** 3.23 — the categories above the title as chips (as before) or as plain text. */
+  categoryStyle: z.enum(['chips', 'plain']).optional(),
   /** 3.22 — every project page's colour, unless a project sets its own; unset is the site's. */
   background: z
     .string()

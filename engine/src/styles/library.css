@@ -647,6 +647,12 @@
   }
   .he-ftr__legal { display: flex; flex-wrap: wrap; gap: var(--he-gap, 6px 20px); margin: 0; padding: 0; list-style: none; }
   .he-ftr__legal a { color: inherit; padding: 4px 0; }
+  /* 3.23 — a separator between the legal links. */
+  .he-ftr__legal.has-sep { column-gap: 10px; }
+  .he-ftr__legal.has-sep li { display: flex; align-items: center; gap: 10px; }
+  .he-ftr__legal.has-sep li + li::before { content: '|'; opacity: 0.6; }
+  .he-ftr__legal.is-sep-slash li + li::before { content: '/'; }
+  .he-ftr__legal.is-sep-dot li + li::before { content: '·'; }
   .he-ftr__legal a:hover { color: var(--color-flare-soft); }
   .he-ftr__toggles { display: flex; flex-wrap: wrap; align-items: center; gap: var(--he-gap, 16px); text-transform: none; letter-spacing: 0; }
 

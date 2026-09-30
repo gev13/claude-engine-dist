@@ -12,6 +12,8 @@ describe('blog layouts (BL1, BL2)', () => {
       progress: false,
       // 2.13 — unset keeps the archive sizes the blog had before server paging.
       archivePerPage: undefined,
+      // 3.23 — category pages page like the rest of the archives.
+      categoryPerPage: undefined,
       archivePager: 'numbers',
       resultCount: false,
       // 2.18 — every extra off, related posts as they always were, cards as each layout drew them.
@@ -44,6 +46,11 @@ describe('blog layouts (BL1, BL2)', () => {
       searchOff: false,
       toolbar: false,
       browseLabel: true,
+      // 3.23 — the cover at its own shape, no index SEO of its own, the category as the eyebrow.
+      coverHeight: undefined,
+      coverHeightMobile: undefined,
+      indexSeo: {},
+      categoryLabel: 'eyebrow',
     });
   });
 

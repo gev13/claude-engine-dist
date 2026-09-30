@@ -525,6 +525,13 @@ function shapeCss(theme: Theme, scope: string): string {
 function brandDecls(theme: Theme): Decl[] {
   const out: Decl[] = [];
   push(out, '--he-logo-height', theme.brand?.logoHeight, isLength);
+  // 3.23 — the numbered pages under a list.
+  const pager = theme.pager ?? {};
+  if (pager.shape === 'square') out.push(['--he-pager-radius', '8px']);
+  push(out, '--he-pager-active-bg', pager.activeBackground, isColor);
+  push(out, '--he-pager-active-text', pager.activeText, isColor);
+  push(out, '--he-pager-border', pager.border, isColor);
+  if (pager.font === 'body') out.push(['--he-pager-family', 'inherit']);
   return out;
 }
 
@@ -626,8 +633,19 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   // 3.8 — headings fill each line before wrapping.
   if (theme.layout?.titleWrap === 'wrap') parts.push(`${safeSelector === ':root' ? '' : `${safeSelector} `}:is(h1,h2,h3,h4){text-wrap:wrap}`);
 
+  /* 3.23 — a library block inside a column: no band padding of its own. Zero
+     specificity, so a Design panel spacing (one class) still wins. */
+  if (theme.layout?.nestedFlush === true && safeSelector === ':root') {
+    parts.push(':where(.he-nested section){padding-block:0}');
+  }
+  // 3.23 — the space under an eyebrow, before its heading.
+  if (theme.layout?.eyebrowGap && isLength(theme.layout.eyebrowGap) && safeSelector === ':root') {
+    parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
+  }
+
   if (theme.layout?.sectionRules === false && safeSelector === ':root') {
-    parts.push('#main>*,#main>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}.he-ftr{border-top-width:0}');
+    // 3.23 — and the sections inside a project's or a post's article, which sit one level deeper.
+    parts.push('#main>*,#main>[class*="he-b-"]>*,#main>article>*,#main>article>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}.he-ftr{border-top-width:0}');
   }
 
   // Link underline is a rule rather than a variable: there is no sensible

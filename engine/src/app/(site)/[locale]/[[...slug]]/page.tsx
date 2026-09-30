@@ -48,6 +48,8 @@ import { parsePageSchema, resolveService } from '@/lib/structuredData';
 import { pageTrail } from '@/server/content/trail';
 import { isoDate } from '@/lib/utils';
 import type { SeoFields } from '@/server/db/schema';
+import { resolveBlog } from '@/lib/blog';
+import { getTheme } from '@/server/content/theme';
 import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 
 /**
@@ -202,10 +204,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
       });
     case 'blogIndex': {
       const { page, paging } = resolved;
+      // 3.23 — with no page at the blog's address, Appearance → Blog's own search title and description.
+      const indexSeo = page ? undefined : resolveBlog((await getTheme()).blog).indexSeo;
+      const ownSeo = indexSeo?.title || indexSeo?.description ? ({ title: indexSeo.title, description: indexSeo.description, exactTitle: indexSeo.exactTitle } as SeoFields) : undefined;
       return buildMetadata({
-        seo: paging.number > 1 ? undefined : page?.seo,
-        title: paged(page?.title ?? site.blogLabel, paging),
-        description: page?.excerpt || t('blog.indexIntro', { site: settings.name }),
+        seo: paging.number > 1 ? (ownSeo ? { exactTitle: ownSeo.exactTitle } : undefined) : (page?.seo ?? ownSeo),
+        title: paged(page?.title ?? indexSeo?.title ?? site.blogLabel, paging),
+        description: page?.excerpt || indexSeo?.description || t('blog.indexIntro', { site: settings.name }),
         path: own(paging, blogIndexPath(permalinks)),
         image: await image(page?.seo, page ? heroImage(page.blocks) : undefined),
         siteName: settings.name,

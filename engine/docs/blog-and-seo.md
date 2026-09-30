@@ -229,3 +229,34 @@ content export:
 - Redirects decided inside a page route (a post under its old category, a
   managed redirect found at a 404) still answer 308: Next.js page routes can
   only answer 307 or 308. Search engines treat 308 exactly as 301.
+
+## The blog's pages, closer again (3.23)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **A page at the blog's address now keeps the list on page 1.** Its blocks
+  come first and the built-in list follows, as on page 2 and beyond. A page
+  with a Post list of its own still shows only its blocks.
+- **Appearance → Blog → Index → The blog's search title and description**
+  are the index's title and description when no page stands at its address.
+  *That title exactly as written* leaves the site's name off the end.
+- **Cards**: *The excerpt* off (the blog's pages and every Post list), and
+  *The category as a chip under the title*, which also takes it out of the
+  date line. A card prints *Read more* once. It used to print it twice on a
+  card grid with *Read more* ticked.
+- **Posts per category page**, separate from the blog index. Empty follows
+  the archive setting.
+- **A category's label**: the eyebrow above its title (as before), a
+  subtitle under it (“Category”, a Site translation), or none. The
+  categories menu is in the toolbar on category pages too.
+- **Post → Cover, then the title in the article**: the cover full width, then
+  the line above the title, the title and the text in one column, with no
+  card behind the title. **The full-width cover's height**, and on phones,
+  applies to both cover layouts (e.g. 600px / 240px); empty keeps the
+  picture's own shape.
+- **Page numbers**: circles (as before) or rounded squares, the current
+  page's fill and number colours, the edge colour, and the site's text face
+  instead of the label face.
+- **Post list → How many** is *Posts on each page* when the list pages on
+  the server. It never capped the total there; the pages go on until the
+  posts run out.

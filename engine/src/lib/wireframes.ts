@@ -455,4 +455,5 @@ export const BLOG_POST_WIREFRAMES: Record<BlogPostLayout, Wire> = {
   split: { shapes: [['txt', 10, 22, 26, 1, 3, 'ink'], ['big', 10, 30, 64, 2], ['txt', 10, 48, 60, 2], ['img', 86, 10, 64, 64, 3], ['txt', 10, 84, 140, 2, 6]] },
   // 2.18 — the cover at its own shape, then a rounded card holding the title.
   coverThenTitle: { shapes: [['img', 0, 0, 160, 44], ['panel', 18, 36, 124, 36, 4], ['txt', 26, 42, 30, 1, 3, 'ink'], ['big', 26, 49, 90, 1], ['txt', 26, 58, 60], ['txt', 20, 80, 120, 2, 6]] },
+  coverThenColumn: { shapes: [['img', 0, 0, 160, 40], ['txt', 16, 50, 28, 4, 6], ['txt', 60, 50, 30, 1, 3, 'ink'], ['big', 60, 57, 80, 1], ['txt', 60, 68, 84, 3, 6]] },
 };

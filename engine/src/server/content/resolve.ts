@@ -2,7 +2,7 @@ import 'server-only';
 import { cache } from 'react';
 import type { AnyBlock } from '@/lib/blocks';
 import { archivePerPage, resolveBlog, type ResolvedBlog } from '@/lib/blog';
-import { findServerList, type ServerList } from '@/lib/listing';
+import { findServerList, hasPostList, type ServerList } from '@/lib/listing';
 import type { Locale } from '@/lib/locales';
 import {
   DEFAULT_PERMALINKS,
@@ -68,15 +68,18 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
   if (indexMatch) {
     const found = await getPageByPath(permalinks.blogIndex, locale);
     const list = found ? findServerList(blocksOf(found)) : undefined;
-    /* 3.22 — a Blog page without a list that pages on the server still has a
-       /page/2: past the first page the built-in archive answers, so the
-       addresses an old blog had keep working. */
-    const page = found && !list && indexMatch.page > 1 ? null : found;
-    const paging = page
-      ? list
+    /* 3.23 — a Blog page with no post list of its own (an SEO title and a
+       heading, say) is shown with the built-in archive under its blocks, on
+       every page. 3.22 — one with a list that pages in the browser still has
+       /page/2 and on: past the first page the built-in archive answers. */
+    const builtIn = found && !list && !hasPostList(blocksOf(found));
+    const page = found && !list && !builtIn && indexMatch.page > 1 ? null : found;
+    const paging =
+      page && list
         ? await listPaging(list, indexMatch.page, permalinks.blogIndex, permalinks, locale)
-        : single(permalinks.blogIndex, indexMatch.page)
-      : await archivePaging({}, archivePerPage(blog, 'index'), indexMatch.page, permalinks.blogIndex, permalinks, locale);
+        : page && !builtIn
+          ? single(permalinks.blogIndex, indexMatch.page)
+          : await archivePaging({}, archivePerPage(blog, 'index'), indexMatch.page, permalinks.blogIndex, permalinks, locale);
     return settle(paging, path, permalinks, () => ({ kind: 'blogIndex', page, paging, list }));
   }
 

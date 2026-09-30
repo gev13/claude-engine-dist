@@ -247,10 +247,12 @@ export function blockStyleToCss(
   prefix = 'he-b',
   /** Rows keep their grid somewhere else; see `swipeTarget`. */
   isRow = false,
+  /** 3.23 — a column's rules are scoped to its own row (`.he-r-<row>>`): two rows may both have a column `c0`. */
+  scope = '',
 ): string {
   if (!style || !isSafeBlockId(id)) return '';
 
-  const root = `.${prefix}-${id}`;
+  const root = `${scope}.${prefix}-${id}`;
   const parts: string[] = [];
 
   /* Only a block's own wrapper stands directly outside the band it paints. A
@@ -573,8 +575,9 @@ export function rowToCss(row: RowCssInput): string {
     parts.push(`@media (max-width:${maxWidth}px){${rules}}`);
   }
 
+  // 3.23 — scoped to this row: a column id is unique only inside its row, and `.he-c-c0` alone hid every row's first column.
   for (const column of columns) {
-    parts.push(blockStyleToCss(column.id, column.style, 'he-c'));
+    parts.push(blockStyleToCss(column.id, column.style, 'he-c', false, `${root}>`));
   }
 
   return parts.filter(Boolean).join('');

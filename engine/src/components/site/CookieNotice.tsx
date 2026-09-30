@@ -18,6 +18,8 @@ import {
   encodeConsent,
 } from '@/lib/cookies';
 import { cn } from '@/lib/utils';
+import { isColor } from '@/lib/theme';
+import { useMessages } from './Messages';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The cookie notice
@@ -58,7 +60,18 @@ function read(): Consent | null {
   }
 }
 
+/** 3.23 — the notice's own colours, corners and width, as properties its rules read; each checked again, since they land in a style. */
+function lookStyle(notice: Notice): React.CSSProperties | undefined {
+  const style: Record<string, string> = {};
+  if (notice.background && isColor(notice.background)) style['--he-cookie-bg'] = notice.background;
+  if (notice.textColor && isColor(notice.textColor)) style['--he-cookie-text'] = notice.textColor;
+  if (typeof notice.radius === 'number') style['--he-cookie-radius'] = `${notice.radius}px`;
+  if (typeof notice.width === 'number') style['--he-cookie-w'] = `${notice.width}px`;
+  return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
+}
+
 function NoticeBanner({ notice }: { notice: Notice }) {
+  const t = useMessages();
   // `null` means "not decided yet in this render" — including before mount,
   // which is why nothing is shown until the effect has run.
   const [open, setOpen] = useState(false);
@@ -123,10 +136,11 @@ function NoticeBanner({ notice }: { notice: Notice }) {
       {/* The dim is the modal's own, and only the modal has one. */}
       {modal && <div className="he-cookie__scrim" aria-hidden="true" />}
       <section
-        className={cn('he-cookie', `is-${notice.position}`)}
+        className={cn('he-cookie', `is-${notice.position}`, notice.look === 'pill' && 'is-pill', notice.closeButton && 'has-close')}
         role={modal ? 'dialog' : 'region'}
         aria-modal={modal ? true : undefined}
         aria-label={notice.title || 'Cookies'}
+        style={lookStyle(notice)}
       >
         <div className="he-cookie__text">
           {notice.title && <p className="he-cookie__title">{notice.title}</p>}
@@ -138,16 +152,25 @@ function NoticeBanner({ notice }: { notice: Notice }) {
           )}
         </div>
 
-        <div className="he-cookie__actions">
-          {notice.showReject && (
-            <button type="button" className="he-btn he-btn--ghost" onClick={() => answer('rejected')}>
-              {notice.rejectLabel || 'Reject'}
-            </button>
-          )}
-          <button type="button" className="he-btn he-btn--primary" onClick={() => answer('accepted')} autoFocus>
-            {notice.acceptLabel || 'Accept'}
+        {notice.closeButton ? (
+          // 3.23 — a notice that only informs: one ✕, which records the answer as the Accept button did.
+          <button type="button" className="he-cookie__close" onClick={() => answer('accepted')} aria-label={t('block.close')} autoFocus>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" aria-hidden="true">
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
           </button>
-        </div>
+        ) : (
+          <div className="he-cookie__actions">
+            {notice.showReject && (
+              <button type="button" className="he-btn he-btn--ghost" onClick={() => answer('rejected')}>
+                {notice.rejectLabel || 'Reject'}
+              </button>
+            )}
+            <button type="button" className="he-btn he-btn--primary" onClick={() => answer('accepted')} autoFocus>
+              {notice.acceptLabel || 'Accept'}
+            </button>
+          </div>
+        )}
       </section>
     </>
   );
@@ -245,7 +268,8 @@ function ConsentBanner({ notice }: { notice: Notice }) {
     <>
       {modal && <div className="he-cookie__scrim" aria-hidden="true" />}
       <section
-        className={cn('he-cookie', details ? 'is-centre is-details' : `is-${notice.position}`)}
+        className={cn('he-cookie', details ? 'is-centre is-details' : `is-${notice.position}`, !details && notice.look === 'pill' && 'is-pill')}
+        style={lookStyle(notice)}
         role={modal ? 'dialog' : 'region'}
         aria-modal={modal ? true : undefined}
         aria-label={notice.title || 'Cookies'}

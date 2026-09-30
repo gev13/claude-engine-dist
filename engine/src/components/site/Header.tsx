@@ -385,10 +385,18 @@ export function Header(props: HeaderProps) {
     ...(cc.hoverBorder ? { '--he-hdr-cta-hover-border': cc.hoverBorder } : {}),
   };
   const hasCtaColors = Object.keys(ctaVars).length > 0;
+  // 3.23 — the header button's edge, and the round menu button's own colours.
+  const extraVars = {
+    ...(typeof h.ctaBorderWidth === 'number' ? { '--he-hdr-cta-bw': `${h.ctaBorderWidth}px` } : {}),
+    ...(h.menuButtonBackground ? { '--he-menubtn-bg': h.menuButtonBackground } : {}),
+    ...(h.menuButtonColor ? { '--he-menubtn-fg': h.menuButtonColor } : {}),
+  };
+  const hasExtra = Object.keys(extraVars).length > 0;
   const headerStyle =
-    h.background === 'glass' || hasHeight || notch || hasCtaColors
+    h.background === 'glass' || hasHeight || notch || hasCtaColors || hasExtra
       ? ({
           ...ctaVars,
+          ...extraVars,
           ...(h.background === 'glass' && h.glassSaturate !== 120 ? { '--he-glass-sat': `${h.glassSaturate / 100}` } : {}),
           ...(notch ? { '--he-notch-r': `${Math.max(0, Math.min(64, h.notchRadius))}px`, ...(h.notchBackground ? { '--he-notch-bg': h.notchBackground } : {}) } : {}),
           ...(h.background === 'glass' ? { '--he-glass-blur': `${h.glassBlur}px`, '--he-glass-tint': `${h.glassOpacity}%` } : {}),
@@ -438,6 +446,7 @@ export function Header(props: HeaderProps) {
         hasHeight && 'has-height',
         !h.border && 'no-border',
         hasCtaColors && 'has-cta-colors',
+        typeof h.ctaBorderWidth === 'number' && 'has-cta-bw',
       )}
       data-collapse={h.collapseAt}
       style={headerStyle}

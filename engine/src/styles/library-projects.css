@@ -29,10 +29,23 @@
   .he-prj-details__link { color: var(--color-flare-soft); text-decoration: none; }
   .he-prj-details__link:hover { text-decoration: underline; }
 
+  /* 3.23 — the page template's hero height, heading width and plain categories. */
+  .he-prj.has-hero-h .he-prj-hero__media:not(.is-framed) { aspect-ratio: auto; height: var(--he-prj-hero-h, auto); max-height: none; }
+  .he-prj.is-cats-plain .he-prj-chips { gap: 4px 16px; }
+  .he-prj.is-cats-plain .he-prj-chips a { padding: 0; border: 0; border-radius: 0; }
+  .he-prj.is-cats-plain .he-prj-chips a:hover { color: var(--color-bone); }
+
   @media (max-width: 1024px) {
     .he-prj-split { grid-template-columns: minmax(0, 1fr); }
   }
   @media (max-width: 768px) {
     .he-prj-hero__media { aspect-ratio: 4 / 3; }
+    .he-prj.has-hero-hm .he-prj-hero__media:not(.is-framed) { aspect-ratio: auto; height: var(--he-prj-hero-h-m); max-height: none; }
   }
+}
+
+/* 3.23 — unlayered, so it beats the width utility: a narrow heading column is
+   a wide-screen measure; on a phone the title and intro take the width. */
+@media (max-width: 768px) {
+  .he-prj.has-head-w :is(h1, .he-prj-intro) { max-width: none; }
 }

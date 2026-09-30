@@ -77,7 +77,7 @@ describe('lines between sections', () => {
     expect(themeToCss(themeSchema.parse({}))).not.toContain('border-bottom-width:0');
     expect(themeToCss(themeSchema.parse({ layout: { sectionRules: true } }))).not.toContain('border-bottom-width:0');
     const off = themeToCss(themeSchema.parse({ layout: { sectionRules: false } }));
-    expect(off).toContain('#main>*,#main>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}');
+    expect(off).toContain('#main>*,#main>[class*="he-b-"]>*,#main>article>*,#main>article>[class*="he-b-"]>*,.he-ftr{border-bottom-width:0}');
     expect(off).toContain('.he-ftr{border-top-width:0}');
   });
 });

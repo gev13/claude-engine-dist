@@ -545,6 +545,7 @@ function AppearanceScreenInner() {
                 </Field>
                 <LengthField label="Space above a section’s introduction" hint="under its heading" placeholder="16px" value={get(['layout', 'introGap'])} onChange={set(['layout', 'introGap'])} />
                 <LengthField label="Introduction width" placeholder="62ch" value={get(['layout', 'introWidth'])} onChange={set(['layout', 'introWidth'])} />
+                <LengthField label="Space under an eyebrow" hint="before its heading" emptyLabel="each block’s own (28px)" value={get(['layout', 'eyebrowGap'])} onChange={set(['layout', 'eyebrowGap'])} />
               </div>
               <label className="mt-4 flex items-center gap-2.5 text-[14px] text-ash">
                 <input
@@ -554,6 +555,15 @@ function AppearanceScreenInner() {
                   onChange={(e) => set(['layout', 'sectionRules'])(e.target.checked ? undefined : false)}
                 />
                 A thin line under each section and above the footer
+              </label>
+              <label className="flex items-center gap-2.5 text-[14px] text-ash">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-flare"
+                  checked={theme.layout?.nestedFlush === true}
+                  onChange={(e) => set(['layout', 'nestedFlush'])(e.target.checked || undefined)}
+                />
+                Blocks inside a row’s columns without their own space above and below
               </label>
             </Panel>
 
@@ -948,6 +958,43 @@ function AppearanceScreenInner() {
                         }
                       />
                     </Field>
+                    <Field label="Posts per category page" hint="empty follows the archive setting">
+                      <Input
+                        type="number"
+                        min={1}
+                        max={MAX_ARCHIVE_PER_PAGE}
+                        placeholder="as above"
+                        value={theme.blog?.categoryPerPage ?? ''}
+                        onChange={(e) =>
+                          set(['blog', 'categoryPerPage'])(
+                            e.target.value === '' ? undefined : Math.min(MAX_ARCHIVE_PER_PAGE, Math.max(1, Math.round(Number(e.target.value) || 1))),
+                          )
+                        }
+                      />
+                    </Field>
+                    <ChoiceField
+                      label="Page numbers"
+                      value={theme.pager?.shape}
+                      inherited="circle"
+                      options={[
+                        { value: 'circle', label: 'Circles' },
+                        { value: 'square', label: 'Rounded squares' },
+                      ]}
+                      onChange={set(['pager', 'shape'])}
+                    />
+                    <ChoiceField
+                      label="Page numbers’ face"
+                      value={theme.pager?.font}
+                      inherited="mono"
+                      options={[
+                        { value: 'mono', label: 'The labels’ mono' },
+                        { value: 'body', label: 'The text’s' },
+                      ]}
+                      onChange={set(['pager', 'font'])}
+                    />
+                    <ColorField label="The current page — fill" value={get(['pager', 'activeBackground'])} onChange={set(['pager', 'activeBackground'])} />
+                    <ColorField label="The current page — number" value={get(['pager', 'activeText'])} onChange={set(['pager', 'activeText'])} />
+                    <ColorField label="Page numbers’ edge" value={get(['pager', 'border'])} onChange={set(['pager', 'border'])} />
                     <ChoiceField
                       label="Links to the other pages"
                       value={theme.blog?.archivePager}

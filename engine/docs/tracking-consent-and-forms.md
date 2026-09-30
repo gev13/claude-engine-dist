@@ -65,6 +65,11 @@ rejected or chose — no address, no id, nothing that identifies anyone.
 
 A link to `#cookie-settings` anywhere on the site reopens the notice.
 
+**How the notice looks** *(3.23)*: a card (as before) or one slim line with the
+text and link side by side; *A card at the bottom, centred* as a position;
+its width, background, text colour and corners; and, in notice mode, a ✕ to
+close it instead of the buttons (it counts as OK).
+
 ## Bot protection — Security → Bot protection
 
 Every public form already has a hidden trap for bots and a rate limit. A

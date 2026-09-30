@@ -140,6 +140,7 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
         <div>
           <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">The header button</p>
           <div className="grid gap-4 sm:grid-cols-4">
+            <NumberField label="Edge" hint="px" min={0} max={4} placeholder="2" value={header?.ctaBorderWidth} onChange={set(at('ctaBorderWidth'))} />
             <ChoiceField
               label="Style"
               value={header?.ctaStyle}
@@ -174,6 +175,13 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
           <div className="grid gap-4 sm:grid-cols-2">
             <NumberField label="Curve of the notch" hint="px" min={0} max={64} placeholder="32" value={header?.notchRadius} onChange={set(at('notchRadius'))} />
             <ColorField label="Notch colour" placeholder="the page colour" value={header?.notchBackground} onChange={(value) => set(at('notchBackground'))(value || undefined)} />
+          </div>
+        )}
+        {/* 3.23 — the round menu button's circle and icon. */}
+        {header?.variant === 'menuButtonInline' && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <TextField label="Menu button circle" hint="a colour — e.g. rgba(0,0,0,0.5); empty is the surface" value={header?.menuButtonBackground} maxLength={60} placeholder="the surface" onChange={set(at('menuButtonBackground'))} />
+            <TextField label="Menu button icon" hint="a colour; empty is the header's text" value={header?.menuButtonColor} maxLength={60} placeholder="the header's" onChange={set(at('menuButtonColor'))} />
           </div>
         )}
         {header?.variant === 'menuButtonInline' && (
@@ -383,6 +391,19 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
           ]}
           onChange={set(['chrome', 'footer', 'socialSeparator'])}
         />
+        <ChoiceField
+          label="Between the legal links"
+          hint="Privacy · Terms · Cookies in the bottom row"
+          value={footer?.legalSeparator}
+          inherited="none"
+          options={[
+            { value: 'none', label: 'Nothing' },
+            { value: 'bar', label: 'A bar — Privacy | Terms' },
+            { value: 'slash', label: 'A slash' },
+            { value: 'dot', label: 'A dot' },
+          ]}
+          onChange={set(['chrome', 'footer', 'legalSeparator'])}
+        />
         <Field label="Listed apart, as icon and name" hint="these links go under the others, one a line — a phone, messengers">
           <div className="flex flex-wrap gap-x-4 gap-y-1.5">
             {SOCIAL_NETWORKS.map((network) => {
@@ -547,6 +568,27 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
                 <ChoiceField label="Weight" value={rails?.weight} options={['400', '500', '600', '700'].map((value) => ({ value, label: value }))} onChange={set(railsAt('weight'))} />
                 <ChoiceField label="Between the links" value={rails?.separator} inherited="none" options={[{ value: 'none', label: 'Nothing' }, { value: 'slash', label: 'A slash — Lk. / Be.' }, { value: 'dot', label: 'A dot' }]} onChange={set(railsAt('separator'))} />
                 <ChoiceField label="Where" value={rails?.position} inherited="center" options={[{ value: 'center', label: 'Middle of the screen' }, { value: 'bottom', label: 'Bottom of the screen' }]} onChange={set(railsAt('position'))} />
+                <Field label="Networks on the rail" hint="none ticked shows every social link">
+                  <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+                    {SOCIAL_NETWORKS.map((network) => {
+                      const list = rails?.networks ?? [];
+                      return (
+                        <label key={network} className="flex items-center gap-1.5 text-[13px] text-ash">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 accent-flare"
+                            checked={list.includes(network)}
+                            onChange={(e) => {
+                              const next = e.target.checked ? [...list, network] : list.filter((n) => n !== network);
+                              set(railsAt('networks'))(next.length ? next : undefined);
+                            }}
+                          />
+                          {SOCIAL_LABELS[network]}
+                        </label>
+                      );
+                    })}
+                  </div>
+                </Field>
                 <ChoiceField label="Written" value={rails?.orientation} inherited="stacked" options={[{ value: 'stacked', label: 'Each part stacked' }, { value: 'row', label: 'One line up the edge' }]} onChange={set(railsAt('orientation'))} />
               </div>
               <div className="grid gap-2 sm:grid-cols-2">

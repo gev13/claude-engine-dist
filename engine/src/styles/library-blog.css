@@ -42,6 +42,12 @@
 
   /* Cover, then a title card that overlaps it. The picture keeps its own shape. */
   .he-post-ctt { background: var(--color-surface); }
+  /* 3.23 — the cover at a height of its own, and on phones. */
+  .he-post-ctt[style*='--he-cover-h'] .he-post-ctt__img { height: var(--he-cover-h, auto); max-height: none; object-fit: cover; }
+  @media (width <= 48rem) { .he-post-ctt[style*='--he-cover-h-m'] .he-post-ctt__img { height: var(--he-cover-h-m); } }
+  /* 3.23 — the title opening the article's column: level with the columns beside it. */
+  .he-post__col { min-width: 0; margin-top: 48px; }
+  .he-post__col > .he-post__back { margin-top: 0; }
   .he-post-ctt__img { display: block; width: 100%; height: auto; max-height: 86svh; object-fit: cover; }
   .he-post-ctt__card { position: relative; margin-top: clamp(-120px, -8vw, -48px); padding: clamp(24px, 4vw, 48px); border-radius: var(--he-card-radius, 16px); background: var(--color-surface); }
 
@@ -132,10 +138,15 @@
 
   /* ── 2.18: the blog's archives ───────────────────────────────────────── */
 
+  /* 3.23 — the category as a chip under a card's title. */
+  .he-card__chip { display: inline-flex; align-self: flex-start; margin: 0 0 12px; padding: 4px 12px; border: 1px solid var(--color-hairline); border-radius: 999px; font-size: 13px; color: var(--color-ash); }
+  .he-ucard__body:has(> .he-card__chip) { display: flex; flex-direction: column; align-items: flex-start; }
   .he-card__more { display: block; margin-top: 14px; font-size: var(--he-card-link-size, 14px); font-weight: var(--he-card-link-weight, 600); color: var(--he-card-link-color, var(--he-link, var(--color-flare-soft))); line-height: var(--he-card-link-line, revert-layer); font-family: var(--he-card-link-family, revert-layer); text-transform: var(--he-card-link-transform, revert-layer); letter-spacing: var(--he-card-link-tracking, revert-layer); }
 
   /* Breadcrumbs above an archive's title: the block, without a section's padding. */
   .he-arch-crumbs { margin-bottom: 20px; }
+  /* 3.23 — the label under a category's title ("Category"). */
+  .he-arch-sub { margin: 14px 0 0; }
   .he-arch-crumbs > section { padding: 0; }
   .he-arch-crumbs .shell { padding: 0; max-width: none; }
 

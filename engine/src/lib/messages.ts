@@ -49,6 +49,8 @@ export const MESSAGES = {
   'blog.onThisPage': 'On this page',
   'blog.searchPlaceholder': 'Search writing',
   'blog.noResults': 'Nothing matched that.',
+  /** 3.23 — under a category's title, when Appearance → Blog puts a label there. */
+  'blog.categoryLabel': 'Category',
   'blog.previous': 'Previous',
   'blog.next': 'Next',
   'blog.all': 'All',

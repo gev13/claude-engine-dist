@@ -200,7 +200,7 @@
     overflow: hidden;
     padding: 0;
     border: 0;
-    border-radius: 10px;
+    border-radius: var(--he-gal-radius, 10px);
     background: var(--color-surface);
     color: inherit;
     font: inherit;
@@ -491,10 +491,10 @@
 
   /* ── Tablet ≤ 1024px ─────────────────────────────────────────────────── */
   @media (width <= 64rem) {
-    .he-gal { --cols-cap: 3; grid-template-columns: repeat(min(var(--cols, 3), 3), minmax(0, 1fr)); }
-    .he-gal.is-masonry { columns: min(var(--cols, 3), 3); }
-    .he-gal.is-masonry.is-rows { columns: auto; grid-template-columns: repeat(min(var(--cols, 3), 3), minmax(0, 1fr)); }
-    .he-gal.is-metro { grid-auto-rows: calc((100cqi - (min(var(--cols, 3), 3) - 1) * var(--g)) / min(var(--cols, 3), 3)); }
+    .he-gal { --cols-cap: 3; grid-template-columns: repeat(var(--cols-t, min(var(--cols, 3), 3)), minmax(0, 1fr)); }
+    .he-gal.is-masonry { columns: var(--cols-t, min(var(--cols, 3), 3)); }
+    .he-gal.is-masonry.is-rows { columns: auto; grid-template-columns: repeat(var(--cols-t, min(var(--cols, 3), 3)), minmax(0, 1fr)); }
+    .he-gal.is-metro { grid-auto-rows: calc((100cqi - (var(--cols-t, min(var(--cols, 3), 3)) - 1) * var(--g)) / var(--cols-t, min(var(--cols, 3), 3))); }
     .he-proj { grid-template-columns: repeat(min(var(--cols, 3), 2), minmax(0, 1fr)); }
     .he-proj.is-metro { grid-auto-rows: calc((100cqi - (min(var(--cols, 3), 2) - 1) * var(--g)) / min(var(--cols, 3), 2)); }
     .he-hacc { gap: 8px; }
@@ -521,11 +521,11 @@
     .he-lightbox__nav.is-prev { grid-column: 1; }
     .he-lightbox__nav.is-next { grid-column: 2; }
     .he-lightbox__img { max-height: calc(100svh - 220px); }
-    .he-gal { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .he-gal { grid-template-columns: repeat(var(--cols-m, 2), minmax(0, 1fr)); }
     .he-gal:not(.is-gap-none) { --g: 8px; }
-    .he-gal.is-masonry { columns: 2; }
-    .he-gal.is-masonry.is-rows { columns: auto; grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .he-gal.is-metro { grid-auto-rows: calc((100cqi - var(--g)) / 2); }
+    .he-gal.is-masonry { columns: var(--cols-m, 2); }
+    .he-gal.is-masonry.is-rows { columns: auto; grid-template-columns: repeat(var(--cols-m, 2), minmax(0, 1fr)); }
+    .he-gal.is-metro { grid-auto-rows: calc((100cqi - (var(--cols-m, 2) - 1) * var(--g)) / var(--cols-m, 2)); }
     .he-gal.is-metro .he-gal__item:nth-child(6n + 5) { grid-column: auto; }
     .he-hacc, .he-hacc.is-tall { flex-direction: column; height: auto; }
     .he-hacc__panel { flex: none; min-height: 84px; padding: 18px; transition: none; }

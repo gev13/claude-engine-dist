@@ -404,3 +404,26 @@ Every option below is off, or draws what it drew before, until it is set.
   stack full-width films; its video field has a Choose button.
 - Fixed: the custom cursor's lag was per frame, so it ran twice as fast on a
   120 Hz screen; it is measured in time now.
+
+## Columns, eyebrows and the details (3.23)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **A column's Design settings belong to its row.** Two rows could each
+  have a column with the same id, and hiding one hid both on every screen.
+  Now the rules name the row too.
+- **Appearance → Layout → Blocks inside a row's columns without their own
+  space above and below**: a library block in a column (a heading, a card
+  grid) drops its band's padding, as the classic blocks always did. Off by
+  default, because a site may have tuned its columns around that space.
+- **Appearance → Layout → Space under an eyebrow**: the gap between a
+  section's eyebrow and its heading (e.g. 12px).
+- **Lines between sections off** now reaches a project's and a post's
+  sections too.
+- **Gallery**: pictures per row on tablets and on phones (one is allowed),
+  and the pictures' corners.
+- **Header**: the header button's edge width (0–4px), and for the menu
+  button beside the logo, the circle's colour and the icon's colour.
+- **Footer → Between the legal links**: a bar, a slash or a dot.
+- **Side rails → Networks on the rail**: which social links the rail shows,
+  in the order ticked. None ticked shows every link, as before.

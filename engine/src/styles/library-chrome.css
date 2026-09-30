@@ -267,8 +267,12 @@
 @media (width <= 768px) { .he-hdr.has-height .he-hdr__inner { min-height: var(--hh-mobile, var(--hh-tablet, var(--hh-laptop, var(--hh-base, 64px)))); } }
 
 /* The round menu button, shown at every width on this header. */
-.he-hdr__toggle.is-round { display: inline-flex; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 999px; background: var(--color-surface); }
+.he-hdr__toggle.is-round { display: inline-flex; justify-content: center; width: 48px; height: 48px; padding: 0; border-radius: 999px; background: var(--he-menubtn-bg, var(--color-surface)); color: var(--he-menubtn-fg, inherit); }
 .he-hdr__toggle.is-round:hover { background: var(--color-surface-2, var(--color-hairline)); }
+/* 3.23 — a circle of its own colour brightens a little under the pointer. */
+.he-hdr[style*='--he-menubtn-bg'] .he-hdr__toggle.is-round:hover { background: var(--he-menubtn-bg); filter: brightness(1.25); }
+/* 3.23 — the header button's own edge width. */
+.he-hdr.has-cta-bw .he-hdr__cta:is(.he-btn-primary, .he-btn-outline) { border-width: var(--he-hdr-cta-bw); }
 .he-hdr--menuButtonInline .he-hdr__inner { grid-template-columns: auto auto minmax(0, 1fr) auto; }
 .he-hdr--menuButtonInline.is-menu-right .he-hdr__inner { grid-template-columns: auto minmax(0, 1fr) auto auto; }
 .he-hdr--menuButtonInline .he-hdr__nav { justify-self: end; }

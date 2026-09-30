@@ -232,6 +232,34 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
               </p>
             </Field>
 
+            {/* 3.23 — the notice's own look. */}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Look" htmlFor="cookie-look">
+                <Select id="cookie-look" value={form.look ?? 'card'} disabled={!canWrite} onChange={(e) => set('look', e.target.value === 'pill' ? 'pill' : undefined)}>
+                  <option value="card">A card (title, text and buttons)</option>
+                  <option value="pill">One slim line — text and link side by side</option>
+                </Select>
+              </Field>
+              <Field label="Width" htmlFor="cookie-width" hint="px, the centred card; empty is 560">
+                <Input id="cookie-width" type="number" min={240} max={1200} value={form.width ?? ''} disabled={!canWrite} onChange={(e) => set('width', e.target.value === '' ? undefined : Math.min(1200, Math.max(240, Math.round(Number(e.target.value) || 560))))} />
+              </Field>
+              <Field label="Background" htmlFor="cookie-bg" hint="a colour; empty is the surface">
+                <Input id="cookie-bg" value={form.background ?? ''} placeholder="the surface" disabled={!canWrite} onChange={(e) => set('background', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Text colour" htmlFor="cookie-text" hint="empty is the site's">
+                <Input id="cookie-text" value={form.textColor ?? ''} placeholder="#ffffff" disabled={!canWrite} onChange={(e) => set('textColor', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Corners" htmlFor="cookie-radius" hint="px">
+                <Input id="cookie-radius" type="number" min={0} max={40} value={form.radius ?? ''} disabled={!canWrite} onChange={(e) => set('radius', e.target.value === '' ? undefined : Math.min(40, Math.max(0, Math.round(Number(e.target.value) || 0))))} />
+              </Field>
+              {form.mode === 'notice' && (
+                <label className="flex items-center gap-2.5 self-end pb-3 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.closeButton === true} disabled={!canWrite} onChange={(e) => set('closeButton', e.target.checked || undefined)} />
+                  A ✕ to close it instead of the buttons
+                </label>
+              )}
+            </div>
+
             <div>
               <label className="flex items-center gap-2.5 text-[14px] text-ash">
                 <input

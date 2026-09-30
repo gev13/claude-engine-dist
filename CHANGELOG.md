@@ -10,6 +10,49 @@ improvements.
 
 ---
 
+## 3.23.0 — 2026-09-30
+
+**The main pages, closer: the blog index with a page, headers, pagers and
+the details.** Every option is off, or draws what it drew before, until it
+is set.
+
+Fixed:
+
+- **A page at the blog's address kept page 1 empty.** Page 1 now shows the
+  page's blocks and then the built-in list, as later pages already did.
+- **A column's Design settings reached every column with the same id** in
+  other rows. Hiding one hid them all. The rules now name their row.
+- **Cards on the blog's pages printed “Read more” twice** when it was ticked.
+- **Lines between sections off** now reaches project and post sections.
+- **Post list → How many** reads *Posts on each page* when the list pages on
+  the server, which is what it always meant there.
+
+Added:
+
+- **Blog**: card excerpt off; the category as a chip under the title; posts
+  per category page; a category's label as eyebrow, subtitle or none, and
+  the categories menu on category pages; the index's search title and
+  description when no page stands there; a post layout *Cover, then the
+  title in the article*, and a cover height (and on phones); page numbers
+  as rounded squares with their own colours and face.
+- **Projects**: hero height (and on phones), a narrow title and intro
+  column, categories as plain text.
+- **Gallery**: pictures per row on tablets and phones (one allowed), and
+  the pictures' corners.
+- **Layout**: blocks in a row's columns without their band's space (off by
+  default); the space under an eyebrow.
+- **Header**: the header button's edge width; the menu button's circle and
+  icon colours. **Footer**: a bar, slash or dot between the legal links.
+  **Rails**: which networks they show.
+- **Cookie notice**: a slim-line look, a centred bottom position, its own
+  width, colours and corners, and a ✕ instead of the buttons in notice mode.
+
+Checked with a computed-style diff of 28 pages at 1440 and 375px against
+3.22.0 (no change), and of a copy of a live site's 14 pages at 1440, 1024
+and 375px (no change).
+
+---
+
 ## 3.22.0 — 2026-09-30
 
 **A finished design, closer: labels, widths, swipe and the details.** Every

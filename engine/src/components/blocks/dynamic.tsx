@@ -177,15 +177,21 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
               <Card
                 key={post.id}
                 eyebrow={
-                  <>
-                    {chipFor(post, t)}
-                    {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
-                  </>
+                  p.card?.categoryPlace === 'under' ? (
+                    // 3.23 — the category moved under the title: the line is the date alone.
+                    post.publishedAt ? formatDate(post.publishedAt) : undefined
+                  ) : (
+                    <>
+                      {chipFor(post, t)}
+                      {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
+                    </>
+                  )
                 }
                 title={post.title}
                 href={postPath(permalinks, post)}
                 hover={p.card?.hover}
                 moreLabel={t('blog.readMore')}
+                more={p.card?.readMore !== false}
                 media={
                   p.card?.image
                     ? post.coverUrl
@@ -194,7 +200,9 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                     : undefined
                 }
               >
-                {post.excerpt}
+                {/* 3.23 — the category as a chip under the title, and the excerpt only when wanted. */}
+                {p.card?.categoryPlace === 'under' && <span className="he-chip he-card__chip">{chipFor(post, t)}</span>}
+                {p.card?.excerpt !== false && post.excerpt}
               </Card>
             ))}
           </CardGrid>
@@ -336,6 +344,7 @@ export function PostCollection({
   const withExcerpt = variant === 'list' || variant === 'wide' || variant === 'overlay';
 
   const items = posts.map((post) => {
+    const chipText = post.kind === 'research' ? labels.research : (post.categoryName ?? labels.article);
     const date = card.date !== false && post.publishedAt && (
       <time className="he-plst__date" dateTime={post.publishedAt.toISOString()}>
         {formatDate(post.publishedAt)}
@@ -355,11 +364,14 @@ export function PostCollection({
           )}
           {minimal && date}
           <div className="he-plst__text">
-            {card.category !== false && <span className="he-plst__chip">{post.kind === 'research' ? labels.research : post.categoryName ?? labels.article}</span>}
+            {card.category !== false && card.categoryPlace !== 'under' && <span className="he-plst__chip">{chipText}</span>}
             <h3 className="he-plst__title">{post.title}</h3>
+            {/* 3.23 — the category as a chip under the title instead. */}
+            {card.category !== false && card.categoryPlace === 'under' && <span className="he-plst__chip is-under">{chipText}</span>}
             {!minimal && date}
             {card.readingTime && labels.minRead && <span className="he-plst__read">{`${post.readingMinutes} ${labels.minRead}`}</span>}
-            {withExcerpt && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
+            {/* 3.23 — the excerpt on or off, whatever the layout draws. */}
+            {(card.excerpt ?? withExcerpt) && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
             {card.readMore && labels.readMore && <span className="he-plst__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </div>
           {minimal && (

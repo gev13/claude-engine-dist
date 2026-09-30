@@ -3315,6 +3315,33 @@ function TypeFields({
                 ))}
               </Select>
             </Field>
+            {str(props, 'layout') !== 'metro' && (
+              <>
+                <Field label="Per row — tablets" hint="empty is up to three">
+                  <Select value={props.columnsTablet === undefined ? '' : String(props.columnsTablet)} onChange={(e) => set(withOpt(props, 'columnsTablet', e.target.value ? Number(e.target.value) : undefined))}>
+                    <option value="">Automatic</option>
+                    {[1, 2, 3, 4, 5].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Per row — phones" hint="empty is two">
+                  <Select value={props.columnsMobile === undefined ? '' : String(props.columnsMobile)} onChange={(e) => set(withOpt(props, 'columnsMobile', e.target.value ? Number(e.target.value) : undefined))}>
+                    <option value="">Automatic</option>
+                    {[1, 2, 3, 4].map((n) => (
+                      <option key={n} value={n}>
+                        {n}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </>
+            )}
+            <Field label="Picture corners" hint="px; empty is 10">
+              <Input type="number" min={0} max={48} value={typeof props.radius === 'number' ? String(props.radius) : ''} placeholder="10" onChange={(e) => set(withOpt(props, 'radius', e.target.value === '' ? undefined : Math.min(48, Math.max(0, Math.round(Number(e.target.value) || 0)))))} />
+            </Field>
             <PropSelect label="Space between" k="gap" fallback="medium" options={[['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']]} props={props} set={set} />
             {layout === 'grid' && (
               <PropSelect label="Picture shape" k="ratio" fallback="square" options={[['square', 'Square'], ['landscape', 'Landscape'], ['portrait', 'Portrait']]} props={props} set={set} />
@@ -5365,7 +5392,8 @@ function TypeFields({
               </Select>
             </Field>
             <Text label="Category slug" k="categorySlug" props={props} set={set} placeholder="optional" />
-            <Field label="How many">
+            {/* 3.23 — with real pages it is the number on each page, which the old label hid. */}
+            <Field label={str(props, 'pagination') === 'server' ? 'Posts on each page' : 'How many'} hint={str(props, 'pagination') === 'server' ? 'every post is reached through /page/2, /page/3…' : undefined}>
               <Input
                 type="number"
                 min={1}
@@ -5674,7 +5702,7 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
         <>
           <PropCheck label="Say how many there are — “Showing 1–12 of 110 results”" k="resultCount" props={props} set={set} />
           <p className="m-0 text-[12px] leading-relaxed text-smoke">
-            “How many” is the number per page. One list per page can do this — on a second, the first one wins.
+            “Posts on each page” is the number per page; every post is listed across the pages. One list per page can do this — on a second, the first one wins.
           </p>
         </>
       )}
@@ -5706,6 +5734,14 @@ function PostCardFields({ props, set }: { props: Props; set: Setter }) {
         {box('The date', 'date', card.date !== false, (v) => (v ? undefined : false))}
         {box('The reading time', 'readingTime', card.readingTime === true, (v) => v || undefined)}
         {box('“Read more →”', 'readMore', card.readMore === true, (v) => v || undefined)}
+        {box('The category as a chip under the title', 'categoryPlace', card.categoryPlace === 'under', (v) => (v ? 'under' : undefined))}
+        <Field label="The excerpt">
+          <Select value={card.excerpt === true ? 'show' : card.excerpt === false ? 'hide' : ''} onChange={(e) => setCard('excerpt', e.target.value === 'show' ? true : e.target.value === 'hide' ? false : undefined)}>
+            <option value="">As the layout draws it</option>
+            <option value="show">Show it</option>
+            <option value="hide">Leave it out</option>
+          </Select>
+        </Field>
         <Field label="Picture shape">
           <Select value={(card.ratio as string) ?? ''} onChange={(e) => setCard('ratio', e.target.value || undefined)}>
             <option value="">As the layout draws it</option>
@@ -5747,6 +5783,19 @@ function PostCoverFields({ props, set }: { props: Props; set: Setter }) {
           </Select>
         </Field>
       )}
+      {/* 3.23 */}
+      <label className="flex items-center gap-2 pb-3 text-[14px] text-ash">
+        <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.excerpt !== false} onChange={(e) => setCard('excerpt', e.target.checked ? undefined : false)} />
+        The excerpt
+      </label>
+      <label className="flex items-center gap-2 pb-3 text-[14px] text-ash">
+        <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.categoryPlace === 'under'} onChange={(e) => setCard('categoryPlace', e.target.checked ? 'under' : undefined)} />
+        The category as a chip under the title
+      </label>
+      <label className="flex items-center gap-2 pb-3 text-[14px] text-ash">
+        <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.readMore !== false} onChange={(e) => setCard('readMore', e.target.checked ? undefined : false)} />
+        “Read more” under each card
+      </label>
     </div>
   );
 }

@@ -55,6 +55,8 @@ type Rails = {
   separator?: 'none' | 'slash' | 'dot';
   position?: 'center' | 'bottom';
   orientation?: 'stacked' | 'row';
+  /** 3.23 — which social links, in this order; unset is every one. */
+  networks?: string[];
 };
 
 /** 3.22 — the rails' own type, as properties their rules read; nothing for what was left unset. */
@@ -99,6 +101,8 @@ export function SideRails({ rails, social, socialStyle }: { rails: Rails; social
   }, [rails.afterFirstScreen, pathname]);
 
   if (hiddenOn(rails.hideOn, pathname)) return null;
+  // 3.23 — only the networks chosen for the rail, in the order chosen.
+  const links = rails.networks ? rails.networks.flatMap((network) => social.filter((link) => link.network === network)) : social;
   const style = { '--he-rails-min': `${rails.minWidth}px`, ...railStyle(rails) } as React.CSSProperties;
   // 3.22 — a width of their own to appear from; the stylesheet's is 1181px.
   const min = Math.round(rails.minWidth);
@@ -134,11 +138,11 @@ export function SideRails({ rails, social, socialStyle }: { rails: Rails; social
           </button>
         </div>
       )}
-      {rails.socialSide !== 'none' && social.length > 0 && (
+      {rails.socialSide !== 'none' && links.length > 0 && (
         <div className={cls(rails.socialSide)} style={style}>
           <p className="he-rail__text">{rails.socialLabel}</p>
           <ul className={separator ? 'he-rail__social has-sep' : 'he-rail__social'}>
-            {social.map((link, i) => (
+            {links.map((link, i) => (
               <li key={link.network + link.href}>
                 {separator && i > 0 && (
                   <span className="he-rail__sep" aria-hidden="true">

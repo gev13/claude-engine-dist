@@ -41,6 +41,10 @@ trash, like posts. An author writes projects; an editor publishes them.
   the title alone.
 - Category chips above the title, and client / year / live link under the
   intro — each optional.
+- **Hero height** and **on phones** (e.g. 640px / 360px); empty keeps 16:9
+  and 4:3. **Title and intro width** (e.g. 42%, or 520px) for a narrow
+  heading column, full width on phones. **Categories above the title** as
+  chips (as before) or plain text. *(3.23)*
 - **More projects** after each project: from the same primary category
   (topped up with the newest when there are too few) or simply the newest; one
   to six; as a grid or a carousel; with its own heading.

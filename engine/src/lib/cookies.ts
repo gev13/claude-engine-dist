@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isColor } from './theme';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The cookie notice (package 10, phase D)
@@ -26,7 +27,7 @@ import { z } from 'zod';
    would be giving legal advice.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export const COOKIE_POSITIONS = ['bottom-bar', 'bottom-left', 'bottom-right', 'centre'] as const;
+export const COOKIE_POSITIONS = ['bottom-bar', 'bottom-left', 'bottom-right', 'centre', 'bottom-center'] as const;
 export type CookiePosition = (typeof COOKIE_POSITIONS)[number];
 
 export const COOKIE_POSITION_LABELS: Record<CookiePosition, string> = {
@@ -34,6 +35,7 @@ export const COOKIE_POSITION_LABELS: Record<CookiePosition, string> = {
   'bottom-left': 'A card in the bottom-left corner',
   'bottom-right': 'A card in the bottom-right corner',
   centre: 'Centred, over a dimmed page',
+  'bottom-center': 'A card at the bottom, centred',
 };
 
 /** Where the answer is kept. Read by the banner, and by anything a site adds. */
@@ -82,6 +84,15 @@ export const cookieNoticeSchema = z.object({
   policyLabel: text(60).default('Cookie policy'),
 
   position: z.enum(COOKIE_POSITIONS).default('bottom-bar'),
+  /** 3.23 — a card (as before) or one slim line — a pill — with the text and the policy link side by side. */
+  look: z.enum(['card', 'pill']).optional(),
+  /** 3.23 — notice mode: a ✕ that closes it (and counts as the answer) instead of the buttons. */
+  closeButton: z.boolean().optional(),
+  /** 3.23 — its own colours and corners; unset is the surface, the text colour and the stylesheet's. */
+  background: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  textColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  radius: z.number().int().min(0).max(40).optional(),
+  width: z.number().int().min(240).max(1200).optional(),
 
   /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
      `notice` is the banner as it always was: a recorded answer and nothing

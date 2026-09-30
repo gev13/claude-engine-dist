@@ -110,6 +110,24 @@ export function ProjectTemplateScreen() {
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.showDetails} onChange={(e) => set('showDetails', e.target.checked)} />
               Client, year and the live link under the intro
             </label>
+            {/* 3.23 — the header's dimensions and the categories' look. */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <Field label="Hero height" htmlFor="tpl-hero-h" hint="e.g. 640px; empty is 16:9">
+                <Input id="tpl-hero-h" value={form.heroHeight ?? ''} placeholder="640px" maxLength={40} onChange={(e) => set('heroHeight', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="— on phones" htmlFor="tpl-hero-hm" hint="empty is 4:3">
+                <Input id="tpl-hero-hm" value={form.heroHeightMobile ?? ''} placeholder="360px" maxLength={40} onChange={(e) => set('heroHeightMobile', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Title and intro width" htmlFor="tpl-head-w" hint="e.g. 520px or 42%; phones use the full width">
+                <Input id="tpl-head-w" value={form.headWidth ?? ''} placeholder="20ch / 62ch" maxLength={40} onChange={(e) => set('headWidth', e.target.value.trim() || undefined)} />
+              </Field>
+            </div>
+            <Field label="Categories above the title" htmlFor="tpl-cats">
+              <Select id="tpl-cats" value={form.categoryStyle ?? 'chips'} onChange={(e) => set('categoryStyle', e.target.value === 'plain' ? 'plain' : undefined)}>
+                <option value="chips">Chips (as before)</option>
+                <option value="plain">Plain text</option>
+              </Select>
+            </Field>
             <ColorField
               label="Page colour"
               hint="every project page, behind every section; a project can set its own"

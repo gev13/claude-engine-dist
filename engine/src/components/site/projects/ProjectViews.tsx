@@ -147,10 +147,10 @@ export async function ProjectArticle({
   const heading = (
     <>
       {chips}
-      <Heading level={1} className="max-w-[20ch]">
+      <Heading level={1} className={template.headWidth ? 'max-w-[var(--he-prj-head-w)]' : 'max-w-[20ch]'}>
         {project.title}
       </Heading>
-      {project.intro && <Prose html={project.intro} className="he-prj-intro mt-6 max-w-[62ch]" />}
+      {project.intro && <Prose html={project.intro} className={cn('he-prj-intro mt-6', template.headWidth ? 'max-w-[var(--he-prj-head-w)]' : 'max-w-[62ch]')} />}
       {template.showDetails && <Details project={project} t={t} />}
     </>
   );
@@ -162,7 +162,19 @@ export async function ProjectArticle({
 
   return (
     <>
-      <article className={cn('he-prj', `is-${template.header}`)}>
+      <article
+        className={cn('he-prj', `is-${template.header}`, template.headWidth && 'has-head-w', template.categoryStyle === 'plain' && 'is-cats-plain', template.heroHeight && 'has-hero-h', template.heroHeightMobile && 'has-hero-hm')}
+        // 3.23 — the hero's height and the heading column's width, from the page template.
+        style={
+          template.heroHeight || template.heroHeightMobile || template.headWidth
+            ? ({
+                ...(template.heroHeight ? { '--he-prj-hero-h': template.heroHeight } : {}),
+                ...(template.heroHeightMobile ? { '--he-prj-hero-h-m': template.heroHeightMobile } : {}),
+                ...(template.headWidth ? { '--he-prj-head-w': template.headWidth } : {}),
+              } as React.CSSProperties)
+            : undefined
+        }
+      >
         {template.header === 'fullBleed' && (
           <header className="he-prj-hero he-bleed-top">
             <HeroMedia project={project} />

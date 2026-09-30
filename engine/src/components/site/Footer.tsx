@@ -32,6 +32,8 @@ export type FooterProps = {
   socialStyle?: SocialLabelStyle;
   /** 3.22 — between names or short labels. */
   socialSeparator?: 'none' | 'slash' | 'dot';
+  /** 3.23 — between the legal links. */
+  legalSeparator?: 'none' | 'bar' | 'slash' | 'dot';
   /** 3.22 — the networks listed as icon and name, apart from the others. */
   contactLinks?: readonly string[];
   variant?: FooterVariant;
@@ -134,7 +136,7 @@ export function Footer(props: FooterProps) {
     <div className="he-ftr__bottom">
       <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
       {legal.length > 0 && (
-        <ul className="he-ftr__legal">
+        <ul className={cn('he-ftr__legal', props.legalSeparator && props.legalSeparator !== 'none' && `has-sep is-sep-${props.legalSeparator}`)}>
           {legal.map((item) => (
             <li key={item.id}>
               <Link href={item.href} {...linkAttrs(item)}>
@@ -173,7 +175,7 @@ export function Footer(props: FooterProps) {
           <div className="he-ftr__fine">
             <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
             {legal.length > 0 && (
-              <ul className="he-ftr__legal">
+              <ul className={cn('he-ftr__legal', props.legalSeparator && props.legalSeparator !== 'none' && `has-sep is-sep-${props.legalSeparator}`)}>
                 {legal.map((item) => (
                   <li key={item.id}>
                     <Link href={item.href} {...linkAttrs(item)}>

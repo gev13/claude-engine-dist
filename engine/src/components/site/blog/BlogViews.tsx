@@ -9,7 +9,7 @@ import { Heading } from '@/components/ui/Heading';
 import { Section } from '@/components/ui/Section';
 import type { AnyBlock } from '@/lib/blocks';
 import { resolveBlog, type ResolvedBlog } from '@/lib/blog';
-import type { ServerList } from '@/lib/listing';
+import { hasPostList, type ServerList } from '@/lib/listing';
 import type { Locale } from '@/lib/locales';
 import { messageReader } from '@/lib/messages';
 import { absoluteWithSlash, blogIndexPath, categoryPath, feedPath, pagedPath, postPath, researchPath, type Permalinks } from '@/lib/permalinks';
@@ -285,8 +285,10 @@ export async function BlogIndexView({
   /* A site with no page at the blog's address still has a blog. It gets a
      plain heading and the posts, so the route never renders without an h1 or
      a list. */
+  // 3.23 — a Blog page with no post list of its own shows the built-in archive under its blocks.
+  const builtIn = !page || (!list && !hasPostList(blocks));
   const latest =
-    !page && !query ? await listPosts({ limit: paging.perPage, offset: (paging.number - 1) * paging.perPage, locale }) : [];
+    builtIn && !query ? await listPosts({ limit: paging.perPage, offset: (paging.number - 1) * paging.perPage, locale }) : [];
   const results = query ? await searchPosts(query, 24) : [];
   const search = (
     <BlogSearch
@@ -329,7 +331,7 @@ export async function BlogIndexView({
         // 3.22 — breadcrumbs, the count and the categories in one row.
         <ArchiveToolbar
           crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
-          count={blog.resultCount && !page && latest.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
+          count={blog.resultCount && builtIn && latest.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
           bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} current="all" bare />}
         />
       ) : (
@@ -349,7 +351,7 @@ export async function BlogIndexView({
           )}
           <SearchResults query={query} results={results} permalinks={permalinks} t={t} />
         </>
-      ) : page ? (
+      ) : page && !builtIn ? (
         <BlockRenderer
           blocks={rest}
           trail={trail}
@@ -357,6 +359,8 @@ export async function BlogIndexView({
           locale={locale}
         />
       ) : (
+        <>
+        {page && rest.length > 0 && <BlockRenderer blocks={rest} trail={trail} locale={locale} />}
         <Section size="lg">
           {latest.length === 0 ? (
             <p className="m-0 text-[16px] text-smoke">{t('blog.nothingYet')}</p>
@@ -383,6 +387,7 @@ export async function BlogIndexView({
             </>
           )}
         </Section>
+        </>
       )}
 
       {!query && <PagingLinks paging={paging} permalinks={permalinks} />}
@@ -500,6 +505,12 @@ export async function ArchiveView({
       />
     ) : undefined;
   const current = kind === 'category' && category ? category.slug : 'research';
+  /* 3.23 — the "Blog" eyebrow above the title (as before), a label under it
+     ("Category", a Site translation), or neither. */
+  const labelAbove = blog.categoryLabel === 'eyebrow' && <Eyebrow>{site.blogLabel}</Eyebrow>;
+  const labelUnder = blog.categoryLabel === 'subtitle' && (
+    <p className="he-arch-sub type-eyebrow">{kind === 'category' ? t('blog.categoryLabel') : t('blog.research')}</p>
+  );
 
   return (
     <>
@@ -508,10 +519,11 @@ export async function ArchiveView({
         {picture ? (
           <div className="he-arch-hero">
             <div>
-              <Eyebrow>{site.blogLabel}</Eyebrow>
+              {labelAbove}
               <Heading level={1} className="max-w-[20ch]">
                 {title}
               </Heading>
+              {labelUnder}
               {description && <p className="mt-6 max-w-[62ch] text-[17px] text-ash">{description}</p>}
             </div>
             <div className="he-arch-hero__media">
@@ -520,10 +532,11 @@ export async function ArchiveView({
           </div>
         ) : (
           <>
-            <Eyebrow>{site.blogLabel}</Eyebrow>
+            {labelAbove}
             <Heading level={1} className={kind === 'category' ? 'max-w-[20ch]' : 'max-w-[18ch]'}>
               {title}
             </Heading>
+            {labelUnder}
             {description && <p className="mt-6 max-w-[62ch] text-[17px] text-ash">{description}</p>}
           </>
         )}
@@ -533,7 +546,8 @@ export async function ArchiveView({
         <ArchiveToolbar
           crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
           count={blog.resultCount && posts.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
-          bar={blog.archiveBar ? <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} bare /> : undefined}
+          // 3.23 — the toolbar row is the index's: its categories are there on every archive.
+          bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} bare />}
         />
       ) : (
         blog.archiveBar && <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} />

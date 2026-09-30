@@ -570,6 +570,21 @@ export const themeSchema = z.object({
       firstGapMobile: length.optional(),
       /** 3.15 — phones: the space between a section's parts — heading, intro, list — and between its cards. */
       itemGapMobile: length.optional(),
+      /** 3.23 — blocks inside a row's column lose their band's own space above and below, as the classic blocks always did. */
+      nestedFlush: z.boolean().optional(),
+      /** 3.23 — the space between an eyebrow and the heading under it (e.g. 12px); unset is each block's own (28px). */
+      eyebrowGap: length.optional(),
+    })
+    .optional(),
+
+  /** 3.23 — the numbered pages under a list: circles (as before) or rounded squares, the current page's colours, the face. */
+  pager: z
+    .object({
+      shape: z.enum(['circle', 'square']).optional(),
+      activeBackground: color.optional(),
+      activeText: color.optional(),
+      border: color.optional(),
+      font: z.enum(['mono', 'body']).optional(),
     })
     .optional(),
 

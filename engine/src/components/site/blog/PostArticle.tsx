@@ -152,23 +152,35 @@ export async function PostArticle({
   const tocTop = !preview && blog.toc.position === 'top';
   // 3.22 — the share buttons in a column of their own beside the article, following the reader.
   const shareBeside = !preview && blog.share.position === 'beside' && showBody;
-  const body = showBody && (
-    tocSide || shareBeside ? (
+  /* 3.23 — "Cover, then the title in the article's column": the title and its
+     details open the article's own column, beside the contents and share
+     columns, instead of standing above them. */
+  const article = (head?: React.ReactNode) =>
+    head ? (
+      <div className="he-post__col">
+        {head}
+        <Prose html={bodyHtml} className="mt-10 max-w-[72ch]" />
+      </div>
+    ) : (
+      <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
+    );
+  const bodyWith = (head?: React.ReactNode) =>
+    showBody &&
+    (tocSide || shareBeside ? (
       <>
         {tocTop && <PostToc blog={blog} t={t} />}
         <div className={cn('he-post__body', tocSide && `has-toc-${blog.toc.position}`, shareBeside && 'has-share-beside')}>
           {shareBeside && <PostShare blog={blog} t={t} beside />}
           {tocSide && <PostToc blog={blog} t={t} />}
-          <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
+          {article(head)}
         </div>
       </>
     ) : (
       <>
         {tocTop && <PostToc blog={blog} t={t} />}
-        <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
+        {article(head)}
       </>
-    )
-  );
+    ));
   const shareTop = !preview && (blog.share.position === 'top' || (blog.share.position === 'beside' && !showBody)) && <PostShare blog={blog} t={t} />;
   const shareBottom = !preview && blog.share.position === 'bottom' && <PostShare blog={blog} t={t} />;
   const title = (
@@ -235,9 +247,19 @@ export async function PostArticle({
             </div>
           </header>
         )}
-        {layout === 'coverThenTitle' && (
-          // 2.18 — the cover at its own shape, full width; the title follows in a card.
-          <div className="he-post-ctt he-bleed-top">
+        {(layout === 'coverThenTitle' || layout === 'coverThenColumn') && (
+          // 2.18 — the cover at its own shape, full width (3.23: or at a height of its own); the title follows.
+          <div
+            className="he-post-ctt he-bleed-top"
+            style={
+              blog.coverHeight || blog.coverHeightMobile
+                ? ({
+                    ...(blog.coverHeight ? { '--he-cover-h': blog.coverHeight } : {}),
+                    ...(blog.coverHeightMobile ? { '--he-cover-h-m': blog.coverHeightMobile } : {}),
+                  } as React.CSSProperties)
+                : undefined
+            }
+          >
             <SiteImg src={post.coverUrl!} alt="" className="he-post-ctt__img" priority />
           </div>
         )}
@@ -255,6 +277,17 @@ export async function PostArticle({
             </div>
           ) : layout === 'fullscreen' ? (
             meta
+          ) : layout === 'coverThenColumn' ? (
+            // 3.23 — the heading opens the article's column (below); without a body it stands here.
+            !showBody && (
+              <>
+                {back}
+                {eyebrow}
+                {title}
+                {excerpt}
+                {meta}
+              </>
+            )
           ) : layout === 'coverThenTitle' ? (
             <div
               className="he-post-ctt__card"
@@ -279,7 +312,17 @@ export async function PostArticle({
           )}
 
           {shareTop}
-          {body}
+          {bodyWith(
+            layout === 'coverThenColumn' ? (
+              <>
+                {back}
+                {eyebrow}
+                {title}
+                {excerpt}
+                {meta}
+              </>
+            ) : undefined,
+          )}
           {shareBottom}
         </Section>
         {!blocksFirst && postBlocks}

@@ -19,6 +19,7 @@
   .he-plst__media .he-fill { transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-plst__link:hover .he-plst__media .he-fill { transform: scale(1.04); }
   .he-plst__text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+  .he-plst__chip.is-under { margin-top: 6px; }
   .he-plst__chip { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-flare-soft)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-plst__title { margin: 0; font-family: var(--font-display); font-size: 22px; font-weight: 700; line-height: 1.2; text-decoration: underline; text-decoration-color: transparent; text-decoration-thickness: 1px; text-underline-offset: 5px; transition: text-decoration-color calc(150ms * var(--he-motion, 1)); }
   .he-plst__link:hover .he-plst__title { text-decoration-color: currentColor; }
@@ -63,17 +64,17 @@
     min-width: 42px;
     height: 42px;
     padding: 0 12px;
-    border: 1px solid var(--color-hairline);
-    border-radius: 999px;
+    border: 1px solid var(--he-pager-border, var(--color-hairline));
+    border-radius: var(--he-pager-radius, 999px);
     background: none;
     color: var(--color-ash);
-    font-family: var(--font-mono);
+    font-family: var(--he-pager-family, var(--font-mono));
     font-size: 13px;
     cursor: pointer;
     transition: border-color calc(150ms * var(--he-motion, 1)), background-color calc(150ms * var(--he-motion, 1)), color calc(150ms * var(--he-motion, 1));
   }
   .he-pager__btn:hover:not(:disabled) { border-color: var(--color-bone); color: var(--color-bone); }
-  .he-pager__btn[aria-current='page'] { border-color: var(--color-bone); background: var(--color-bone); color: var(--color-ink); }
+  .he-pager__btn[aria-current='page'] { border-color: var(--he-pager-active-bg, var(--color-bone)); background: var(--he-pager-active-bg, var(--color-bone)); color: var(--he-pager-active-text, var(--color-ink)); }
   .he-pager__btn:disabled { opacity: 0.35; cursor: default; }
   /* 2.13 — the server's pages are links, not buttons, and the ends of the
      range are plain spans; the same look either way. */

@@ -63,6 +63,7 @@ export function Card({
   hover,
   moreLabel,
   media,
+  more = true,
 }: {
   href?: string;
   eyebrow?: React.ReactNode;
@@ -79,6 +80,8 @@ export function Card({
   moreLabel?: string;
   /** 3.2 — a picture above everything else, inset in the card. */
   media?: React.ReactNode;
+  /** 3.23 — the "Read more" line at the foot of a linked card (true, as before) or none. */
+  more?: boolean;
 }) {
   const moves = cardHoverProps(hover);
   const body = (
@@ -107,7 +110,7 @@ export function Card({
       )}
       {children && <div className="he-ucard__body mt-3 text-[15px] text-ash">{children}</div>}
       {meta && <div className="mt-auto pt-5">{meta}</div>}
-      {href && (
+      {href && more && (
         <span className="he-more mt-auto flex items-center gap-2 pt-5 text-[length:var(--he-card-link-size,var(--he-label-size,11px))] tracking-[var(--he-card-link-tracking,var(--he-label-tracking,0.12em))] text-[color:var(--he-card-link-color,var(--he-label-color,var(--color-flare-soft)))] transition-colors group-hover:text-flare-hot he-lbl-card">
           {moreLabel || <MessageText k="block.readMore" />}
           <ArrowRight className="he-more__icon transition-transform duration-200 group-hover:translate-x-1" />

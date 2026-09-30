@@ -36,9 +36,10 @@ export function BlogList({
   if (blog.index === 'grid') {
     /* The card grid's line above the title: its date, as always — or what the
        site picked (2.18), joined with a middle dot. */
+    const category = (p: PostRow) => (p.kind === 'research' ? labels?.research : (p.categoryName ?? labels?.article));
     const eyebrow = (p: PostRow) => {
       const parts = [
-        card.category ? (p.kind === 'research' ? labels?.research : (p.categoryName ?? labels?.article)) : null,
+        card.category && card.categoryPlace !== 'under' ? category(p) : null,
         card.date !== false && p.publishedAt ? formatDate(p.publishedAt) : null,
         card.readingTime && labels?.minRead ? `${p.readingMinutes} ${labels.minRead}` : null,
       ].filter(Boolean);
@@ -58,6 +59,8 @@ export function BlogList({
             href={postPath(permalinks, p)}
             hover={card.hover}
             moreLabel={labels?.readMore}
+            // 3.23 — the card's own "Read more" is the only one (it used to be printed twice); off when the site says so.
+            more={card.readMore !== false}
             // 3.22 — the cover at the top of each card.
             media={
               card.image
@@ -67,8 +70,9 @@ export function BlogList({
                 : undefined
             }
           >
-            {p.excerpt}
-            {card.readMore && labels?.readMore && <span className="he-card__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
+            {/* 3.23 — the category as a chip under the title, and the excerpt only when wanted. */}
+            {card.categoryPlace === 'under' && <span className="he-chip he-card__chip">{category(p)}</span>}
+            {card.excerpt !== false && p.excerpt}
           </Card>
         ))}
         {wantsTilt(card.hover) && <CardTilt />}

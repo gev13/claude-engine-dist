@@ -3,6 +3,8 @@ import { SOCIAL_NETWORKS, isSafeHref, type SocialNetwork } from './navigation';
 
 /** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+/** 3.23 — a colour: hex, or rgb()/hsl() with numbers only (the theme's grammar, repeated: the theme imports this file). */
+const COLOR = /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
 /** 3.22 — a plain length (40px, 2.5rem, -0.02em, 0), for the few sizes set here; it lands in a style attribute. */
 const LENGTH = /^(0|-?\d*\.?\d+(px|rem|em|vw|vh|%))$/;
 
@@ -108,6 +110,11 @@ export const chromeSchema = z.object({
         .optional(),
       /** 3.22 — the header button drawn as the main button (unset, as before) or the outline one. */
       ctaStyle: z.enum(['primary', 'outline']).optional(),
+      /** 3.23 — the header button's edge, px; unset is its button style's. */
+      ctaBorderWidth: z.number().int().min(0).max(4).optional(),
+      /** 3.23 — the round menu button's own circle and icon colours (e.g. rgba(0,0,0,0.5)); unset is the surface. */
+      menuButtonBackground: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
+      menuButtonColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       /** While scrolling: always there (as before), hide going down and return going up, or shrink. */
       behaviour: z.enum(['always', 'hide', 'shrink']).optional(),
       /** Phones: the logo at the left (as before), centred between the buttons, or (3.6) just after the menu button. */
@@ -201,6 +208,8 @@ export const chromeSchema = z.object({
       copyrightCase: z.enum(['upper', 'asWritten']).optional(),
       /** 3.22 — between the social links written as names or short labels: nothing (as before), a slash or a dot. */
       socialSeparator: z.enum(['none', 'slash', 'dot']).optional(),
+      /** 3.23 — between the legal links in the bottom row: nothing (as before), a bar, a slash or a dot. */
+      legalSeparator: z.enum(['none', 'bar', 'slash', 'dot']).optional(),
       /** 3.22 — these social links as a list of icon and name under the others (phone, messengers), instead of among them. */
       contactLinks: z.array(z.enum(SOCIAL_NETWORKS)).max(12).optional(),
     })
@@ -260,6 +269,8 @@ export const chromeSchema = z.object({
       position: z.enum(['center', 'bottom']).optional(),
       /** Each part stacked (as before), or the whole rail one line written up the edge. */
       orientation: z.enum(['stacked', 'row']).optional(),
+      /** 3.23 — which social links the rail shows, in this order; unset is every one. */
+      networks: z.array(z.enum(SOCIAL_NETWORKS)).max(20).optional(),
     })
     .optional(),
 
@@ -325,6 +336,9 @@ export type ResolvedChrome = {
     under: boolean;
     ctaColors: { text?: string; background?: string; border?: string; hoverText?: string; hoverBackground?: string; hoverBorder?: string };
     ctaStyle: 'primary' | 'outline';
+    ctaBorderWidth?: number;
+    menuButtonBackground?: string;
+    menuButtonColor?: string;
     behaviour: 'always' | 'hide' | 'shrink';
     logoMobile: 'left' | 'center' | 'afterMenu';
     height: { base?: number; laptop?: number; tablet?: number; mobile?: number };
@@ -370,6 +384,7 @@ export type ResolvedChrome = {
     email: boolean;
     copyrightCase: 'upper' | 'asWritten';
     socialSeparator: 'none' | 'slash' | 'dot';
+    legalSeparator: 'none' | 'bar' | 'slash' | 'dot';
     contactLinks: SocialNetwork[];
   };
   cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
@@ -390,6 +405,7 @@ export type ResolvedChrome = {
     separator: 'none' | 'slash' | 'dot';
     position: 'center' | 'bottom';
     orientation: 'stacked' | 'row';
+    networks?: SocialNetwork[];
   } | null;
   announcement: { text: string; linkLabel?: string; href?: string; dismissible: boolean } | null;
   regionBar: { message: string; buttonLabel: string; options: { label: string; href: string }[] } | null;
@@ -441,6 +457,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       under: beside || notch ? false : (c.header?.under ?? false),
       ctaColors: Object.fromEntries(Object.entries(c.header?.ctaColors ?? {}).filter(([, v]) => typeof v === 'string' && HEX.test(v))),
       ctaStyle: c.header?.ctaStyle ?? 'primary',
+      ctaBorderWidth: c.header?.ctaBorderWidth,
+      menuButtonBackground: c.header?.menuButtonBackground && COLOR.test(c.header.menuButtonBackground) ? c.header.menuButtonBackground : undefined,
+      menuButtonColor: c.header?.menuButtonColor && COLOR.test(c.header.menuButtonColor) ? c.header.menuButtonColor : undefined,
       behaviour: c.header?.behaviour ?? 'always',
       logoMobile: c.header?.logoMobile ?? 'left',
       height: c.header?.height ?? {},
@@ -486,6 +505,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       email: c.footer?.email ?? true,
       copyrightCase: c.footer?.copyrightCase ?? 'upper',
       socialSeparator: c.footer?.socialSeparator ?? 'none',
+      legalSeparator: c.footer?.legalSeparator ?? 'none',
       contactLinks: c.footer?.contactLinks ?? [],
     },
     cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
@@ -512,6 +532,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
           separator: c.rails.separator ?? 'none',
           position: c.rails.position ?? 'center',
           orientation: c.rails.orientation ?? 'stacked',
+          networks: c.rails.networks?.length ? c.rails.networks : undefined,
         }
       : null,
     announcement: announcement

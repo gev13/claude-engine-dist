@@ -18,7 +18,8 @@ export const BLOG_INDEX_LAYOUTS = ['grid', 'list', 'minimal', 'overlay', 'compac
 export type BlogIndexLayout = (typeof BLOG_INDEX_LAYOUTS)[number];
 
 /** `coverThenTitle` (2.18): the cover full-width at its own shape, then a card with the title and details. */
-export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split', 'coverThenTitle'] as const;
+/** `coverThenColumn` (3.23): the cover, then the title and details opening the article's own column — no card. */
+export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split', 'coverThenTitle', 'coverThenColumn'] as const;
 export type BlogPostLayout = (typeof BLOG_POST_LAYOUTS)[number];
 
 /* ── What a post shows (T3, 2.13) ────────────────────────────────────────
@@ -91,6 +92,8 @@ export const blogSchema = z.object({
   progress: z.boolean().optional(),
   /** T2 — posts per archive page, on the server; unset keeps 24 / 48. */
   archivePerPage: z.number().int().min(1).max(MAX_ARCHIVE_PER_PAGE).optional(),
+  /** 3.23 — posts per page on a category's archive, when it should differ from the index; unset follows the setting above. */
+  categoryPerPage: z.number().int().min(1).max(MAX_ARCHIVE_PER_PAGE).optional(),
   archivePager: z.enum(ARCHIVE_PAGERS).optional(),
   /** “Showing 1–12 of 110 results” above an archive. */
   resultCount: z.boolean().optional(),
@@ -133,6 +136,9 @@ export const blogSchema = z.object({
   excerpt: z.boolean().optional(),
   /** 3.22 — Cover, then a title card: how far the card rides up over the cover (e.g. 80px, 0 for none); unset is the drawn 48–120px. */
   coverOverlap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+  /** 3.23 — the full-width cover's height (e.g. 600px), and on phones; unset is the picture's own shape. */
+  coverHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+  coverHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   /** 3.22 — the card in the corner: also on phones, and closed for this post only rather than for the visit. */
   upNext: z.object({ phones: z.boolean().optional(), dismiss: z.enum(['visit', 'post']).optional() }).optional(),
 
@@ -157,6 +163,10 @@ export const blogSchema = z.object({
       hover: cardHoverSchema.optional(),
       /** 3.22 — the card grid: each post's cover at the top of its card. */
       image: z.boolean().optional(),
+      /** 3.23 — the excerpt: shown or left out; unset is as each layout draws it. */
+      excerpt: z.boolean().optional(),
+      /** 3.23 — the category in the line with the date (as the card grid has it), or as a chip under the title. */
+      categoryPlace: z.enum(['line', 'under']).optional(),
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -175,6 +185,12 @@ export const blogSchema = z.object({
   toolbar: z.boolean().optional(),
   /** 3.22 — the chips' "Browse" label (unset or true, as before). */
   browseLabel: z.boolean().optional(),
+  /** 3.23 — the built-in blog index's search title and description, when no page stands at its address. */
+  indexSeo: z
+    .object({ title: z.string().trim().max(300).optional(), description: z.string().trim().max(1000).optional(), exactTitle: z.boolean().optional() })
+    .optional(),
+  /** 3.23 — a category's page: the "Blog" eyebrow above its title (unset, as before), a label under it, or neither. */
+  categoryLabel: z.enum(['eyebrow', 'subtitle', 'none']).optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
@@ -184,7 +200,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under' }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';
@@ -193,6 +209,7 @@ export type ResolvedBlog = {
   progress: boolean;
   /** Undefined means "as before 2.13": 24 on the index, 48 elsewhere. */
   archivePerPage?: number;
+  categoryPerPage?: number;
   archivePager: ArchivePager;
   resultCount: boolean;
   share: { position: PostSharePosition; networks: ShareNetwork[] };
@@ -203,6 +220,8 @@ export type ResolvedBlog = {
   meta: { show: boolean; author: boolean; readingTime: boolean; categories: boolean };
   excerpt: boolean;
   coverOverlap?: string;
+  coverHeight?: string;
+  coverHeightMobile?: string;
   upNext: { phones: boolean; dismiss: 'visit' | 'post' };
   authorBox: boolean;
   backLink: boolean;
@@ -221,6 +240,8 @@ export type ResolvedBlog = {
   searchOff: boolean;
   toolbar: boolean;
   browseLabel: boolean;
+  indexSeo: { title?: string; description?: string; exactTitle?: boolean };
+  categoryLabel: 'eyebrow' | 'subtitle' | 'none';
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -231,6 +252,7 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     post: blog?.post ?? 'standard',
     progress: blog?.progress ?? false,
     archivePerPage: blog?.archivePerPage,
+    categoryPerPage: blog?.categoryPerPage,
     archivePager: blog?.archivePager ?? 'numbers',
     resultCount: blog?.resultCount ?? false,
     share: { position: blog?.share?.position ?? 'off', networks: blog?.share?.networks ?? ['facebook', 'x', 'pinterest', 'linkedin'] },
@@ -246,6 +268,8 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     },
     excerpt: blog?.excerpt !== false,
     coverOverlap: blog?.coverOverlap && isLength(blog.coverOverlap) ? blog.coverOverlap : undefined,
+    coverHeight: blog?.coverHeight && isLength(blog.coverHeight) ? blog.coverHeight : undefined,
+    coverHeightMobile: blog?.coverHeightMobile && isLength(blog.coverHeightMobile) ? blog.coverHeightMobile : undefined,
     upNext: { phones: blog?.upNext?.phones === true, dismiss: blog?.upNext?.dismiss ?? 'visit' },
     authorBox: blog?.authorBox ?? false,
     off: blog?.off ?? false,
@@ -264,6 +288,8 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     searchOff: blog?.searchOff ?? false,
     toolbar: blog?.toolbar ?? false,
     browseLabel: blog?.browseLabel !== false,
+    indexSeo: blog?.indexSeo ?? {},
+    categoryLabel: blog?.categoryLabel ?? 'eyebrow',
   };
 }
 
@@ -296,6 +322,7 @@ export function eyebrowAroundCategory(
 
 /** Posts per page on one archive: the setting, or what that archive showed before it existed. */
 export function archivePerPage(blog: ResolvedBlog, archive: 'index' | 'category' | 'research'): number {
+  if (archive === 'category' && blog.categoryPerPage) return blog.categoryPerPage;
   return blog.archivePerPage ?? (archive === 'index' ? LEGACY_INDEX_PER_PAGE : LEGACY_ARCHIVE_PER_PAGE);
 }
 
@@ -310,6 +337,7 @@ export const BLOG_INDEX_LABELS: Record<BlogIndexLayout, { label: string; hint: s
 
 export const BLOG_POST_LABELS: Record<BlogPostLayout, { label: string; hint: string }> = {
   coverThenTitle: { label: 'Cover, then a title card', hint: 'The cover full-width at its own shape, then a rounded card with the title and details' },
+  coverThenColumn: { label: 'Cover, then the title in the article', hint: 'The cover full-width, then the title and details at the top of the article’s own column — no card' },
   standard: { label: 'Standard', hint: 'Title, excerpt and the article' },
   cover: { label: 'Cover image', hint: 'A wide cover image under the title' },
   fullscreen: { label: 'Full-screen cover', hint: 'The title over a full-width cover image' },

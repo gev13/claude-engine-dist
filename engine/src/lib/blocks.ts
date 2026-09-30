@@ -492,6 +492,10 @@ export const blockSchemas = {
   gallery: z.object({
     ...showcaseHead,
     layout: z.enum(GALLERY_LAYOUTS).default('grid'),
+    /** 3.23 — pictures per row on tablets and on phones (1 allowed); unset is up to three, then two. And the pictures' corners, px. */
+    columnsTablet: z.number().int().min(1).max(5).optional(),
+    columnsMobile: z.number().int().min(1).max(4).optional(),
+    radius: z.number().int().min(0).max(48).optional(),
     /** 3.22 — masonry: filled column by column (unset, as before) or row by row, adding below without moving anything. */
     masonryOrder: z.enum(['columns', 'rows']).optional(),
     columns: z.number().int().min(2).max(5).default(3),
@@ -742,6 +746,9 @@ export const blockSchemas = {
         ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
         /** 2.19 — how each card answers the pointer; unset is nothing new. */
         hover: cardHoverSchema.optional(),
+        /** 3.23 — the excerpt shown or left out, and the category as a chip under the title; unset is as each layout draws it. */
+        excerpt: z.boolean().optional(),
+        categoryPlace: z.enum(['line', 'under']).optional(),
       })
       .optional(),
   }),

@@ -71,6 +71,12 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
             ]}
             onChange={set(['blog', 'eyebrowStyle'])}
           />
+          <Field label="The full-width cover’s height" hint="e.g. 600px; empty is the picture’s own shape">
+            <Input value={blog?.coverHeight ?? ''} placeholder="600px" maxLength={40} onChange={(e) => set(['blog', 'coverHeight'])(e.target.value.trim() || undefined)} />
+          </Field>
+          <Field label="— on phones">
+            <Input value={blog?.coverHeightMobile ?? ''} placeholder="as above" maxLength={40} onChange={(e) => set(['blog', 'coverHeightMobile'])(e.target.value.trim() || undefined)} />
+          </Field>
           <Field label="Cover, then a title card: overlap" hint="how far the card rides up over the cover; 0 starts it right under; empty is 48–120px">
             <Input value={blog?.coverOverlap ?? ''} placeholder="e.g. 80px or 0" maxLength={40} onChange={(e) => set(['blog', 'coverOverlap'])(e.target.value.trim() || undefined)} />
           </Field>
@@ -280,6 +286,30 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
         <Check label="The “Browse” label before the chips" checked={blog?.browseLabel !== false} onChange={(v) => set(['blog', 'browseLabel'])(v ? undefined : false)} />
         <Check label="The newest post as a large card — picture left — above the list" checked={blog?.featured === true} onChange={(v) => set(['blog', 'featured'])(v || undefined)} />
         <Choice
+          label="A category’s label"
+          hint="“Category” is a Site translation"
+          value={blog?.categoryLabel}
+          options={[
+            ['eyebrow', 'The blog’s name above the title (as before)'],
+            ['subtitle', '“Category” under the title'],
+            ['none', 'Neither'],
+          ]}
+          onChange={set(['blog', 'categoryLabel'])}
+        />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="The blog’s search title" hint="used when no page stands at the blog’s address">
+            <Input value={blog?.indexSeo?.title ?? ''} maxLength={300} onChange={(e) => set(['blog', 'indexSeo'])(tidy({ ...blog?.indexSeo, title: e.target.value || undefined }))} />
+          </Field>
+          <Field label="The blog’s search description">
+            <Input value={blog?.indexSeo?.description ?? ''} maxLength={1000} onChange={(e) => set(['blog', 'indexSeo'])(tidy({ ...blog?.indexSeo, description: e.target.value || undefined }))} />
+          </Field>
+        </div>
+        <Check
+          label="That title exactly as written, without the site’s name after it"
+          checked={blog?.indexSeo?.exactTitle === true}
+          onChange={(v) => set(['blog', 'indexSeo'])(tidy({ ...blog?.indexSeo, exactTitle: v || undefined }))}
+        />
+        <Choice
           label="A category’s heading"
           hint="the picture is set with each category"
           value={blog?.categoryHero}
@@ -302,6 +332,8 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
           <div className="grid gap-2 sm:grid-cols-2">
             <Check label="The date" checked={card.date !== false} onChange={(v) => setCard('date', v ? undefined : false)} />
             <Check label="The cover (the card grid)" checked={card.image === true} onChange={(v) => setCard('image', v || undefined)} />
+            <Check label="The excerpt" checked={card.excerpt !== false} onChange={(v) => setCard('excerpt', v ? undefined : false)} />
+            <Check label="The category as a chip under the title" checked={card.categoryPlace === 'under'} onChange={(v) => setCard('categoryPlace', v ? 'under' : undefined)} />
 
             <Check label="The reading time" checked={card.readingTime === true} onChange={(v) => setCard('readingTime', v || undefined)} />
             <Check label="“Read more →”" checked={card.readMore === true} onChange={(v) => setCard('readMore', v || undefined)} />
