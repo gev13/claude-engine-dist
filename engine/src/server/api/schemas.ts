@@ -24,6 +24,8 @@ export const seoSchema = z.object({
     .array(z.object({ name: z.string().optional(), property: z.string().optional(), content: z.string() }))
     .max(40)
     .optional(),
+  /** 3.22 — posts: a reading time as written, kept instead of the counted one. */
+  readingMinutes: z.number().int().min(1).max(600).optional(),
 });
 
 export const blockInput = z.object({

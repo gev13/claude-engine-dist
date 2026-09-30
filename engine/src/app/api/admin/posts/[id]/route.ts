@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { eq, sql } from 'drizzle-orm';
-import { readingMinutes } from '@/lib/utils';
+import { postReadingMinutes } from '@/lib/utils';
 import { toSlug } from '@/lib/slug';
 import { blockInput, seoSchema, statusEnum } from '@/server/api/schemas';
 import { badRequest, conflict, forbidden, handle, noContent, notFound, ok, readJson } from '@/server/api/respond';
@@ -140,7 +140,11 @@ export async function PATCH(request: Request, ctx: Ctx) {
         ...(input.slug !== undefined ? { slug: input.slug } : {}),
         ...(input.title !== undefined ? { title: input.title } : {}),
         ...(input.excerpt !== undefined ? { excerpt: input.excerpt } : {}),
-        ...(body !== undefined ? { body, readingMinutes: readingMinutes(body) } : {}),
+        ...(body !== undefined ? { body } : {}),
+        // 3.22 — recounted when the text changes, or kept as written when the post states one.
+        ...(body !== undefined || input.seo !== undefined
+          ? { readingMinutes: postReadingMinutes(body ?? row.body, (input.seo ?? row.seo) as { readingMinutes?: unknown }) }
+          : {}),
         ...(input.blocks !== undefined ? { blocks: validated.blocks } : {}),
         ...(input.layout !== undefined ? { layout: input.layout } : {}),
         ...(input.kind !== undefined ? { kind: input.kind } : {}),

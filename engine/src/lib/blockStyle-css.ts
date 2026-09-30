@@ -194,7 +194,10 @@ function block(selector: string, decls: Decl[]): string {
  * `grid-cols-*`, which only ever appears once in a block that is not a row.
  */
 function swipeTarget(root: string, isRow: boolean): string {
-  return isRow ? `${root}>.shell>[class^="he-r-"]` : `${root} [class*="grid-cols-"]`;
+  /* 3.22 — the library blocks draw their grids with their own classes, so
+     each marks its grid `he-swipe-track`; a `grid-cols-*` grid inside one of
+     those cards is not a second track. */
+  return isRow ? `${root}>.shell>[class^="he-r-"]` : `${root} :is(.he-swipe-track,[class*="grid-cols-"]:not(.he-swipe-track *))`;
 }
 
 /**
@@ -204,8 +207,9 @@ function swipeTarget(root: string, isRow: boolean): string {
  * has already been told `column-reverse` at this width; swiping wins, and
  * has to say so rather than inherit a stacking rule.
  */
-function swipeCss(root: string, isRow: boolean, maxWidth: number): string {
+function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number, arrowsBelow = false): string {
   const target = swipeTarget(root, isRow);
+  const share = typeof width === 'number' && Number.isInteger(width) && width >= 40 && width <= 100 ? width : 84;
   return (
     `@media (max-width:${maxWidth}px){` +
     `${target}{display:flex;flex-direction:row;grid-template-columns:none;` +
@@ -215,7 +219,9 @@ function swipeCss(root: string, isRow: boolean, maxWidth: number): string {
     `${target}::-webkit-scrollbar{display:none}` +
     /* A card shy of full width, so the sliver of the next one is the thing
        that says "this scrolls" — no arrows, no dots, no script. */
-    `${target}>*{flex:0 0 84%;min-width:0;scroll-snap-align:start}` +
+    `${target}>*{flex:0 0 ${share}%;min-width:0;scroll-snap-align:start}` +
+    // 3.22 — room under the cards for the arrows placed there.
+    (arrowsBelow ? `${target}{margin-bottom:64px}` : '') +
     `}`
   );
 }
@@ -388,7 +394,7 @@ export function blockStyleToCss(
     /* Its own media query rather than a line in the one above: the track
        rules carry their own selectors, and folding two selector sets into one
        block would mean emitting the wider one's declarations for both. */
-    if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth));
+    if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth, style.swipeWidth, style.swipeArrows === 'belowRight'));
   }
 
   /* 2.19 (T32) — hidden on exactly the tiers chosen, each its own range, so

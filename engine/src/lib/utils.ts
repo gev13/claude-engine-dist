@@ -10,6 +10,12 @@ export function readingMinutes(html: string): number {
   return Math.max(1, Math.round(words / 220));
 }
 
+/** 3.22 — a post's reading time: the one written on it (SEO → reading time), else counted from its text. */
+export function postReadingMinutes(html: string, seo: { readingMinutes?: unknown } | null | undefined): number {
+  const manual = seo?.readingMinutes;
+  return typeof manual === 'number' && Number.isInteger(manual) && manual >= 1 && manual <= 600 ? manual : readingMinutes(html);
+}
+
 export function absoluteUrl(path: string, origin: string): string {
   if (/^https?:\/\//i.test(path)) return path;
   return `${origin.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;

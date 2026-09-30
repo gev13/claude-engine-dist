@@ -8,7 +8,7 @@ import { getTheme } from '@/server/content/theme';
  * for a page with no colours of its own.
  */
 export async function PageAppearanceStyle({ appearance }: { appearance: PageAppearance | undefined }) {
-  if (!appearance || (!appearance.background && appearance.scheme !== 'alt')) return null;
+  if (!appearance || (!appearance.background && appearance.scheme !== 'alt' && appearance.scheme !== 'alt2')) return null;
   const css = pageAppearanceCss(appearance, await getTheme());
   return css ? <style id="he-page-appearance" dangerouslySetInnerHTML={{ __html: css }} /> : null;
 }

@@ -33,7 +33,7 @@ html.he-cursor-text .he-cursor__dot, html.he-cursor-text .he-cursor__ring { opac
 html.he-cursor-down .he-cursor__dot { transform-origin: center; scale: 0.8; }
 .he-cursor.is-blend .he-cursor__dot { width: 28px; height: 28px; margin: -14px 0 0 -14px; background: #fff; mix-blend-mode: difference; }
 html.he-cursor-link .he-cursor.is-blend .he-cursor__dot { width: 56px; height: 56px; margin: -28px 0 0 -28px; opacity: 1; }
-.he-cursor__label { position: absolute; top: 50%; left: 50%; translate: -50% -50%; padding: 6px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-bone); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+.he-cursor__label { position: absolute; top: 50%; left: 50%; translate: -50% -50%; padding: 6px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-bone); font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); white-space: nowrap; font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 .he-cursor__dot:has(.he-cursor__label) { width: 0; height: 0; margin: 0; background: transparent; opacity: 1; }
 
 /* ── T28: page transitions ───────────────────────────────────────────────── */
@@ -44,6 +44,13 @@ html.he-cursor-link .he-cursor.is-blend .he-cursor__dot { width: 56px; height: 5
 .he-site[data-transition='fade'] { --he-leave: he-pt-fade-out calc(200ms * var(--he-motion, 1)) ease; --he-enter: he-fade calc(300ms * var(--he-motion, 1)) ease; }
 .he-site[data-transition='slide'] { --he-leave: he-pt-slide-out calc(260ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); --he-enter: he-pt-slide-in calc(360ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }
 .he-site[data-transition='curtain'] { --he-leave: none; --he-enter: he-fade calc(250ms * var(--he-motion, 1)) ease; }
+/* 3.22 — leaving by fading and moving up, as long as the arrival; and the first page arriving the same way. */
+.he-site[data-transition][data-leave='up'] { --he-leave: he-pt-fade-up-out calc(350ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }
+html.he-first-enter .he-site[data-transition] #main { animation: var(--he-enter) both; }
+/* The reveal footer waits underneath main: while main is faded out it would show through. */
+.he-site.has-reveal:has(#main:is(.he-page-leave, .he-page-enter)) .he-ftr-wrap,
+html.he-first-enter .he-site.has-reveal .he-ftr-wrap { visibility: hidden; }
+@keyframes he-pt-fade-up-out { to { opacity: 0; transform: translateY(-1.5rem); } }
 @keyframes he-pt-fade-out { to { opacity: 0; } }
 @keyframes he-pt-fade-up { from { opacity: 0; transform: translateY(-1.5rem); } to { opacity: 1; transform: none; } }
 @keyframes he-pt-slide-out { to { opacity: 0; transform: translateX(-3rem); } }
@@ -66,7 +73,7 @@ html.he-pre-skip .he-preloader { display: none; }
 @keyframes he-pre-pulse { from { opacity: 0.55; } to { opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .he-site[data-transition] #main.he-page-leave, .he-site[data-transition] #main.he-page-enter { animation: none; }
+  .he-site[data-transition] #main.he-page-leave, .he-site[data-transition] #main.he-page-enter, html.he-first-enter .he-site[data-transition] #main { animation: none; }
   .he-curtain, .he-preloader { display: none; }
 }
 .he-reduce-motion .he-site[data-transition] #main { animation: none !important; }
@@ -87,14 +94,28 @@ html.he-pre-skip .he-preloader { display: none; }
   .he-rail.is-right { right: 22px; }
   .he-rail.is-contrast { color: #fff; mix-blend-mode: difference; }
 }
-.he-rail__text { margin: 0; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase; white-space: nowrap; writing-mode: vertical-rl; rotate: 180deg; }
+.he-rail__text { margin: 0; font-family: var(--he-rail-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-rail-size, var(--he-label-size, 11px)); letter-spacing: var(--he-rail-tracking, var(--he-label-tracking, 0.16em)); text-transform: var(--he-rail-transform, var(--he-label-transform, uppercase)); white-space: nowrap; writing-mode: vertical-rl; rotate: 180deg; font-weight: var(--he-rail-weight, var(--he-label-weight, revert-layer)); color: var(--he-label-color, revert-layer); line-height: var(--he-label-line, revert-layer); }
 .he-rail__top { display: flex; flex-direction: column; align-items: center; gap: 16px; padding: 0; border: 0; background: none; color: inherit; cursor: pointer; }
 .he-rail__bar { position: relative; display: block; width: 2px; height: 60px; overflow: hidden; background: color-mix(in srgb, currentColor 25%, transparent); }
 .he-rail__bar > span { position: absolute; inset: 0; background: currentColor; transform-origin: top; }
 .he-rail__social { display: flex; flex-direction: column; align-items: center; gap: 12px; margin: 0; padding: 0; list-style: none; }
-.he-rail__social a { display: grid; place-items: center; min-width: 24px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em; color: inherit; writing-mode: vertical-rl; rotate: 180deg; }
+.he-rail__social a { display: grid; place-items: center; min-width: 24px; font-family: var(--he-rail-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-rail-size, var(--he-label-size, 11px)); letter-spacing: var(--he-rail-tracking, var(--he-label-tracking, 0.1em)); color: var(--he-label-color, inherit); writing-mode: vertical-rl; rotate: 180deg; font-weight: var(--he-rail-weight, var(--he-label-weight, revert-layer)); line-height: var(--he-label-line, revert-layer); text-transform: var(--he-rail-transform, none); }
 .he-rail__social a:has(svg) { writing-mode: horizontal-tb; rotate: none; }
 .he-rail__social a:hover { color: var(--color-flare-soft); }
+/* 3.22 — a separator between the social links, a width of their own, the bottom of the screen, one line up the edge. */
+.he-rail__social.has-sep li { display: flex; flex-direction: inherit; align-items: center; gap: inherit; }
+.he-rail__sep { font-size: var(--he-rail-size, var(--he-label-size, 11px)); opacity: 0.6; writing-mode: vertical-rl; rotate: 180deg; }
+.he-rail.has-min { position: fixed; top: 50%; z-index: 35; flex-direction: column; align-items: center; gap: 18px; color: var(--color-bone); translate: 0 -50%; opacity: 0; pointer-events: none; transition: opacity calc(0.3s * var(--he-motion, 1)); }
+.he-rail.has-min.is-shown { opacity: 1; pointer-events: auto; }
+.he-rail.has-min.is-left { left: 22px; }
+.he-rail.has-min.is-right { right: 22px; }
+.he-rail.has-min.is-contrast { color: #fff; mix-blend-mode: difference; }
+.he-rail.is-bottom { top: auto; bottom: 40px; translate: none; }
+.he-rail.is-row { flex-direction: row; writing-mode: vertical-rl; rotate: 180deg; gap: 16px; }
+.he-rail.is-row :is(.he-rail__text, .he-rail__social a, .he-rail__sep) { writing-mode: inherit; rotate: none; }
+.he-rail.is-row .he-rail__social a:has(svg) { writing-mode: horizontal-tb; rotate: 180deg; }
+.he-rail.is-row .he-rail__top { flex-direction: row; }
+.he-rail.is-row .he-rail__social { flex-direction: row; gap: 8px; }
 
 /* ── T33: cards that answer the pointer ────────────────────────────────────
    `.he-ch` is only on a card whose list chose an effect. Lift, grow and

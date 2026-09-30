@@ -3,6 +3,7 @@ import { messageReader } from '@/lib/messages';
 import { getPermalinks } from '@/server/routing/config';
 import { blogIndexPath, withSlash } from '@/lib/permalinks';
 import { Fragment } from 'react';
+import { MasonryRows } from './MasonryRows';
 import type { z } from 'zod';
 import { Icon } from '@/components/site/icons';
 import type { blockSchemas } from '@/lib/blocks';
@@ -359,10 +360,13 @@ export function ReviewsBlock(p: P<'reviews'>) {
   if (card.background && isColor(card.background)) cardVars['--he-rev-bg'] = card.background;
   if (typeof card.radius === 'number' && card.radius >= 0 && card.radius <= 40) cardVars['--he-rev-radius'] = `${card.radius}px`;
   const circle = (color?: string) => (color && isColor(color) ? { background: color } : undefined);
+  // 3.22 — masonry in reading order.
+  const rowOrder = p.layout === 'masonry' && p.masonryOrder === 'rows';
   const list = (
     <ul
-      className={cn('he-rev__list', `is-${p.layout}`, card.border === false && 'no-border', card.quoteMark && 'has-mark')}
+      className={cn('he-rev__list he-swipe-track', `is-${p.layout}`, card.border === false && 'no-border', card.quoteMark && 'has-mark', rowOrder && 'is-rows', card.avatarSize && card.avatarSize !== 'small' && `is-avatar-${card.avatarSize}`)}
       style={{ '--cols': p.columns, ...cardVars } as React.CSSProperties}
+      data-masonry-rows={rowOrder ? '' : undefined}
     >
       {p.items.map((r, i) => {
         const rating = p.hideRatings ? undefined : r.rating;
@@ -405,6 +409,7 @@ export function ReviewsBlock(p: P<'reviews'>) {
   return (
     <section className={cn('he-lsec he-rev', toneClass(p.tone))}>
       <div className="shell">
+        {rowOrder && <MasonryRows />}
         {p.summaryPosition === 'side' && summary ? (
           <div className="he-rev__split">
             <div className="he-rev__aside">

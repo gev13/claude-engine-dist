@@ -385,6 +385,24 @@ export function PostEditor({
                   onChange={(e) => set('excerpt', e.target.value)}
                 />
               </Field>
+
+              {/* 3.22 — a figure of the site's own (an imported blog's), kept instead of the counted one. */}
+              <Field label="Reading time" htmlFor="post-reading" hint="minutes; empty counts it from the text on every save">
+                <Input
+                  id="post-reading"
+                  type="number"
+                  min={1}
+                  max={600}
+                  value={value.seo.readingMinutes === undefined ? '' : String(value.seo.readingMinutes)}
+                  placeholder="counted"
+                  onChange={(e) => {
+                    const n = Math.round(Number(e.target.value));
+                    const { readingMinutes: _drop, ...rest } = value.seo;
+                    void _drop;
+                    set('seo', e.target.value === '' || !Number.isFinite(n) || n < 1 ? rest : { ...rest, readingMinutes: Math.min(600, n) });
+                  }}
+                />
+              </Field>
             </div>
           </Panel>
 

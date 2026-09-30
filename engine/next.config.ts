@@ -106,8 +106,13 @@ const nextConfig: NextConfig = {
       { source: '/admin/band/:path*', headers: [...withCsp(probeCsp, 'SAMEORIGIN'), NOINDEX] },
       { source: '/admin/((?!band$|band/).*)', headers: [...withCsp(adminCsp), NOINDEX] },
       { source: '/admin', headers: [...withCsp(adminCsp), NOINDEX] },
+      /* 3.22 — the preview and the installer are pages the middleware leaves
+         alone, so they took the public rule below and went out with no policy
+         at all. They get the base public one (nothing switched on) here. */
+      { source: '/preview/:path*', headers: [...withCsp(csp), NOINDEX] },
+      { source: '/install', headers: [...withCsp(csp), NOINDEX] },
       // No CSP here: the middleware sets the public policy per request (2.16).
-      { source: '/((?!admin$|admin/).*)', headers: securityHeaders.filter((header) => header.key !== 'Content-Security-Policy') },
+      { source: '/((?!admin$|admin/|preview$|preview/|install$).*)', headers: securityHeaders.filter((header) => header.key !== 'Content-Security-Policy') },
       { source: '/api/:path*', headers: [NOINDEX] },
     ];
   },

@@ -89,7 +89,8 @@ describe('section style to CSS', () => {
   it('turns a block’s grid into a track below the chosen width', () => {
     const css = blockStyleToCss('b1', parse({ swipeOn: 'mobile' }));
     expect(css).toContain('@media (max-width:768px)');
-    expect(css).toContain('.he-b-b1 [class*="grid-cols-"]{display:flex');
+    // 3.22 — a library block's own grid (`he-swipe-track`), or a `grid-cols-*` one that is not inside it.
+    expect(css).toContain('.he-b-b1 :is(.he-swipe-track,[class*="grid-cols-"]:not(.he-swipe-track *)){display:flex');
     expect(css).toContain('scroll-snap-type:x mandatory');
     expect(css).toContain('scroll-snap-align:start');
     // Never at the wider widths.

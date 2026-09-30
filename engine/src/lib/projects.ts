@@ -65,6 +65,13 @@ export const projectTemplateSchema = z.object({
     .prefault({}),
   /** Include published projects in the site's search results. */
   inSearch: z.boolean().default(false),
+  /** 3.22 — every project page's colour, unless a project sets its own; unset is the site's. */
+  background: z
+    .string()
+    .trim()
+    .max(60)
+    .refine((value) => value === '' || isColor(value), 'A colour such as #000000')
+    .optional(),
   /**
    * Blocks shown after every project — a call to action, usually. Ordinary
    * blocks, checked with `collectInvalidBlocks` on save like a popup's.
@@ -90,7 +97,7 @@ export const projectOptionsSchema = z.object({
     .refine((value) => value === '' || isColor(value), 'A colour such as #000000')
     .optional(),
   /** 2.19 — the site's alternate palette for this project's page. */
-  scheme: z.enum(['inherit', 'alt']).optional(),
+  scheme: z.enum(['inherit', 'alt', 'alt2']).optional(),
 });
 
 export function readProjectOptions(value: unknown): z.output<typeof projectOptionsSchema> {

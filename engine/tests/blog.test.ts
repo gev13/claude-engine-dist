@@ -18,7 +18,7 @@ describe('blog layouts (BL1, BL2)', () => {
       share: { position: 'off', networks: ['facebook', 'x', 'pinterest', 'linkedin'] },
       toc: { position: 'off', levels: 'h2h3', title: undefined },
       prevNext: 'off',
-      related: { source: 'kind', count: 3, layout: 'grid', title: undefined },
+      related: { source: 'kind', count: 3, layout: 'grid', title: undefined, cards: 'text' },
       authorBox: false,
       backLink: false,
       eyebrow: undefined,
@@ -35,6 +35,15 @@ describe('blog layouts (BL1, BL2)', () => {
       archiveBar: false,
       searchBelow: false,
       off: false,
+      // 3.22 — the eyebrow after its rule, the meta row and excerpt shown, the cover card's own overlap, the corner card as before, the search and "Browse" as before.
+      eyebrowStyle: 'rule',
+      meta: { show: true, author: true, readingTime: true, categories: true },
+      excerpt: true,
+      coverOverlap: undefined,
+      upNext: { phones: false, dismiss: 'visit' },
+      searchOff: false,
+      toolbar: false,
+      browseLabel: true,
     });
   });
 

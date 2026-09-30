@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 import { ACCESS_AUDIENCE, ACCESS_ISSUER } from '@/lib/accessToken';
 import { localeConfig, splitLocale } from '@/lib/locales';
-import { withSlash, feedTarget } from '@/lib/permalinks';
+import { withSlash, feedTarget, pageNumberHop } from '@/lib/permalinks';
 import { pickRule } from '@/lib/redirectRules';
 import { routingConfig } from '@/server/routing/config';
 import { requestHost, wwwRedirectTarget } from '@/lib/host';
@@ -172,6 +172,16 @@ export async function middleware(request: NextRequest) {
          trailing slash it was parsed with and writes it back, which turned
          `/blog/` → `/blog` into a redirect to itself. */
       return NextResponse.redirect(new URL(`${canonical}${search}`, request.url), wrongLocale || mode === 'never' ? 308 : 301);
+    }
+
+    /* 3.22 — page 1 has one address and a page number one spelling
+       (/page/02 is /page/2). The routes know this too, but a route can only
+       answer 308; these are pure string rules, so they are a 301 here. */
+    const pageHop = pageNumberHop(rest, routing.permalinks.pageSegment);
+    if (pageHop) {
+      const prefix = prefixed && locale !== config.defaultLocale ? `/${locale}` : '';
+      const to = withSlash(`${prefix}${pageHop === '/' && prefix ? '' : pageHop}` || '/', mode);
+      return new NextResponse(null, { status: 301, headers: { Location: new URL(`${to}${search}`, request.url).toString() } });
     }
 
     /* Redirect rules that match a query run before any route, because the

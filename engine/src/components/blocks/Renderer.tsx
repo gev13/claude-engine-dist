@@ -62,6 +62,7 @@ import { TiltObserver } from './library/TiltObserver';
 import { GlitchObserver } from './library/GlitchObserver';
 import { FormBlock } from './library/FormBlock';
 import { LottieBlock } from './library/LottieBlock';
+import { SwipeArrows } from './library/SwipeArrows';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const registry: Record<string, (props: any) => React.ReactNode | Promise<React.ReactNode>> = {
@@ -166,8 +167,15 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
       {children}
       {style.background?.videoUrl && <SectionVideo background={style.background} />}
       <ShapeDividers style={style} />
+      {swipeArrows(style)}
     </div>
   );
+}
+
+/** 3.22 — ‹ › for a grid that swipes, when the Design tab asks for them. */
+function swipeArrows(style: BlockStyle) {
+  if (!style.swipeOn || !style.swipeArrows || style.swipeArrows === 'none') return null;
+  return <SwipeArrows placement={style.swipeArrows} />;
 }
 
 /** Width, entrance, hover, sticky, snap and shape classes a styled block or row carries (P3-C). */
@@ -190,8 +198,11 @@ function shellClass(style: BlockStyle) {
     style.snap && 'he-snap',
     // 2.19 (T31) — the site's alternate palette on this section: a light band on a dark site.
     style.scheme === 'alt' && 'he-scheme-alt',
+    style.scheme === 'alt2' && 'he-scheme-alt2',
     // 3.3 — the hook Appearance → Panels' "line up the content" aims at.
     style.panel && 'he-panel',
+    // 3.22 — the wrapper the swipe arrows are placed against.
+    style.swipeOn && style.swipeArrows && style.swipeArrows !== 'none' && 'he-swipe-host',
   );
 }
 
@@ -285,6 +296,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       </div>
       {style?.background?.videoUrl && <SectionVideo background={style.background} />}
       {style && <ShapeDividers style={style} />}
+      {style && swipeArrows(style)}
     </div>
   );
 }

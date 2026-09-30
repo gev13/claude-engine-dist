@@ -104,6 +104,7 @@ function Indicator({
   running,
   interval,
   slides,
+  counter,
 }: {
   kind: P['indicator'];
   count: number;
@@ -115,6 +116,8 @@ function Indicator({
   interval: number;
   /** P4-A2 — thumbnails and chapter lists name their slides, so they need them. */
   slides?: readonly CarouselSlide[];
+  /** 3.22 — how the counter reads. */
+  counter?: P['counter'];
 }) {
   const t = useMessages();
   if (kind === 'none' || count < 2) return null;
@@ -165,9 +168,25 @@ function Indicator({
     );
   }
   if (kind === 'counter') {
+    // 3.22 — "01 / 03" as drawn, or "1 — 3", a line between, "1 of 3"; in the labels' face or the text's.
+    const n = (value: number) => (counter?.pad === false ? String(value) : pad(value));
+    const separator = counter?.separator ?? 'slash';
     return (
-      <span className="he-ind he-ind--counter" aria-live="polite">
-        {pad(active + 1)} / {pad(count)}
+      <span className={cn('he-ind he-ind--counter', counter?.font === 'body' && 'is-body')} aria-live="polite">
+        {n(active + 1)}
+        {separator === 'line' ? (
+          <>
+            <span className="he-ind__line" aria-hidden="true" />
+            <span className="sr-only"> / </span>
+          </>
+        ) : separator === 'dash' ? (
+          ' — '
+        ) : separator === 'of' ? (
+          ` ${t('block.counterOf')} `
+        ) : (
+          ' / '
+        )}
+        {n(count)}
       </span>
     );
   }
@@ -388,7 +407,7 @@ function SplitScreenSlider(p: P) {
             <div key={i} className={cn('he-split__pane', i === active && 'is-active', i < active && 'is-before')} aria-hidden={i !== active}>
               <MediaFill
                 imageUrl={s.imageUrl}
-                videoUrl={s.videoUrl}
+                videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt}
                 alt={i === active ? s.alt : ''}
                 className="he-split__media"
                 eager={i === 0}
@@ -415,7 +434,7 @@ function SplitScreenSlider(p: P) {
           </div>
         )}
         {p.indicator !== 'none' && p.indicator !== 'counter' && count > 1 && (
-          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
         )}
         {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
       </div>
@@ -467,7 +486,7 @@ function FilmstripSlider(p: P) {
             >
               <MediaFill
                 imageUrl={s.imageUrl}
-                videoUrl={s.videoUrl}
+                videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt}
                 alt={distance === 0 ? s.alt : ''}
                 className="he-film__media"
                 showControl={false}
@@ -486,7 +505,7 @@ function FilmstripSlider(p: P) {
           {p.arrows !== 'none' && count > 1 && (
             <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />
           )}
-          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
           {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
         </div>
       </div>
@@ -513,7 +532,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
           )}
         </div>
         <div className="he-hcard__media">
-          <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-hcard__img" sizes="third" />
+          <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={s.alt} className="he-hcard__img" sizes="third" />
         </div>
       </div>
     );
@@ -522,7 +541,7 @@ function CardSlide({ s, mode }: { s: CarouselSlide; mode: P['mode'] }) {
   const inner = (
     <>
       <div className="he-card__media">
-        <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-card__img" showControl={false} sizes="third" />
+        <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={s.alt} className="he-card__img" showControl={false} sizes="third" />
         {s.badge && <span className="he-card__badge">{s.badge}</span>}
       </div>
       <div className="he-card__body">
@@ -669,6 +688,7 @@ function TrackCarousel(p: P) {
             running={auto.running}
             interval={p.interval}
             slides={p.slides}
+            counter={p.counter}
           />
           {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
         </div>
@@ -706,7 +726,7 @@ function HeroSlider(p: P) {
           >
             <MediaFill
               imageUrl={s.imageUrl}
-              videoUrl={s.videoUrl}
+              videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt}
               alt={s.alt}
               className="he-cslide__media"
               eager={i === 0}
@@ -738,7 +758,7 @@ function HeroSlider(p: P) {
         )}
 
         <div className="he-cslide__controls">
-          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+          <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
           {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
         </div>
       </div>
@@ -780,7 +800,7 @@ function MediaSlider(p: P) {
           <div className={cn('he-mslide__stage', `is-${p.transition}`)}>
             {p.slides.map((s, i) => (
               <div key={i} className={cn('he-mslide__slide', i === active && 'is-active')} aria-hidden={i !== active}>
-                <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={s.alt} className="he-mslide__media" paused={i !== active} showControl={false} />
+                <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={s.alt} className="he-mslide__media" paused={i !== active} showControl={false} />
               </div>
             ))}
             {p.arrows !== 'none' && count > 1 && (
@@ -802,7 +822,7 @@ function MediaSlider(p: P) {
               {current?.caption || current?.title || ''}
             </p>
             <div className="he-mslide__controls">
-              <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+              <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
               {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
             </div>
           </div>
@@ -875,7 +895,7 @@ function QuoteSlider(p: P) {
             {p.arrows !== 'none' && (
               <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />
             )}
-            <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+            <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
             {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
           </div>
         )}
@@ -923,7 +943,7 @@ function CoverFlow(p: P) {
                 aria-label={distance === 0 ? undefined : `Show ${s.title || `image ${i + 1}`}`}
                 onClick={() => go(i)}
               >
-                <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} alt={distance === 0 ? s.alt : ''} className="he-cover__media" showControl={false} paused={distance !== 0} />
+                <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={distance === 0 ? s.alt : ''} className="he-cover__media" showControl={false} paused={distance !== 0} />
               </button>
             );
           })}
@@ -933,7 +953,7 @@ function CoverFlow(p: P) {
             {current?.caption || current?.title || ''}
           </p>
           <div className="he-cover__controls">
-            <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} />
+            <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
             {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
             {p.arrows !== 'none' && count > 1 && (
               <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />

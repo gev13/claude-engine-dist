@@ -57,7 +57,7 @@ export type ProjectRecord = {
   blocks: AnyBlock[];
   seo: SeoFields;
   customCss: string;
-  options: { hideMore?: boolean; background?: string; scheme?: 'inherit' | 'alt' };
+  options: { hideMore?: boolean; background?: string; scheme?: 'inherit' | 'alt' | 'alt2' };
   status: ContentStatus;
   publishedAt: string | null;
   sortOrder: number;
@@ -178,7 +178,7 @@ export function ProjectEditor({
       options: {
         ...(value.options.hideMore ? { hideMore: true } : {}),
         ...(value.options.background ? { background: value.options.background } : {}),
-        ...(value.options.scheme === 'alt' ? { scheme: 'alt' as const } : {}),
+        ...(value.options.scheme === 'alt' || value.options.scheme === 'alt2' ? { scheme: value.options.scheme } : {}),
       },
     };
     try {
@@ -492,10 +492,11 @@ export function ProjectEditor({
                 <Select
                   id="project-scheme"
                   value={value.options.scheme ?? 'inherit'}
-                  onChange={(e) => set('options', { ...value.options, scheme: e.target.value === 'alt' ? 'alt' : undefined })}
+                  onChange={(e) => set('options', { ...value.options, scheme: e.target.value === 'alt' || e.target.value === 'alt2' ? e.target.value : undefined })}
                 >
                   <option value="inherit">The site’s colours</option>
                   <option value="alt">The alternate palette</option>
+                  <option value="alt2">The second alternate palette</option>
                 </Select>
               </Field>
             </div>

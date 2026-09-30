@@ -28,7 +28,8 @@ const querySchema = z.object({
   exclude: z.string().uuid().optional(),
   order: z.enum(PROJECT_ORDERS).default('manual'),
   locale: z.string().regex(/^[a-z]{2,3}(-[a-z]{2,4})?$/).optional(),
-  limit: z.coerce.number().int().min(1).max(24).default(12),
+  // 3.22 — as many as the projects block may show at once (it used to stop at 24, so a larger "Load more" got a 400).
+  limit: z.coerce.number().int().min(1).max(100).default(12),
   offset: z.coerce.number().int().min(0).max(10_000).default(0),
 });
 

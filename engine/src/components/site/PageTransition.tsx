@@ -8,6 +8,15 @@ type Style = 'fadeUp' | 'fade' | 'slide' | 'curtain';
 
 /** How long the old page takes to leave, per style, in ms (scaled by the site's motion setting in CSS). */
 const LEAVE_MS: Record<Style, number> = { fadeUp: 250, fade: 200, slide: 260, curtain: 420 };
+/** 3.22 — leaving by fading and moving up takes as long as arriving. */
+const LEAVE_UP_MS = 350;
+
+/**
+ * 3.22 — marks `<html>` before paint so the first page plays its arrival from
+ * its first frame; skipped for anyone who asked for less motion.
+ */
+export const FIRST_ENTER_SCRIPT =
+  "try{var d=document.documentElement;if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&!d.classList.contains('he-reduce-motion')){d.classList.add('he-first-enter')}}catch(e){}";
 
 /**
  * How one page gives way to the next (T28, 2.19).
@@ -18,11 +27,11 @@ const LEAVE_MS: Record<Style, number> = { fadeUp: 250, fade: 200, slide: 260, cu
  * arriving page plays the entering half. Everything else is left alone: a
  * link to a place on the same page, a new tab, a download, a modified
  * click, another site, the back and forward buttons. The first load is
- * never animated (the preloader, if chosen, covers that), and a visitor who
+ * animated only when asked (3.22; the preloader, if chosen, covers it otherwise), and a visitor who
  * asked for less motion gets none of it. The content is in the HTML
  * whatever happens, so nothing here delays a crawler.
  */
-export function PageTransition({ style }: { style: Style }) {
+export function PageTransition({ style, leave = 'fade', firstLoad = false }: { style: Style; leave?: 'fade' | 'fadeUp'; firstLoad?: boolean }) {
   const pathname = usePathname();
   const router = useRouter();
   const first = useRef(true);
@@ -37,7 +46,10 @@ export function PageTransition({ style }: { style: Style }) {
     leaving.current = false;
     if (first.current) {
       first.current = false;
-      return;
+      // 3.22 — the first page's arrival (started by FIRST_ENTER_SCRIPT) is over; later ones restart it themselves.
+      if (!firstLoad) return;
+      const played = window.setTimeout(() => document.documentElement.classList.remove('he-first-enter'), 900);
+      return () => window.clearTimeout(played);
     }
     if (motionReduced()) return;
     main.classList.remove('he-page-enter');
@@ -49,7 +61,7 @@ export function PageTransition({ style }: { style: Style }) {
       document.documentElement.classList.remove('he-curtain-enter');
     }, 900);
     return () => window.clearTimeout(done);
-  }, [pathname]);
+  }, [pathname, firstLoad]);
 
   // The leaving half, on a click that would load another page of this site.
   useEffect(() => {
@@ -71,7 +83,7 @@ export function PageTransition({ style }: { style: Style }) {
       leaving.current = true;
       main.classList.add('he-page-leave');
       if (style === 'curtain') document.documentElement.classList.add('he-curtain-leave');
-      window.setTimeout(() => router.push(url.pathname + url.search + url.hash), LEAVE_MS[style]);
+      window.setTimeout(() => router.push(url.pathname + url.search + url.hash), leave === 'fadeUp' && style !== 'curtain' ? LEAVE_UP_MS : LEAVE_MS[style]);
     };
     // Back from the cache with the leaving class still on: undo it.
     const onShow = (event: PageTransitionEvent) => {
@@ -90,7 +102,7 @@ export function PageTransition({ style }: { style: Style }) {
       document.removeEventListener('click', onClick, { capture: true });
       window.removeEventListener('pageshow', onShow);
     };
-  }, [router, style]);
+  }, [router, style, leave]);
 
   return style === 'curtain' ? <div className="he-curtain" aria-hidden="true" /> : null;
 }

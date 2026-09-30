@@ -34,10 +34,10 @@
   .he-mrows.is-hover-lift .he-mrows__item { transition: transform calc(250ms * var(--he-motion, 1)); }
   .he-mrows.is-hover-lift .he-mrows__item:hover { transform: translateY(-4px); }
   .he-mrows__body { padding-block: 28px; }
-  .he-mrows__num { margin: 0 0 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-ash); }
+  .he-mrows__num { margin: 0 0 8px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-ash)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-mrows__title { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.3vw, 30px); font-weight: 600; line-height: 1.2; letter-spacing: -0.01em; color: var(--color-bone); }
   .he-mrows__text { margin: 14px 0 0; max-width: 62ch; font-size: var(--he-block-text, 16px); line-height: 1.6; color: var(--color-ash); }
-  .he-mrows__link { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-flare-soft); }
+  .he-mrows__link { display: inline-flex; align-items: center; gap: 10px; margin-top: 16px; font-family: var(--he-card-link-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-card-link-size, var(--he-label-size, 11px)); letter-spacing: var(--he-card-link-tracking, var(--he-label-tracking, 0.12em)); text-transform: var(--he-card-link-transform, var(--he-label-transform, uppercase)); color: var(--he-card-link-color, var(--he-label-color, var(--color-flare-soft))); font-weight: var(--he-card-link-weight, var(--he-label-weight, revert-layer)); line-height: var(--he-card-link-line, var(--he-label-line, revert-layer)); }
   .he-mrows__link:hover { color: var(--color-flare-hot); }
 
   /* ── Bento: rows of mixed widths (cardGrid · pattern) ────────────────── */
@@ -73,7 +73,7 @@
 
   /* ── A line beside a form's send button ──────────────────────────────── */
   .he-fb__actions:has(.he-fb__note) { align-items: center; }
-  .he-fb__note { margin: 0 0 0 12px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--color-smoke); }
+  .he-fb__note { margin: 0 0 0 12px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.06em); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── Blog: search in the category bar, and the featured post ─────────── */
   .he-catbar__search { flex: 1 1 280px; max-width: 460px; margin-left: auto; }
@@ -95,7 +95,7 @@
   .he-featpost__media .he-fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-featpost:hover .he-fill { transform: scale(1.04); }
   .he-featpost__body { padding: clamp(24px, 3vw, 40px); }
-  .he-featpost__meta { margin: 0 0 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-featpost__meta { margin: 0 0 14px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-featpost__title { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.4vw, 30px); font-weight: 600; line-height: 1.2; color: var(--color-bone); }
   .he-featpost__excerpt { margin: 14px 0 0; font-size: 15px; line-height: 1.6; color: var(--color-ash); }
 
@@ -119,7 +119,7 @@
   .he-catidx__desc { margin: 4px 0 0; font-size: 15px; line-height: 1.55; color: var(--color-ash); }
 
   /* ── The hero's kicker, on every hero ────────────────────────────────── */
-  .he-hero__kicker { margin: 0 0 16px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-flare); }
+  .he-hero__kicker { margin: 0 0 16px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-flare)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-hero__kicker.is-center { text-align: center; }
 
   @media (width <= 1024px) {

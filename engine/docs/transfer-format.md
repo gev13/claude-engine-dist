@@ -91,3 +91,16 @@ Either way a backup is taken first. Afterwards the caches are cleared, the
 saved-block usage index is rebuilt and, when Meilisearch is switched on, the
 search index is rebuilt too. Postgres search needs nothing: its index
 follows the rows.
+
+## Since 3.22
+
+- `posts.layout` must be one of `body`, `blocks`, `bodyThenBlocks`,
+  `blocksThenBody`, and `project_terms.taxonomy` `category` or `tag`; other
+  values are refused with the row, instead of being read as the default.
+- A synced saved block (`savedBlock`) whose `savedBlockId` is neither in the
+  archive nor on the site is taken out of the tree, with a note in the report.
+- In a **merge**, each post and project the archive carries gets exactly the
+  archive's category (and tag) links: its old ones are removed first. Posts
+  and projects the archive does not carry keep theirs.
+- `seo.readingMinutes` (1–600) on a post is its reading time, kept instead of
+  the counted one.

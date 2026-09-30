@@ -36,11 +36,13 @@ function Marker({ icon, open }: { icon: AccordionIcon; open: boolean }) {
 export function Accordion({
   items,
   className,
+  style,
   look = 'lines',
   icon = 'plus',
 }: {
   items: FaqItem[];
   className?: string;
+  style?: React.CSSProperties;
   look?: AccordionLook;
   icon?: AccordionIcon;
 }) {
@@ -49,7 +51,7 @@ export function Accordion({
   const boxed = look !== 'lines';
 
   return (
-    <div className={cn(boxed ? `he-faq is-${look}` : 'border-t-2 border-hairline', className)}>
+    <div className={cn(boxed ? `he-faq is-${look}` : 'border-t-2 border-hairline', className)} style={style}>
       {items.map((item, i) => {
         const isOpen = open === i;
         const panelId = `${base}-panel-${i}`;

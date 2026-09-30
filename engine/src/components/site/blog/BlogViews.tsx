@@ -30,6 +30,7 @@ import { getSiteSettings } from '@/server/content/siteSettings';
 import { getTheme } from '@/server/content/theme';
 import { searchPosts } from '@/server/search';
 import { BlogSearch } from './BlogSearch';
+import { DetailsDismiss } from './DetailsDismiss';
 import { ProjectsBlock } from '@/components/blocks/library/showcase';
 import { blockSchemas } from '@/lib/blocks';
 import { projectItem, type ProjectCard } from '@/lib/projects';
@@ -96,6 +97,7 @@ async function CategoryBar({
   blog,
   search,
   current = 'all',
+  bare = false,
 }: {
   locale: Locale;
   permalinks: Permalinks;
@@ -105,6 +107,8 @@ async function CategoryBar({
   search?: React.ReactNode;
   /** 3.3 — the chip for the page being shown: `all`, `research` or a category's slug. */
   current?: string;
+  /** 3.22 — inside the archive's toolbar row: the bar alone, without a section of its own. */
+  bare?: boolean;
 }) {
   const categories = await listCategories(locale);
   /* 3.3 — the search on its own row under the chips, when asked (it carries its own label). */
@@ -117,15 +121,15 @@ async function CategoryBar({
     ));
   const chip = (active: boolean) =>
     active
-      ? 'he-chip border-2 border-flare bg-flare px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-bone'
-      : 'he-chip border-2 border-hairline px-4 py-2 font-mono text-[11px] uppercase tracking-[0.12em] text-ash transition-colors hover:border-rule hover:text-bone';
-  if (categories.length === 0) return search ? <Section size="sm">{search}</Section> : null;
+      ? 'he-chip border-2 border-flare bg-flare px-4 py-2 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-bone he-lbl'
+      : 'he-chip border-2 border-hairline px-4 py-2 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-ash))] transition-colors hover:border-rule hover:text-bone he-lbl';
+  const wrap = (node: React.ReactNode) => (bare ? node : <Section size="sm">{node}</Section>);
+  if (categories.length === 0) return search ? wrap(search) : null;
   const research =
     blog.chipResearch === 'show' || (blog.chipResearch === 'auto' && (await countPosts({ kind: 'research', locale })) > 0);
 
   if (blog.filterStyle === 'dropdown') {
-    return (
-      <Section size="sm">
+    return wrap(
         <nav aria-label={t('blog.categories')} className="he-catbar">
           {blog.chipAll && (
             <Link href={blogIndexPath(permalinks)} aria-current={current === 'all' ? 'page' : undefined} className="he-catbar__all">
@@ -137,6 +141,7 @@ async function CategoryBar({
               {t('blog.categories')}
               <span aria-hidden="true">▾</span>
             </summary>
+            <DetailsDismiss />
             <ul className="he-catmenu__list">
               {research && (
                 <li>
@@ -151,15 +156,13 @@ async function CategoryBar({
             </ul>
           </details>
           {searchPart}
-        </nav>
-      </Section>
+        </nav>,
     );
   }
 
-  return (
-    <Section size="sm">
+  return wrap(
       <nav aria-label={t('blog.categories')} className="flex flex-wrap items-center gap-2">
-        <span className="label-mono mr-2">{t('blog.browse')}</span>
+        {blog.browseLabel && <span className="label-mono mr-2">{t('blog.browse')}</span>}
         {blog.chipAll && (
           <Link href={blogIndexPath(permalinks)} aria-current={current === 'all' ? 'page' : undefined} className={chip(current === 'all')}>
             {t('blog.all')}
@@ -181,7 +184,22 @@ async function CategoryBar({
           </Link>
         ))}
         {searchPart}
-      </nav>
+      </nav>,
+  );
+}
+
+/** 3.22 — one row under an archive's title: breadcrumbs on the left, the count and the categories on the right. */
+function ArchiveToolbar({ crumbs, count, bar }: { crumbs?: React.ReactNode; count?: React.ReactNode; bar?: React.ReactNode }) {
+  if (!crumbs && !count && !bar) return null;
+  return (
+    <Section size="sm">
+      <div className="he-blogbar">
+        <div className="he-blogbar__start">{crumbs}</div>
+        <div className="he-blogbar__end">
+          {count}
+          {bar}
+        </div>
+      </div>
     </Section>
   );
 }
@@ -228,9 +246,9 @@ function FeaturedPost({ post, permalinks, t }: { post: PostListItem; permalinks:
 }
 
 /** "Showing 1–12 of 110 results", when the site asks for it. */
-function ResultCount({ paging, t }: { paging: Paging; t: T }) {
+function ResultCount({ paging, t, inBar = false }: { paging: Paging; t: T; inBar?: boolean }) {
   const range = resultRange(paging.number, paging.perPage, paging.count);
-  return <p className="he-result-count label-mono mb-8">{t('archive.resultCount', range)}</p>;
+  return <p className={inBar ? 'he-result-count label-mono' : 'he-result-count label-mono mb-8'}>{t('archive.resultCount', range)}</p>;
 }
 
 /* ── The blog index ─────────────────────────────────────────────────────── */
@@ -284,6 +302,11 @@ export async function BlogIndexView({
   );
   // 2.22 — the newest post as a large card on the first page, when chosen.
   const lead = blog.featured && paging.number === 1 && latest.length > 1 ? latest[0] : undefined;
+  // 3.22 — the search box can be left off (a search's own results page keeps it, to search again).
+  const searchShown = !blog.searchOff || Boolean(query);
+  const searchInBar = searchShown && blog.searchInBar;
+  const searchRow = searchShown && !blog.searchInBar;
+  const toolbar = blog.toolbar && !query;
   // Projects join the results when Projects → Page template says they belong in search (2.14).
   const projectResults =
     query && (await getProjectTemplate(locale)).inSearch ? await searchProjectCards(query, permalinks, 12) : [];
@@ -294,7 +317,7 @@ export async function BlogIndexView({
         <BlockRenderer blocks={[first]} trail={trail} locale={locale} />
       ) : (
         <Section size="lg">
-          {blog.archiveBreadcrumbs && <ArchiveCrumbs trail={trail} />}
+          {blog.archiveBreadcrumbs && !toolbar && <ArchiveCrumbs trail={trail} />}
           <Heading level={1} className="max-w-[18ch]">
             {site.blogLabel}
           </Heading>
@@ -302,9 +325,18 @@ export async function BlogIndexView({
         </Section>
       )}
 
-      <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={blog.searchInBar ? search : undefined} />
+      {toolbar ? (
+        // 3.22 — breadcrumbs, the count and the categories in one row.
+        <ArchiveToolbar
+          crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
+          count={blog.resultCount && !page && latest.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
+          bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} current="all" bare />}
+        />
+      ) : (
+        <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} />
+      )}
 
-      {!blog.searchInBar && (
+      {searchRow && (
         <Section size="sm" rule={!query}>
           {search}
         </Section>
@@ -330,7 +362,7 @@ export async function BlogIndexView({
             <p className="m-0 text-[16px] text-smoke">{t('blog.nothingYet')}</p>
           ) : (
             <>
-              {blog.resultCount && <ResultCount paging={paging} t={t} />}
+              {blog.resultCount && !toolbar && <ResultCount paging={paging} t={t} />}
               {lead && <FeaturedPost post={lead} permalinks={permalinks} t={t} />}
               <BlogList
                 posts={lead ? latest.slice(1) : latest}
@@ -458,10 +490,21 @@ export async function ArchiveView({
   const picture = kind === 'category' && blog.categoryHero === 'full' ? category?.imageUrl : null;
   const around = kind === 'category' ? template : { before: [], after: [] };
 
+  const toolbar = blog.toolbar;
+  const archiveSearch =
+    blog.searchInBar && !blog.searchOff ? (
+      <BlogSearch
+        initialQuery=""
+        action={blogIndexPath(permalinks)}
+        labels={{ label: t('chrome.search'), placeholder: t('blog.searchArticles'), submit: t('chrome.search'), clear: t('blog.clear') }}
+      />
+    ) : undefined;
+  const current = kind === 'category' && category ? category.slug : 'research';
+
   return (
     <>
       <Section size="lg">
-        {blog.archiveBreadcrumbs && <ArchiveCrumbs trail={trail} />}
+        {blog.archiveBreadcrumbs && !toolbar && <ArchiveCrumbs trail={trail} />}
         {picture ? (
           <div className="he-arch-hero">
             <div>
@@ -485,24 +528,15 @@ export async function ArchiveView({
           </>
         )}
       </Section>
-      {/* 3.3 — the blog's category bar here too, with this page's chip lit. */}
-      {blog.archiveBar && (
-        <CategoryBar
-          locale={locale}
-          permalinks={permalinks}
-          t={t}
-          blog={blog}
-          current={kind === 'category' && category ? category.slug : 'research'}
-          search={
-            blog.searchInBar ? (
-              <BlogSearch
-                initialQuery=""
-                action={blogIndexPath(permalinks)}
-                labels={{ label: t('chrome.search'), placeholder: t('blog.searchArticles'), submit: t('chrome.search'), clear: t('blog.clear') }}
-              />
-            ) : undefined
-          }
+      {/* 3.3 — the blog's category bar here too, with this page's chip lit; (3.22) or all of it in one row. */}
+      {toolbar ? (
+        <ArchiveToolbar
+          crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
+          count={blog.resultCount && posts.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
+          bar={blog.archiveBar ? <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} bare /> : undefined}
         />
+      ) : (
+        blog.archiveBar && <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} />
       )}
       {around.before.length > 0 && <BlockRenderer blocks={around.before} trail={trail} locale={locale} />}
 
@@ -511,7 +545,7 @@ export async function ArchiveView({
           <p className="m-0 text-[16px] text-smoke">{empty}</p>
         ) : (
           <>
-            {blog.resultCount && <ResultCount paging={paging} t={t} />}
+            {blog.resultCount && !toolbar && <ResultCount paging={paging} t={t} />}
             <BlogList
               posts={posts}
               blog={blog}

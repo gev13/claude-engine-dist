@@ -20,13 +20,17 @@ import {
   type CheckResult,
   type ExistingSnapshot,
   type ImportStrategy,
+  JOIN_OWNERS,
   NATURAL_KEYS,
   type PreparedRow,
   type TableReport,
   checkArchive,
   checkSetting,
+  replacedOwners,
   tableColumns,
 } from './importCheck';
+import { VARIANT_NAME } from '@/lib/responsive';
+import { afterImportMedia } from '@/server/media/afterImport';
 
 const run = promisify(execFile);
 
@@ -557,15 +561,18 @@ export async function importContent(archive: string, options: ImportOptions): Pr
       const staged = path.join(staging, 'media');
       await mkdir(staged, { recursive: true });
       await run('tar', ['-xzf', archive, '-C', staging, read.mediaPrefix], { timeout: 30 * 60_000, maxBuffer: 1024 * 1024 });
-      const skipped = outcome.skippedMedia.map((file) => file.replace(/\.[^./]+$/, ''));
+      // 3.22 — the skipped file itself and its generated sizes, never another file that shares its stem (logo.png beside logo.jpg).
+      const skipped = outcome.skippedMedia.map((file) => ({ file, stem: file.replace(/\.[^./]+$/, '') }));
       await cp(staged, mediaDir(), {
         recursive: true,
         force: true,
         filter: (source) => {
           const relative = path.relative(staged, source);
-          return !skipped.some((stem) => relative === stem || relative.startsWith(`${stem}.`));
+          return !skipped.some(({ file, stem }) => relative === file || (relative.startsWith(`${stem}.`) && VARIANT_NAME.test(relative)));
         },
       });
+      // 3.22 — what an upload would have done to each file: clean an SVG, read a film's size, make a picture's sizes.
+      await afterImportMedia(outcome.importedMedia);
     }
     return outcome;
   } catch (error) {
@@ -585,7 +592,7 @@ export async function importContent(archive: string, options: ImportOptions): Pr
 export async function importDocuments(
   documents: Record<string, unknown[]>,
   options: ImportOptions & { hasFile: (filename: string) => boolean; whenAddressMatches?: 'update' | 'skip' },
-): Promise<(Extract<ImportOutcome, { ok: true }> & { skippedMedia: string[] }) | Extract<ImportOutcome, { ok: false }>> {
+): Promise<(Extract<ImportOutcome, { ok: true }> & { skippedMedia: string[]; importedMedia: string[] }) | Extract<ImportOutcome, { ok: false }>> {
   const strategy = options.strategy ?? 'replace';
   const { check, settings } = await planDocuments(documents, {
     strategy,
@@ -620,6 +627,15 @@ export async function importDocuments(
     for (const table of CONTENT_TABLES) {
       const rows = check.prepared[table] ?? [];
       const object = TABLE_OBJECTS[table] as PgTable & { id?: AnyColumn };
+      // 3.22 — a merge replaces the links of each post and project the archive carries (with its links).
+      const owner = JOIN_OWNERS[table];
+      if (strategy === 'merge' && owner && documents[table]) {
+        const ids = [...replacedOwners(check.prepared, owner.table)];
+        const column = (object as unknown as Record<string, AnyColumn>)[owner.column];
+        for (let i = 0; column && i < ids.length; i += 500) {
+          await tx.delete(object as never).where(inArray(column, ids.slice(i, i + 500)));
+        }
+      }
       const inserts = rows.filter((row) => row.action === 'create').map((row) => row.values);
       for (let i = 0; i < inserts.length; i += 200) {
         await tx.insert(object as never).values(inserts.slice(i, i + 200) as never);
@@ -642,5 +658,6 @@ export async function importDocuments(
     applied.settings = settings.length;
   });
 
-  return { ok: true, applied, report: check.report, backupTaken: safety.filename, attributedTo: options.attributeTo, skippedMedia: check.skippedMedia };
+  const importedMedia = (check.prepared.media ?? []).filter((row) => row.action !== 'skip').map((row) => row.values.filename as string);
+  return { ok: true, applied, report: check.report, backupTaken: safety.filename, attributedTo: options.attributeTo, skippedMedia: check.skippedMedia, importedMedia };
 }

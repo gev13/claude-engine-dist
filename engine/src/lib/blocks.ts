@@ -79,6 +79,8 @@ const slide = z.object({
   body: text(4000),
   imageUrl: mediaUrl.optional(),
   videoUrl: mediaUrl.optional(),
+  /** 3.22 — the same film in another format (a WebM beside the MP4); browsers take the one they play best. */
+  videoUrlAlt: mediaUrl.optional(),
   alt: text(200),
   href: safeHref.optional(),
   buttonLabel: text(40),
@@ -245,6 +247,9 @@ export const blockSchemas = {
     kicker: z.string().optional(),
     title: z.string(),
     titleAs: textTagSchema.optional(),
+    /** 3.22 — words inside the title to pick out, as the heading block does ("Image." with an accent dot). */
+    highlight: text(80),
+    highlightStyle: z.enum(['color', 'marker', 'underline', 'circle', 'curly', 'strike', 'zigzag', 'double', 'outline', 'gradient']).optional(),
     lede: z.string().optional(),
     body: z.string().optional(),
     links: z.array(link).default([]),
@@ -360,8 +365,14 @@ export const blockSchemas = {
     dividers: z.boolean().optional(),
     /** 3.8 — picture rows: how wide the picture column is (e.g. 400px); unset is two fifths. */
     mediaWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
-    /** 3.8 — image cards: the picture's shape; unset is 4:3. */
-    mediaRatio: z.enum(['4/3', '5/4', '1/1', '3/2', '16/9']).optional(),
+    /** 3.8 — image cards: the picture's shape; unset is 4:3. (3.22) `auto` is each file's own shape. */
+    mediaRatio: z.enum(['4/3', '5/4', '1/1', '3/2', '16/9', 'auto']).optional(),
+    /** 3.22 — image cards: the picture fills its box (cropped, as before) or fits inside it whole. */
+    mediaFit: z.enum(['cover', 'contain']).optional(),
+    /** 3.22 — image cards: the tallest a picture may be (e.g. 220px); unset has no cap. */
+    mediaMaxHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.22 — icon features: the icon's height (e.g. 200px), its width following the file's proportions; unset is the drawn 28px in its box. */
+    iconSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.15 — picture rows: the picture's shape on phones (e.g. 326/154); unset keeps 50:33. */
     mediaRatioMobile: phoneRatio,
     /**
@@ -465,6 +476,9 @@ export const blockSchemas = {
     maxWidth: z.enum(['full', 'wide', 'medium', 'narrow']).default('full'),
     /** Ambient: a pause button, for anyone who wants it to stop (WCAG 2.2.2). */
     controls: z.boolean().default(true),
+    /** 3.22 — ambient: edge to edge of the screen rather than in the column, and with no space above and below. */
+    bleed: z.boolean().optional(),
+    flush: z.boolean().optional(),
     caption: text(200),
     /** P3-B8 — more videos after the first, picked from a list beside or below the player. */
     playlist: z
@@ -478,6 +492,8 @@ export const blockSchemas = {
   gallery: z.object({
     ...showcaseHead,
     layout: z.enum(GALLERY_LAYOUTS).default('grid'),
+    /** 3.22 — masonry: filled column by column (unset, as before) or row by row, adding below without moving anything. */
+    masonryOrder: z.enum(['columns', 'rows']).optional(),
     columns: z.number().int().min(2).max(5).default(3),
     gap: z.enum(['none', 'small', 'medium', 'large']).default('medium'),
     ratio: z.enum(['square', 'landscape', 'portrait']).default('square'),
@@ -487,7 +503,7 @@ export const blockSchemas = {
     images: z
       /* 2.17 — `videoUrl` makes the tile a moving picture (an uploaded film,
          muted and looped while on screen); `url` is its poster. */
-      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional() }))
+      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional(), videoUrlAlt: mediaUrl.optional() }))
       .min(1)
       .max(200),
     link: libraryLink.optional(),
@@ -636,6 +652,12 @@ export const blockSchemas = {
     alignWithTitle: z.boolean().optional(),
     /** 3.10 — contained: the lines between questions stop short of the edges. */
     insetDividers: z.boolean().optional(),
+    /** 3.22 — the heading beside the questions (unset, as before) or above them, the list running the full width. */
+    layout: z.enum(['split', 'stacked']).optional(),
+    /** 3.22 — the corners of each boxed question (e.g. 8px); unset is 14px. */
+    rowRadius: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.22 — filled boxes: the open question takes an accent tint (unset or true, as before) or keeps its colour. */
+    openTint: z.boolean().optional(),
     tone,
     eyebrow: z.string().optional(),
     title: z.string().optional(),
@@ -879,6 +901,14 @@ export const blockSchemas = {
     /** V9 — the full-screen slider can move up and down instead of sideways. */
     direction: z.enum(['horizontal', 'vertical']).default('horizontal'),
     indicator: z.enum(CAROUSEL_INDICATORS).default('dots'),
+    /** 3.22 — the counter indicator: numbers padded ("01", unset) or not, what stands between them, and in the labels' face (unset) or the text's. */
+    counter: z
+      .object({
+        pad: z.boolean().optional(),
+        separator: z.enum(['slash', 'dash', 'line', 'of']).optional(),
+        font: z.enum(['mono', 'body']).optional(),
+      })
+      .optional(),
     arrows: z.enum(CAROUSEL_ARROWS).default('corner'),
     /** Cards in view per tier; fractions make the next card peek (1.2). */
     perView: z
@@ -969,6 +999,9 @@ export const blockSchemas = {
     alt: text(200),
     position: z.enum(MEDIA_BAND_POSITIONS).default('bottomLeft'),
     height: z.enum(['short', 'medium', 'tall', 'screen']).default('tall'),
+    /** 3.22 — a height of its own (e.g. 900px or 80vh), and on phones; each unset keeps the chosen height. */
+    heightCustom: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    heightCustomMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     overlay: z.enum(['none', 'light', 'medium', 'strong', 'gradient']).default('medium'),
     parallax: z.enum(['none', 'vertical', 'horizontal']).default('none'),
     strength: z.enum(['subtle', 'medium', 'strong']).default('medium'),
@@ -1057,6 +1090,19 @@ export const blockSchemas = {
     style: z.enum(['tiles', 'grid', 'plain']).default('tiles'),
     /** Print each company's name under its logo. */
     captions: z.boolean().default(false),
+    /** 3.22 — how tall a logo may be (e.g. 111px), per screen tier; unset is 40px. */
+    logoHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    logoHeightTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    logoHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.22 — logos in grey until pointed at (unset or true, as before), or in their own colours. */
+    greyscale: z.boolean().optional(),
+    /** 3.22 — how opaque a logo is at rest, 0–1; unset is 0.72. */
+    opacity: z.number().min(0).max(1).optional(),
+    /** 3.22 — what pointing at a logo does: shows it in full (as before), nothing, or grows it a little. */
+    logoHover: z.enum(['reveal', 'none', 'grow']).optional(),
+    /** 3.22 — logos per row on tablets and on phones; unset is up to four, then two or three. */
+    columnsTablet: z.number().int().min(1).max(6).optional(),
+    columnsMobile: z.number().int().min(1).max(6).optional(),
     logos: z
       .array(z.object({ name: z.string().trim().min(1).max(80), imageUrl: mediaUrl.optional(), href: safeHref.optional() }))
       .min(1)
@@ -1230,8 +1276,8 @@ export const blockSchemas = {
   heading: z.object({
     tone,
     align: z.enum(['left', 'center']).default('left'),
-    /** `lede` is large body text, the old statement block's size. */
-    size: z.enum(['medium', 'large', 'display', 'lede']).default('large'),
+    /** `lede` is large body text, the old statement block's size; (3.22) `theme` is the tag's own size from Appearance → Typography. */
+    size: z.enum(['medium', 'large', 'display', 'lede', 'theme']).default('large'),
     /** `split` puts the subtitle beside the heading, as the old statement block did. */
     layout: z.enum(['stacked', 'split']).default('stacked'),
     /**
@@ -1590,6 +1636,8 @@ export const blockSchemas = {
     ...showcaseHead,
     layout: z.enum(REVIEW_LAYOUTS).default('grid'),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
+    /** 3.22 — masonry: filled column by column (unset, as before) or row by row, adding below without moving anything. */
+    masonryOrder: z.enum(['columns', 'rows']).optional(),
     summary: z
       .object({
         rating: z.number().min(0).max(5),
@@ -1630,6 +1678,8 @@ export const blockSchemas = {
         radius: z.number().int().min(0).max(40).optional(),
         border: z.boolean().optional(),
         quoteMark: z.boolean().optional(),
+        /** 3.22 — the photo beside the name: small (40px, unset), medium or large. */
+        avatarSize: z.enum(['small', 'medium', 'large']).optional(),
       })
       .optional(),
   }),

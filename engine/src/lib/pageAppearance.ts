@@ -21,8 +21,8 @@ export const pageAppearanceSchema = z.object({
     .max(60)
     .refine((value) => value === '' || isColor(value), 'A colour such as #000000')
     .optional(),
-  /** `alt` — the site's alternate palette, for this page. */
-  scheme: z.enum(['inherit', 'alt']).optional(),
+  /** `alt` — the site's alternate palette, for this page; (3.22) `alt2` its second one. */
+  scheme: z.enum(['inherit', 'alt', 'alt2']).optional(),
 });
 
 export type PageAppearance = z.output<typeof pageAppearanceSchema>;
@@ -35,8 +35,8 @@ export function readPageAppearance(value: unknown): PageAppearance {
 /** The CSS for one page's colours, or '' when it has none of its own. Every value checked twice. */
 export function pageAppearanceCss(appearance: PageAppearance, theme: Theme): string {
   const parts: string[] = [];
-  if (appearance.scheme === 'alt') {
-    const decls = colorDecls(theme, 'colorsAlt');
+  if (appearance.scheme === 'alt' || appearance.scheme === 'alt2') {
+    const decls = colorDecls(theme, appearance.scheme === 'alt2' ? 'colorsAlt2' : 'colorsAlt');
     if (decls.length) parts.push(`:root{${decls.map(([k, v]) => `${k}:${v}`).join(';')}}`);
   }
   if (appearance.background && isColor(appearance.background)) {

@@ -373,3 +373,19 @@ export function absoluteWithSlash(origin: string, path: string, mode: TrailingSl
   const withTrailing = withSlash(path === '' ? '/' : path, mode);
   return `${origin}${withTrailing}`;
 }
+
+/**
+ * 3.22 — where `/…/page/1` or a zero-padded page number (`/page/02`) should
+ * go, or null. `/page/0` is left to the route, which answers 404.
+ */
+export function pageNumberHop(path: string, segment: string): string | null {
+  const escaped = segment.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = new RegExp(`^(.*)/${escaped}/(\\d{1,6})/?$`).exec(path);
+  if (!match) return null;
+  const written = match[2]!;
+  const n = Number(written);
+  if (n === 0) return null;
+  if (n === 1) return match[1] || '/';
+  if (written !== String(n)) return `${match[1]}/${segment}/${n}`;
+  return null;
+}

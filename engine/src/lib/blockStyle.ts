@@ -248,6 +248,10 @@ export const blockStyleSchema = z.object({
        * of it where it does not.
        */
       videoUrl: z.string().regex(SECTION_VIDEO, 'An mp4 or webm from the media library').optional(),
+      /** 3.22 — the same film in another format (a WebM beside the MP4). */
+      videoUrlAlt: z.string().regex(SECTION_VIDEO, 'An mp4 or webm from the media library').optional(),
+      /** 3.22 — the pause button over the film (unset or true, as before). */
+      videoControls: z.boolean().optional(),
       /** A lighter film for phones. */
       videoMobileUrl: z.string().regex(SECTION_VIDEO, 'An mp4 or webm from the media library').optional(),
       videoPoster: z.string().max(500).optional(),
@@ -327,7 +331,7 @@ export const blockStyleSchema = z.object({
   sticky: z.boolean().optional(),
 
   /** 2.19 (T31) — the site's alternate palette on this section, every colour at once. */
-  scheme: z.enum(['alt']).optional(),
+  scheme: z.enum(['alt', 'alt2']).optional(),
   /** P3-C5 — the page settles on this block when scrolling stops near it. */
   snap: z.boolean().optional(),
 
@@ -368,6 +372,10 @@ export const blockStyleSchema = z.object({
   motion: z.number().min(0).max(5).optional(),
 
   swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
+  /** 3.22 — how much of the width each card takes while swiping, in %; unset is 84, so the next card peeks in. */
+  swipeWidth: z.number().int().min(40).max(100).optional(),
+  /** 3.22 — ‹ › buttons for the swipe: none (unset, as before), under the cards on the right, or either side of them. Hidden when the cards fit. */
+  swipeArrows: z.enum(['none', 'belowRight', 'sides']).optional(),
 
   /** Hidden at these widths and below — how visibility was stored before 2.19; still read. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),

@@ -351,7 +351,7 @@ function NavigationScreenInner() {
             </Field>
             <div className="space-y-2">
               {social.map((link, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[180px_1fr_90px_auto]">
+                <div key={i} className="grid gap-2 sm:grid-cols-[160px_1fr_90px_140px_auto]">
                   <Select
                     value={link.network}
                     onChange={(e) =>
@@ -376,6 +376,14 @@ function NavigationScreenInner() {
                     maxLength={8}
                     aria-label={`Short label for ${SOCIAL_LABELS[link.network]}`}
                     onChange={(e) => setSocial(social.map((s, j) => (j === i ? { ...s, short: e.target.value.trim() || undefined } : s)))}
+                  />
+                  {/* 3.22 — its name where it is written out (the footer's contact list). */}
+                  <Input
+                    value={link.label ?? ''}
+                    placeholder={SOCIAL_LABELS[link.network]}
+                    maxLength={40}
+                    aria-label={`Name for ${SOCIAL_LABELS[link.network]}`}
+                    onChange={(e) => setSocial(social.map((s, j) => (j === i ? { ...s, label: e.target.value || undefined } : s)))}
                   />
                   <AdminButton
                     variant="ghost"

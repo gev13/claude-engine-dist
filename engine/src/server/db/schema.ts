@@ -244,6 +244,8 @@ export type SeoFields = {
   schema?: import('../../lib/structuredData').PageSchema;
   /** Arbitrary extra <meta> tags, editable from the admin panel. */
   extraMeta?: { name?: string; property?: string; content: string }[];
+  /** 3.22 — posts: the reading time as written (e.g. an imported site's figure), instead of the one counted from the text. */
+  readingMinutes?: number;
 };
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -301,7 +303,7 @@ export const pages = pgTable(
     /** Custom CSS for this page alone, written into a <style> after the theme. */
     customCss: text('custom_css').notNull().default(''),
     /** 2.19 — this page's own background and palette (lib/pageAppearance.ts). */
-    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' }>().notNull().default(sql`'{}'::jsonb`),
+    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' | 'alt2' }>().notNull().default(sql`'{}'::jsonb`),
     /** Nesting for the sitemap tree. */
     parentId: uuid('parent_id'),
     sortOrder: integer('sort_order').notNull().default(0),
@@ -387,7 +389,7 @@ export const posts = pgTable(
     /** Custom CSS for this page alone, written into a <style> after the theme. */
     customCss: text('custom_css').notNull().default(''),
     /** 2.19 — this page's own background and palette (lib/pageAppearance.ts). */
-    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' }>().notNull().default(sql`'{}'::jsonb`),
+    appearance: jsonb('appearance').$type<{ background?: string; scheme?: 'inherit' | 'alt' | 'alt2' }>().notNull().default(sql`'{}'::jsonb`),
     coverMediaId: uuid('cover_media_id').references(() => media.id, { onDelete: 'set null' }),
     primaryCategoryId: uuid('primary_category_id').references(() => categories.id, { onDelete: 'set null' }),
     readingMinutes: integer('reading_minutes').notNull().default(0),

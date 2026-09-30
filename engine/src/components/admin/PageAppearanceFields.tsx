@@ -2,7 +2,7 @@
 
 import { Field, Input, Panel, Select } from '@/components/admin/ui';
 
-export type PageAppearanceValue = { background?: string; scheme?: 'inherit' | 'alt' };
+export type PageAppearanceValue = { background?: string; scheme?: 'inherit' | 'alt' | 'alt2' };
 
 /**
  * One page's own colours (T31, 2.19): a background, and the site's
@@ -19,10 +19,11 @@ export function PageAppearanceFields({ value, onChange, what }: { value: PageApp
   return (
     <Panel title={`This ${what}’s colours`}>
       <div className="space-y-4">
-        <Field label="Palette" hint="the alternate palette is set in Appearance → Colours">
+        <Field label="Palette" hint="the alternate palettes are set in Appearance → Colours">
           <Select value={value.scheme ?? 'inherit'} onChange={(e) => set({ scheme: e.target.value as PageAppearanceValue['scheme'] })}>
             <option value="inherit">The site’s colours</option>
             <option value="alt">The alternate palette</option>
+            <option value="alt2">The second alternate palette</option>
           </Select>
         </Field>
         <Field label="Background" hint="a colour such as #000000; empty keeps the palette’s">

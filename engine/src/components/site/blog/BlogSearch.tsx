@@ -44,7 +44,7 @@ export function BlogSearch({
       />
       <button
         type="submit"
-        className="he-chip border-2 border-flare bg-flare px-5 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-bone transition-colors hover:bg-flare-hot hover:text-ink"
+        className="he-chip border-2 border-flare bg-flare px-5 py-2.5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-bone transition-colors hover:bg-flare-hot hover:text-ink he-lbl"
       >
         {labels.submit}
       </button>
@@ -55,7 +55,7 @@ export function BlogSearch({
             setValue('');
             router.push(action);
           }}
-          className="cursor-pointer bg-transparent px-2 py-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-smoke hover:text-flare-soft"
+          className="cursor-pointer bg-transparent px-2 py-2.5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-smoke))] hover:text-flare-soft he-lbl"
         >
           {labels.clear}
         </button>

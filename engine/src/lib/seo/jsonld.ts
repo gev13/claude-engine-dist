@@ -472,8 +472,17 @@ export function siteNavigation(links: readonly { name: string; path: string }[] 
  */
 export function customNodes(jsonLd: unknown): Node[] {
   if (!Array.isArray(jsonLd)) return [];
-  return jsonLd
-    .filter((item): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item) && typeof (item as { '@type'?: unknown })['@type'] === 'string')
+  const isObject = (item: unknown): item is Record<string, unknown> => !!item && typeof item === 'object' && !Array.isArray(item);
+  // A @type is a name, or (3.22) a list of names: ["Organization", "LocalBusiness"].
+  const typed = (item: Record<string, unknown>) => {
+    const type = item['@type'];
+    return typeof type === 'string' || (Array.isArray(type) && type.length > 0 && type.every((t) => typeof t === 'string'));
+  };
+  /* 3.22 — a whole document pasted from another tool ({"@graph": [...]}, as
+     Yoast writes it) is its nodes; it used to be dropped for having no @type. */
+  const nodes = jsonLd.flatMap((item) => (isObject(item) && !typed(item) && Array.isArray(item['@graph']) ? (item['@graph'] as unknown[]) : [item]));
+  return nodes
+    .filter((item): item is Record<string, unknown> => isObject(item) && typed(item))
     .slice(0, 20)
     .map(({ '@context': _context, ...node }) => node as Node);
 }

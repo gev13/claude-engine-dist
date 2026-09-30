@@ -181,3 +181,51 @@ content export:
   rule never travel, so a staging site's `noindex` cannot reach a live one.
 - Fixed: a page's **"Use exactly this title"** never saved — the page routes
   kept a copy of the SEO rules without it.
+
+## The post and the blog, closer to a finished design (3.22)
+
+- **Above the title** — *That line's style*: after a short rule (as before),
+  the category as a chip linking to it with the rest beside it, or text
+  alone. Its case and face follow Appearance → Typography → Labels.
+- **The row under the title** (author, reading time, categories) — off, or
+  any part off. **The excerpt under the title** — off.
+- **Reading time** — each post can state its own (Post editor → Reading
+  time), kept instead of the counted one; an import keeps it when the archive
+  carries `seo.readingMinutes`.
+- **Share buttons → A column beside the article that follows the reader** —
+  inside the post, beside the contents column, instead of over the page's
+  edge where the side rail is. The networks keep the order you choose, and
+  can be moved.
+- **Keep reading → Cards → The archive's cards**: pictures, date, reading
+  time and *Read more*, as the blog's archive draws them.
+- **Previous and next → the corner card**: on phones too; closed for this
+  post only rather than for the visit.
+- **Cover, then a title card → overlap**: how far the card rides up over the
+  cover; 0 starts it right under.
+- **The blog's pages**: no search box (searching by address still works); one
+  row under the title with the breadcrumbs on the left and the result count
+  and the categories on the right; the “Browse” label off; the card grid with
+  each post's cover. The *Categories* menu closes on a click outside and on
+  Escape. Fixed: breadcrumbs over an archive's title stood a gutter in from
+  the title.
+- **Pictures inside a post's text** carry their stored width and height (no
+  jump as they load), and a `srcset` of their sizes when responsive images
+  are on.
+
+### Addresses
+
+- With the trailing slash set to *always*, the home page's canonical and
+  hreflang addresses end in `/` like every other.
+- `/…/page/1` and a padded page number (`/page/02`) answer **301** to their
+  one spelling; `/page/0` is not found.
+- The research archive answers only when there is research, and leaves the
+  blog sitemap otherwise; a category with no published posts, or set to
+  noindex, leaves it too.
+- A Blog page without a list that pages on the server still has `/page/2` and
+  beyond: past the first page the built-in archive answers.
+- Pasted JSON-LD may be a whole document (`{"@graph": [...]}`, as Yoast
+  writes it) or name several types (`"@type": ["LocalBusiness", "Store"]`);
+  both used to be dropped.
+- Redirects decided inside a page route (a post under its old category, a
+  managed redirect found at a 404) still answer 308: Next.js page routes can
+  only answer 307 or 308. Search engines treat 308 exactly as 301.

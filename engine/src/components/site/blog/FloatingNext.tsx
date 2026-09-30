@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from '@/components/ui/SiteLink';
 import { Icon } from '@/components/site/icons';
+import { cn } from '@/lib/utils';
 
 type Target = { title: string; href: string } | null;
 
@@ -15,13 +16,28 @@ const DISMISSED = 'he-next-dismissed';
  * it never covers the opening, and it is hidden on phones, where the corner
  * is the content.
  */
-export function FloatingNext({ next, previous, labels }: { next: Target; previous: Target; labels: { upNext: string; previous: string; next: string; dismiss: string } }) {
+export function FloatingNext({
+  next,
+  previous,
+  labels,
+  phones = false,
+  dismissKey,
+}: {
+  next: Target;
+  previous: Target;
+  labels: { upNext: string; previous: string; next: string; dismiss: string };
+  /** 3.22 — shown on phones too. */
+  phones?: boolean;
+  /** 3.22 — closing it is remembered for this post only (its id), rather than for the whole visit. */
+  dismissKey?: string;
+}) {
   const [shown, setShown] = useState(false);
   const [dismissed, setDismissed] = useState(true);
+  const storageKey = dismissKey ? `${DISMISSED}:${dismissKey}` : DISMISSED;
 
   useEffect(() => {
     try {
-      setDismissed(sessionStorage.getItem(DISMISSED) === '1');
+      setDismissed(sessionStorage.getItem(storageKey) === '1');
     } catch {
       setDismissed(false);
     }
@@ -29,7 +45,7 @@ export function FloatingNext({ next, previous, labels }: { next: Target; previou
     check();
     window.addEventListener('scroll', check, { passive: true });
     return () => window.removeEventListener('scroll', check);
-  }, []);
+  }, [storageKey]);
 
   const target = next ?? previous;
   if (!target || dismissed) return null;
@@ -37,14 +53,14 @@ export function FloatingNext({ next, previous, labels }: { next: Target; previou
   const dismiss = () => {
     setDismissed(true);
     try {
-      sessionStorage.setItem(DISMISSED, '1');
+      sessionStorage.setItem(storageKey, '1');
     } catch {
       /* Closed for this page, then. */
     }
   };
 
   return (
-    <aside className={shown ? 'he-upnext is-shown' : 'he-upnext'} aria-label={labels.upNext} aria-hidden={shown ? undefined : true}>
+    <aside className={cn('he-upnext', shown && 'is-shown', phones && 'on-phones')} aria-label={labels.upNext} aria-hidden={shown ? undefined : true}>
       <p className="he-upnext__label">{next ? labels.upNext : labels.previous}</p>
       <Link href={target.href} className="he-upnext__title" tabIndex={shown ? undefined : -1}>
         {target.title}

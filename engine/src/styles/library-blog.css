@@ -45,7 +45,13 @@
   .he-post-ctt__img { display: block; width: 100%; height: auto; max-height: 86svh; object-fit: cover; }
   .he-post-ctt__card { position: relative; margin-top: clamp(-120px, -8vw, -48px); padding: clamp(24px, 4vw, 48px); border-radius: var(--he-card-radius, 16px); background: var(--color-surface); }
 
-  .he-post__back { margin: 0 0 20px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  /* 3.22 — the card's overlap measured from the cover's bottom edge: 0 starts it right under the cover.
+     The section's own top padding (4rem, 5rem from 48rem, 84px from 64rem) is taken back first. */
+  .he-post-ctt__card[style*='--he-ctt-gap'] { margin-top: calc(-4rem - var(--he-ctt-gap)); }
+  @media (width >= 48rem) { .he-post-ctt__card[style*='--he-ctt-gap'] { margin-top: calc(-5rem - var(--he-ctt-gap)); } }
+  @media (width >= 64rem) { .he-post-ctt__card[style*='--he-ctt-gap'] { margin-top: calc(-84px - var(--he-ctt-gap)); } }
+
+  .he-post__back { margin: 0 0 20px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); font-weight: var(--he-label-weight, revert-layer); color: var(--he-label-color, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-post__back a { color: var(--color-ash); }
   .he-post__back a:hover { color: var(--color-bone); }
 
@@ -59,6 +65,18 @@
   .he-post__body.has-toc-right { grid-template-columns: minmax(0, 1fr) minmax(200px, 260px); }
   .he-post__body.has-toc-right > .he-post__toc { order: 2; }
   .he-post__body > .he-post__toc { position: sticky; top: calc(var(--he-header-h, 0px) + 24px); margin-top: 48px; }
+  /* 3.22 — the share buttons in a column of their own beside the article (and its contents), following the reader. */
+  .he-post__body.has-share-beside { display: grid; gap: var(--he-gap, 40px); align-items: start; grid-template-columns: auto minmax(0, 1fr); }
+  .he-post__body.has-share-beside.has-toc-left { grid-template-columns: auto minmax(200px, 260px) minmax(0, 1fr); }
+  .he-post__body.has-share-beside.has-toc-right { grid-template-columns: auto minmax(0, 1fr) minmax(200px, 260px); }
+  .he-post__body > .he-post__share.is-beside { position: sticky; top: calc(var(--he-header-h, 0px) + 24px); margin-top: 48px; }
+  .he-post__share.is-beside .he-shr-sec { padding: 0; border: 0; }
+  .he-post__share.is-beside .he-shr-sec .shell { padding: 0; max-width: none; }
+  .he-post__share.is-beside .he-shr { flex-direction: column; }
+  /* 3.22 — the line above the title as a chip and text, or as text alone. */
+  .he-post__eyebrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 24px; }
+  .he-post__chip { display: inline-flex; align-items: center; padding: 5px 12px; border: 1px solid var(--color-hairline); border-radius: 999px; color: var(--color-bone); transition: border-color calc(150ms * var(--he-motion, 1)); }
+  a.he-post__chip:hover { border-color: var(--color-rule); }
   .he-post__toc .he-toc-sec { padding: 0; }
   .he-post__toc.is-top .he-toc-sec { padding-top: 40px; }
 
@@ -66,7 +84,7 @@
   .he-postnav__a { display: grid; gap: 6px; padding: 20px 22px; border: 1px solid var(--color-hairline); border-radius: var(--he-card-radius, 16px); color: var(--color-bone); transition: border-color calc(150ms * var(--he-motion, 1)); }
   .he-postnav__a:hover { border-color: var(--color-rule); }
   .he-postnav__a.is-next { grid-column: 2; text-align: right; }
-  .he-postnav__dir { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-postnav__dir { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-postnav__title { font-family: var(--font-display); font-size: 18px; font-weight: 700; line-height: 1.3; }
 
   .he-author { display: flex; gap: 22px; align-items: flex-start; max-width: 72ch; padding: 26px; border: 1px solid var(--color-hairline); border-radius: var(--he-card-radius, 16px); }
@@ -81,7 +99,7 @@
   /* "Up next": a card in the corner, out of the way until a third of the way down. */
   .he-upnext { position: fixed; right: 20px; bottom: 20px; z-index: 40; display: grid; gap: 6px; width: min(320px, calc(100vw - 40px)); padding: 16px 44px 16px 18px; border: 1px solid var(--color-hairline); border-radius: var(--he-card-radius, 16px); background: var(--color-surface); box-shadow: 0 18px 50px rgb(0 0 0 / 0.35); opacity: 0; translate: 0 16px; pointer-events: none; transition: opacity calc(200ms * var(--he-motion, 1)), translate calc(200ms * var(--he-motion, 1)); }
   .he-upnext.is-shown { opacity: 1; translate: 0 0; pointer-events: auto; }
-  .he-upnext__label { margin: 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-upnext__label { margin: 0; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-upnext__title { font-family: var(--font-display); font-size: 16px; font-weight: 700; line-height: 1.3; color: var(--color-bone); }
   .he-upnext__nav { display: flex; gap: 8px; margin-top: 4px; }
   .he-upnext__nav a { display: grid; place-items: center; width: 30px; height: 30px; border: 1px solid var(--color-hairline); border-radius: 999px; color: var(--color-ash); }
@@ -94,13 +112,18 @@
     .he-post__body.has-toc-left, .he-post__body.has-toc-right { grid-template-columns: minmax(0, 1fr); gap: 0; }
     .he-post__body.has-toc-right > .he-post__toc { order: 0; }
     .he-post__body > .he-post__toc { position: static; margin-top: 32px; }
+    .he-post__body.has-share-beside, .he-post__body.has-share-beside.has-toc-left, .he-post__body.has-share-beside.has-toc-right { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    .he-post__body > .he-post__share.is-beside { position: static; margin-top: 32px; }
+    .he-post__share.is-beside .he-shr { flex-direction: row; }
   }
 
   @media (width <= 48rem) {
     .he-postnav { grid-template-columns: minmax(0, 1fr); }
     .he-postnav__a.is-next { grid-column: auto; }
     .he-author { flex-direction: column; gap: 14px; padding: 20px; }
-    .he-upnext { display: none; }
+    .he-upnext:not(.on-phones) { display: none; }
+    /* 3.22 — kept on phones when asked: a slim card across the bottom. */
+    .he-upnext.on-phones { right: 12px; bottom: 12px; left: 12px; width: auto; }
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -109,7 +132,7 @@
 
   /* ── 2.18: the blog's archives ───────────────────────────────────────── */
 
-  .he-card__more { display: block; margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--he-link, var(--color-flare-soft)); }
+  .he-card__more { display: block; margin-top: 14px; font-size: var(--he-card-link-size, 14px); font-weight: var(--he-card-link-weight, 600); color: var(--he-card-link-color, var(--he-link, var(--color-flare-soft))); line-height: var(--he-card-link-line, revert-layer); font-family: var(--he-card-link-family, revert-layer); text-transform: var(--he-card-link-transform, revert-layer); letter-spacing: var(--he-card-link-tracking, revert-layer); }
 
   /* Breadcrumbs above an archive's title: the block, without a section's padding. */
   .he-arch-crumbs { margin-bottom: 20px; }
@@ -122,8 +145,15 @@
 
   /* "Categories ▾" — a menu instead of a row of chips. */
   .he-catbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px; }
-  .he-catbar__all { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-bone); }
+  .he-catbar__all { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-bone)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-catmenu { position: relative; margin-left: auto; }
+  /* 3.22 — the archive's toolbar: breadcrumbs left; the count and the categories right. */
+  .he-blogbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; }
+  .he-blogbar__start .he-arch-crumbs { margin: 0; }
+  .he-blogbar__end { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-left: auto; }
+  .he-blogbar__end .he-result-count { margin: 0; }
+  .he-blogbar__end .he-catbar { justify-content: flex-end; }
+  .he-blogbar__end .he-catmenu { margin-left: 0; }
   .he-catmenu__button { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--color-hairline); border-radius: 999px; font-size: 14px; cursor: pointer; list-style: none; }
   .he-catmenu__button::-webkit-details-marker { display: none; }
   .he-catmenu[open] .he-catmenu__button { border-color: var(--color-rule); }
@@ -144,3 +174,8 @@
    lost and the contents column kept the page's side padding (96px off a
    260px column on a full-width site). */
 .he-post__toc .he-toc-sec .shell { padding: 0; max-width: none; }
+
+/* 3.22 — the same for the breadcrumbs over an archive's title and in its
+   toolbar: the rule inside the layer above lost to `.shell`'s utility, so
+   they stood a page-gutter in from the title they belong to. */
+.he-arch-crumbs .shell { padding: 0; max-width: none; }

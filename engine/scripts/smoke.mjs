@@ -180,8 +180,11 @@ async function main() {
      categories (weekly, 0.6) and the posts (monthly). */
   const blogMap = await text('/sitemaps/blog.xml');
   const blogEntries = sitemapEntries(blogMap.body);
-  const [indexEntry, researchEntry] = blogEntries;
+  const [indexEntry] = blogEntries;
   const blogIndex = indexEntry?.path ?? own('/blog');
+  // 3.22 — research is listed (and answers) only when there is some.
+  const researchPath = own(`${blogIndex.replace(/\/+$/, '')}/research`);
+  const researchListed = blogEntries.some((entry) => entry.path === researchPath);
 
   /* 3.11 — a blog switched off (Appearance → Blog) lists nothing in its
      sitemap and answers "not found" at its index; its checks then turn into
@@ -189,7 +192,14 @@ async function main() {
   const blogOff = blogEntries.length === 0 && (await get(blogIndex)).status === 404;
 
   // Routes that exist whether or not anybody has made a page for them.
-  if (!blogOff) for (const path of [blogIndex, researchEntry?.path ?? own('/blog/research')]) await checkPage(path);
+  if (!blogOff) {
+    await checkPage(blogIndex);
+    if (researchListed) await checkPage(researchPath);
+    else {
+      const research = await get(researchPath);
+      check(`${researchPath} with no research -> 404, and not in the sitemap`, research.status === 404, `got ${research.status}`);
+    }
+  }
 
   const notFound = await get(own(`/smoke-missing-${Date.now()}`));
   check('unknown path -> 404', notFound.status === 404, `got ${notFound.status}`);

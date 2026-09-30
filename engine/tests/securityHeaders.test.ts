@@ -38,7 +38,7 @@ const publicPolicy = publicCsp(new Map());
 
 const probe = forSource('/admin/band/:path*');
 const admin = forSource('/admin/((?!band$|band/).*)');
-const site = forSource('/((?!admin$|admin/).*)');
+const site = forSource('/((?!admin$|admin/|preview$|preview/|install$).*)');
 
 describe('exactly one policy applies to any path', () => {
   /* The failure this prevents is silent: overlapping rules are enforced as
@@ -58,6 +58,13 @@ describe('exactly one policy applies to any path', () => {
   ])('%s is covered by one and only one', (path) => {
     const hit = policyRules.filter((rule) => matches(rule, path));
     expect(hit.map((r) => r.source)).toHaveLength(1);
+  });
+
+  // 3.22 — the pages the middleware leaves alone still get a policy.
+  it.each(['/preview/abc123', '/install'])('%s is covered by one and only one', (path) => {
+    const hit = policyRules.filter((rule) => matches(rule, path));
+    expect(hit.map((r) => r.source)).toHaveLength(1);
+    expect(value(hit[0]!, 'Content-Security-Policy')).toBe(buildCsp({ isProd: process.env.NODE_ENV === 'production' }));
   });
 
   it('leaves no admin path uncovered', () => {

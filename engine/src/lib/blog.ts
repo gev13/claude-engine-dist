@@ -2,6 +2,9 @@ import { z } from 'zod';
 import { type CardHover, cardHoverSchema } from './cardHover';
 import { SHARE_NETWORKS, type ShareNetwork } from './share';
 
+/** 3.22 — a plain length (80px, 5rem, 0). Kept here rather than imported: theme.ts imports this file. */
+const isLength = (value: string) => /^(0|\d*\.?\d+(px|rem|em|vw|vh|%))$/.test(value.trim());
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Blog layouts (BL1, BL2)
    ───────────────────────────────────────────────────────────────────────────
@@ -67,7 +70,8 @@ export const LEGACY_ARCHIVE_PER_PAGE = 48;
 export const MAX_ARCHIVE_PER_PAGE = 48;
 
 /* ── A post's extras, and the archives' (2.18) ─────────────────────────── */
-export const POST_SHARE_POSITIONS = ['off', 'top', 'bottom', 'side'] as const;
+/** `beside` (3.22): a column of its own beside the article, following the reader — inside the post, not over the page's edge. */
+export const POST_SHARE_POSITIONS = ['off', 'top', 'bottom', 'side', 'beside'] as const;
 export type PostSharePosition = (typeof POST_SHARE_POSITIONS)[number];
 export const POST_TOC_POSITIONS = ['off', 'left', 'right', 'top'] as const;
 export type PostTocPosition = (typeof POST_TOC_POSITIONS)[number];
@@ -105,6 +109,8 @@ export const blogSchema = z.object({
       count: z.number().int().min(2).max(6).default(3),
       layout: z.enum(['grid', 'carousel']).default('grid'),
       title: z.string().trim().max(80).optional(),
+      /** 3.22 — the grid's cards: text cards (unset, as before) or the archive's own cards, pictures and all. */
+      cards: z.enum(['text', 'archive']).optional(),
     })
     .optional(),
   /** The author's picture, name, bio and links under the article (Profile). */
@@ -119,6 +125,16 @@ export const blogSchema = z.object({
   backLink: z.boolean().optional(),
   /** The line above the title; `{category}`, `{date}` and `{minutes}` are filled in. Empty is what it always said. */
   eyebrow: z.string().trim().max(80).optional(),
+  /** 3.22 — that line after a short rule (unset, as before), with the category as a chip linking to it, or as plain text. */
+  eyebrowStyle: z.enum(['rule', 'chip', 'plain']).optional(),
+  /** 3.22 — the row under the title (author, reading time, categories): each part, or the row, can be left out. */
+  meta: z.object({ off: z.boolean().optional(), author: z.boolean().optional(), readingTime: z.boolean().optional(), categories: z.boolean().optional() }).optional(),
+  /** 3.22 — the excerpt under the title (unset or true, as before). */
+  excerpt: z.boolean().optional(),
+  /** 3.22 — Cover, then a title card: how far the card rides up over the cover (e.g. 80px, 0 for none); unset is the drawn 48–120px. */
+  coverOverlap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+  /** 3.22 — the card in the corner: also on phones, and closed for this post only rather than for the visit. */
+  upNext: z.object({ phones: z.boolean().optional(), dismiss: z.enum(['visit', 'post']).optional() }).optional(),
 
   /* ── The blog's archives (T20, 2.18) ─────────────────────────────────── */
   /** The "All" chip. */
@@ -139,6 +155,8 @@ export const blogSchema = z.object({
       ratio: z.enum(['16/9', '4/3', '3/2', '1/1']).optional(),
       /** 2.19 — how each card answers the pointer. */
       hover: cardHoverSchema.optional(),
+      /** 3.22 — the card grid: each post's cover at the top of its card. */
+      image: z.boolean().optional(),
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -151,6 +169,12 @@ export const blogSchema = z.object({
   archiveBar: z.boolean().optional(),
   /** 3.3 — with the search in the bar: on its own row under the chips, labelled, instead of at the end. */
   searchBelow: z.boolean().optional(),
+  /** 3.22 — no search box on the blog's pages (searching by address still works). */
+  searchOff: z.boolean().optional(),
+  /** 3.22 — one row under the title: breadcrumbs on the left, the result count and the categories on the right. */
+  toolbar: z.boolean().optional(),
+  /** 3.22 — the chips' "Browse" label (unset or true, as before). */
+  browseLabel: z.boolean().optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
@@ -160,7 +184,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';
@@ -174,7 +198,12 @@ export type ResolvedBlog = {
   share: { position: PostSharePosition; networks: ShareNetwork[] };
   toc: { position: PostTocPosition; levels: 'h2' | 'h2h3'; title?: string };
   prevNext: PrevNextStyle;
-  related: { source: RelatedSource; count: number; layout: 'grid' | 'carousel'; title?: string };
+  related: { source: RelatedSource; count: number; layout: 'grid' | 'carousel'; title?: string; cards: 'text' | 'archive' };
+  eyebrowStyle: 'rule' | 'chip' | 'plain';
+  meta: { show: boolean; author: boolean; readingTime: boolean; categories: boolean };
+  excerpt: boolean;
+  coverOverlap?: string;
+  upNext: { phones: boolean; dismiss: 'visit' | 'post' };
   authorBox: boolean;
   backLink: boolean;
   eyebrow?: string;
@@ -189,6 +218,9 @@ export type ResolvedBlog = {
   archiveBar: boolean;
   searchBelow: boolean;
   off: boolean;
+  searchOff: boolean;
+  toolbar: boolean;
+  browseLabel: boolean;
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -204,7 +236,17 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     share: { position: blog?.share?.position ?? 'off', networks: blog?.share?.networks ?? ['facebook', 'x', 'pinterest', 'linkedin'] },
     toc: { position: blog?.toc?.position ?? 'off', levels: blog?.toc?.levels ?? 'h2h3', title: blog?.toc?.title },
     prevNext: blog?.prevNext ?? 'off',
-    related: { source: blog?.related?.source ?? 'kind', count: blog?.related?.count ?? 3, layout: blog?.related?.layout ?? 'grid', title: blog?.related?.title },
+    related: { source: blog?.related?.source ?? 'kind', count: blog?.related?.count ?? 3, layout: blog?.related?.layout ?? 'grid', title: blog?.related?.title, cards: blog?.related?.cards ?? 'text' },
+    eyebrowStyle: blog?.eyebrowStyle ?? 'rule',
+    meta: {
+      show: blog?.meta?.off !== true,
+      author: blog?.meta?.author !== false,
+      readingTime: blog?.meta?.readingTime !== false,
+      categories: blog?.meta?.categories !== false,
+    },
+    excerpt: blog?.excerpt !== false,
+    coverOverlap: blog?.coverOverlap && isLength(blog.coverOverlap) ? blog.coverOverlap : undefined,
+    upNext: { phones: blog?.upNext?.phones === true, dismiss: blog?.upNext?.dismiss ?? 'visit' },
     authorBox: blog?.authorBox ?? false,
     off: blog?.off ?? false,
     backLink: blog?.backLink ?? false,
@@ -219,6 +261,9 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     featured: blog?.featured ?? false,
     archiveBar: blog?.archiveBar ?? false,
     searchBelow: blog?.searchBelow ?? false,
+    searchOff: blog?.searchOff ?? false,
+    toolbar: blog?.toolbar ?? false,
+    browseLabel: blog?.browseLabel !== false,
   };
 }
 
@@ -231,6 +276,22 @@ export function fillEyebrow(template: string, values: { category: string; date: 
     .replace(/\{minRead\}/g, values.minRead)
     .replace(/\s*[·—|-]\s*$/u, '')
     .trim();
+}
+
+/**
+ * 3.22 — the line above a post's title in two halves around `{category}`,
+ * for the chip style: "{category} · {minutes} min read" → "", "· 17 min read".
+ * Null when the line names no category, which is then shown as plain text.
+ */
+export function eyebrowAroundCategory(
+  template: string | undefined,
+  values: { date: string; minutes: number; minRead: string },
+): { before: string; after: string } | null {
+  const line = template || '{category} — {date}';
+  const at = line.indexOf('{category}');
+  if (at < 0) return null;
+  const fill = (part: string) => fillEyebrow(part, { ...values, category: '' });
+  return { before: fill(line.slice(0, at)), after: fill(line.slice(at + '{category}'.length)) };
 }
 
 /** Posts per page on one archive: the setting, or what that archive showed before it existed. */

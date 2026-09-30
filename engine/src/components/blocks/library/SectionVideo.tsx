@@ -5,7 +5,7 @@ import { Icon } from '@/components/site/icons';
 import { useMessages } from '@/components/site/Messages';
 import type { BlockStyle } from '@/lib/blockStyle';
 import { SECTION_VIDEO } from '@/lib/blockStyle';
-import { useAmbientPlayback } from './media';
+import { orderedSources, useAmbientPlayback } from './media';
 
 type Background = NonNullable<BlockStyle['background']>;
 
@@ -42,17 +42,26 @@ export function SectionVideo({ background }: { background: Background }) {
   }, [background.videoUrl, background.videoMobileUrl, background.videoMobile]);
 
   const poster = background.videoPoster && /^\/[A-Za-z0-9._~\-/%]*$/.test(background.videoPoster) ? background.videoPoster : undefined;
+  // 3.22 — the desktop film in both formats, when a second is given; the browser picks.
+  const alt = src && src === background.videoUrl && background.videoUrlAlt && SECTION_VIDEO.test(background.videoUrlAlt) ? background.videoUrlAlt : null;
+  const controls = background.videoControls !== false;
   return (
     <>
       <div className="he-bgv" aria-hidden="true">
-        {src ? (
-          <video key={src} ref={ref} src={src} poster={poster} muted loop playsInline preload="metadata" className="he-bgv__media" />
+        {src && alt ? (
+          <video key={src} ref={ref} poster={poster} muted loop playsInline preload="none" className="he-bgv__media">
+            {orderedSources([src, alt]).map((file) => (
+              <source key={file.src} src={file.src} type={file.type} />
+            ))}
+          </video>
+        ) : src ? (
+          <video key={src} ref={ref} src={src} poster={poster} muted loop playsInline preload="none" className="he-bgv__media" />
         ) : poster ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={poster} alt="" className="he-bgv__media" loading="lazy" decoding="async" />
         ) : null}
       </div>
-      {src && (
+      {src && controls && (
         <button type="button" className="he-media-pause" aria-label={playing ? t('media.pauseBackground') : t('media.playBackground')} onClick={toggle}>
           {playing ? <Icon.Pause size={16} /> : <Icon.Play size={16} />}
         </button>

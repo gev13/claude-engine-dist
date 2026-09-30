@@ -13,6 +13,7 @@ import { SOCIAL_LABELS, SOCIAL_NETWORKS, type SocialNetwork } from '@/lib/naviga
 import type { Permalinks } from '@/lib/permalinks';
 import { postUrl, type PostDetail, type PostListItem } from '@/server/content/posts';
 import { FloatingNext } from './FloatingNext';
+import { BlogList } from '@/components/site/BlogList';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    What a post can have besides its article (T19, 2.18)
@@ -27,9 +28,9 @@ import { FloatingNext } from './FloatingNext';
 type T = ReturnType<typeof messageReader>;
 
 /** Share buttons: in the article's flow, or pinned down the left side on wide screens. */
-export function PostShare({ blog, t, side = false }: { blog: ResolvedBlog; t: T; side?: boolean }) {
+export function PostShare({ blog, t, side = false, beside = false }: { blog: ResolvedBlog; t: T; side?: boolean; beside?: boolean }) {
   const props = blockSchemas.share.safeParse({
-    title: side ? '' : t('blog.share'),
+    title: side || beside ? '' : t('blog.share'),
     networks: blog.share.networks,
     style: 'icons',
     size: 'small',
@@ -38,7 +39,7 @@ export function PostShare({ blog, t, side = false }: { blog: ResolvedBlog; t: T;
   });
   if (!props.success) return null;
   return (
-    <div className={side ? 'he-post__share is-side' : 'he-post__share'}>
+    <div className={side ? 'he-post__share is-side' : beside ? 'he-post__share is-beside' : 'he-post__share'}>
       <ShareBlock {...props.data} />
     </div>
   );
@@ -83,17 +84,22 @@ export function PrevNext({
   next,
   permalinks,
   t,
+  postId,
 }: {
   blog: ResolvedBlog;
   previous: PostListItem | null;
   next: PostListItem | null;
   permalinks: Permalinks;
   t: T;
+  /** 3.22 — closing the card for this post only is remembered by it. */
+  postId?: string;
 }) {
   if (!previous && !next) return null;
   if (blog.prevNext === 'floating') {
     return (
       <FloatingNext
+        phones={blog.upNext.phones}
+        dismissKey={blog.upNext.dismiss === 'post' ? postId : undefined}
         next={next ? { title: next.title, href: postUrl(permalinks, next) } : null}
         previous={previous ? { title: previous.title, href: postUrl(permalinks, previous) } : null}
         labels={{ upNext: t('blog.upNext'), previous: t('blog.previous'), next: t('blog.next'), dismiss: t('blog.dismiss') }}
@@ -127,6 +133,24 @@ export function RelatedPosts({ blog, posts, permalinks, t }: { blog: ResolvedBlo
   if (posts.length === 0) return null;
   const title = blog.related.title || t('blog.keepReading');
   const eyebrow = (p: PostListItem) => (p.kind === 'research' ? t('blog.research') : (p.categoryName ?? t('blog.article')));
+
+  // 3.22 — the archive's own cards: its layout, pictures, date, reading time, "Read more" and hover.
+  if (blog.related.layout === 'grid' && blog.related.cards === 'archive') {
+    return (
+      <Section tone="raised" size="lg">
+        <Heading level={2} className="mb-8">
+          {title}
+        </Heading>
+        <BlogList
+          posts={posts}
+          blog={blog}
+          fallbackEyebrow={t('blog.article')}
+          permalinks={permalinks}
+          labels={{ research: t('blog.research'), article: t('blog.article'), minRead: t('blog.minRead'), readMore: t('blog.readMore') }}
+        />
+      </Section>
+    );
+  }
 
   if (blog.related.layout === 'carousel') {
     const slides = blockSchemas.carousel.safeParse({

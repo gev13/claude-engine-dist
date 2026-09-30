@@ -84,7 +84,7 @@
    ──────────────────────────────────────────────────────────────────────────
    Every value the admin's Appearance screen can change, declared here with the
    mockup value as its default. The saved theme is emitted as an *unlayered*
-   <style> element, and an unlayered rule beats a layered one whatever the
+   \3c style> element, and an unlayered rule beats a layered one whatever the
    document order — so these defaults hold until somebody edits them, and lose
    cleanly the moment they do.
 
@@ -144,15 +144,17 @@
     --he-lede-line: 1.24;
     --he-lede-tracking: -0.03em;
 
-    --he-eyebrow-family: var(--font-mono);
-    --he-eyebrow-size: 11px;
-    --he-eyebrow-weight: 400;
-    --he-eyebrow-style: normal;
-    --he-eyebrow-color: var(--color-smoke);
-    --he-eyebrow-transform: uppercase;
+    /* 3.22 — an eyebrow is a label: it follows Appearance → Labels until
+       its own role is set. Unset, both are what was drawn before. */
+    --he-eyebrow-family: var(--he-label-family, var(--font-mono));
+    --he-eyebrow-size: var(--he-label-size, 11px);
+    --he-eyebrow-weight: var(--he-label-weight, 400);
+    --he-eyebrow-style: var(--he-label-style, normal);
+    --he-eyebrow-color: var(--he-label-color, var(--color-smoke));
+    --he-eyebrow-transform: var(--he-label-transform, uppercase);
     --he-eyebrow-decoration: none;
-    --he-eyebrow-line: 1.25;
-    --he-eyebrow-tracking: 0.14em;
+    --he-eyebrow-line: var(--he-label-line, 1.25);
+    --he-eyebrow-tracking: var(--he-label-tracking, 0.14em);
 
     --he-h1-family: var(--font-display);
     --he-h1-size: clamp(36px, 7vw, 66px);
@@ -392,12 +394,13 @@
 }
 
 @utility label-mono {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  line-height: 1.4;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--color-smoke);
+  font-family: var(--he-label-family, var(--font-mono));
+  font-size: var(--he-label-size, 11px);
+  font-weight: var(--he-label-weight, revert-layer);
+  line-height: var(--he-label-line, 1.4);
+  text-transform: var(--he-label-transform, uppercase);
+  letter-spacing: var(--he-label-tracking, 0.14em);
+  color: var(--he-label-color, var(--color-smoke));
 }
 
 @utility display {
@@ -429,6 +432,25 @@
   color: var(--he-lede-color);
   text-transform: var(--he-lede-transform);
   text-decoration: var(--he-lede-decoration);
+}
+
+/* 3.22 — a label drawn with utilities: the face, case, weight and line
+   height of Appearance → Labels, each falling back to what it was — weight
+   and line height to `revert-layer`, whatever the element had without this
+   rule (a heading keeps its own). Size, tracking and colour stay per
+   element, as var(--he-label-*, own). */
+@utility he-lbl {
+  font-family: var(--he-label-family, var(--font-mono));
+  text-transform: var(--he-label-transform, uppercase);
+  font-weight: var(--he-label-weight, revert-layer);
+  line-height: var(--he-label-line, revert-layer);
+}
+/* …and a card's "Read more": Card links first, then Labels. */
+@utility he-lbl-card {
+  font-family: var(--he-card-link-family, var(--he-label-family, var(--font-mono)));
+  text-transform: var(--he-card-link-transform, var(--he-label-transform, uppercase));
+  font-weight: var(--he-card-link-weight, var(--he-label-weight, revert-layer));
+  line-height: var(--he-card-link-line, var(--he-label-line, revert-layer));
 }
 
 @utility type-eyebrow {
@@ -681,9 +703,9 @@
   & pre code { background: none; padding: 0; color: var(--color-ash); }
   & img { display: block; width: 100%; height: auto; }
   & figure { margin: 2em 0; }
-  & figcaption { margin-top: 10px; font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.12em; color: var(--color-smoke); }
+  & figcaption { margin-top: 10px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); text-transform: var(--he-label-transform, uppercase); letter-spacing: var(--he-label-tracking, 0.12em); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   & hr { border: 0; border-top: 2px solid var(--color-hairline); margin: 2.4em 0; }
   & table { width: 100%; border-collapse: collapse; font-size: 15px; }
   & th, & td { border: 1px solid var(--color-hairline); padding: 10px 14px; text-align: left; }
-  & th { background: var(--color-surface); color: var(--color-bone); font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.1em; }
+  & th { background: var(--color-surface); color: var(--he-label-color, var(--color-bone)); font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); text-transform: var(--he-label-transform, uppercase); letter-spacing: var(--he-label-tracking, 0.1em); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 }

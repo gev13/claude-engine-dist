@@ -111,7 +111,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
         ) : (
           <>
             {count}
-            <ul className="he-news" id={listId} style={{ '--cols': p.columns } as React.CSSProperties}>
+            <ul className="he-news he-swipe-track" id={listId} style={{ '--cols': p.columns } as React.CSSProperties}>
               {posts.map((post) => (
                 <li key={post.id} {...cardHoverProps(p.card?.hover)}>
                   <Link href={postPath(permalinks, post)} className="he-news__card">
@@ -211,7 +211,7 @@ function AllWriting({ href, t }: { href: string; t: T }) {
   return (
     <Link
       href={href}
-      className="mt-9 inline-flex font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft hover:text-flare-hot"
+      className="mt-9 inline-flex text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-flare-soft))] hover:text-flare-hot he-lbl"
     >
       {t('blog.allWriting')} →
     </Link>
@@ -372,7 +372,7 @@ export function PostCollection({
     );
   });
 
-  const listClass = cn('he-plst', `is-${variant}`, card.ratio && 'has-ratio');
+  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio');
   const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}) } as React.CSSProperties;
 
   const tilt = wantsTilt(card.hover) && <CardTilt />;

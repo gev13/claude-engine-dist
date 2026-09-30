@@ -24,11 +24,13 @@
 
   .he-lot__cap {
     margin-top: 14px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-lot.is-center .he-lot__cap { text-align: center; }
   .he-lot.is-right .he-lot__cap { text-align: right; }

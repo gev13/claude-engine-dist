@@ -196,6 +196,34 @@ Then set the real address in `.env` and restart:
 NEXT_PUBLIC_SITE_URL="https://example.com"
 ```
 
+
+### Optional: serve media straight from nginx
+
+The engine serves `/media` itself — byte ranges for video (which iOS needs),
+validators, and the smaller picture sizes behind `?w=` — so nothing here is
+required. On a busy site, nginx can hand out the files directly and leave
+Node the rest. Send any request that asks for a size (`?w=`) to the app, and
+serve everything else from `MEDIA_STORAGE_DIR` with the same headers the
+engine sends:
+
+```nginx
+location /media/ {
+    # A picture size is chosen by the app (it knows which copies exist).
+    if ($arg_w) { proxy_pass http://127.0.0.1:3000; }
+
+    alias /var/www/your-site/engine/storage/media/;   # MEDIA_STORAGE_DIR, absolute, with the trailing slash
+    types { image/svg+xml svg; image/avif avif; }
+    add_header Cache-Control "public, max-age=31536000, immutable" always;
+    add_header X-Content-Type-Options nosniff always;
+    add_header Content-Security-Policy "default-src 'none'; style-src 'unsafe-inline'; sandbox" always;
+    add_header Content-Disposition inline always;
+    # nginx answers Range requests for static files on its own (206, 416).
+}
+```
+
+Keep `sandbox` in that policy: it is what stops an uploaded file from running
+anything as your site if it is opened directly.
+
 ---
 
 ## 7. Keep it running

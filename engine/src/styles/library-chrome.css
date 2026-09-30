@@ -176,6 +176,21 @@
     .he-menu:is(.is-enter-fade, .is-enter-slide, .is-enter-stagger), .he-menu[class*='is-enter-'] .he-menu__list > li { animation: none; }
   }
 
+  /* ── 3.22: the full-screen menu's links at the site's own size, weight and spacing ── */
+  .he-menu.is-fullscreen.has-item-size .he-menu__row { font-size: var(--he-menu-size); }
+  .he-menu.is-fullscreen.has-item-weight .he-menu__row { font-weight: var(--he-menu-weight); }
+  .he-menu.is-fullscreen.has-item-tracking .he-menu__row { letter-spacing: var(--he-menu-tracking); }
+  @media (width <= 48rem) { .he-menu.is-fullscreen.has-item-size-m .he-menu__row { font-size: var(--he-menu-size-m); } }
+  /* A plain + (still turning to ×), without its circle. */
+  .he-menu.is-expand-plus .he-menu__plus { width: auto; height: auto; border: 0; border-radius: 0; }
+  /* The menu's own colour, solid or at the chosen strength. */
+  .he-menu.has-bg { background: var(--he-menu-bg); }
+  .he-menu.has-bg[style*='--he-menu-alpha'] { background: color-mix(in srgb, var(--he-menu-bg) var(--he-menu-alpha), transparent); }
+  /* The contact details as a row at the bottom left, the social links beside them. */
+  .he-menu__aside.is-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px clamp(40px, 10vw, 150px); margin-top: auto; padding-top: 40px; border-top: 0; }
+  .he-menu__aside.is-row .he-menu__social { margin: 0; }
+  .he-menu__aside.is-row .he-menu__email { display: block; margin-top: 6px; font-size: 18px; text-decoration: none; }
+
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }
   .he-menu--fullscreenCentered :is(.he-menu__sub, .he-menu__services) { text-align: center; }
@@ -226,8 +241,19 @@
 .he-hdr.is-bg-transparent:not(.is-shrunk) .he-hdr__bar { background: transparent; border-color: transparent; backdrop-filter: none; }
 .he-hdr.is-bg-glass .he-hdr__bar {
   background: color-mix(in srgb, var(--color-ink) var(--he-glass-tint, 60%), transparent);
-  backdrop-filter: blur(var(--he-glass-blur, 14px)) saturate(1.2);
+  backdrop-filter: blur(var(--he-glass-blur, 14px)) saturate(var(--he-glass-sat, 1.2));
 }
+/* 3.22 — no line under the bar. */
+.he-hdr.no-border .he-hdr__bar { border-bottom-color: transparent; }
+/* 3.22 — the page starts at the top, under the bar, which stays over it. */
+.he-site[data-header-under] .he-hdr { position: fixed; top: 0; left: 0; right: 0; }
+.he-site[data-header-under] .he-hdr:not(.is-sticky) { position: absolute; }
+/* 3.22 — the header button's own colours; each unset keeps its button style's.
+   The menu-button header draws its main button outlined (below), so its own rule reads the same properties. */
+.he-hdr.has-cta-colors:not(.he-hdr--menuButtonInline) .he-hdr__cta.he-btn-primary { background-color: var(--he-hdr-cta-bg, var(--he-btn-primary-bg)); border-color: var(--he-hdr-cta-border, var(--he-btn-primary-border)); color: var(--he-hdr-cta-text, var(--he-btn-primary-text)); }
+.he-hdr.has-cta-colors:not(.he-hdr--menuButtonInline) .he-hdr__cta.he-btn-primary:hover { background-color: var(--he-hdr-cta-hover-bg, var(--he-btn-primary-hover-bg)); border-color: var(--he-hdr-cta-hover-border, var(--he-btn-primary-hover-border)); color: var(--he-hdr-cta-hover-text, var(--he-btn-primary-hover-text)); }
+.he-hdr.has-cta-colors .he-hdr__cta.he-btn-outline { background-color: var(--he-hdr-cta-bg, var(--he-btn-outline-bg)); border-color: var(--he-hdr-cta-border, var(--he-btn-outline-border)); color: var(--he-hdr-cta-text, var(--he-btn-outline-text)); }
+.he-hdr.has-cta-colors .he-hdr__cta.he-btn-outline:hover { background-color: var(--he-hdr-cta-hover-bg, var(--he-btn-outline-hover-bg)); border-color: var(--he-hdr-cta-hover-border, var(--he-btn-outline-hover-border)); color: var(--he-hdr-cta-hover-text, var(--he-btn-outline-hover-text)); }
 .he-hdr { transition: transform calc(0.3s * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
 .he-hdr.is-sticky.is-tucked { transform: translateY(-100%); }
 .he-hdr.is-shrunk .he-hdr__inner { min-height: 52px; }
@@ -246,8 +272,8 @@
 .he-hdr--menuButtonInline .he-hdr__inner { grid-template-columns: auto auto minmax(0, 1fr) auto; }
 .he-hdr--menuButtonInline.is-menu-right .he-hdr__inner { grid-template-columns: auto minmax(0, 1fr) auto auto; }
 .he-hdr--menuButtonInline .he-hdr__nav { justify-self: end; }
-.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary { background: transparent; border: 1.5px solid var(--color-flare); color: var(--color-flare-soft); }
-.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary:hover { background: var(--color-flare); color: var(--color-bone); }
+.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary { background: var(--he-hdr-cta-bg, transparent); border: 1.5px solid var(--he-hdr-cta-border, var(--color-flare)); color: var(--he-hdr-cta-text, var(--color-flare-soft)); }
+.he-hdr--menuButtonInline .he-hdr__cta.he-btn-primary:hover { background: var(--he-hdr-cta-hover-bg, var(--color-flare)); border-color: var(--he-hdr-cta-hover-border, var(--color-flare)); color: var(--he-hdr-cta-hover-text, var(--color-bone)); }
 
 /* Phones: the logo centred between the menu button and the header button. */
 @media (width <= 768px) {

@@ -6,6 +6,7 @@ import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Field, Input, Panel, Select, Spinner } from '@/components/admin/ui';
 import { useToast } from '@/components/admin/useToast';
+import { ColorField } from '@/components/admin/styleFields';
 import { api, fetcher } from '@/lib/admin/client';
 import type { AnyBlock } from '@/lib/blocks';
 import { PROJECT_HEADERS, PROJECT_HEADER_LABELS, type ProjectTemplate } from '@/lib/projects';
@@ -109,6 +110,13 @@ export function ProjectTemplateScreen() {
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.showDetails} onChange={(e) => set('showDetails', e.target.checked)} />
               Client, year and the live link under the intro
             </label>
+            <ColorField
+              label="Page colour"
+              hint="every project page, behind every section; a project can set its own"
+              value={form.background || undefined}
+              placeholder="the site’s"
+              onChange={(next) => set('background', next)}
+            />
           </div>
         </Panel>
 

@@ -6,7 +6,8 @@ import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
 import type { z } from 'zod';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import type { CheckReport, ImportStrategy, TableReport } from '@/lib/importReport';
-import { savedBlockCycle } from '@/lib/blockTree';
+import { SAVED_BLOCK_TYPE, mapBlocks, savedBlockCycle, savedBlockRefs } from '@/lib/blockTree';
+import { POST_LAYOUTS } from '@/lib/blog';
 import { cookieNoticeSchema } from '@/lib/cookies';
 import { safeCss } from '@/lib/customCode';
 import { integrationsSchema } from '@/lib/integrations';
@@ -18,7 +19,7 @@ import { projectOptionsSchema, projectTemplateSchema } from '@/lib/projects';
 import { normalisePath } from '@/lib/redirectRules';
 import { PORTABLE_SEO_KEYS, SITE_SETTING_FIELDS, siteSettingsSchema } from '@/lib/siteSettings';
 import { themeSchema } from '@/lib/theme';
-import { readingMinutes } from '@/lib/utils';
+import { postReadingMinutes } from '@/lib/utils';
 import { seoSchema } from '@/server/api/schemas';
 import { checkRow } from '@/server/content/redirectPlan';
 import { sanitizeRichText } from '@/server/content/sanitize';
@@ -230,6 +231,11 @@ export const TABLE_RULES: Record<string, Rule[]> = {
   ],
   posts: [
     slugRule,
+    // 3.22 — an unknown layout used to become "body" without a word.
+    (values) =>
+      values.layout !== undefined && !(POST_LAYOUTS as readonly unknown[]).includes(values.layout)
+        ? `its layout “${String(values.layout)}” is not one of ${POST_LAYOUTS.join(', ')}.`
+        : null,
     blocksRule('blocks'),
     schemaRule('seo', seoSchema, 'The SEO fields'),
     schemaRule('appearance', pageAppearanceSchema, 'The colours'),
@@ -238,13 +244,18 @@ export const TABLE_RULES: Record<string, Rule[]> = {
       // Sanitised as the editor's save would, and the reading time counted from what is kept.
       if (typeof values.body === 'string') {
         values.body = sanitizeRichText(values.body);
-        values.readingMinutes = readingMinutes(values.body as string);
+        // 3.22 — a reading time written on the post (seo.readingMinutes) is kept; otherwise counted.
+        values.readingMinutes = postReadingMinutes(values.body as string, values.seo as { readingMinutes?: unknown } | undefined);
       }
       return null;
     },
   ],
   projects: [slugRule, blocksRule('blocks'), schemaRule('seo', seoSchema, 'The SEO fields'), schemaRule('options', projectOptionsSchema, 'The options'), cssRule, richText('intro')],
-  project_terms: [slugRule],
+  project_terms: [
+    slugRule,
+    // 3.22 — a term is a category or a tag; anything else was stored and then shown nowhere.
+    (values) => (values.taxonomy !== 'category' && values.taxonomy !== 'tag' ? `its taxonomy “${String(values.taxonomy)}” must be category or tag.` : null),
+  ],
   saved_blocks: [
     blocksRule('tree'),
     (values) => (values.mode !== undefined && values.mode !== 'synced' && values.mode !== 'template' ? 'its mode must be synced or template.' : null),
@@ -357,6 +368,12 @@ const SOFT_REFERENCES: Record<string, { column: string; target: string; nullable
 
 /** Join tables: no id of their own, only the pair. */
 const JOIN_TABLES = new Set(['post_categories', 'project_term_links']);
+
+/** 3.22 — each join table's owner: in a merge, an owner the archive carries has its links replaced by the archive's. */
+export const JOIN_OWNERS: Record<string, { table: string; column: string }> = {
+  post_categories: { table: 'posts', column: 'postId' },
+  project_term_links: { table: 'projects', column: 'projectId' },
+};
 
 /** The defaults a natural key relies on when a row leaves them out. */
 const KEY_DEFAULTS: Record<string, unknown> = { locale: 'en', matchType: 'exact', matchQuery: '' };
@@ -560,6 +577,22 @@ export function checkArchive(input: CheckInput): CheckResult {
     if (refused === 0) break;
   }
 
+  /* 3.22 — a synced saved block that is neither in the archive nor here
+     would render nothing: it is taken out of the tree, and the report says so. */
+  const savedIds = idsOf('saved_blocks');
+  for (const [name, column] of [['pages', 'blocks'], ['posts', 'blocks'], ['projects', 'blocks'], ['saved_blocks', 'tree']] as const) {
+    for (const entry of prepared[name] ?? []) {
+      const tree = entry.values[column];
+      if (!Array.isArray(tree)) continue;
+      const missing = savedBlockRefs(tree as AnyBlock[]).filter((id) => !savedIds.has(id));
+      if (missing.length === 0) continue;
+      entry.values[column] = mapBlocks(tree as AnyBlock[], (block) =>
+        block.type === SAVED_BLOCK_TYPE && missing.includes(String((block.props as { savedBlockId?: unknown })?.savedBlockId)) ? null : block,
+      );
+      entry.notes.push(`${missing.length === 1 ? 'a saved block it used is' : `${missing.length} saved blocks it used are`} not in the archive or on this site, and ${missing.length === 1 ? 'was' : 'were'} taken out.`);
+    }
+  }
+
   // Saved blocks may not contain themselves, through any chain, in the set as it will be.
   if (prepared.saved_blocks) {
     const trees = new Map<string, AnyBlock[]>();
@@ -572,11 +605,18 @@ export function checkArchive(input: CheckInput): CheckResult {
     });
   }
 
-  // Join rows in a merge: a pair already here is left alone.
+  /* Join rows in a merge. An owner the archive carries (a post, a project)
+     gets exactly the archive's links — the import replaces its old ones
+     (3.22; they used to stay, so a changed category kept the old one too).
+     For any other owner, a pair already here is left alone. */
   if (strategy === 'merge') {
     for (const name of JOIN_TABLES) {
+      const owner = JOIN_OWNERS[name]!;
+      const replaced = replacedOwners(prepared, owner.table);
       const here = new Set((existing[name] ?? []).map((row) => naturalKey(name, row)));
-      for (const entry of prepared[name] ?? []) entry.action = here.has(naturalKey(name, entry.values)) ? 'skip' : 'create';
+      for (const entry of prepared[name] ?? []) {
+        entry.action = replaced.has(entry.values[owner.column] as string) ? 'create' : here.has(naturalKey(name, entry.values)) ? 'skip' : 'create';
+      }
     }
   }
 
@@ -591,6 +631,11 @@ export function checkArchive(input: CheckInput): CheckResult {
   report.rejected.sort((a, b) => tables.findIndex((t) => t.name === a.table) - tables.findIndex((t) => t.name === b.table) || a.row - b.row);
 
   return { report, prepared, urlMap, skippedMedia };
+}
+
+/** 3.22 — the owners (posts, projects) whose links a merge replaces: those it writes. */
+export function replacedOwners(prepared: Record<string, PreparedRow[]>, table: string): Set<string> {
+  return new Set((prepared[table] ?? []).filter((entry) => entry.action !== 'skip' && typeof entry.values.id === 'string').map((entry) => entry.values.id as string));
 }
 
 function remapText(text: string, urls: [string, string][]): string {

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { BUTTON_VARIANTS, TYPE_ROLES } from '@/lib/theme';
+import { BUTTON_VARIANTS, TYPE_ROLES, roleVar, type TypeRole } from '@/lib/theme';
 import { COLOR_TOKENS } from '@/lib/theme-css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -31,7 +31,7 @@ export const typeVar = (
 ) => {
   const suffix =
     field === 'lineHeight' ? 'line' : field === 'letterSpacing' ? 'tracking' : field;
-  return `--he-${role}-${suffix}`;
+  return `--he-${roleVar(role as TypeRole)}-${suffix}`;
 };
 
 export const colorVar = (key: string) => COLOR_TOKENS[key];

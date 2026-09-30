@@ -65,7 +65,7 @@ export function BlockHead({
 /** The 01 / 02 / 03 mono index used by numbered lists. */
 export function Ordinal({ n }: { n: number }) {
   return (
-    <span className="font-mono text-[11px] uppercase tracking-[0.14em] text-flare">
+    <span className="text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-flare))] he-lbl">
       {String(n).padStart(2, '0')}
     </span>
   );

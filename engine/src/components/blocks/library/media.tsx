@@ -24,18 +24,40 @@ export function useAmbientPlayback(
   const [playing, setPlaying] = useState(false);
   const [choice, setChoice] = useState<'auto' | 'play' | 'pause'>('auto');
   const [inView, setInView] = useState(false);
+  /** 3.22 — within a screen of the viewport: until then the film is not fetched at all (`preload="none"`). */
+  const [near, setNear] = useState(false);
 
   useEffect(() => {
     const video = ref.current;
     if (!video) return;
     if (typeof IntersectionObserver === 'undefined') {
       setInView(true);
+      setNear(true);
       return;
     }
     const observer = new IntersectionObserver((entries) => setInView(entries.some((entry) => entry.isIntersecting)), { threshold: 0.25 });
     observer.observe(video);
-    return () => observer.disconnect();
+    const approach = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) {
+        setNear(true);
+        approach.disconnect();
+      }
+    }, { rootMargin: '100% 0px' });
+    approach.observe(video);
+    return () => {
+      observer.disconnect();
+      approach.disconnect();
+    };
   }, [ref, element]);
+
+  /* Near the screen: fetch the film's start, so it is ready to play. A browser
+     that stopped at preload="none" does not always resume on its own. */
+  useEffect(() => {
+    const video = ref.current;
+    if (!near || !video) return;
+    video.preload = 'metadata';
+    if (video.readyState === 0 && video.networkState !== 2) video.load();
+  }, [near, ref, element]);
 
   useEffect(() => {
     const video = ref.current;
@@ -53,7 +75,7 @@ export function useAmbientPlayback(
     return () => window.removeEventListener(MOTION_EVENT, sync);
   }, [ref, choice, inView, paused, element]);
 
-  return { playing, toggle: () => setChoice(playing ? 'pause' : 'play') };
+  return { playing, near, toggle: () => setChoice(playing ? 'pause' : 'play') };
 }
 
 export type VideoSourceFile = { src: string; type?: string };
@@ -96,13 +118,13 @@ export function BgVideo({
   return (
     <>
       {sources && sources.length > 0 ? (
-        <video ref={ref} poster={poster} muted loop playsInline preload="metadata" className={className} aria-hidden="true">
+        <video ref={ref} poster={poster} muted loop playsInline preload="none" className={className} aria-hidden="true">
           {sources.map((file) => (
             <source key={file.src} src={file.src} type={file.type} />
           ))}
         </video>
       ) : (
-        <video ref={ref} src={src} poster={poster} muted loop playsInline preload="metadata" className={className} aria-hidden="true" />
+        <video ref={ref} src={src} poster={poster} muted loop playsInline preload="none" className={className} aria-hidden="true" />
       )}
       {showControl && (
         <button type="button" className="he-media-pause" aria-label={playing ? t('media.pauseBackground') : t('media.playBackground')} onClick={toggle}>
@@ -117,6 +139,7 @@ export function BgVideo({
 export function MediaFill({
   imageUrl,
   videoUrl,
+  videoUrlAlt,
   alt = '',
   className,
   eager = false,
@@ -129,6 +152,8 @@ export function MediaFill({
   /** 3.15 — the picture shown on phones instead (≤768px); a video ignores it. */
   mobileImageUrl?: string;
   videoUrl?: string;
+  /** 3.22 — the same film in another format; with it, both are offered and the browser picks. */
+  videoUrlAlt?: string;
   alt?: string;
   className?: string;
   eager?: boolean;
@@ -138,7 +163,16 @@ export function MediaFill({
   sizes?: SizesHint | string;
 }) {
   if (videoUrl) {
-    return <BgVideo src={videoUrl} poster={imageUrl} className={className} paused={paused} showControl={showControl} />;
+    return (
+      <BgVideo
+        src={videoUrl}
+        sources={videoUrlAlt ? orderedSources([videoUrl, videoUrlAlt]) : undefined}
+        poster={imageUrl}
+        className={className}
+        paused={paused}
+        showControl={showControl}
+      />
+    );
   }
   if (imageUrl) {
     return <SiteImg src={imageUrl} mobileSrc={mobileImageUrl} alt={alt} className={className} loading={eager ? 'eager' : 'lazy'} decoding="async" sizes={sizes} priority={eager} />;

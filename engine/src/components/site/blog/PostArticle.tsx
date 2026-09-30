@@ -7,7 +7,7 @@ import { Heading } from '@/components/ui/Heading';
 import { Prose } from '@/components/ui/Prose';
 import { Section } from '@/components/ui/Section';
 import type { AnyBlock } from '@/lib/blocks';
-import { fillEyebrow, resolveBlog, type ResolvedBlog } from '@/lib/blog';
+import { eyebrowAroundCategory, fillEyebrow, resolveBlog, type ResolvedBlog } from '@/lib/blog';
 import { safeCss } from '@/lib/customCode';
 import { countHeadingOnes } from '@/lib/headings';
 import type { Locale } from '@/lib/locales';
@@ -25,6 +25,7 @@ import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from 
 import { getTheme } from '@/server/content/theme';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { SiteImg } from '@/components/ui/SiteImg';
+import { withBodyImages } from '@/server/content/bodyImages';
 import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -92,6 +93,8 @@ export async function PostArticle({
 
   const blocks = (post.layout === 'body' ? [] : post.blocks) as AnyBlock[];
   const showBody = post.layout !== 'blocks';
+  // 3.22 — the text's pictures with their sizes (and a srcset when responsive images are on).
+  const bodyHtml = showBody ? await withBodyImages(post.body) : '';
   const blocksFirst = post.layout === 'blocksThenBody';
   // The post's own title stays the page's one h1 — unless an opening block already is.
   const titleLevel = blocksFirst && countHeadingOnes(blocks) > 0 ? 2 : 1;
@@ -106,7 +109,29 @@ export async function PostArticle({
   ];
 
   const categoryLabel = post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article'));
-  const eyebrow = blog.eyebrow ? (
+  const eyebrowValues = { date: post.publishedAt ? formatDate(post.publishedAt) : '', minutes: post.readingMinutes, minRead: t('blog.minRead') };
+  const eyebrowLine = blog.eyebrow
+    ? fillEyebrow(blog.eyebrow, { ...eyebrowValues, category: categoryLabel })
+    : `${categoryLabel}${post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}`;
+  // 3.22 — the category as a chip linking to its archive, the rest of the line beside it.
+  const around = blog.eyebrowStyle === 'chip' ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
+  const categoryHref = post.categorySlug ? categoryPath(permalinks, post.categorySlug) : null;
+  const eyebrow = around ? (
+    <div className="he-post__eyebrow is-chip type-eyebrow">
+      {around.before && <span>{around.before}</span>}
+      {categoryHref ? (
+        <Link href={categoryHref} className="he-chip he-post__chip">
+          {categoryLabel}
+        </Link>
+      ) : (
+        <span className="he-chip he-post__chip">{categoryLabel}</span>
+      )}
+      {around.after && <span>{around.after}</span>}
+    </div>
+  ) : blog.eyebrowStyle === 'plain' || blog.eyebrowStyle === 'chip' ? (
+    // 3.22 — the line alone, without the rule before it.
+    <p className="he-post__eyebrow is-plain type-eyebrow">{eyebrowLine}</p>
+  ) : blog.eyebrow ? (
     // 2.18 — the site's own line: "{category} · {minutes} min read".
     <Eyebrow>
       {fillEyebrow(blog.eyebrow, {
@@ -125,42 +150,52 @@ export async function PostArticle({
   const back = blog.backLink && <BackLink href={indexPath} t={t} />;
   const tocSide = !preview && (blog.toc.position === 'left' || blog.toc.position === 'right');
   const tocTop = !preview && blog.toc.position === 'top';
+  // 3.22 — the share buttons in a column of their own beside the article, following the reader.
+  const shareBeside = !preview && blog.share.position === 'beside' && showBody;
   const body = showBody && (
-    tocSide ? (
-      <div className={cn('he-post__body', `has-toc-${blog.toc.position}`)}>
-        <PostToc blog={blog} t={t} />
-        <Prose html={post.body} className="mt-12 max-w-[72ch]" />
-      </div>
+    tocSide || shareBeside ? (
+      <>
+        {tocTop && <PostToc blog={blog} t={t} />}
+        <div className={cn('he-post__body', tocSide && `has-toc-${blog.toc.position}`, shareBeside && 'has-share-beside')}>
+          {shareBeside && <PostShare blog={blog} t={t} beside />}
+          {tocSide && <PostToc blog={blog} t={t} />}
+          <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
+        </div>
+      </>
     ) : (
       <>
         {tocTop && <PostToc blog={blog} t={t} />}
-        <Prose html={post.body} className="mt-12 max-w-[72ch]" />
+        <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
       </>
     )
   );
-  const shareTop = !preview && blog.share.position === 'top' && <PostShare blog={blog} t={t} />;
+  const shareTop = !preview && (blog.share.position === 'top' || (blog.share.position === 'beside' && !showBody)) && <PostShare blog={blog} t={t} />;
   const shareBottom = !preview && blog.share.position === 'bottom' && <PostShare blog={blog} t={t} />;
   const title = (
     <Heading level={titleLevel} className={cn('max-w-[20ch]', onCover && 'text-white')}>
       {post.title}
     </Heading>
   );
-  const excerpt = post.excerpt && (
+  const excerpt = blog.excerpt && post.excerpt && (
     <p className={cn('mt-6 max-w-[62ch] text-[19px]', onCover ? 'text-white/85' : 'text-ash')}>{post.excerpt}</p>
   );
-  const meta = (
+  // 3.22 — the row under the title, or any of its parts, can be left out.
+  const metaParts = blog.meta.show && ((blog.meta.author && post.authorName) || blog.meta.readingTime || (blog.meta.categories && post.categories.length > 0));
+  const meta = metaParts && (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-x-6 gap-y-2 border-t-2 border-hairline pt-5 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke',
+        'he-post__meta flex flex-wrap items-center gap-x-6 gap-y-2 border-t-2 border-hairline pt-5 text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl',
         !onCover && 'mt-8',
       )}
     >
-      {post.authorName && <span>{post.authorName}</span>}
-      <span>
-        {post.readingMinutes}
-        {` ${t('blog.minRead')}`}
-      </span>
-      {post.categories.length > 0 && (
+      {blog.meta.author && post.authorName && <span>{post.authorName}</span>}
+      {blog.meta.readingTime && (
+        <span>
+          {post.readingMinutes}
+          {` ${t('blog.minRead')}`}
+        </span>
+      )}
+      {blog.meta.categories && post.categories.length > 0 && (
         <span className="flex flex-wrap gap-3">
           {post.categories.map((c) => (
             <Link key={c.slug} href={categoryPath(permalinks, c.slug)} className="hover:text-flare-soft">
@@ -221,7 +256,11 @@ export async function PostArticle({
           ) : layout === 'fullscreen' ? (
             meta
           ) : layout === 'coverThenTitle' ? (
-            <div className="he-post-ctt__card">
+            <div
+              className="he-post-ctt__card"
+              // 3.22 — how far the card rides up over the cover; 0 starts it right under.
+              style={blog.coverOverlap ? ({ '--he-ctt-gap': blog.coverOverlap === '0' ? '0px' : blog.coverOverlap } as React.CSSProperties) : undefined}
+            >
               {back}
               {eyebrow}
               {title}
@@ -248,7 +287,7 @@ export async function PostArticle({
 
       {!preview && blog.share.position === 'side' && <PostShare blog={blog} t={t} side />}
       {!preview && blog.authorBox && <AuthorBox post={post} t={t} />}
-      {!preview && blog.prevNext !== 'off' && <PrevNext blog={blog} previous={adjacent.previous} next={adjacent.next} permalinks={permalinks} t={t} />}
+      {!preview && blog.prevNext !== 'off' && <PrevNext blog={blog} previous={adjacent.previous} next={adjacent.next} permalinks={permalinks} t={t} postId={post.id} />}
       <RelatedPosts blog={blog} posts={related} permalinks={permalinks} t={t} />
 
       {!preview && (

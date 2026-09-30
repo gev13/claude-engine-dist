@@ -4,6 +4,7 @@ import type { ResolvedBlog } from '@/lib/blog';
 import { wantsTilt } from '@/lib/cardHover';
 import { formatDate } from '@/lib/utils';
 import { CardTilt } from './CardTilt';
+import { SiteImg } from '@/components/ui/SiteImg';
 import { postPath, type Permalinks } from '@/lib/permalinks';
 import type { listPosts } from '@/server/content/posts';
 
@@ -44,9 +45,28 @@ export function BlogList({
       return parts.length ? parts.join(' · ') : fallbackEyebrow;
     };
     return (
-      <CardGrid cols={3} id={listId}>
+      <CardGrid
+        cols={3}
+        id={listId}
+        style={card.image && card.ratio ? ({ '--he-ucard-ratio': card.ratio.replace('/', ' / ') } as React.CSSProperties) : undefined}
+      >
         {posts.map((p) => (
-          <Card key={p.id} eyebrow={eyebrow(p)} title={p.title} href={postPath(permalinks, p)} hover={card.hover} moreLabel={labels?.readMore}>
+          <Card
+            key={p.id}
+            eyebrow={eyebrow(p)}
+            title={p.title}
+            href={postPath(permalinks, p)}
+            hover={card.hover}
+            moreLabel={labels?.readMore}
+            // 3.22 — the cover at the top of each card.
+            media={
+              card.image
+                ? p.coverUrl
+                  ? <SiteImg src={p.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="third" />
+                  : <span className="he-fill he-media-empty" aria-hidden="true" />
+                : undefined
+            }
+          >
             {p.excerpt}
             {card.readMore && labels?.readMore && <span className="he-card__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </Card>

@@ -26,7 +26,7 @@ describe('a section’s own sizes on smaller screens', () => {
 
 describe('the contained FAQ', () => {
   it('follows the card corners, and keeps its own radius otherwise', () => {
-    expect(css('library-variants.css')).toMatch(/\.he-faq\.is-contained \{[^}]*border-radius: var\(--he-box-radius, 18px\); clip-path: var\(--he-card-clip, none\)/);
+    expect(css('library-variants.css')).toMatch(/\.he-faq\.is-contained \{[^}]*border-radius: var\(--he-faq-radius, var\(--he-box-radius, 18px\)\); clip-path: var\(--he-card-clip, none\)/);
     expect(themeToCss(themeSchema.parse({ shape: { cards: { style: 'cut' } } }))).toContain('--he-box-radius:0px');
     expect(themeToCss(themeSchema.parse({}))).not.toContain('--he-box-radius');
   });

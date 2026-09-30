@@ -123,7 +123,7 @@
     border: 0;
     background: radial-gradient(circle at 50% 100%, transparent 4.5px, var(--dc) 5px, var(--dc) 6.5px, transparent 7px) 0 0 / 14px 8px repeat-x;
   }
-  .he-div__mid { display: inline-flex; flex-shrink: 0; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-div__mid { display: inline-flex; flex-shrink: 0; align-items: center; gap: 10px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-div__orn { display: inline-flex; color: var(--color-flare); }
   .he-div__dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
   .he-div__diamond { width: 9px; height: 9px; background: currentColor; rotate: 45deg; }
@@ -177,7 +177,7 @@
   .he-vlist__thumb > .he-fill { position: absolute; inset: 0; }
   .he-vlist__play { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(0 0 0 / 0.28); color: #fff; }
   .he-vlist__title { display: block; font-size: 14px; font-weight: 600; line-height: 1.35; }
-  .he-vlist__dur { display: block; margin-top: 4px; font-family: var(--font-mono); font-size: 11px; color: var(--color-smoke); }
+  .he-vlist__dur { display: block; margin-top: 4px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── P3-B9: stars on testimonials ────────────────────────────────────── */
 

@@ -39,9 +39,20 @@
      own HTML, where newlines are formatting in the markup rather than
      anything an author typed — honouring them there would add breaks nobody
      asked for. */
-  .he-site :is(p, li, dd, blockquote, figcaption):not(.prose-edge, .prose-edge *) {
+  .he-site :is(p, li, dd, blockquote, figcaption, h1, h2, h3, h4, h5, h6):not(.prose-edge, .prose-edge *) {
     white-space: pre-line;
   }
+
+  /* 3.22 — ‹ › for a grid that swipes (Design → Swipe sideways → Arrows),
+     placed against the track by SwipeArrows, shown only while it scrolls. */
+  .he-swipe-host:not(.he-sticky) { position: relative; }
+  .he-swipe-nav { position: absolute; z-index: 2; display: flex; gap: 10px; pointer-events: none; }
+  .he-swipe-nav[hidden] { display: none; }
+  .he-swipe-nav.is-belowRight { top: calc(var(--he-swipe-bottom, 0px) + 16px); right: var(--he-swipe-right, 20px); }
+  .he-swipe-nav.is-sides { top: var(--he-swipe-top, 0px); left: var(--he-swipe-left, 0px); right: var(--he-swipe-right, 0px); height: calc(var(--he-swipe-bottom, 0px) - var(--he-swipe-top, 0px)); align-items: center; justify-content: space-between; padding-inline: 6px; }
+  .he-swipe-nav__btn { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-hairline); border-radius: 999px; background: var(--color-surface); color: var(--color-bone); cursor: pointer; pointer-events: auto; transition: opacity calc(200ms * var(--he-motion, 1)), border-color calc(200ms * var(--he-motion, 1)); }
+  .he-swipe-nav__btn:hover:not(:disabled) { border-color: var(--color-rule); }
+  .he-swipe-nav__btn:disabled { opacity: 0.35; cursor: default; }
 
   /* The shell's side padding, as a value other rules can compute with. */
   :root { --he-shell-pad: 20px; }
@@ -61,6 +72,8 @@
       linear-gradient(160deg, var(--color-surface-2), var(--color-surface));
   }
 
+  /* 3.22 — Appearance → Motion: films as moving pictures only, no pause buttons anywhere. */
+  .he-site[data-video-controls='off'] .he-media-pause { display: none; }
   .he-media-pause {
     position: absolute;
     right: 20px;
@@ -406,6 +419,9 @@
     letter-spacing: 0.1em;
     font-variant-numeric: tabular-nums;
   }
+  /* 3.22 — the counter in the text's face, and a thin line between its numbers. */
+  .he-ind--counter.is-body { font-family: inherit; font-size: 15px; letter-spacing: 0; }
+  .he-ind__line { display: inline-block; width: 40px; height: 1px; margin: 0 14px; background: currentColor; vertical-align: middle; }
 
   /* ── Carousel: cards, products, promo cards (a scroll-snap track) ──── */
 
@@ -484,18 +500,22 @@
     border-radius: 999px;
     background: var(--color-bone);
     color: var(--color-ink);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 10px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-card__body { display: flex; flex: 1; flex-direction: column; gap: 8px; padding: 20px 22px 24px; }
   .he-card__eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-card__title { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; line-height: 1.2; }
   .he-card__text { margin: 0; font-size: 15px; color: var(--color-ash); }
@@ -507,7 +527,7 @@
     box-shadow: inset 0 0 0 1px rgb(255 255 255 / 0.25), 0 0 0 1px rgb(0 0 0 / 0.25);
   }
   .he-card__price { margin-top: auto; padding-top: 8px; font-weight: 600; }
-  .he-card__more { margin-top: auto; font-size: 14px; color: var(--he-link); }
+  .he-card__more { margin-top: auto; font-size: var(--he-card-link-size, 14px); color: var(--he-card-link-color, var(--he-link)); font-weight: var(--he-card-link-weight, revert-layer); line-height: var(--he-card-link-line, revert-layer); font-family: var(--he-card-link-family, revert-layer); text-transform: var(--he-card-link-transform, revert-layer); letter-spacing: var(--he-card-link-tracking, revert-layer); }
   .he-card__price + .he-card__more { margin-top: 0; }
 
   /* HR5 — large promo cards, one in view with the next peeking. */
@@ -529,11 +549,13 @@
   }
   .he-hcard__eyebrow {
     margin-bottom: 8px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.14em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-hcard__title { margin: 0; font-family: var(--font-display); font-size: clamp(26px, 2.6vw, 40px); font-weight: 700; line-height: 1.08; }
   .he-hcard__body { margin: 10px 0 0; max-width: 52ch; color: var(--color-ash); }
@@ -580,11 +602,14 @@
   }
   .he-cslide__eyebrow {
     margin-bottom: 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 12px);
+    letter-spacing: var(--he-label-tracking, 0.14em);
+    text-transform: var(--he-label-transform, uppercase);
     opacity: 0.85;
+    font-weight: var(--he-label-weight, revert-layer);
+    color: var(--he-label-color, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-cslide__title { max-width: 18ch; }
   .he-cslide__body { margin: 16px 0 0; max-width: 52ch; font-size: 17px; opacity: 0.9; }
@@ -626,13 +651,16 @@
     flex: 1 0 auto;
     padding: 22px 28px;
     border-right: 1px solid var(--color-hairline);
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.12em;
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 12px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
     text-align: center;
-    text-transform: uppercase;
+    text-transform: var(--he-label-transform, uppercase);
     white-space: nowrap;
     transition: background-color calc(150ms * var(--he-motion, 1));
+    font-weight: var(--he-label-weight, revert-layer);
+    color: var(--he-label-color, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-cslide__strip a:last-child { border-right: 0; }
   .he-cslide__strip a:hover { background: var(--color-surface); }
@@ -791,11 +819,14 @@
   .he-stack__text { max-width: 660px; }
   .he-stack__eyebrow {
     margin-bottom: 14px;
-    font-family: var(--font-mono);
-    font-size: 12px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 12px);
+    letter-spacing: var(--he-label-tracking, 0.14em);
+    text-transform: var(--he-label-transform, uppercase);
     opacity: 0.85;
+    font-weight: var(--he-label-weight, revert-layer);
+    color: var(--he-label-color, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-stack__body { margin: 16px 0 0; max-width: 52ch; font-size: 17px; opacity: 0.9; }
   .he-stack__cta { margin-top: 28px; }

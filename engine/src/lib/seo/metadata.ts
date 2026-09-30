@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, localePath, ogLocale, type Locale, type LocaleConfig } from '@/lib/locales';
 import { site } from '@/lib/site';
-import { withSlash } from '@/lib/permalinks';
+import { slashMode, withSlash } from '@/lib/permalinks';
 import type { SeoFields } from '@/server/db/schema';
 
 const DEFAULT_OG = '/og-default.png';
@@ -56,7 +56,10 @@ export function buildMetadata(opts: {
      duplicate and should not be indexed — the single most damaging mistake
      available in a multilingual setup. */
   const ownPath = withSlash(localePath(locale, opts.path, config));
-  const canonical = seo.canonicalUrl?.trim() || `${SITE_URL}${ownPath === '/' ? '' : ownPath}`;
+  /* 3.22 — the home page's address: "https://site.com" as before, or with the
+     slash every other address has when the trailing slash is `always`. */
+  const home = slashMode() === 'always' ? '/' : '';
+  const canonical = seo.canonicalUrl?.trim() || `${SITE_URL}${ownPath === '/' ? home : ownPath}`;
 
   /* hreflang has to be reciprocal *and* self-referential, or search engines
      discard the set entirely — so this page is in its own list. x-default
@@ -64,9 +67,9 @@ export function buildMetadata(opts: {
   const languages: Record<string, string> = {};
   for (const translation of opts.translations ?? []) {
     const url = withSlash(localePath(translation.locale, translation.path, config));
-    languages[translation.locale] = `${SITE_URL}${url === '/' ? '' : url}`;
+    languages[translation.locale] = `${SITE_URL}${url === '/' ? home : url}`;
     if (translation.locale === config.defaultLocale) {
-      languages['x-default'] = `${SITE_URL}${url === '/' ? '' : url}`;
+      languages['x-default'] = `${SITE_URL}${url === '/' ? home : url}`;
     }
   }
   const shared: ShareImage = opts.image ?? (opts.imageUrl ? { url: opts.imageUrl } : { url: DEFAULT_OG, width: 1200, height: 630 });

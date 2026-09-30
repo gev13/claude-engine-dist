@@ -1,6 +1,14 @@
 {
-  "latest": "3.21.0",
+  "latest": "3.22.0",
   "releases": [
+    {
+      "version": "3.22.0",
+      "date": "2026-09-30",
+      "summary": "A finished design, closer: a Labels type role, container width per screen, swipe with arrows on every grid, logo, FAQ, counter and heading options, a second alternate palette, header, overlay menu, footer and rail details, video without controls, post and blog template options, project page colour, duplicate, URL and import fixes. Everything off until chosen.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.21.0",
       "date": "2026-09-29",

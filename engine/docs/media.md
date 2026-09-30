@@ -8,7 +8,7 @@ did before; each of these is switched on where it is wanted.
 The media route answers byte-range requests (`206 Partial Content`), which
 iOS Safari needs before it will play an MP4 at all. It also sends `ETag` and
 `Last-Modified`, answers `304 Not Modified`, and honours `If-Range`. Nothing
-to configure. To serve `/media` from nginx instead, see INSTALL.md §8.
+to configure. To serve `/media` from nginx instead, see INSTALL.md — *Optional: serve media straight from nginx*.
 
 ## Moving pictures — the video block's *ambient* display
 
@@ -80,3 +80,14 @@ answers with the smallest copy at least that wide — AVIF to browsers that
 take it — or the original while copies do not exist yet. Switching it off
 returns every page to plain `<img>` tags; the copies stay on disk until the
 pictures are deleted.
+
+## After an import (3.22)
+
+A transfer archive's files arrive by copy, so they used to skip what an
+upload does. After an import each file it wrote is treated like an upload:
+an SVG is cleaned (and a file that is not an SVG at all is replaced by an
+empty drawing), a film without a size has it read from its header, and —
+with responsive images on — the smaller picture sizes are made in the
+background, as Media → Generate sizes would. A file skipped because this site
+already has it under another name no longer takes another file with the same
+stem with it (`logo.png` beside `logo.jpg`).

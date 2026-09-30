@@ -150,7 +150,7 @@ export function BlockDesignPanel({
   const band = useBandStyle(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
   /** Which background field the media picker is choosing for; null when it is closed. */
-  const [picking, setPicking] = useState<null | 'imageUrl' | 'videoUrl' | 'videoMobileUrl' | 'videoPoster'>(null);
+  const [picking, setPicking] = useState<null | 'imageUrl' | 'videoUrl' | 'videoUrlAlt' | 'videoMobileUrl' | 'videoPoster'>(null);
 
   const current = style ?? {};
   const set = (path: Path) => (value: unknown) => {
@@ -330,15 +330,15 @@ export function BlockDesignPanel({
       <section>
         <PanelTitle>Background</PanelTitle>
         {/* 2.19 (T31) — every colour of the section at once, from the alternate palette. */}
-        <label className="mb-4 flex items-center gap-2 text-[13px] text-ash">
-          <input
-            type="checkbox"
-            className="h-4 w-4 accent-flare"
-            checked={current.scheme === 'alt'}
-            onChange={(e) => set(['scheme'])(e.target.checked ? 'alt' : undefined)}
-          />
-          Alternate colours — a light section on a dark site, or the reverse (Appearance → Colours → alternate)
-        </label>
+        {/* 3.22 — or the second alternate palette, so a light section and a dark one each have their own. */}
+        <Field label="Palette" hint="a light section on a dark site, or the reverse — set in Appearance → Colours">
+          <Select value={current.scheme ?? ''} onChange={(e) => set(['scheme'])(e.target.value || undefined)}>
+            <option value="">The page’s colours</option>
+            <option value="alt">The alternate palette</option>
+            <option value="alt2">The second alternate palette</option>
+          </Select>
+        </Field>
+        <div className="mb-4" />
         <div className="grid gap-4 sm:grid-cols-2">
           <ColorField
             label="Colour"
@@ -466,6 +466,7 @@ export function BlockDesignPanel({
           <PickedFile label="Video" hint="an mp4 or webm from the media library — muted, looped, playing while on screen" value={current.background?.videoUrl} onChoose={() => setPicking('videoUrl')} onClear={() => set(['background', 'videoUrl'])(undefined)} />
           {current.background?.videoUrl && (
             <>
+              <PickedFile label="The same film in another format" hint="optional — a webm beside the mp4; browsers take the one they play best" value={current.background?.videoUrlAlt} onChoose={() => setPicking('videoUrlAlt')} onClear={() => set(['background', 'videoUrlAlt'])(undefined)} />
               <PickedFile label="Video on phones" hint="optional — a lighter file for small screens" value={current.background?.videoMobileUrl} onChoose={() => setPicking('videoMobileUrl')} onClear={() => set(['background', 'videoMobileUrl'])(undefined)} />
               <PickedFile label="Poster" hint="shown until the film plays, and instead of it where it does not" value={current.background?.videoPoster} onChoose={() => setPicking('videoPoster')} onClear={() => set(['background', 'videoPoster'])(undefined)} />
               <Field label="On phones">
@@ -474,6 +475,10 @@ export function BlockDesignPanel({
                   <option value="poster">Show the poster only</option>
                 </Select>
               </Field>
+              <label className="flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.background?.videoControls !== false} onChange={(e) => set(['background', 'videoControls'])(e.target.checked ? undefined : false)} />
+                A pause button over the film (WCAG 2.2.2 asks for a way to stop moving pictures that run longer than five seconds)
+              </label>
               <p className="m-0 text-[12px] text-smoke">Visitors with data saver on, or who asked for less motion, see the poster. The overlay colour above lies over the film.</p>
             </>
           )}
@@ -760,6 +765,27 @@ export function BlockDesignPanel({
             stays on the page and in the tab order.
           </p>
         </Field>
+        {current.swipeOn && (
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            <Field label="Card width while swiping" hint="% of the width; empty is 84, so the next card peeks in">
+              <Input
+                type="number"
+                min={40}
+                max={100}
+                value={current.swipeWidth === undefined ? '' : String(current.swipeWidth)}
+                placeholder="84"
+                onChange={(e) => set(['swipeWidth'])(e.target.value === '' ? undefined : Math.round(Math.min(100, Math.max(40, Number(e.target.value)))))}
+              />
+            </Field>
+            <Field label="Arrows" hint="shown only while the cards scroll">
+              <Select value={current.swipeArrows ?? ''} onChange={(e) => set(['swipeArrows'])(e.target.value || undefined)}>
+                <option value="">None</option>
+                <option value="belowRight">Under the cards, on the right</option>
+                <option value="sides">Either side of the cards</option>
+              </Select>
+            </Field>
+          </div>
+        )}
 
         {/* 2.19 (T32) — each tier on its own, so a block can show on phones only. The
             old "this width and below" setting is shown as the tiers it hid, and
@@ -814,7 +840,7 @@ export function BlockDesignPanel({
 
       <MediaPicker
         open={picking !== null}
-        accept={picking === 'videoUrl' || picking === 'videoMobileUrl' ? 'video' : 'image'}
+        accept={picking === 'videoUrl' || picking === 'videoUrlAlt' || picking === 'videoMobileUrl' ? 'video' : 'image'}
         onClose={() => setPicking(null)}
         onSelect={(media) => {
           if (picking) set(['background', picking])(media.url);

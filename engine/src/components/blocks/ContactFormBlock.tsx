@@ -19,7 +19,7 @@ const businessTypes = ['Operator', 'Sportsbook', 'Game studio', 'Aggregator', 'P
 const fieldClass =
   'w-full border-2 border-hairline bg-surface px-4 py-3 text-[length:var(--he-block-text,16px)] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none';
 
-const labelClass = 'mb-2 block font-mono text-[11px] uppercase tracking-[0.12em] text-smoke';
+const labelClass = 'mb-2 block text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl';
 
 /**
  * The form itself. The service options arrive as a prop because the catalogue
@@ -183,7 +183,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
           <Button type="submit" disabled={state === 'sending'} withArrow className={split ? 'w-full' : undefined}>
             {state === 'sending' ? 'Sending…' : 'Send your enquiry'}
           </Button>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">
+          <span className="text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">
             We reply within one working day
           </span>
         </div>

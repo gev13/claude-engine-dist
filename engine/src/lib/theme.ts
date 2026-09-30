@@ -177,7 +177,7 @@ const fontKey = z.string().refine((value) => value in FONT_STACKS, 'Not a font t
 
 /* ── Typography ───────────────────────────────────────────────────────────── */
 
-export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'] as const;
+export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'footerTitle', 'cardLink'] as const;
 export type TypeRole = (typeof TYPE_ROLES)[number];
 
 export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
@@ -190,7 +190,24 @@ export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
   h4: 'H4',
   h5: 'H5',
   h6: 'H6',
+  label: 'Labels (chips, meta, small captions)',
+  footerTitle: 'Footer column titles',
+  cardLink: 'Card links (Learn more, Read more)',
 };
+
+/**
+ * 3.22 — the three label roles. Unlike the others they have no single value
+ * to fall back to: every small label was drawn with a size and tracking of
+ * its own, so each stylesheet rule reads `var(--he-label-size, <its own>)`
+ * and an unset role leaves every label exactly as it was. Footer column
+ * titles and card links read their own role first, then Labels.
+ */
+export const LABEL_ROLES = ['label', 'footerTitle', 'cardLink'] as const;
+
+/** The custom-property stem of a role: `footerTitle` → `footer-title`. */
+export function roleVar(role: TypeRole): string {
+  return role.replace(/[A-Z]/g, (c) => `-${c.toLowerCase()}`);
+}
 
 /**
  * Breakpoints, widest first. These are max-widths: `tablet` styles apply at
@@ -353,6 +370,8 @@ export const themeSchema = z.object({
    * on (GL6). Only the colours that differ need setting; the rest inherit.
    */
   colorsAlt: palette.optional(),
+  /** 3.22 — a third palette a page or a section can take (a light section and a black project page, each its own). */
+  colorsAlt2: palette.optional(),
 
   /** Header, menus, footer and site-wide features — see src/lib/chrome.ts. */
   chrome: chromeSchema.optional(),
@@ -528,6 +547,10 @@ export const themeSchema = z.object({
   layout: z
     .object({
       containerWidth: length.optional(),
+      /** 3.22 — the content column on each narrower tier; each unset keeps the wider tier's (86vw on desktop, 100% on phones). */
+      containerWidthLaptop: length.optional(),
+      containerWidthTablet: length.optional(),
+      containerWidthMobile: length.optional(),
       gutter: length.optional(),
       radius: length.optional(),
       /** 3.1 — how wide a section's heading may run before it wraps (e.g. 820px or 32ch); unset keeps each block's own. */

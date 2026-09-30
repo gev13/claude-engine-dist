@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { BlockTitle } from '../parts';
 import { HeroLayers } from './HeroLayers';
 import { MediaFill } from './media';
+import { withHighlight } from './highlight';
 
 type P = z.output<(typeof blockSchemas)['hero']>;
 
@@ -29,7 +30,7 @@ function Text({ p, align = 'left' }: { p: P; align?: 'left' | 'center' }) {
       {p.kicker && <p className={cn('he-hero__kicker', align === 'center' && 'is-center')}>{p.kicker}</p>}
       {p.eyebrow && <Eyebrow className={align === 'center' ? 'justify-center' : undefined}>{p.eyebrow}</Eyebrow>}
       <BlockTitle as={p.titleAs ?? 'h1'} className="he-hero__title">
-        {p.title}
+        {withHighlight(p.title, p.highlight, p.highlightStyle ?? 'color')}
       </BlockTitle>
       {p.lede && <p className="he-hero__lede">{p.lede}</p>}
       {p.body && <p className="he-hero__body">{p.body}</p>}

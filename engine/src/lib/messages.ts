@@ -21,6 +21,12 @@ export const MESSAGES = {
   'chrome.openMenu': 'Open menu',
   'chrome.closeMenu': 'Close menu',
   'chrome.menu': 'Menu',
+  /** 3.22 — the full-screen menu: the service lists' headings, the contact details, the drill-down's way back. */
+  'menu.coreServices': 'Core services',
+  'menu.specialist': 'Specialist',
+  'menu.getInTouch': 'Get in touch',
+  'menu.contact': 'Contact',
+  'menu.back': 'Back',
   'chrome.search': 'Search',
   'chrome.backToTop': 'Back to top',
   'chrome.home': 'Home',
@@ -161,6 +167,8 @@ export const MESSAGES = {
   'block.previousSlide': 'Previous slide',
   'block.nextSlide': 'Next slide',
   'block.slides': 'Slides',
+  /** 3.22 — between the numbers of a slider's counter: "1 of 3". */
+  'block.counterOf': 'of',
   'block.slidesScroll': 'Slides — scroll sideways',
   'block.previousPicture': 'Previous picture',
   'block.nextPicture': 'Next picture',

@@ -48,7 +48,25 @@ type Rails = {
   autoContrast: boolean;
   hideOn: string[];
   minWidth: number;
+  font?: 'label' | 'body' | 'display';
+  case?: 'label' | 'upper' | 'none';
+  size?: number;
+  weight?: string;
+  separator?: 'none' | 'slash' | 'dot';
+  position?: 'center' | 'bottom';
+  orientation?: 'stacked' | 'row';
 };
+
+/** 3.22 — the rails' own type, as properties their rules read; nothing for what was left unset. */
+const FACES = { body: 'var(--he-body-family)', display: 'var(--font-display)' } as const;
+function railStyle(rails: Rails): React.CSSProperties {
+  return {
+    ...(rails.font && rails.font !== 'label' ? { '--he-rail-family': FACES[rails.font] } : {}),
+    ...(rails.case && rails.case !== 'label' ? { '--he-rail-transform': rails.case === 'upper' ? 'uppercase' : 'none', '--he-rail-tracking': rails.case === 'upper' ? '0.14em' : '0' } : {}),
+    ...(rails.size ? { '--he-rail-size': `${Math.max(8, Math.min(24, rails.size))}px` } : {}),
+    ...(rails.weight ? { '--he-rail-weight': rails.weight } : {}),
+  } as React.CSSProperties;
+}
 
 const hiddenOn = (patterns: string[], path: string) =>
   patterns.some((pattern) => (pattern.endsWith('*') ? path.startsWith(pattern.slice(0, -1)) : path.replace(/\/+$/, '') === pattern.replace(/\/+$/, '')));
@@ -81,11 +99,27 @@ export function SideRails({ rails, social, socialStyle }: { rails: Rails; social
   }, [rails.afterFirstScreen, pathname]);
 
   if (hiddenOn(rails.hideOn, pathname)) return null;
-  const style = { '--he-rails-min': `${rails.minWidth}px` } as React.CSSProperties;
-  const cls = (side: 'left' | 'right') => `he-rail is-${side}${shown ? ' is-shown' : ''}${rails.autoContrast ? ' is-contrast' : ''}`;
+  const style = { '--he-rails-min': `${rails.minWidth}px`, ...railStyle(rails) } as React.CSSProperties;
+  // 3.22 — a width of their own to appear from; the stylesheet's is 1181px.
+  const min = Math.round(rails.minWidth);
+  const ownWidth = Number.isInteger(min) && min >= 768 && min <= 2560 && min !== 1181;
+  const cls = (side: 'left' | 'right') =>
+    [
+      'he-rail',
+      `is-${side}`,
+      shown && 'is-shown',
+      rails.autoContrast && 'is-contrast',
+      ownWidth && 'has-min',
+      rails.position === 'bottom' && 'is-bottom',
+      rails.orientation === 'row' && 'is-row',
+    ]
+      .filter(Boolean)
+      .join(' ');
+  const separator = rails.separator === 'slash' ? '/' : rails.separator === 'dot' ? '·' : null;
 
   return (
     <>
+      {ownWidth && <style>{`@media (width >= ${min}px){.he-rail.has-min{display:flex}}@media (width < ${min}px){.he-rail.has-min{display:none}}`}</style>}
       {rails.scrollSide !== 'none' && (
         <div className={cls(rails.scrollSide)} style={style}>
           <button
@@ -103,9 +137,14 @@ export function SideRails({ rails, social, socialStyle }: { rails: Rails; social
       {rails.socialSide !== 'none' && social.length > 0 && (
         <div className={cls(rails.socialSide)} style={style}>
           <p className="he-rail__text">{rails.socialLabel}</p>
-          <ul className="he-rail__social">
-            {social.map((link) => (
+          <ul className={separator ? 'he-rail__social has-sep' : 'he-rail__social'}>
+            {social.map((link, i) => (
               <li key={link.network + link.href}>
+                {separator && i > 0 && (
+                  <span className="he-rail__sep" aria-hidden="true">
+                    {separator}
+                  </span>
+                )}
                 <a href={link.href} {...(opensElsewhere(link) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[link.network]}>
                   {socialText(link, socialStyle === 'icon' ? 'short' : socialStyle) ?? <SocialIcon network={link.network} size={16} />}
                 </a>

@@ -69,11 +69,13 @@
     box-shadow: 0 30px 60px -30px rgb(0 0 0 / 0.55);
   }
   .he-ovc__eyebrow {
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.14em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   .he-ovc__rule { display: block; width: 32px; height: 2px; margin: 14px 0 18px; background: var(--color-flare); }
   .he-ovc.is-insideLeft, .he-ovc.is-insideRight { display: flex; align-items: center; min-height: 660px; padding-bottom: 0; }
@@ -88,6 +90,8 @@
   .he-band.is-h-medium { min-height: clamp(380px, 46vw, 580px); }
   .he-band.is-h-tall { min-height: min(82svh, 880px); }
   .he-band.is-h-screen { min-height: 100svh; }
+  /* 3.22 — a height of its own, and on phones. */
+  .he-band.has-h { min-height: var(--he-band-h); }
   .he-band__bg { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
   .he-band::after { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none; background: rgb(0 0 0 / var(--he-ov, 0.42)); }
   .he-band.is-bottomLeft::after { background: linear-gradient(to top, rgb(0 0 0 / calc(var(--he-ov, 0.42) * 1.7)), rgb(0 0 0 / calc(var(--he-ov, 0.42) * 0.3)) 70%); }
@@ -155,7 +159,7 @@
   a.he-tile:hover .he-tile__bg { transform: scale(1.04); }
   .he-tile::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgb(0 0 0 / 0.66), rgb(0 0 0 / 0) 58%); }
   .he-tile__text { max-width: 520px; padding: 40px 32px; }
-  .he-tile__eyebrow { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.85; }
+  .he-tile__eyebrow { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); opacity: 0.85; font-weight: var(--he-label-weight, revert-layer); color: var(--he-label-color, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-tile__title { margin: 8px 0 0; font-family: var(--font-display); font-size: clamp(24px, 2.4vw, 38px); font-weight: 700; line-height: 1.08; }
   .he-tile__body { margin: 10px 0 0; font-size: 15px; opacity: 0.9; }
   .he-tile__btn {
@@ -163,11 +167,14 @@
     margin-top: 20px;
     padding: 12px 22px;
     border: 1.5px solid currentColor;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
     transition: background-color calc(150ms * var(--he-motion, 1)), color calc(150ms * var(--he-motion, 1));
+    font-weight: var(--he-label-weight, revert-layer);
+    color: var(--he-label-color, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
   a.he-tile:hover .he-tile__btn { background: #fff; color: #000; }
 
@@ -205,7 +212,7 @@
   }
   .he-icard__media .he-fill { transition: transform calc(600ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-fgrid__item:has(a:hover) .he-icard__media .he-fill { transform: scale(1.04); }
-  .he-fgrid__eyebrow { margin-bottom: 6px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-fgrid__eyebrow { margin-bottom: 6px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-fgrid__title { margin: 0; font-family: var(--font-display); font-size: 19px; font-weight: 700; line-height: 1.25; }
   /* The whole item is the link's hit area; the title stays the link's name. */
   .he-fgrid__link::after { content: ''; position: absolute; inset: 0; }
@@ -214,7 +221,7 @@
   .he-fgrid__body { margin: 8px 0 0; font-size: 15px; color: var(--color-ash); }
   /* 3.6 — an item's text inset (item style), beyond the card's own padding. */
   .he-fgrid__item > :is(.he-fgrid__eyebrow, .he-fgrid__title, .he-fgrid__body, .he-fgrid__more) { padding-inline: var(--he-item-text-inset, 0); }
-  .he-fgrid__more { margin-top: 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--he-link); }
+  .he-fgrid__more { margin-top: 14px; font-family: var(--he-card-link-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-card-link-size, var(--he-label-size, 11px)); letter-spacing: var(--he-card-link-tracking, var(--he-label-tracking, 0.12em)); text-transform: var(--he-card-link-transform, var(--he-label-transform, uppercase)); color: var(--he-card-link-color, var(--he-label-color, var(--he-link))); font-weight: var(--he-card-link-weight, var(--he-label-weight, revert-layer)); line-height: var(--he-card-link-line, var(--he-label-line, revert-layer)); }
 
   /* ── CT6: image accordion ────────────────────────────────────────────── */
 
@@ -332,7 +339,7 @@
   }
   .he-figs__value sup { margin-left: 3px; font-size: 0.38em; font-weight: 600; letter-spacing: 0; }
   .he-figs__label { max-width: 24ch; margin: 12px auto 0; font-size: 14px; color: var(--color-ash); }
-  .he-figs__foot { margin: 32px 0 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-align: center; text-transform: uppercase; color: var(--color-smoke); }
+  .he-figs__foot { margin: 32px 0 0; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-align: center; text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── CT9: logo wall ──────────────────────────────────────────────────── */
 
@@ -370,8 +377,13 @@
     text-align: center;
   }
   .he-logos__wrap.is-framed .he-logos__cell { background: transparent; }
-  .he-logos__img { width: auto; max-width: 100%; max-height: 40px; object-fit: contain; opacity: 0.72; filter: grayscale(1); transition: opacity calc(150ms * var(--he-motion, 1)), filter calc(150ms * var(--he-motion, 1)); }
+  .he-logos__img { width: auto; max-width: 100%; max-height: var(--he-logo-h, 40px); object-fit: contain; opacity: var(--he-logo-o, 0.72); filter: var(--he-logo-f, grayscale(1)); transition: opacity calc(150ms * var(--he-motion, 1)), filter calc(150ms * var(--he-motion, 1)), transform calc(200ms * var(--he-motion, 1)); }
   .he-logos__cell:hover .he-logos__img { opacity: 1; filter: none; }
+  /* 3.22 — pointing at a logo changes nothing, or grows it a little. */
+  .he-logos.is-hover-none .he-logos__cell:hover .he-logos__img { opacity: var(--he-logo-o, 0.72); filter: var(--he-logo-f, grayscale(1)); }
+  .he-logos.is-hover-grow .he-logos__cell:hover .he-logos__img { opacity: var(--he-logo-o, 0.72); filter: var(--he-logo-f, grayscale(1)); transform: scale(1.06); }
+  @media (width <= 64rem) { .he-logos__img { max-height: var(--he-logo-h-t, var(--he-logo-h, 40px)); } }
+  @media (width <= 48rem) { .he-logos__img { max-height: var(--he-logo-h-m, var(--he-logo-h-t, var(--he-logo-h, 40px))); } }
   .he-logos__word { font-family: var(--font-display); font-size: 18px; font-weight: 700; opacity: 0.75; }
   .he-logos__foot { position: relative; margin-top: 32px; }
   .he-logos.is-center .he-logos__foot { text-align: center; }
@@ -407,7 +419,7 @@
   .he-quote__cap > span { display: flex; flex-direction: column; gap: 2px; text-align: left; }
   .he-quote__avatar { width: 48px; height: 48px; border-radius: 999px; object-fit: cover; }
   .he-quote__name { font-weight: 600; }
-  .he-quote__role { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-quote__role { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── CT11: colour picker ─────────────────────────────────────────────── */
 
@@ -468,7 +480,7 @@
     transition: text-decoration-color calc(150ms * var(--he-motion, 1));
   }
   .he-news__card:hover .he-news__title { text-decoration-color: currentColor; }
-  .he-news__date { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-news__date { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-news__excerpt { display: -webkit-box; margin: 0; overflow: hidden; font-size: 15px; color: var(--color-ash); -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
   .he-news__all { display: flex; justify-content: center; margin-top: 44px; }
 
@@ -661,6 +673,8 @@
     .he-band__inner, .he-band.is-center .he-band__inner, .he-band.is-right .he-band__inner { align-items: flex-end; justify-content: flex-start; text-align: left; }
     .he-band.is-center .he-actions { justify-content: flex-start; }
     .he-band.is-h-tall { min-height: 78svh; }
+    .he-band.has-h { min-height: var(--he-band-h); }
+    .he-band.has-h-m { min-height: var(--he-band-h-m); }
 
     .he-tiles__grid, .he-fgrid, .he-news { grid-template-columns: minmax(0, 1fr); }
     .he-tiles__grid.is-mosaic { grid-template-columns: minmax(0, 1fr); grid-auto-rows: auto; }

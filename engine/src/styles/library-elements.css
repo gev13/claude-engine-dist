@@ -27,6 +27,8 @@
   .he-hd.is-large .he-hd__title { max-width: var(--he-title-measure, 22ch); font-size: clamp(34px, 4.6vw, 64px); line-height: 1.05; }
   .he-hd.is-display .he-hd__title { max-width: 16ch; font-size: clamp(44px, 8vw, 128px); line-height: 0.96; letter-spacing: -0.035em; }
   .he-hd.is-medium .he-hd__title { max-width: var(--he-title-measure, 30ch); }
+  /* 3.22 — the tag's own size and line height from Appearance → Typography, and no cap of its own. */
+  .he-hd.is-theme .he-hd__title { max-width: var(--he-title-measure, none); }
   .he-mark { padding: 0 0.04em; background: none; color: inherit; }
   .he-mark.is-color { color: var(--color-flare); }
   .he-mark.is-marker { background: linear-gradient(transparent 58%, color-mix(in srgb, var(--color-flare) 45%, transparent) 58%); }
@@ -157,7 +159,7 @@
   .he-cd.is-center .he-cd__units { justify-content: center; }
   .he-cd__unit { position: relative; display: flex; flex-direction: column; align-items: center; gap: 8px; }
   .he-cd__num { font-family: var(--font-display); font-size: clamp(40px, 6vw, 76px); font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
-  .he-cd__label { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-cd__label { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-cd__units.is-plain { gap: 28px; }
   .he-cd__units.is-boxed .he-cd__unit { min-width: 104px; padding: 22px 18px 18px; border-radius: 16px; background: var(--color-surface); }
   .is-raised .he-cd__units.is-boxed .he-cd__unit { background: var(--color-surface-2); }
@@ -175,7 +177,7 @@
   .he-social-sec { padding-block: 40px; }
   .he-social-sec.is-center { text-align: center; }
   .he-social-sec.is-right { text-align: right; }
-  .he-social__title { margin: 0 0 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-social__title { margin: 0 0 14px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-social { --s: 42px; display: flex; flex-wrap: wrap; gap: var(--he-gap, 10px); margin: 0; padding: 0; list-style: none; }
   .he-social-sec.is-center .he-social { justify-content: center; }
   .he-social-sec.is-right .he-social { justify-content: flex-end; }
@@ -221,7 +223,7 @@
   .he-plan__top { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
   .he-plan__name { margin: 0; font-family: var(--font-display); font-size: 20px; font-weight: 700; }
   .he-plan__tagline { margin: 4px 0 0; font-size: 13px; color: var(--color-smoke); }
-  .he-plan__badge { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-ink); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+  .he-plan__badge { flex-shrink: 0; padding: 4px 10px; border-radius: 999px; background: var(--color-flare); color: var(--color-ink); font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.1em); text-transform: var(--he-label-transform, uppercase); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-plan__price { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--he-gap, 6px); margin: 0; }
   .he-plan__amount { font-family: var(--font-display); font-size: clamp(36px, 3.8vw, 52px); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
   .he-plan__period { font-size: 14px; color: var(--color-smoke); }
@@ -317,7 +319,7 @@
     .he-cd__units.is-boxed .he-cd__unit { min-width: 64px; padding: 14px 8px 12px; border-radius: 12px; }
     .he-cd__units.is-boxed.has-dividers { gap: 18px; }
     .he-cd__units.is-boxed .he-cd__sep { left: -14px; }
-    .he-cd__label { font-size: 9px; letter-spacing: 0.1em; }
+    .he-cd__label { font-size: var(--he-label-size, 9px); letter-spacing: var(--he-label-tracking, 0.1em); }
     .he-price__plans { grid-template-columns: minmax(0, 1fr); }
     .he-price__opt { padding: 9px 14px; }
     .he-team__grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 28px 14px); }

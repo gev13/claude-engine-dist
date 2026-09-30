@@ -66,8 +66,12 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
   // 3.6 — a blog switched off answers none of its own addresses; pages still resolve.
   const indexMatch = blog.off ? undefined : matches.find((m) => m.kind === 'blogIndex');
   if (indexMatch) {
-    const page = await getPageByPath(permalinks.blogIndex, locale);
-    const list = page ? findServerList(page.blocks as AnyBlock[]) : undefined;
+    const found = await getPageByPath(permalinks.blogIndex, locale);
+    const list = found ? findServerList(blocksOf(found)) : undefined;
+    /* 3.22 — a Blog page without a list that pages on the server still has a
+       /page/2: past the first page the built-in archive answers, so the
+       addresses an old blog had keep working. */
+    const page = found && !list && indexMatch.page > 1 ? null : found;
     const paging = page
       ? list
         ? await listPaging(list, indexMatch.page, permalinks.blogIndex, permalinks, locale)
@@ -109,6 +113,8 @@ export const resolvePath = cache(async (path: string, locale: Locale): Promise<R
 
 type Context = { permalinks: Permalinks; blog: ResolvedBlog; locale: Locale; path: string };
 
+const blocksOf = (page: PublicPage) => page.blocks as AnyBlock[];
+
 /** The addresses that belong to the blog, and go when it is switched off. */
 const BLOG_KINDS = new Set<string>(['blogIndex', 'research', 'category', 'post']);
 
@@ -117,6 +123,8 @@ async function resolveMatch(match: BlogMatch, { permalinks, blog, locale, path }
     case 'research': {
       const base = path.replace(new RegExp(`/${permalinks.pageSegment}/\\d+$`), '');
       const paging = await archivePaging({ kind: 'research' }, archivePerPage(blog, 'research'), match.page, base, permalinks, locale);
+      // 3.22 — a site with no research has no research page (nor a sitemap entry for one).
+      if (paging.count === 0) return null;
       return settle(paging, path, permalinks, () => ({ kind: 'research', paging }));
     }
     case 'category': {
@@ -181,6 +189,12 @@ async function resolveMatch(match: BlogMatch, { permalinks, blog, locale, path }
  */
 function settle(paging: Paging, path: string, permalinks: Permalinks, ok: () => Resolved): Resolved | null {
   if (path.endsWith(`/${permalinks.pageSegment}/1`)) return { kind: 'redirect', to: paging.base };
+  // 3.22 — there is no page 0, and a page number has one spelling: /page/02 is /page/2.
+  if (paging.number < 1) return null;
+  const written = path.slice(path.lastIndexOf('/') + 1);
+  if (path.includes(`/${permalinks.pageSegment}/`) && /^0\d+$/.test(written)) {
+    return { kind: 'redirect', to: paging.number === 1 ? paging.base : pagedPath(paging.base, paging.number, permalinks) };
+  }
   if (paging.number > paging.total) return null;
   return ok();
 }

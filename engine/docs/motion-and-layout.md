@@ -316,3 +316,91 @@ but not a button's own, which is exactly what was typed.
   own weight range (see `docs/fonts.md`).
 - 3.17.2: **Header → Notch header: stay at the top on wider screens while
   scrolling** — the same for desktops and tablets.
+
+## Labels, widths per screen, swipe with arrows and the finished details (3.22)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Appearance → Typography → Labels.** The small text around the content —
+  category chips, dates and meta rows, card eyebrows, a post's back link and
+  contents title, captions, form labels, the footer's bottom row, rails and
+  badges — was mono capitals with no setting. Its family, size (per screen),
+  weight, case, letter spacing, colour and line height are now one role;
+  section eyebrows follow it until the *Eyebrow label* role is set. Two more
+  roles sit on top: **Footer column titles** and **Card links** (“Learn
+  more”, “Read more”); each empty field falls back to Labels, then to what
+  was drawn. Empty, every label is exactly as before.
+- **Appearance → Layout → Container width** for desktop, tablet and phones
+  (e.g. 86vw on desktop, 100% on phones with a 16px side padding).
+- **Headings keep their line breaks.** Enter in a heading field starts a new
+  line on the site too (heading, hero, call to action, media band, every
+  section title).
+- **Heading → Size → Theme**: the tag's own size from Appearance →
+  Typography, without a width cap of its own.
+- **Card grid → Icon features → Icon size**: the icon's height (40, 96,
+  200px or your own), its width following the file — an illustration or an
+  animated GIF keeps its shape. **Image cards** gain *each file's own
+  shape*, *whole, fitted inside* and a tallest height.
+- **Design tab → Swipe sideways on small screens** now works on every block
+  that lays items out in a grid — card grids of every layout, logos,
+  reviews, projects, post lists, gallery, team, stats and pricing — and
+  gains **Card width while swiping** (%) and **Arrows** (under the cards on
+  the right, or either side), shown only while the cards scroll.
+- **Logo wall**: logo height per screen, the logos' own colours instead of
+  grey, the opacity at rest, what pointing does, and logos per row on
+  tablets and phones.
+- **FAQ**: the heading above with the questions full width; the boxes'
+  corners; the open question without the accent tint.
+- **Carousel → Counter**: 1, 2… instead of 01, 02…; a dash, a thin line or
+  “of” between the numbers (“of” is a Site translation); the text's face.
+- **Media band → Height of its own**, and on phones (e.g. 900px / 420px).
+- **Hero → Words to pick out**: the heading block's marks on the hero title
+  (the full stop in the accent colour).
+- **Reviews → Photo size** (40, 52, 64px) and, like the **Gallery**,
+  **Masonry order: row by row** — the first three are the first row, and
+  more are added below without moving any already shown.
+- **A second alternate palette** (Appearance → Colours) for a page, a post,
+  a project or a section, so a light section and a black project page each
+  have their own. A section in either alternate palette now takes every
+  colour with it — its headings, links and buttons too, which kept the
+  page's colours before.
+
+### Header and menus
+
+- **Header**: the thin line under the bar on or off; the glass's saturation;
+  **the page starts at the very top, under the bar**, on every page; the
+  header button as the outline button, or in colours of its own (text, fill,
+  edge, and each pointed at).
+- **Full-screen menu**: the links' size (and on phones), weight and letter
+  spacing; a plain + or a chevron instead of the + in a circle; the menu's own
+  background colour; the header button in the menu or not (*Buttons sit →
+  Not in the menu*); the service pages listed or not; the contact details as
+  a row at the bottom left of any full-screen menu, with the email, the
+  address and the social links each on or off. Its words (“Get in touch”,
+  the service headings, Back) are Site translations. The entrance “Sliding
+  down” is now named for what it does: *Sliding in from the side*.
+
+### Footer, rails, motion, video
+
+- **Footer**: a slash or a dot between the social links when Menus shows
+  them as names or short labels (“Fb. / Ig. / Lk.”), and any of them listed
+  apart as icon and name, one a line (a phone, messengers). Each social link
+  can carry its own name (Menus → Social links).
+- **Side rails**: their face, case, size and weight; a slash or a dot between
+  the links; the middle or the bottom of the screen; each part stacked or the
+  whole rail one line written up the edge. *From a width of* now works.
+- **Page changes**: the first page of a visit can arrive the same way; a page
+  can leave fading and moving up, as long as its arrival. The reveal footer is
+  hidden while the page is faded out, so it no longer shows through.
+- **Appearance → Motion → Pause buttons over films**: off, background and
+  ambient films are moving pictures only (WCAG 2.2.2 asks for a way to stop
+  motion longer than five seconds, so keep one somewhere if you can). A
+  section's own background film has the same switch; an ambient film with no
+  controls shows no button at all, and starts on a click if it is still.
+- **Films load only near the screen** (`preload="none"` until within a screen
+  of the viewport). Carousel slides, gallery tiles and section backgrounds
+  take a second format (a WebM beside the MP4). The ambient video can run
+  **edge to edge** and with **no space above and below**, so project pages
+  stack full-width films; its video field has a Choose button.
+- Fixed: the custom cursor's lag was per frame, so it ran twice as fast on a
+  120 Hz screen; it is measured in time now.

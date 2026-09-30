@@ -21,6 +21,29 @@ import { recordUsage } from './savedBlocks';
 
 const copyTitle = (title: string, max: number) => `${title} (copy)`.slice(0, max);
 const copySlug = (slug: string, taken: string[]) => uniqueSlug(`${slug}-copy`.slice(0, 180), taken);
+
+/** 3.22 — trashed content is restored before it is copied; the route says so. */
+export const TRASHED = 'trashed' as const;
+
+/**
+ * 3.22 — one suffix for a page's slug and its path, so they stay in step:
+ * the first "-copy", "-copy-2"… that is free for both. The home page's path
+ * is "/" and has no last segment, so its copy is "/home-copy" (then -2…).
+ */
+export function pageCopyAddress(row: { slug: string; path: string }, taken: { slug: string; path: string }[]): { slug: string; path: string } {
+  const slugs = new Set(taken.map((page) => page.slug));
+  const paths = new Set(taken.map((page) => page.path));
+  const home = row.path === '/';
+  const parent = home ? '' : row.path.split('/').slice(0, -1).join('/');
+  const last = home ? 'home' : row.path.split('/').pop() || row.slug;
+  const slugBase = (row.slug || last).slice(0, 180);
+  for (let n = 1; ; n++) {
+    const suffix = n === 1 ? '-copy' : `-copy-${n}`;
+    const slug = `${slugBase}${suffix}`;
+    const path = `${parent}/${last}${suffix}`;
+    if (!slugs.has(slug) && !paths.has(path)) return { slug, path };
+  }
+}
 const copyBlocks = (blocks: unknown) => freshIds((blocks ?? []) as AnyBlock[], () => nanoid(10), { renameForms: true }) as Block[];
 
 /** A copy's own SEO: everything but the canonical, which named the original. */
@@ -32,20 +55,18 @@ function copySeo(seo: unknown): SeoFields {
 export async function duplicatePage(id: string, userId: string) {
   const [row] = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
   if (!row) return null;
+  if (row.deletedAt) return TRASHED;
+  // Every page in the language: a path is unique per language (`pages_path_key`), whoever owns it.
   const siblings = await db.select({ slug: pages.slug, path: pages.path }).from(pages).where(eq(pages.locale, row.locale));
-  // The path keeps its parent and gains "-copy" on its last segment: /services/seo → /services/seo-copy.
-  const parent = row.path.split('/').slice(0, -1).join('/');
-  const last = row.path.split('/').pop() || row.slug;
-  const takenPaths = new Set(siblings.map((page) => page.path));
-  let lastCopy = `${last}-copy`;
-  for (let n = 2; takenPaths.has(`${parent}/${lastCopy}`); n++) lastCopy = `${last}-copy-${n}`;
+  // The path keeps its parent and gains "-copy" on its last segment: /services/seo → /services/seo-copy; the slug the same suffix.
+  const address = pageCopyAddress(row, siblings);
 
   const blocks = copyBlocks(row.blocks);
   const [copy] = await db
     .insert(pages)
     .values({
-      slug: copySlug(row.slug, siblings.map((page) => page.slug)),
-      path: row.path === '/' ? '/home-copy' : `${parent}/${lastCopy}`,
+      slug: address.slug,
+      path: address.path,
       locale: row.locale,
       title: copyTitle(row.title, 300),
       navLabel: row.navLabel,
@@ -55,6 +76,8 @@ export async function duplicatePage(id: string, userId: string) {
       blocks,
       seo: copySeo(row.seo),
       customCss: row.customCss,
+      // 3.22 — its own colours too, so the copy looks like the original.
+      appearance: row.appearance,
       parentId: row.parentId,
       sortOrder: row.sortOrder,
       template: row.template,
@@ -71,6 +94,7 @@ export async function duplicatePage(id: string, userId: string) {
 export async function duplicatePost(id: string, userId: string) {
   const [row] = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
   if (!row) return null;
+  if (row.deletedAt) return TRASHED;
   const taken = (await db.select({ slug: posts.slug }).from(posts).where(eq(posts.locale, row.locale))).map((post) => post.slug);
   const blocks = copyBlocks(row.blocks);
   const [copy] = await db
@@ -87,6 +111,7 @@ export async function duplicatePost(id: string, userId: string) {
       status: 'draft',
       seo: copySeo(row.seo),
       customCss: row.customCss,
+      appearance: row.appearance,
       coverMediaId: row.coverMediaId,
       primaryCategoryId: row.primaryCategoryId,
       readingMinutes: row.readingMinutes,
@@ -104,6 +129,7 @@ export async function duplicatePost(id: string, userId: string) {
 export async function duplicateProject(id: string, userId: string) {
   const [row] = await db.select().from(projects).where(eq(projects.id, id)).limit(1);
   if (!row) return null;
+  if (row.deletedAt) return TRASHED;
   const taken = (await db.select({ slug: projects.slug }).from(projects).where(eq(projects.locale, row.locale))).map((p) => p.slug);
   const blocks = copyBlocks(row.blocks);
   const [copy] = await db
@@ -143,7 +169,8 @@ export async function duplicateProject(id: string, userId: string) {
 
 export async function duplicateSavedBlock(id: string, userId: string) {
   const [row] = await db.select().from(savedBlocks).where(and(eq(savedBlocks.id, id))).limit(1);
-  if (!row || row.deletedAt) return null;
+  if (!row) return null;
+  if (row.deletedAt) return TRASHED;
   const tree = freshIds((row.tree ?? []) as AnyBlock[], () => nanoid(10)) as Block[];
   const [copy] = await db
     .insert(savedBlocks)

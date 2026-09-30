@@ -10,13 +10,13 @@
   .he-fb.is-card .he-fb__box { padding: var(--he-fb-pad, 32px); border: 1px solid var(--color-hairline); border-radius: var(--he-box-radius, 20px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-fb.is-card.is-raised .he-fb__box { background: var(--color-surface-2); }
   .he-fb__progress { margin-bottom: 26px; }
-  .he-fb__stepname { margin: 0 0 10px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-fb__stepname { margin: 0 0 10px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-fb__bar { height: 4px; overflow: hidden; border-radius: 999px; background: color-mix(in srgb, var(--color-bone) 12%, transparent); }
   .he-fb__bar span { display: block; height: 100%; border-radius: inherit; background: var(--color-flare); transition: width calc(400ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-fb__grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--he-gap, 22px 20px); }
   .he-fb__field { grid-column: 1 / -1; min-width: 0; margin: 0; padding: 0; border: 0; }
   .he-fb__field.is-half { grid-column: auto / span 1; }
-  .he-fb__label { display: block; margin-bottom: 8px; padding: 0; font-family: var(--font-mono); font-size: 11px; line-height: 1.3; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-fb__label { display: block; margin-bottom: 8px; padding: 0; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); line-height: var(--he-label-line, 1.3); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); }
   .he-fb__opt { text-transform: none; letter-spacing: 0; color: color-mix(in srgb, var(--color-smoke) 75%, transparent); }
   .he-fb__input {
     width: 100%;

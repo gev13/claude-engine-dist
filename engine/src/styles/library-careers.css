@@ -48,11 +48,13 @@
     flex-wrap: wrap;
     gap: var(--he-gap, 8px 18px);
     margin: 14px 0 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 11px);
+    letter-spacing: var(--he-label-tracking, 0.1em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
 
   .he-job-card__side { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right; }
@@ -62,17 +64,19 @@
     padding: 5px 12px;
     border: 1.5px solid var(--color-hairline);
     border-radius: 999px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--color-smoke);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 10px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
+    color: var(--he-label-color, var(--color-smoke));
     white-space: nowrap;
+    font-weight: var(--he-label-weight, revert-layer);
+    line-height: var(--he-label-line, revert-layer);
   }
 
   .he-job-tag.is-open { border-color: var(--color-flare); color: var(--color-flare-soft); }
 
-  .he-job-card__when { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em; color: var(--color-smoke); }
+  .he-job-card__when { font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.08em); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── One advert ────────────────────────────────────────────────────────── */
 
@@ -86,7 +90,7 @@
     border-bottom: 1.5px solid var(--color-hairline);
   }
 
-  .he-job__meta dt { margin: 0 0 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--color-smoke); }
+  .he-job__meta dt { margin: 0 0 6px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.12em); text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-job__meta dd { margin: 0; font-size: 16px; line-height: 1.4; color: var(--color-bone); }
 
   .he-job__section { margin-top: 48px; }
@@ -158,14 +162,15 @@
     border-radius: 999px;
     background: color-mix(in srgb, var(--color-ink) 82%, transparent);
     backdrop-filter: blur(4px);
-    font-family: var(--font-mono);
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    line-height: 1;
-    color: var(--color-flare-soft);
+    font-family: var(--he-label-family, var(--font-mono));
+    font-size: var(--he-label-size, 10px);
+    letter-spacing: var(--he-label-tracking, 0.12em);
+    text-transform: var(--he-label-transform, uppercase);
+    line-height: var(--he-label-line, 1);
+    color: var(--he-label-color, var(--color-flare-soft));
     white-space: nowrap;
     pointer-events: none;
+    font-weight: var(--he-label-weight, revert-layer);
   }
 
   /* Each host has to establish a containing block, or the badge escapes to

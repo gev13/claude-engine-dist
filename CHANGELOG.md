@@ -10,6 +10,75 @@ improvements.
 
 ---
 
+## 3.22.0 — 2026-09-30
+
+**A finished design, closer: labels, widths, swipe and the details.** Every
+option is off, or draws what it drew before, until it is set.
+
+- **Labels** (Appearance → Typography): the small text around the content —
+  chips, dates, meta rows, card eyebrows, captions, form labels, the footer's
+  bottom row, rails — has a role of its own (face, size per screen, weight,
+  case, spacing, colour), with **Footer column titles** and **Card links**
+  on top. Section eyebrows follow it until their own role is set.
+- **Container width per screen** (desktop, tablet, phones).
+- **Headings keep typed line breaks**; **Heading → Size → Theme**.
+- **Card grid**: icons at a height of their own (illustrations, GIFs);
+  image cards in each file's own shape, whole, with a height cap.
+- **Swipe on small screens works on every grid** — card grids of every
+  layout, logos, reviews, projects, post lists, gallery, team, stats,
+  pricing — with a card width and optional arrows.
+- **Logo wall**: size per screen, own colours, opacity, hover, per-row counts.
+- **FAQ**: heading above, full-width list, box corners, no open tint.
+- **Carousel counter**: 1 — 3, a thin line or “of”, the text's face.
+- **Media band** height of its own; **hero** title highlight; **review**
+  photo size; **masonry row by row** (reviews, gallery), adding below
+  without moving anything.
+- **A second alternate palette** for pages, posts, projects and sections;
+  a section in an alternate palette now takes its headings, links and
+  buttons with it.
+- **Header**: line under the bar off, glass saturation, the page under the
+  bar, the header button outlined or in its own colours.
+- **Full-screen menu**: link size, weight and spacing; plain + or chevron;
+  its own colour; header button and service lists off; contact details as a
+  bottom-left row. Its words are Site translations.
+- **Footer**: separators between short social labels, and a contact list of
+  icon and name. **Rails**: face, case, size, separator, position, one line
+  up the edge; *From a width of* now works.
+- **Page changes**: the first page can arrive the same way; leave fading up;
+  the reveal footer no longer shows through.
+- **Video**: pause buttons off site-wide or per section; an ambient film
+  without controls shows no button; films load only near the screen; a
+  second format on slides, gallery tiles and section films; ambient films
+  edge to edge with no space; a Choose button for the video field.
+- **Posts**: the eyebrow as a chip or plain; the meta row and excerpt off;
+  a reading time of the post's own; share buttons in a column beside the
+  article; the chosen network order kept; related posts as the archive's
+  cards; the corner card on phones and closed per post; the cover card's
+  overlap. Pictures in a post's text get their width and height (and a
+  srcset with responsive images on).
+- **Blog pages**: search off, one toolbar row, “Browse” off, cover cards;
+  the Categories menu closes on an outside click and on Escape.
+- **Project pages**: the page colour reaches every section, and the page
+  template has a default colour for all projects.
+- **Duplicate** keeps a page's or post's colours, keeps slug and path in
+  step, gives the home page's copy a unique address, and refuses trashed
+  items.
+- **Addresses**: the home canonical ends in / under *always*; `/page/1` and
+  `/page/02` are 301s; `/page/0` is not found; the research page and empty
+  or noindex categories leave the sitemap; a Blog page without a paged list
+  still has page 2.
+- **Imports**: an unknown post layout or term taxonomy is refused, a missing
+  saved block is taken out with a note, a merge replaces a post's links,
+  files skipped as duplicates no longer take a same-named file with them,
+  and imported SVGs, films and pictures get what an upload gives them.
+- **Fixes**: `/api/projects` takes up to 100 (Load more with a larger limit
+  got a 400); the cursor's lag is timed, not per frame; `/preview` and
+  `/install` have a content security policy; JSON-LD pasted as an `@graph`
+  document or with several types is kept; the nginx `/media` block is in the
+  distribution's INSTALL.md.
+
+---
+
 ## 3.21.0 — 2026-09-29
 
 **www to the bare domain.** Settings → *Redirect www to the bare domain*:

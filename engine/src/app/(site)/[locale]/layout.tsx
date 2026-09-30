@@ -26,7 +26,7 @@ import { getIntegrations, getPublicCaptcha } from '@/server/integrations/setting
 import { getSiteSchema } from '@/server/content/structuredData';
 import { CaptchaProvider } from '@/components/site/Captcha';
 import { CustomCursor } from '@/components/site/CustomCursor';
-import { PageTransition, Preloader } from '@/components/site/PageTransition';
+import { FIRST_ENTER_SCRIPT, PageTransition, Preloader } from '@/components/site/PageTransition';
 import { RevealFooter, SideRails } from '@/components/site/SiteMotion';
 import { SiteReveal } from '@/components/blocks/library/RevealObserver';
 import { responsiveImages } from '@/lib/responsive';
@@ -215,7 +215,10 @@ export default async function SiteLayout({
           className="he-site"
           data-header={chrome.header.variant}
           data-header-overlay={chrome.header.overlay ? '' : undefined}
+          data-header-under={chrome.header.under && !chrome.header.overlay ? '' : undefined}
+          data-video-controls={chrome.videoControls ? undefined : 'off'}
           data-transition={chrome.transition.style !== 'off' ? chrome.transition.style : undefined}
+          data-leave={chrome.transition.style !== 'off' && chrome.transition.leave === 'fadeUp' ? 'up' : undefined}
           /* 2.22 — the space the first section leaves for the notch follows the header's own height setting. */
           style={chrome.header.variant === 'notch' ? notchSpace(chrome.header.height) : undefined}
         >
@@ -280,6 +283,8 @@ export default async function SiteLayout({
               note={navigation.footerNote}
               social={navigation.social}
               socialStyle={navigation.socialStyle}
+              socialSeparator={chrome.footer.socialSeparator}
+              contactLinks={chrome.footer.contactLinks}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}
               logo={footerLogo(chrome.footer, theme.brand)}
@@ -296,7 +301,13 @@ export default async function SiteLayout({
           {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
           {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} />}
-          {chrome.transition.style !== 'off' && !chrome.reduceMotion && <PageTransition style={chrome.transition.style} />}
+          {chrome.transition.style !== 'off' && !chrome.reduceMotion && chrome.transition.firstLoad && (
+            // 3.22 — the first page arrives like the others: marked before paint, so it never shows and then vanishes.
+            <script dangerouslySetInnerHTML={{ __html: FIRST_ENTER_SCRIPT }} />
+          )}
+          {chrome.transition.style !== 'off' && !chrome.reduceMotion && (
+            <PageTransition style={chrome.transition.style} leave={chrome.transition.leave} firstLoad={chrome.transition.firstLoad} />
+          )}
           {chrome.transition.preloader && !chrome.reduceMotion && (
             <Preloader>
               {theme.brand?.logoUrl ? (

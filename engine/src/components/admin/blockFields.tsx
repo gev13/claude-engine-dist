@@ -263,6 +263,21 @@ function Text({
   placeholder?: string;
   hint?: string;
 }) {
+  // 3.22 — a heading may run over several lines: Enter starts a new one, and the site keeps it.
+  if (k === 'title') {
+    const value = str(props, k);
+    return (
+      <Field label={label} hint={hint ?? 'Enter starts a new line'}>
+        <Textarea
+          rows={Math.min(4, Math.max(1, value.split('\n').length))}
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => set({ ...props, [k]: e.target.value })}
+          className="min-h-0 resize-y"
+        />
+      </Field>
+    );
+  }
   return (
     <Field label={label} hint={hint}>
       <Input value={str(props, k)} placeholder={placeholder} onChange={(e) => set({ ...props, [k]: e.target.value })} />
@@ -286,6 +301,53 @@ function Area({
   return (
     <Field label={label}>
       <Textarea rows={rows} value={str(props, k)} onChange={(e) => set({ ...props, [k]: e.target.value })} />
+    </Field>
+  );
+}
+
+/** 3.22 — a length with a few named sizes and a box for any other. */
+function LengthPresetField({
+  label,
+  hint,
+  value,
+  presets,
+  emptyLabel,
+  onChange,
+}: {
+  label: string;
+  hint?: string;
+  value: string | undefined;
+  presets: [string, string][];
+  emptyLabel: string;
+  onChange: (next: string | undefined) => void;
+}) {
+  const known = !value || presets.some(([v]) => v === value);
+  const [custom, setCustom] = useState(!known);
+  return (
+    <Field label={label} hint={hint}>
+      <div className="grid gap-2">
+        <Select
+          value={custom ? 'custom' : (value ?? '')}
+          onChange={(e) => {
+            const next = e.target.value;
+            if (next === 'custom') {
+              setCustom(true);
+              return;
+            }
+            setCustom(false);
+            onChange(next || undefined);
+          }}
+        >
+          <option value="">{emptyLabel}</option>
+          {presets.map(([v, l]) => (
+            <option key={v} value={v}>
+              {l}
+            </option>
+          ))}
+          <option value="custom">Custom…</option>
+        </Select>
+        {custom && <Input value={value ?? ''} placeholder="e.g. 180px" onChange={(e) => onChange(e.target.value.trim() || undefined)} />}
+      </div>
     </Field>
   );
 }
@@ -624,6 +686,12 @@ function LottieField({ props, set }: { props: Props; set: Setter }) {
 /* ── Pattern-library helpers ─────────────────────────────────────────────── */
 
 /** Sets an optional key, or removes it when the value is empty. */
+/** An object without its unset keys, or undefined once nothing is left. */
+function tidyObject(value: Record<string, unknown>): Record<string, unknown> | undefined {
+  const next = Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined));
+  return Object.keys(next).length ? next : undefined;
+}
+
 function withOpt(props: Props, key: string, value: unknown): Props {
   const next = { ...props };
   if (value === undefined || value === '' || value === null) delete next[key];
@@ -632,6 +700,27 @@ function withOpt(props: Props, key: string, value: unknown): Props {
 }
 
 /** An image or video from the media library, with Choose and Clear. */
+/** 3.22 — picks an uploaded film for a field that also takes a YouTube or Vimeo link. */
+function VideoPickButton({ onPick }: { onPick: (url: string) => void }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <>
+      <AdminButton variant="secondary" type="button" onClick={() => setOpen(true)}>
+        Choose
+      </AdminButton>
+      <MediaPicker
+        open={open}
+        accept="video"
+        onClose={() => setOpen(false)}
+        onSelect={(media) => {
+          onPick(media.url);
+          setOpen(false);
+        }}
+      />
+    </>
+  );
+}
+
 function MediaInput({
   label,
   value,
@@ -914,7 +1003,7 @@ type PlanItem = {
   button?: { label: string; href: string };
 };
 type MemberItem = { name: string; role?: string; bio?: string; imageUrl?: string; links?: SocialItem[] };
-type GalleryImage = { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string };
+type GalleryImage = { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string; videoUrlAlt?: string };
 type AccordionPanel = { title: string; label?: string; body?: string; imageUrl?: string; alt?: string; link?: { label: string; href: string } };
 type ProjectItem = {
   title: string;
@@ -938,7 +1027,7 @@ type PriceGroup = { title?: string; note?: string; items: PriceItem[] };
 type HoursDay = { day: Weekday; slots: { open: string; close: string }[] };
 type NoteItem = { label: string; text: string };
 type ReviewItem = { name: string; role?: string; company?: string; meta?: string; avatarUrl?: string; avatarColor?: string; rating?: number; title?: string; text: string; date?: string; source?: string };
-type ReviewCard = { background?: string; radius?: number; border?: boolean; quoteMark?: boolean };
+type ReviewCard = { background?: string; radius?: number; border?: boolean; quoteMark?: boolean; avatarSize?: 'small' | 'medium' | 'large' };
 type ReviewSummary = { rating: number; count?: string; label?: string; link?: { label: string; href: string } };
 type PlaylistItem = { source: string; videoTitle: string; posterUrl?: string; duration?: string };
 type FormFieldRow = {
@@ -1323,6 +1412,7 @@ type SlideItem = {
   body?: string;
   imageUrl?: string;
   videoUrl?: string;
+  videoUrlAlt?: string;
   alt?: string;
   href?: string;
   buttonLabel?: string;
@@ -1386,7 +1476,12 @@ function SlideFields({ item, update, mode }: { item: SlideItem; update: (patch: 
       </Field>
       <MediaInput label="Image" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
       {(mode === 'hero' || mode === 'heroCards' || mode === 'media') && (
-        <MediaInput label="Video" hint="plays muted in a loop; the image becomes its poster" accept="video" value={item.videoUrl} onChange={(videoUrl) => update({ videoUrl })} />
+        <>
+          <MediaInput label="Video" hint="plays muted in a loop; the image becomes its poster" accept="video" value={item.videoUrl} onChange={(videoUrl) => update({ videoUrl })} />
+          {item.videoUrl && (
+            <MediaInput label="The same film in another format (optional)" hint="a webm beside the mp4 — browsers take the one they play best" accept="video" value={item.videoUrlAlt} onChange={(videoUrlAlt) => update({ videoUrlAlt })} />
+          )}
+        </>
       )}
       <Field label="Image description" hint="for screen readers">
         <Input value={item.alt ?? ''} onChange={opt('alt')} />
@@ -1499,6 +1594,39 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
                 ))}
               </Select>
             </Field>
+            {str(props, 'indicator') === 'counter' && (
+              <>
+                <Field label="Counter numbers">
+                  <Select
+                    value={(props.counter as { pad?: boolean } | undefined)?.pad === false ? 'plain' : ''}
+                    onChange={(e) => set(withOpt(props, 'counter', tidyObject({ ...(props.counter as object), pad: e.target.value === 'plain' ? false : undefined })))}
+                  >
+                    <option value="">01, 02… (as drawn)</option>
+                    <option value="plain">1, 2…</option>
+                  </Select>
+                </Field>
+                <Field label="Between the numbers">
+                  <Select
+                    value={(props.counter as { separator?: string } | undefined)?.separator ?? ''}
+                    onChange={(e) => set(withOpt(props, 'counter', tidyObject({ ...(props.counter as object), separator: e.target.value || undefined })))}
+                  >
+                    <option value="">A slash — 1 / 3</option>
+                    <option value="dash">A dash — 1 — 3</option>
+                    <option value="line">A thin line</option>
+                    <option value="of">“of” — 1 of 3 (Site translations)</option>
+                  </Select>
+                </Field>
+                <Field label="Counter face">
+                  <Select
+                    value={(props.counter as { font?: string } | undefined)?.font ?? ''}
+                    onChange={(e) => set(withOpt(props, 'counter', tidyObject({ ...(props.counter as object), font: e.target.value || undefined })))}
+                  >
+                    <option value="">The labels’ (mono)</option>
+                    <option value="body">The text’s</option>
+                  </Select>
+                </Field>
+              </>
+            )}
             <Field label="Arrows">
               <Select value={str(props, 'arrows') || 'corner'} onChange={(e) => set({ ...props, arrows: e.target.value })}>
                 {CAROUSEL_ARROWS.map((k) => (
@@ -2417,6 +2545,17 @@ function TypeFields({
           )}
           <Text label="Eyebrow" k="eyebrow" props={props} set={set} />
           <Text label="Heading" k="title" props={props} set={set} />
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Text label="Words to pick out" k="highlight" props={props} set={set} hint="part of the heading, e.g. its last word or its full stop" />
+            <PropSelect
+              label="Picked out as"
+              k="highlightStyle"
+              fallback="color"
+              options={[['color', 'The accent colour'], ['marker', 'A marker stroke'], ['underline', 'Underlined'], ['circle', 'Circled'], ['curly', 'A curly line'], ['strike', 'Struck through'], ['zigzag', 'A zigzag'], ['double', 'Double underline'], ['outline', 'Outlined letters'], ['gradient', 'Gradient letters']]}
+              props={props}
+              set={set}
+            />
+          </div>
           <Area label="Lede" k="lede" props={props} set={set} rows={2} />
           <Area label="Body" k="body" props={props} set={set} rows={4} />
           <LinksRepeater items={arr<LinkItem>(props, 'links')} onChange={(links) => set({ ...props, links })} />
@@ -2569,7 +2708,7 @@ function TypeFields({
               label="Size"
               k="size"
               fallback="large"
-              options={[['medium', 'Medium'], ['large', 'Large'], ['display', 'Display — very large'], ['lede', 'Statement — large body text']]}
+              options={[['medium', 'Medium'], ['large', 'Large'], ['display', 'Display — very large'], ['lede', 'Statement — large body text'], ['theme', 'Theme — the tag’s size from Appearance → Typography']]}
               props={props}
               set={set}
             />
@@ -3060,7 +3199,11 @@ function TypeFields({
         <>
           {HEAD_FIELDS(props, set)}
           <Field label="Video" hint={where}>
-            <Input value={str(props, 'source')} placeholder="https://www.youtube.com/watch?v=…" spellCheck={false} onChange={(e) => set({ ...props, source: e.target.value.trim() })} />
+            <div className="flex items-center gap-2">
+              <Input value={str(props, 'source')} placeholder="https://www.youtube.com/watch?v=…" spellCheck={false} className="flex-1" onChange={(e) => set({ ...props, source: e.target.value.trim() })} />
+              {/* 3.22 — or an uploaded film, from the library. */}
+              <VideoPickButton onPick={(url) => set({ ...props, source: url })} />
+            </div>
           </Field>
           <Text label="Video title" k="videoTitle" props={props} set={set} hint="names the player and its play button for screen readers" />
           <MediaInput label={ambient ? 'Poster' : 'Preview picture (optional)'} hint={ambient ? 'shown before it plays, and to visitors who asked for less motion' : undefined} value={str(props, 'posterUrl') || undefined} onChange={(posterUrl) => set({ ...props, posterUrl: posterUrl || undefined })} />
@@ -3114,8 +3257,10 @@ function TypeFields({
               <PropCheck label="Rounded corners" k="rounded" props={props} set={set} />
               <label className="flex items-center gap-2 text-[14px] text-ash">
                 <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.controls !== false} onChange={(e) => set({ ...props, controls: e.target.checked })} />
-                A pause button over the film
+                A pause button over the film (off: no button at all — a still film starts on a click)
               </label>
+              <PropCheck label="Edge to edge of the screen" k="bleed" props={props} set={set} />
+              <PropCheck label="No space above and below (films stack edge to edge)" k="flush" props={props} set={set} />
             </>
           ) : (
             <Text label="Text beside the play button" k="buttonLabel" props={props} set={set} placeholder="Watch the film" />
@@ -3158,6 +3303,9 @@ function TypeFields({
           {HEAD_FIELDS(props, set)}
           <div className="grid gap-3 sm:grid-cols-3">
             <PropSelect label="Layout" k="layout" fallback="grid" options={[['grid', 'Even grid'], ['masonry', 'Masonry — natural shapes'], ['metro', 'Metro — mixed tile sizes']]} props={props} set={set} />
+            {str(props, 'layout') === 'masonry' && (
+              <PropSelect label="Masonry order" k="masonryOrder" fallback="columns" options={[['columns', 'Column by column'], ['rows', 'Row by row — more are added below']]} props={props} set={set} />
+            )}
             <Field label="Per row">
               <Select value={String(num(props, 'columns', 3))} onChange={(e) => set({ ...props, columns: Number(e.target.value) })}>
                 {[2, 3, 4, 5].map((n) => (
@@ -3231,6 +3379,9 @@ function TypeFields({
                   value={item.videoUrl}
                   onChange={(videoUrl) => update({ videoUrl })}
                 />
+                {item.videoUrl && (
+                  <MediaInput label="The same film in another format (optional)" hint="a webm beside the mp4" accept="video" value={item.videoUrlAlt} onChange={(videoUrlAlt) => update({ videoUrlAlt })} />
+                )}
               </>
             )}
           />
@@ -3789,6 +3940,9 @@ function TypeFields({
           {HEAD_FIELDS(props, set)}
           <div className="grid gap-3 sm:grid-cols-3">
             <PropSelect label="Layout" k="layout" fallback="grid" options={[['grid', 'Grid'], ['masonry', 'Masonry'], ['list', 'List']]} props={props} set={set} />
+            {str(props, 'layout') === 'masonry' && (
+              <PropSelect label="Masonry order" k="masonryOrder" fallback="columns" options={[['columns', 'Column by column'], ['rows', 'Row by row — more are added below']]} props={props} set={set} />
+            )}
             <Field label="Per row">
               <Select value={String(num(props, 'columns', 3))} onChange={(e) => set({ ...props, columns: Number(e.target.value) })}>
                 <option value="2">Two</option>
@@ -3897,6 +4051,13 @@ function TypeFields({
                   value={(props.card as ReviewCard | undefined)?.radius ?? ''}
                   onChange={(e) => setReviewCard({ radius: e.target.value === '' ? undefined : Math.min(40, Math.max(0, Math.round(Number(e.target.value) || 0))) })}
                 />
+              </Field>
+              <Field label="Photo size">
+                <Select value={(props.card as ReviewCard | undefined)?.avatarSize ?? ''} onChange={(e) => setReviewCard({ avatarSize: (e.target.value || undefined) as ReviewCard['avatarSize'] })}>
+                  <option value="">Small — 40px</option>
+                  <option value="medium">Medium — 52px</option>
+                  <option value="large">Large — 64px</option>
+                </Select>
               </Field>
               <label className="flex items-center gap-2 text-[13px] text-ash">
                 <input type="checkbox" className="h-4 w-4 accent-flare" checked={(props.card as ReviewCard | undefined)?.border !== false} onChange={(e) => setReviewCard({ border: e.target.checked ? undefined : false })} />
@@ -4243,6 +4404,14 @@ function TypeFields({
             <PropSelect label="Darken the media" k="overlay" fallback="medium" options={[...OVERLAY_OPTIONS, ['gradient', 'Darker towards the bottom']]} props={props} set={set} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="Height of its own" hint="e.g. 900px or 80vh — replaces the height above">
+              <Input value={str(props, 'heightCustom')} placeholder="900px" onChange={(e) => set(withOpt(props, 'heightCustom', e.target.value.trim() || undefined))} />
+            </Field>
+            <Field label="— on phones" hint="768px and below">
+              <Input value={str(props, 'heightCustomMobile')} placeholder="as above" onChange={(e) => set(withOpt(props, 'heightCustomMobile', e.target.value.trim() || undefined))} />
+            </Field>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
             <PropSelect
               label="Drift with the scroll"
               k="parallax"
@@ -4356,6 +4525,55 @@ function TypeFields({
             </div>
           </div>
           <PropCheck label="Draw the logos inside a rounded card" k="framed" props={props} set={set} />
+          <div className="grid gap-3 sm:grid-cols-3">
+            <Field label="Logo height" hint="the tallest a logo is drawn; empty is 40px">
+              <Input value={str(props, 'logoHeight')} placeholder="40px" onChange={(e) => set(withOpt(props, 'logoHeight', e.target.value.trim() || undefined))} />
+            </Field>
+            <Field label="— on tablets" hint="1024px and below">
+              <Input value={str(props, 'logoHeightTablet')} placeholder="as above" onChange={(e) => set(withOpt(props, 'logoHeightTablet', e.target.value.trim() || undefined))} />
+            </Field>
+            <Field label="— on phones" hint="768px and below">
+              <Input value={str(props, 'logoHeightMobile')} placeholder="as above" onChange={(e) => set(withOpt(props, 'logoHeightMobile', e.target.value.trim() || undefined))} />
+            </Field>
+            <Field label="Logos per row — tablets" hint="empty is up to four">
+              <Select value={props.columnsTablet === undefined ? '' : String(props.columnsTablet)} onChange={(e) => set(withOpt(props, 'columnsTablet', e.target.value ? Number(e.target.value) : undefined))}>
+                <option value="">Automatic</option>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Logos per row — phones" hint="empty is two or three">
+              <Select value={props.columnsMobile === undefined ? '' : String(props.columnsMobile)} onChange={(e) => set(withOpt(props, 'columnsMobile', e.target.value ? Number(e.target.value) : undefined))}>
+                <option value="">Automatic</option>
+                {[1, 2, 3, 4, 5, 6].map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+            <Field label="Opacity at rest" hint="0 to 1; empty is 0.72">
+              <Input
+                type="number"
+                min={0}
+                max={1}
+                step={0.05}
+                value={typeof props.opacity === 'number' ? String(props.opacity) : ''}
+                placeholder="0.72"
+                onChange={(e) => set(withOpt(props, 'opacity', e.target.value === '' ? undefined : Math.min(1, Math.max(0, Number(e.target.value)))))}
+              />
+            </Field>
+            <Field label="Colours">
+              <Select value={props.greyscale === false ? 'colour' : ''} onChange={(e) => set(withOpt(props, 'greyscale', e.target.value === 'colour' ? false : undefined))}>
+                <option value="">Grey until pointed at</option>
+                <option value="colour">The logos’ own colours</option>
+              </Select>
+            </Field>
+            <PropSelect label="On hover" k="logoHover" fallback="reveal" options={[['reveal', 'Show in full colour'], ['none', 'Nothing'], ['grow', 'Grow a little']]} props={props} set={set} />
+          </div>
           <Repeater
             label="Logos"
             items={arr<LogoItem>(props, 'logos')}
@@ -4791,6 +5009,14 @@ function TypeFields({
                 props={props}
                 set={set}
               />
+              <LengthPresetField
+                label="Icon size"
+                hint="the icon’s height; its width follows the file (an illustration or GIF keeps its shape)"
+                value={str(props, 'iconSize') || undefined}
+                presets={[['40px', 'Small — 40px'], ['96px', 'Medium — 96px'], ['200px', 'Large — 200px']]}
+                emptyLabel="As drawn (28px in its box)"
+                onChange={(v) => set(withOpt(props, 'iconSize', v))}
+              />
             </div>
           )}
           {['icons', 'imageCards', 'overlay', 'rows'].includes(variant) && (
@@ -4805,7 +5031,13 @@ function TypeFields({
                 </div>
               )}
               {variant === 'imageCards' && (
-                <PropSelect label="Picture shape" k="mediaRatio" fallback="4/3" options={[['4/3', '4:3'], ['5/4', '5:4'], ['1/1', 'Square'], ['3/2', '3:2'], ['16/9', '16:9']]} props={props} set={set} />
+                <>
+                  <PropSelect label="Picture shape" k="mediaRatio" fallback="4/3" options={[['4/3', '4:3'], ['5/4', '5:4'], ['1/1', 'Square'], ['3/2', '3:2'], ['16/9', '16:9'], ['auto', 'Each file’s own shape']]} props={props} set={set} />
+                  <PropSelect label="Picture in its box" k="mediaFit" fallback="cover" options={[['cover', 'Fills it (cropped)'], ['contain', 'Whole, fitted inside']]} props={props} set={set} />
+                  <Field label="Tallest picture" hint="e.g. 220px; empty has no cap">
+                    <Input value={str(props, 'mediaMaxHeight')} placeholder="220px" onChange={(e) => set(withOpt(props, 'mediaMaxHeight', e.target.value.trim() || undefined))} />
+                  </Field>
+                </>
               )}
             </div>
           )}
@@ -5004,6 +5236,16 @@ function TypeFields({
                 set={set}
               />
               <PropSelect label="Marker" k="icon" fallback="plus" options={[['plus', 'Plus'], ['chevron', 'Chevron'], ['arrow', 'Arrow']]} props={props} set={set} />
+              <PropSelect label="Heading" k="layout" fallback="split" options={[['split', 'Beside the questions'], ['stacked', 'Above, questions full width']]} props={props} set={set} />
+              <Field label="Box corners" hint="filled, outlined and one-panel styles; empty is 14px">
+                <Input value={str(props, 'rowRadius')} placeholder="14px" onChange={(e) => set(withOpt(props, 'rowRadius', e.target.value.trim() || undefined))} />
+              </Field>
+              {str(props, 'style') === 'filled' && (
+                <label className="flex items-center gap-2 self-end pb-3 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.openTint !== false} onChange={(e) => set(withOpt(props, 'openTint', e.target.checked ? undefined : false))} />
+                  The open question takes an accent tint
+                </label>
+              )}
               <Field label="Heading column width" hint="e.g. 460px — empty shares the row">
                 <Input value={str(props, 'headWidth')} placeholder="460px" onChange={(e) => set(withOpt(props, 'headWidth', e.target.value.trim() || undefined))} />
               </Field>

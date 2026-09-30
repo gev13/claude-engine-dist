@@ -161,6 +161,8 @@ const socialLink = z.object({
   href,
   /** Its own short label, for the `short` style ("Be." rather than the default). */
   short: z.string().trim().max(8).optional(),
+  /** 3.22 — its own name where one is written out (the footer's contact list): "Call us", a number. */
+  label: z.string().trim().max(40).optional(),
 });
 export type SocialLink = z.infer<typeof socialLink>;
 

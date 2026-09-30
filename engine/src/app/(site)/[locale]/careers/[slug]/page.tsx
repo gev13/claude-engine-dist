@@ -128,7 +128,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
             </dl>
           )}
 
-          <p className="mt-6 font-mono text-[11px] uppercase tracking-[0.12em] text-smoke">
+          <p className="mt-6 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">
             {job.postedAt && (
               <span title={formatDate(job.postedAt)}>Posted {formatRelative(new Date(job.postedAt), locale)}</span>
             )}

@@ -105,8 +105,21 @@ export function MediaBand(p: P<'mediaBand'>) {
         fade?.accentArrow && 'is-arrow-accent',
         // 3.15 — a phone picture of its own is shown whole there, without the fade.
         p.imageUrlMobile && !p.videoUrl && 'has-mobile-media',
+        // 3.22 — a height of its own.
+        p.heightCustom && 'has-h',
+        p.heightCustomMobile && 'has-h-m',
       )}
-      style={fade ? ({ ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` } as React.CSSProperties) : undefined}
+      style={
+        fade || p.heightCustom || p.heightCustomMobile
+          ? ({
+              ...(fade
+                ? { ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` }
+                : {}),
+              ...(p.heightCustom ? { '--he-band-h': p.heightCustom } : {}),
+              ...(p.heightCustomMobile ? { '--he-band-h-m': p.heightCustomMobile } : {}),
+            } as React.CSSProperties)
+          : undefined
+      }
     >
       {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
       {hasText && (
@@ -155,7 +168,15 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
      grids gets it without four separate props. Unset leaves the layout's own
      spacing alone — they differ on purpose. */
   const gaps = gapTiers(p);
-  const cols = { '--cols': p.columns, ...gaps.style, ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}) } as React.CSSProperties;
+  const cols = {
+    '--cols': p.columns,
+    ...gaps.style,
+    ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}),
+    // 3.22 — pictures that fit rather than fill, a cap on their height, and icons at a height of their own.
+    ...(p.mediaFit === 'contain' ? { '--he-icard-fit': 'contain' } : {}),
+    ...(p.mediaMaxHeight ? { '--he-icard-max': p.mediaMaxHeight } : {}),
+    ...(p.iconSize ? { '--he-feat-size': p.iconSize } : {}),
+  } as React.CSSProperties;
 
   /* The mosaic is the tile grid with two tile sizes, not a second component:
      same markup, same fields, same editor — the difference is which cells the
@@ -166,7 +187,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-tiles', toneClass(p.tone))}>
         {head && <div className="shell he-tiles__head">{head}</div>}
         <div
-          className={cn('he-tiles__grid', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many', gaps.className)}
+          className={cn('he-tiles__grid he-swipe-track', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many', gaps.className)}
           style={cols}
         >
           {p.cards.map((c, i) => {
@@ -205,7 +226,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
         <div className="shell">
           {head}
           <ul
-            className={cn('he-mrows', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className)}
+            className={cn('he-mrows he-swipe-track', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className)}
             style={
               p.gap || p.gapTablet || p.gapMobile || p.mediaWidth || p.mediaRatioMobile
                 ? ({
@@ -252,7 +273,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-lsec', toneClass(p.tone))}>
         <div className="shell">
           {head}
-          <ul className={cn('he-rows', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`, gaps.className)} style={cols}>
+          <ul className={cn('he-rows he-swipe-track', head && 'has-head', p.shadow && 'has-shadow', `is-hover-${p.hover}`, gaps.className)} style={cols}>
             {p.cards.map((c, i) => (
               <li key={c.title + i} className={cn('he-rows__item', itemClass(p.blockId, i, c.style))}>
                 {c.imageUrl && (
@@ -279,7 +300,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 )}
                 {c.href && (
                   <Link href={c.href} className="he-cbtn is-outline is-small he-rows__btn">
-                    {c.buttonLabel || 'Learn more'}
+                    {c.buttonLabel || <MessageText k="block.readMore" />}
                     <span className="sr-only">: {c.title}</span>
                   </Link>
                 )}
@@ -298,12 +319,14 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     p.shadow && 'has-shadow',
     p.offset && !icons && `is-offset cols-${p.columns}`,
     icons && `is-icon-${p.iconStyle} is-pos-${p.iconPosition}`,
+    icons && p.iconSize && 'has-icon-size',
+    !icons && p.mediaRatio === 'auto' && 'is-media-auto',
   );
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
       <div className="shell">
         {head}
-        <ul className={cn('he-fgrid', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className)} style={cols}>
+        <ul className={cn('he-fgrid he-swipe-track', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className)} style={cols}>
           {p.cards.map((c, i) => {
             // 3.6 — the words after the title, in their own colour.
             const after = c.titleAfter && (
@@ -404,7 +427,7 @@ export function StatsFigures(p: P<'stats'>) {
             <MediaFill imageUrl={p.imageUrl} alt={p.alt} className="he-fill" />
           </div>
         )}
-        <div className="he-figs__grid" style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>
+        <div className="he-figs__grid he-swipe-track" style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>
           {p.items.map((s, i) => (
             <div key={s.label + i} className="he-figs__item">
               <div className="he-figs__value">
@@ -428,7 +451,7 @@ function StatsCounters(p: P<'stats'>) {
     <section className={cn('he-lsec he-counters', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers', p.dividers && p.dividersMobile === 'cross' && 'is-cross-sm')}>
       <div className="shell">
         {(p.title || p.eyebrow || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />}
-        <ul className={cn('he-counters__grid', `is-icon-${p.iconPosition}`)} style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>
+        <ul className={cn('he-counters__grid he-swipe-track', `is-icon-${p.iconPosition}`)} style={{ '--n': Math.min(Math.max(p.items.length, 1), 4) } as React.CSSProperties}>
           {p.items.map((s, i) => (
             <li key={s.label + i} className="he-counter">
               {s.iconUrl && (
@@ -457,16 +480,22 @@ function StatsCounters(p: P<'stats'>) {
 export function LogoWall(p: P<'logoWall'>) {
   const cols = {
     '--cols': p.columns,
-    '--cols-t': Math.min(p.columns, 4),
-    '--cols-m': p.columns >= 5 ? 3 : 2,
+    '--cols-t': p.columnsTablet ?? Math.min(p.columns, 4),
+    '--cols-m': p.columnsMobile ?? (p.columns >= 5 ? 3 : 2),
+    // 3.22 — the logos' size, colour and rest opacity; each unset keeps the drawn value.
+    ...(p.logoHeight ? { '--he-logo-h': p.logoHeight } : {}),
+    ...(p.logoHeightTablet ? { '--he-logo-h-t': p.logoHeightTablet } : {}),
+    ...(p.logoHeightMobile ? { '--he-logo-h-m': p.logoHeightMobile } : {}),
+    ...(p.greyscale === false ? { '--he-logo-f': 'none' } : {}),
+    ...(typeof p.opacity === 'number' ? { '--he-logo-o': p.opacity } : {}),
   } as React.CSSProperties;
 
   return (
-    <section className={cn('he-lsec he-logos', toneClass(p.tone), `is-${p.align}`)}>
+    <section className={cn('he-lsec he-logos', toneClass(p.tone), `is-${p.align}`, p.logoHover && p.logoHover !== 'reveal' && `is-hover-${p.logoHover}`)}>
       <div className="shell">
         <div className={cn('he-logos__wrap', p.framed && 'is-framed', `is-style-${p.style}`, p.captions && 'has-captions')}>
           <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.align} />
-          <ul className="he-logos__grid" style={cols}>
+          <ul className="he-logos__grid he-swipe-track" style={cols}>
             {p.logos.map((logo, i) => {
               const mark = logo.imageUrl ? (
                 <>

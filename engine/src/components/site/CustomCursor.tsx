@@ -45,11 +45,17 @@ export function CustomCursor({ style, mediaLabel }: { style: Style; mediaLabel?:
     let ry = y;
     let frame = 0;
     let visible = false;
+    let last = performance.now();
 
-    const loop = () => {
-      // The ring closes 18% of the gap each frame — a soft lag behind the dot.
-      rx += (x - rx) * 0.18;
-      ry += (y - ry) * 0.18;
+    const loop = (now: number = performance.now()) => {
+      /* The ring closes 18% of the gap each 60th of a second — a soft lag
+         behind the dot. (3.22) Measured in time, not frames: per frame, it ran
+         twice as fast on a 120 Hz screen. */
+      const dt = Math.min(100, Math.max(0, now - last));
+      last = now;
+      const k = 1 - Math.pow(1 - 0.18, dt / (1000 / 60));
+      rx += (x - rx) * k;
+      ry += (y - ry) * k;
       if (dot.current) dot.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
       if (ring.current) ring.current.style.transform = `translate3d(${rx}px, ${ry}px, 0)`;
       frame = requestAnimationFrame(loop);

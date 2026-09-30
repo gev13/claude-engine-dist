@@ -1,10 +1,10 @@
 import 'server-only';
-import { created, handle, notFound } from './respond';
+import { conflict, created, handle, notFound } from './respond';
 import { requireUser } from './guard';
 import { audit } from '@/server/auth/audit';
 import { clientIp } from '@/server/auth/rateLimit';
 import type { Permission } from '@/server/auth/rbac';
-import { duplicatePage, duplicatePost, duplicateProject, duplicateSavedBlock } from '@/server/content/duplicate';
+import { TRASHED, duplicatePage, duplicatePost, duplicateProject, duplicateSavedBlock } from '@/server/content/duplicate';
 
 type Kind = 'page' | 'post' | 'project' | 'savedBlock';
 
@@ -30,6 +30,8 @@ export function duplicateHandler(kind: Kind) {
       if (!/^[0-9a-f-]{36}$/i.test(id)) return notFound('That does not exist.');
       const result = await rule.run(id, guard.user.id);
       if (!result) return notFound('That does not exist.');
+      // 3.22 — a copy of something in the trash would be a live draft of deleted content.
+      if (result === TRASHED) return conflict('That is in the trash. Restore it first, then duplicate it.');
       const copy = result.copy as { id: string };
       await audit({
         actorId: guard.user.id,

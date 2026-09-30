@@ -4,6 +4,7 @@ import { useId } from 'react';
 import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
 import type { Chrome } from '@/lib/chrome';
+import { SOCIAL_LABELS, SOCIAL_NETWORKS } from '@/lib/navigation';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Appearance: the 2.19 header, menu, footer and site-wide motion options
@@ -125,11 +126,50 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
           />
         </div>
         {header?.background === 'glass' && (
-          <div className="grid gap-4 sm:grid-cols-2">
+          <div className="grid gap-4 sm:grid-cols-3">
             <NumberField label="Blur" hint="px" min={0} max={30} placeholder="14" value={header?.glassBlur} onChange={set(at('glassBlur'))} />
             <NumberField label="Tint" hint="% of the page colour laid over the blur" min={0} max={100} placeholder="60" value={header?.glassOpacity} onChange={set(at('glassOpacity'))} />
+            <NumberField label="Saturation" hint="% — 100 keeps the page’s own colours" min={0} max={300} placeholder="120" value={header?.glassSaturate} onChange={set(at('glassSaturate'))} />
           </div>
         )}
+        {/* 3.22 */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Check label="A thin line under the bar" value={header?.border} fallback onChange={set(at('border'))} />
+          <Check label="The page starts at the very top, under the bar (on every page)" value={header?.under} onChange={set(at('under'))} />
+        </div>
+        <div>
+          <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">The header button</p>
+          <div className="grid gap-4 sm:grid-cols-4">
+            <ChoiceField
+              label="Style"
+              value={header?.ctaStyle}
+              inherited="primary"
+              options={[
+                { value: 'primary', label: 'The main button' },
+                { value: 'outline', label: 'The outline button' },
+              ]}
+              onChange={set(at('ctaStyle'))}
+            />
+            {(
+              [
+                ['text', 'Text'],
+                ['background', 'Fill'],
+                ['border', 'Edge'],
+                ['hoverText', 'Text, pointed at'],
+                ['hoverBackground', 'Fill, pointed at'],
+                ['hoverBorder', 'Edge, pointed at'],
+              ] as const
+            ).map(([key, label]) => (
+              <ColorField
+                key={key}
+                label={label}
+                placeholder="the button style’s"
+                value={header?.ctaColors?.[key]}
+                onChange={(value) => set(['chrome', 'header', 'ctaColors', key])(value || undefined)}
+              />
+            ))}
+          </div>
+        </div>
         {header?.variant === 'notch' && (
           <div className="grid gap-4 sm:grid-cols-2">
             <NumberField label="Curve of the notch" hint="px" min={0} max={64} placeholder="32" value={header?.notchRadius} onChange={set(at('notchRadius'))} />
@@ -208,7 +248,7 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
             options={[
               { value: 'none', label: 'At once' },
               { value: 'fade', label: 'Fading in' },
-              { value: 'slide', label: 'Sliding down' },
+              { value: 'slide', label: 'Sliding in from the side' },
               { value: 'stagger', label: 'One link after another' },
             ]}
             onChange={set(at('entrance'))}
@@ -216,10 +256,55 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
         </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <NumberField label="Solid" hint="% — lower lets the page show through" min={30} max={100} placeholder="100" value={menu?.opacity} onChange={set(at('opacity'))} />
-          <TextField label="Contact heading" hint="the creative full-screen menu’s contact column" value={menu?.contactTitle} maxLength={60} placeholder="Get in touch" onChange={set(at('contactTitle'))} />
-          <TextField label="Phone" hint="in that column, beside the email" value={menu?.phone} maxLength={40} placeholder="+44 20 0000 0000" onChange={set(at('phone'))} />
+          <TextField label="Contact heading" hint="over the contact details; empty is Site translations’ “Get in touch”" value={menu?.contactTitle} maxLength={60} placeholder="Get in touch" onChange={set(at('contactTitle'))} />
+          <TextField label="Phone" hint="with the contact details" value={menu?.phone} maxLength={40} placeholder="+44 20 0000 0000" onChange={set(at('phone'))} />
         </div>
         <Check label="Show a link’s picture beside the list while it is pointed at" value={menu?.hoverImages} onChange={set(at('hoverImages'))} />
+        {/* 3.22 */}
+        <div className="grid gap-4 sm:grid-cols-4">
+          <TextField label="Link size" hint="e.g. 40px — overrides the size above" value={menu?.itemSize} maxLength={40} placeholder="as above" onChange={set(at('itemSize'))} />
+          <TextField label="Link size on phones" hint="768px and below" value={menu?.itemSizeMobile} maxLength={40} placeholder="as above" onChange={set(at('itemSizeMobile'))} />
+          <ChoiceField
+            label="Link weight"
+            value={menu?.itemWeight}
+            options={['300', '400', '500', '600', '700', '800'].map((value) => ({ value, label: value }))}
+            onChange={set(at('itemWeight'))}
+          />
+          <TextField label="Letter spacing" hint="e.g. 0 or -0.02em" value={menu?.itemTracking} maxLength={20} placeholder="as drawn" onChange={set(at('itemTracking'))} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <ChoiceField
+            label="Opens a link’s sub-items"
+            value={menu?.expandIcon}
+            inherited="circle"
+            options={[
+              { value: 'circle', label: 'A + in a circle' },
+              { value: 'plus', label: 'A plain +' },
+              { value: 'chevron', label: 'A chevron' },
+            ]}
+            onChange={set(at('expandIcon'))}
+          />
+          <ColorField label="Background" placeholder="the page’s" value={menu?.background} onChange={(value) => set(at('background'))(value || undefined)} />
+          <ChoiceField
+            label="Contact details"
+            value={menu?.contactPosition}
+            inherited="column"
+            options={[
+              { value: 'column', label: 'A column (the menu with contact details)' },
+              { value: 'row', label: 'A row at the bottom left' },
+              { value: 'off', label: 'None' },
+            ]}
+            onChange={set(at('contactPosition'))}
+          />
+        </div>
+        {menu?.contactPosition !== 'off' && (
+          <div className="flex flex-wrap gap-x-6 gap-y-2">
+            <Check label="The email (Settings)" value={menu?.contactEmail} fallback onChange={set(at('contactEmail'))} />
+            <Check label="The address (Menus)" value={menu?.contactAddress} fallback onChange={set(at('contactAddress'))} />
+            <Check label="The social links" value={menu?.contactSocial} fallback onChange={set(at('contactSocial'))} />
+          </div>
+        )}
+        <Check label="List the service pages under the links" value={menu?.services} fallback onChange={set(at('services'))} />
         <p className="m-0 text-[12px] text-smoke">
           For the full-screen menus. The pictures are set on each link in Menus; links without one show none. Arriving
           effects are skipped for anyone who asks for less motion.
@@ -284,6 +369,42 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
         <Check label="Show the contact email" value={footer?.email !== false} onChange={(v) => set(['chrome', 'footer', 'email'])(v ? undefined : false)} />
         <Check label="The copyright line as written, not in capitals" value={footer?.copyrightCase === 'asWritten'} onChange={(v) => set(['chrome', 'footer', 'copyrightCase'])(v ? 'asWritten' : undefined)} />
       </div>
+      {/* 3.22 */}
+      <div className="mt-4 grid gap-4 sm:grid-cols-2">
+        <ChoiceField
+          label="Between the social links"
+          hint="when Menus shows them as names or short labels"
+          value={footer?.socialSeparator}
+          inherited="none"
+          options={[
+            { value: 'none', label: 'Nothing' },
+            { value: 'slash', label: 'A slash — Fb. / Ig.' },
+            { value: 'dot', label: 'A dot' },
+          ]}
+          onChange={set(['chrome', 'footer', 'socialSeparator'])}
+        />
+        <Field label="Listed apart, as icon and name" hint="these links go under the others, one a line — a phone, messengers">
+          <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+            {SOCIAL_NETWORKS.map((network) => {
+              const list = footer?.contactLinks ?? [];
+              return (
+                <label key={network} className="flex items-center gap-1.5 text-[13px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={list.includes(network)}
+                    onChange={(e) => {
+                      const next = e.target.checked ? [...list, network] : list.filter((n) => n !== network);
+                      set(['chrome', 'footer', 'contactLinks'])(next.length ? next : undefined);
+                    }}
+                  />
+                  {SOCIAL_LABELS[network]}
+                </label>
+              );
+            })}
+          </div>
+        </Field>
+      </div>
     </Panel>
   );
 }
@@ -304,6 +425,13 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
       <Panel title="For everyone">
         <div className="space-y-3">
           <Check label="Reduce motion for everyone" value={chrome?.reduceMotion} onChange={set(['chrome', 'reduceMotion'])} />
+          {/* 3.22 */}
+          <Check
+            label="Pause buttons over background and ambient films (off: films are moving pictures only — WCAG 2.2.2 asks for a way to stop them)"
+            value={chrome?.videoControls}
+            fallback
+            onChange={set(['chrome', 'videoControls'])}
+          />
           <p className="m-0 text-[12px] text-smoke">
             Stops every animation on the site for every visitor — sliders, reveals, the pointer, page changes, the
             preloader and card tilt — as if each had asked for less motion. Visitors who ask for less motion get it
@@ -352,6 +480,18 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
             onChange={set(['chrome', 'transition', 'style'])}
           />
           <Check label="Show the logo while the first page of a visit loads" value={chrome?.transition?.preloader} onChange={set(['chrome', 'transition', 'preloader'])} />
+          {/* 3.22 */}
+          <Check label="The first page of a visit arrives the same way" value={chrome?.transition?.firstLoad} onChange={set(['chrome', 'transition', 'firstLoad'])} />
+          <ChoiceField
+            label="A page leaves"
+            value={chrome?.transition?.leave}
+            inherited="fade"
+            options={[
+              { value: 'fade', label: 'Fading out' },
+              { value: 'fadeUp', label: 'Fading and moving up, as long as it arrives' },
+            ]}
+            onChange={set(['chrome', 'transition', 'leave'])}
+          />
           <p className="m-0 text-[12px] text-smoke">
             Links to other sites, new tabs, downloads and the back button are left alone. The logo shows for a second and a
             half at most, once a visit.
@@ -400,6 +540,14 @@ export function MotionExtrasPanel({ chrome, set }: Props) {
                 />
                 <TextField label="Their label" value={rails?.socialLabel} maxLength={30} placeholder="Follow us —" onChange={set(railsAt('socialLabel'))} />
                 <NumberField label="From a width of" hint="px" min={768} max={2560} placeholder="1181" value={rails?.minWidth} onChange={set(railsAt('minWidth'))} />
+                {/* 3.22 — how they read. */}
+                <ChoiceField label="Face" value={rails?.font} inherited="label" options={[{ value: 'label', label: 'The labels’ (Typography → Labels)' }, { value: 'body', label: 'The text’s' }, { value: 'display', label: 'The headings’' }]} onChange={set(railsAt('font'))} />
+                <ChoiceField label="Letters" value={rails?.case} inherited="label" options={[{ value: 'label', label: 'As the labels' }, { value: 'upper', label: 'Capitals' }, { value: 'none', label: 'As written' }]} onChange={set(railsAt('case'))} />
+                <NumberField label="Size" hint="px" min={8} max={24} placeholder="11" value={rails?.size} onChange={set(railsAt('size'))} />
+                <ChoiceField label="Weight" value={rails?.weight} options={['400', '500', '600', '700'].map((value) => ({ value, label: value }))} onChange={set(railsAt('weight'))} />
+                <ChoiceField label="Between the links" value={rails?.separator} inherited="none" options={[{ value: 'none', label: 'Nothing' }, { value: 'slash', label: 'A slash — Lk. / Be.' }, { value: 'dot', label: 'A dot' }]} onChange={set(railsAt('separator'))} />
+                <ChoiceField label="Where" value={rails?.position} inherited="center" options={[{ value: 'center', label: 'Middle of the screen' }, { value: 'bottom', label: 'Bottom of the screen' }]} onChange={set(railsAt('position'))} />
+                <ChoiceField label="Written" value={rails?.orientation} inherited="stacked" options={[{ value: 'stacked', label: 'Each part stacked' }, { value: 'row', label: 'One line up the edge' }]} onChange={set(railsAt('orientation'))} />
               </div>
               <div className="grid gap-2 sm:grid-cols-2">
                 <Check label="Only once the reader is a screen down" value={rails?.afterFirstScreen} onChange={set(railsAt('afterFirstScreen'))} />

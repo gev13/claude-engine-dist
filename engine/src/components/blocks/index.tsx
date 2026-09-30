@@ -14,6 +14,7 @@ import { BlockHead, BlockTitle, Ordinal, Tick } from './parts';
 import { ConvergeFigure } from './ConvergeFigure';
 import { LayersFigure } from './LayersFigure';
 import { LibraryHero } from './library/heroes';
+import { withHighlight } from './library/highlight';
 import { CardGridVariant, StatsFigures } from './library/content';
 import { MediaAccordion } from './library/MediaAccordion';
 import { SiteImg } from '@/components/ui/SiteImg';
@@ -37,11 +38,11 @@ export function HeroBlock(p: P<'hero'>) {
       >
         <div className="animate-rise">
           {p.kicker && (
-            <div className="he-hero__kicker mb-4 font-mono text-[11px] uppercase tracking-[0.14em] text-flare">{p.kicker}</div>
+            <div className="he-hero__kicker mb-4 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-flare))] he-lbl">{p.kicker}</div>
           )}
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
           <BlockTitle as={p.titleAs ?? 'h1'} className="mb-5 max-w-[15ch]">
-            {p.title}
+            {withHighlight(p.title, p.highlight, p.highlightStyle ?? 'color')}
           </BlockTitle>
           {p.lede && <Lede className="mb-5 max-w-[34ch] text-bone">{p.lede}</Lede>}
           {p.body && <p className="mb-8 max-w-[58ch] text-[length:var(--he-block-lead,17px)] text-ash">{p.body}</p>}
@@ -79,7 +80,7 @@ export function StatsBlock(p: P<'stats'>) {
       {p.title || p.intro ? (
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-8" />
       ) : (
-        p.eyebrow && <div className="mb-8 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{p.eyebrow}</div>
+        p.eyebrow && <div className="mb-8 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{p.eyebrow}</div>
       )}
       <div className="he-stats grid grid-cols-1 gap-0.5 sm:grid-cols-2 lg:grid-cols-4">
         {p.items.map((s) => (
@@ -87,7 +88,7 @@ export function StatsBlock(p: P<'stats'>) {
         ))}
       </div>
       {p.footnote && (
-        <div className="mt-[18px] font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{p.footnote}</div>
+        <div className="mt-[18px] text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{p.footnote}</div>
       )}
     </Section>
   );
@@ -186,7 +187,7 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
       {spans ? (
         // 2.22 — rows of mixed widths, in the pattern given ("2-3": two, then three…).
-        <div className={cn('he-bento', gapTiers(p).className)} style={gapTiers(p).style}>
+        <div className={cn('he-bento he-swipe-track', gapTiers(p).className)} style={gapTiers(p).style}>
           {cards.map((card, i) => (
             <div key={i} className="he-bento__cell" style={{ '--span': spans[i] } as React.CSSProperties}>
               {card}
@@ -298,7 +299,7 @@ export function CheckListsBlock(p: P<'checkLists'>) {
             style={list.accent ? ({ '--he-ilist-accent': list.accent } as React.CSSProperties) : undefined}
           >
             {list.title && (
-              <h3 className="he-ilist__title mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-smoke">{list.title}</h3>
+              <h3 className="he-ilist__title mb-5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{list.title}</h3>
             )}
             <ul className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}>
               {list.items.map((raw, i) => {
@@ -345,6 +346,28 @@ export function FaqBlock(p: P<'faq'>) {
     );
   }
 
+  const list = (
+    <Accordion
+      items={p.items}
+      look={p.style}
+      icon={p.icon}
+      className={cn(p.insetDividers && 'is-inset-lines', p.openTint === false && 'no-tint') || undefined}
+      style={p.rowRadius ? ({ '--he-faq-radius': p.rowRadius } as React.CSSProperties) : undefined}
+    />
+  );
+
+  // 3.22 — the heading above, the questions the full width under it.
+  if (p.layout === 'stacked') {
+    return (
+      <Section tone={p.tone ?? 'base'} size="lg" id="faq">
+        <div className="he-faq-stacked grid grid-cols-1 gap-8 lg:gap-10">
+          {(p.title || p.eyebrow) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} />}
+          {list}
+        </div>
+      </Section>
+    );
+  }
+
   return (
     <Section tone={p.tone ?? 'base'} size="lg" id="faq">
       <div
@@ -352,7 +375,7 @@ export function FaqBlock(p: P<'faq'>) {
         style={p.headWidth ? ({ '--he-faq-head': p.headWidth } as React.CSSProperties) : undefined}
       >
         <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} />
-        <Accordion items={p.items} look={p.style} icon={p.icon} className={p.insetDividers ? 'is-inset-lines' : undefined} />
+        {list}
       </div>
     </Section>
   );
@@ -430,7 +453,7 @@ export function CtaBlock(p: P<'cta'>) {
     <section className="bg-flare text-ink">
       <div className="shell py-14 md:py-20">
         {p.eyebrow && (
-          <div className="mb-5 font-mono text-[11px] uppercase tracking-[0.14em] text-ink/70">{p.eyebrow}</div>
+          <div className="mb-5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-ink/70 he-lbl">{p.eyebrow}</div>
         )}
         <BlockTitle as={p.titleAs} className="max-w-[var(--he-title-measure,22ch)] text-ink">
           {p.title}
@@ -456,7 +479,7 @@ export function PagerBlock(p: P<'pager'>) {
     <Section size="sm">
       <Link href={p.href} className="group flex flex-wrap items-center justify-between gap-4">
         <span>
-          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{p.label}</span>
+          <span className="text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{p.label}</span>
           <span className="mt-2 block font-display text-[clamp(20px,3vw,27px)] font-extrabold tracking-[-0.03em] text-bone transition-colors group-hover:text-flare-soft">
             {p.title}
           </span>
@@ -494,7 +517,7 @@ export function ImageBlock(p: P<'image'>) {
               </figcaption>
             )
           : p.caption && (
-              <figcaption className="mt-2.5 font-mono text-[11px] uppercase tracking-[0.12em] text-smoke">
+              <figcaption className="mt-2.5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">
                 {p.caption}
               </figcaption>
             )}
@@ -519,7 +542,7 @@ export function TableBlock(p: P<'table'>) {
               {p.head.map((h) => (
                 <th
                   key={h}
-                  className="border border-hairline bg-surface px-3.5 py-2.5 text-left font-mono text-[11px] uppercase tracking-[0.1em] text-bone"
+                  className="border border-hairline bg-surface px-3.5 py-2.5 text-left text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.1em)] text-[color:var(--he-label-color,var(--color-bone))] he-lbl"
                 >
                   {h}
                 </th>
@@ -555,7 +578,7 @@ export function InfoPanelBlock(p: P<'infoPanel'>) {
       <dl className="m-0 grid grid-cols-1 gap-0.5 sm:grid-cols-2 lg:grid-cols-3">
         {p.items.map((item) => (
           <div key={item.label} className="bg-ink px-6 py-6">
-            <dt className="font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{item.label}</dt>
+            <dt className="text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{item.label}</dt>
             <dd className="m-0 mt-2 text-[length:var(--he-block-text,16px)] text-bone">{item.value}</dd>
           </div>
         ))}

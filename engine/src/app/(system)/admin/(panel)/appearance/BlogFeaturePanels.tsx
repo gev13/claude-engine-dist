@@ -38,6 +38,19 @@ function Check({ label, checked, onChange }: { label: string; checked: boolean; 
   );
 }
 
+/** An object with its unset keys dropped, or undefined when nothing is left. */
+function tidy<T extends Record<string, unknown>>(value: T): T | undefined {
+  const next = Object.fromEntries(Object.entries(value).filter(([, v]) => v !== undefined)) as T;
+  return Object.keys(next).length ? next : undefined;
+}
+
+function move<T>(list: T[], from: number, to: number): T[] {
+  const next = [...list];
+  const [item] = next.splice(from, 1);
+  next.splice(to, 0, item!);
+  return next;
+}
+
 export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefined; set: Setter }) {
   const share = blog?.share;
   const networks = share?.networks ?? (['facebook', 'x', 'pinterest', 'linkedin'] as ShareNetwork[]);
@@ -47,7 +60,42 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
         <Field label="Above the title" hint="the line with the category and date; {category}, {date} and {minutes} are filled in">
           <Input value={blog?.eyebrow ?? ''} placeholder="{category} — {date}" maxLength={80} onChange={(e) => set(['blog', 'eyebrow'])(e.target.value || undefined)} />
         </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Choice
+            label="That line’s style"
+            value={blog?.eyebrowStyle}
+            options={[
+              ['rule', 'After a short rule'],
+              ['chip', 'The category as a chip (linking to it), the rest beside it'],
+              ['plain', 'Text alone'],
+            ]}
+            onChange={set(['blog', 'eyebrowStyle'])}
+          />
+          <Field label="Cover, then a title card: overlap" hint="how far the card rides up over the cover; 0 starts it right under; empty is 48–120px">
+            <Input value={blog?.coverOverlap ?? ''} placeholder="e.g. 80px or 0" maxLength={40} onChange={(e) => set(['blog', 'coverOverlap'])(e.target.value.trim() || undefined)} />
+          </Field>
+        </div>
         <Check label="“Back to the blog” above the title" checked={blog?.backLink === true} onChange={(v) => set(['blog', 'backLink'])(v || undefined)} />
+        <Check label="The excerpt under the title" checked={blog?.excerpt !== false} onChange={(v) => set(['blog', 'excerpt'])(v ? undefined : false)} />
+        <div>
+          <Check
+            label="A row under the title — author, reading time, categories"
+            checked={blog?.meta?.off !== true}
+            onChange={(v) => set(['blog', 'meta'])(tidy({ ...blog?.meta, off: v ? undefined : true }))}
+          />
+          {blog?.meta?.off !== true && (
+            <div className="mt-2 flex flex-wrap gap-4 pl-6">
+              {(['author', 'readingTime', 'categories'] as const).map((part) => (
+                <Check
+                  key={part}
+                  label={{ author: 'The author', readingTime: 'The reading time', categories: 'The categories' }[part]}
+                  checked={blog?.meta?.[part] !== false}
+                  onChange={(v) => set(['blog', 'meta'])(tidy({ ...blog?.meta, [part]: v ? undefined : false }))}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <Choice
@@ -58,6 +106,7 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
               ['top', 'Above the article'],
               ['bottom', 'Below the article'],
               ['side', 'A bar down the left side (wide screens)'],
+              ['beside', 'A column beside the article that follows the reader'],
             ]}
             onChange={(position) => set(['blog', 'share'])(position ? { ...share, position } : undefined)}
           />
@@ -75,7 +124,21 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
           />
         </div>
         {share?.position && share.position !== 'off' && (
-          <Field label="Networks">
+          <Field label="Networks" hint="in the order they are shown; a new one is added at the end">
+            {/* 3.22 — the order is the one chosen, not the list's own. */}
+            <ol className="m-0 mb-3 flex list-none flex-wrap gap-2 p-0">
+              {networks.map((network, i) => (
+                <li key={network} className="flex items-center gap-1 border-2 border-hairline px-2 py-1 text-[13px] text-bone">
+                  {SHARE_LABELS[network]}
+                  <button type="button" className="px-1 text-smoke hover:text-bone disabled:opacity-30" aria-label={`Move ${SHARE_LABELS[network]} earlier`} disabled={i === 0} onClick={() => set(['blog', 'share'])({ ...share, networks: move(networks, i, i - 1) })}>
+                    ‹
+                  </button>
+                  <button type="button" className="px-1 text-smoke hover:text-bone disabled:opacity-30" aria-label={`Move ${SHARE_LABELS[network]} later`} disabled={i === networks.length - 1} onClick={() => set(['blog', 'share'])({ ...share, networks: move(networks, i, i + 1) })}>
+                    ›
+                  </button>
+                </li>
+              ))}
+            </ol>
             <div className="flex flex-wrap gap-4">
               {SHARE_NETWORKS.filter((n) => n !== 'native').map((network) => (
                 <label key={network} className="flex items-center gap-2 text-[13px] text-ash">
@@ -85,7 +148,7 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
                     checked={networks.includes(network)}
                     onChange={(e) => {
                       const next = e.target.checked ? [...networks, network] : networks.filter((n) => n !== network);
-                      if (next.length) set(['blog', 'share'])({ ...share, networks: SHARE_NETWORKS.filter((n) => next.includes(n)) });
+                      if (next.length) set(['blog', 'share'])({ ...share, networks: next });
                     }}
                   />
                   {SHARE_LABELS[network]}
@@ -114,6 +177,16 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
             ]}
             onChange={(value) => set(['blog', 'prevNext'])(value)}
           />
+          {blog?.prevNext === 'floating' && (
+            <div className="flex flex-col justify-end gap-2 sm:col-span-2">
+              <Check label="The corner card on phones too" checked={blog?.upNext?.phones === true} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, phones: v || undefined }))} />
+              <Check
+                label="Closing it hides it on this post only (not for the rest of the visit)"
+                checked={blog?.upNext?.dismiss === 'post'}
+                onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, dismiss: v ? 'post' : undefined }))}
+              />
+            </div>
+          )}
           <Choice
             label="Keep reading"
             value={blog?.related?.source}
@@ -143,6 +216,15 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
             <Field label="Heading">
               <Input value={blog?.related?.title ?? ''} placeholder="Keep reading" maxLength={80} onChange={(e) => set(['blog', 'related'])({ source: 'kind', count: 3, layout: 'grid', ...blog?.related, title: e.target.value || undefined })} />
             </Field>
+            {(blog?.related?.layout ?? 'grid') === 'grid' && (
+              <Choice
+                label="Cards"
+                hint="the archive’s cards follow Blog navigation and cards below"
+                value={blog?.related?.cards}
+                options={[['text', 'Text cards (as before)'], ['archive', 'The archive’s cards — pictures, date, reading time']]}
+                onChange={(cards) => set(['blog', 'related'])({ source: 'kind', count: 3, layout: 'grid', ...blog?.related, cards })}
+              />
+            )}
           </div>
         )}
         <Check label="An author box under the article — picture, bio and links from each author’s Profile" checked={blog?.authorBox === true} onChange={(v) => set(['blog', 'authorBox'])(v || undefined)} />
@@ -182,11 +264,20 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
         </div>
         <Check label="An “All” chip" checked={blog?.chipAll !== false} onChange={(v) => set(['blog', 'chipAll'])(v ? undefined : false)} />
         <Check label="Breadcrumbs above the title — Home › Blog › Category" checked={blog?.archiveBreadcrumbs === true} onChange={(v) => set(['blog', 'archiveBreadcrumbs'])(v || undefined)} />
-        <Check label="The search box at the end of the category bar" checked={blog?.searchInBar === true} onChange={(v) => set(['blog', 'searchInBar'])(v || undefined)} />
+        <Check label="No search box on the blog’s pages" checked={blog?.searchOff === true} onChange={(v) => set(['blog', 'searchOff'])(v || undefined)} />
+        {blog?.searchOff !== true && (
+          <Check label="The search box at the end of the category bar" checked={blog?.searchInBar === true} onChange={(v) => set(['blog', 'searchInBar'])(v || undefined)} />
+        )}
         {blog?.searchInBar === true && (
           <Check label="…on its own row under the chips" checked={blog?.searchBelow === true} onChange={(v) => set(['blog', 'searchBelow'])(v || undefined)} />
         )}
         <Check label="The category bar on every category and research page too" checked={blog?.archiveBar === true} onChange={(v) => set(['blog', 'archiveBar'])(v || undefined)} />
+        <Check
+          label="One row under the title — breadcrumbs on the left; the result count and the categories on the right"
+          checked={blog?.toolbar === true}
+          onChange={(v) => set(['blog', 'toolbar'])(v || undefined)}
+        />
+        <Check label="The “Browse” label before the chips" checked={blog?.browseLabel !== false} onChange={(v) => set(['blog', 'browseLabel'])(v ? undefined : false)} />
         <Check label="The newest post as a large card — picture left — above the list" checked={blog?.featured === true} onChange={(v) => set(['blog', 'featured'])(v || undefined)} />
         <Choice
           label="A category’s heading"
@@ -210,6 +301,7 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
           <p className="m-0 mb-3 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">Each card shows</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <Check label="The date" checked={card.date !== false} onChange={(v) => setCard('date', v ? undefined : false)} />
+            <Check label="The cover (the card grid)" checked={card.image === true} onChange={(v) => setCard('image', v || undefined)} />
 
             <Check label="The reading time" checked={card.readingTime === true} onChange={(v) => setCard('readingTime', v || undefined)} />
             <Check label="“Read more →”" checked={card.readMore === true} onChange={(v) => setCard('readMore', v || undefined)} />

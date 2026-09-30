@@ -9,6 +9,7 @@ import {
   isColor,
   isUsableLength as isLength,
   isLineHeight,
+  roleVar,
 } from './theme';
 import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
 
@@ -76,7 +77,7 @@ export const COLOR_TOKENS: Record<string, string> = {
 };
 
 /** The colour tokens of one palette, checked — exported for a page that takes the alternate palette (2.19). */
-export function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' = 'colors'): Decl[] {
+export function colorDecls(theme: Theme, which: 'colors' | 'colorsAlt' | 'colorsAlt2' = 'colors'): Decl[] {
   const out: Decl[] = [];
   const colors = theme[which] ?? {};
   for (const [key, token] of Object.entries(COLOR_TOKENS)) {
@@ -126,6 +127,37 @@ function layoutDecls(theme: Theme): Decl[] {
   return out;
 }
 
+/**
+ * 3.22 — every property `globals.css` declares from a palette colour, with
+ * that declaration. `tests/theme.test.ts` reads the stylesheet and fails when
+ * the two lists drift apart.
+ */
+export const PALETTE_FOLLOWERS: Decl[] = [
+  ['--he-link', 'var(--color-flare-soft)'],
+  ['--he-link-hover', 'var(--color-flare-hot)'],
+  ['--he-selection', 'var(--color-flare)'],
+  ['--he-body-color', 'var(--color-bone)'],
+  ['--he-lede-color', 'var(--color-bone)'],
+  ['--he-eyebrow-color', 'var(--he-label-color, var(--color-smoke))'],
+  ['--he-h1-color', 'var(--color-bone)'],
+  ['--he-h2-color', 'var(--color-bone)'],
+  ['--he-h3-color', 'var(--color-bone)'],
+  ['--he-h4-color', 'var(--color-bone)'],
+  ['--he-h5-color', 'var(--color-bone)'],
+  ['--he-h6-color', 'var(--color-bone)'],
+  ['--he-btn-primary-bg', 'var(--color-flare)'],
+  ['--he-btn-primary-text', 'var(--color-bone)'],
+  ['--he-btn-primary-hover-bg', 'var(--color-flare-hot)'],
+  ['--he-btn-primary-hover-text', 'var(--color-ink)'],
+  ['--he-btn-outline-text', 'var(--color-bone)'],
+  ['--he-btn-outline-border', 'var(--color-rule)'],
+  ['--he-btn-outline-hover-bg', 'var(--color-surface)'],
+  ['--he-btn-outline-hover-text', 'var(--color-bone)'],
+  ['--he-btn-outline-hover-border', 'var(--color-bone)'],
+  ['--he-btn-ghost-text', 'var(--color-bone)'],
+  ['--he-btn-ghost-hover-text', 'var(--color-flare-soft)'],
+];
+
 /* ── Typography ───────────────────────────────────────────────────────────── */
 
 const TRANSFORMS = ['none', 'uppercase', 'lowercase', 'capitalize'];
@@ -140,18 +172,19 @@ function typographyDecls(theme: Theme): Decl[] {
   for (const role of TYPE_ROLES) {
     const base = typography[role]?.base;
     if (!base) continue;
+    const v = roleVar(role);
 
     if (base.family && base.family in FONT_STACKS) {
-      out.push([`--he-${role}-family`, FONT_STACKS[base.family]]);
+      out.push([`--he-${v}-family`, FONT_STACKS[base.family]]);
     }
-    push(out, `--he-${role}-size`, base.size, isLength);
-    push(out, `--he-${role}-weight`, base.weight, isKeyword(WEIGHTS));
-    push(out, `--he-${role}-style`, base.style, isKeyword(STYLES));
-    push(out, `--he-${role}-color`, base.color, isColor);
-    push(out, `--he-${role}-transform`, base.transform, isKeyword(TRANSFORMS));
-    push(out, `--he-${role}-decoration`, base.decoration, isKeyword(DECORATIONS));
-    push(out, `--he-${role}-line`, base.lineHeight, isLineHeight);
-    push(out, `--he-${role}-tracking`, base.letterSpacing, isLength);
+    push(out, `--he-${v}-size`, base.size, isLength);
+    push(out, `--he-${v}-weight`, base.weight, isKeyword(WEIGHTS));
+    push(out, `--he-${v}-style`, base.style, isKeyword(STYLES));
+    push(out, `--he-${v}-color`, base.color, isColor);
+    push(out, `--he-${v}-transform`, base.transform, isKeyword(TRANSFORMS));
+    push(out, `--he-${v}-decoration`, base.decoration, isKeyword(DECORATIONS));
+    push(out, `--he-${v}-line`, base.lineHeight, isLineHeight);
+    push(out, `--he-${v}-tracking`, base.letterSpacing, isLength);
   }
 
   return out;
@@ -165,9 +198,10 @@ function adaptiveDecls(theme: Theme, breakpoint: BreakpointKey): Decl[] {
   for (const role of TYPE_ROLES as readonly TypeRole[]) {
     const step = typography[role]?.[breakpoint];
     if (!step) continue;
-    push(out, `--he-${role}-size`, step.size, isLength);
-    push(out, `--he-${role}-line`, step.lineHeight, isLineHeight);
-    push(out, `--he-${role}-tracking`, step.letterSpacing, isLength);
+    const v = roleVar(role);
+    push(out, `--he-${v}-size`, step.size, isLength);
+    push(out, `--he-${v}-line`, step.lineHeight, isLineHeight);
+    push(out, `--he-${v}-tracking`, step.letterSpacing, isLength);
   }
 
   // 3.13 — block text sizes on phones.
@@ -189,6 +223,11 @@ function adaptiveDecls(theme: Theme, breakpoint: BreakpointKey): Decl[] {
 
   const brand = theme.brand ?? {};
   if (breakpoint === 'mobile') push(out, '--he-logo-height', brand.logoHeightMobile, isLength);
+
+  // 3.22 — the content column's width on this tier.
+  const layout = theme.layout ?? {};
+  const container = { laptop: layout.containerWidthLaptop, tablet: layout.containerWidthTablet, mobile: layout.containerWidthMobile }[breakpoint];
+  push(out, '--container-shell', container, isLength);
 
   return out;
 }
@@ -521,16 +560,15 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
 
   const parts: string[] = [];
 
-  parts.push(
-    block(safeSelector, [
-      ...colorDecls(theme),
-      ...statusDecls(theme),
-      ...layoutDecls(theme),
-      ...typographyDecls(theme),
-      ...buttonDecls(theme),
-      ...brandDecls(theme),
-    ]),
-  );
+  const rootDecls: Decl[] = [
+    ...colorDecls(theme),
+    ...statusDecls(theme),
+    ...layoutDecls(theme),
+    ...typographyDecls(theme),
+    ...buttonDecls(theme),
+    ...brandDecls(theme),
+  ];
+  parts.push(block(safeSelector, rootDecls));
 
   if (responsive) {
     for (const { key, maxWidth } of BREAKPOINTS) {
@@ -551,9 +589,20 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
      marked "alternate colours" in the Design panel carries this class. The
      tokens inherit, so everything inside it follows; emitted only once an
      alternate palette has been saved. */
+  /* 3.22 — the properties that name a palette colour (a heading's colour is
+     `var(--color-bone)`) were resolved once, at the root, so a section in
+     another palette kept the page's heading, link and button colours. The
+     section re-points each one the site has not set outright. */
+  const own = new Set(rootDecls.map(([property]) => property));
+  const followers: Decl[] = PALETTE_FOLLOWERS.filter(([property]) => !own.has(property));
   const alt = colorDecls(theme, 'colorsAlt');
   if (alt.length > 0 && safeSelector === ':root') {
-    parts.push(block('.he-scheme-alt', [...alt, ['color', 'var(--color-bone)']]));
+    parts.push(block('.he-scheme-alt', [...alt, ['color', 'var(--color-bone)'], ...followers]));
+  }
+  // 3.22 — the second alternate palette, the same way.
+  const alt2 = colorDecls(theme, 'colorsAlt2');
+  if (alt2.length > 0 && safeSelector === ':root') {
+    parts.push(block('.he-scheme-alt2', [...alt2, ['color', 'var(--color-bone)'], ...followers]));
   }
 
   parts.push(localeFontCss(theme, safeSelector));

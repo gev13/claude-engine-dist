@@ -24,14 +24,17 @@
     cursor: pointer;
   }
   .he-faq__answer { max-width: 70ch; margin: 0; padding: 0 24px 22px; font-size: 16px; color: var(--color-ash); }
-  .he-faq.is-filled .he-faq__item { border-radius: 14px; background: var(--color-surface); transition: background-color calc(200ms * var(--he-motion, 1)); }
+  .he-faq.is-filled .he-faq__item { border-radius: var(--he-faq-radius, 14px); background: var(--color-surface); transition: background-color calc(200ms * var(--he-motion, 1)); }
   .is-raised .he-faq.is-filled .he-faq__item { background: var(--color-surface-2); }
   .he-faq.is-filled .he-faq__item.is-open { background: color-mix(in srgb, var(--color-flare) 10%, var(--color-surface)); }
-  .he-faq.is-outlined .he-faq__item { border: 1px solid var(--color-hairline); border-radius: 14px; transition: border-color calc(200ms * var(--he-motion, 1)); }
+  .he-faq.is-outlined .he-faq__item { border: 1px solid var(--color-hairline); border-radius: var(--he-faq-radius, 14px); transition: border-color calc(200ms * var(--he-motion, 1)); }
   .he-faq.is-outlined .he-faq__item.is-open { border-color: var(--color-bone); }
-  .he-faq.is-contained { gap: 0; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: var(--he-box-radius, 18px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
+  .he-faq.is-contained { gap: 0; overflow: hidden; border: 1px solid var(--color-hairline); border-radius: var(--he-faq-radius, var(--he-box-radius, 18px)); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
   .he-faq.is-contained .he-faq__item + .he-faq__item { border-top: 1px solid var(--color-hairline); }
-  .he-faq__btn:focus-visible { outline: 3px solid var(--color-flare); outline-offset: -3px; border-radius: 14px; }
+  .he-faq__btn:focus-visible { outline: 3px solid var(--color-flare); outline-offset: -3px; border-radius: var(--he-faq-radius, 14px); }
+  /* 3.22 — the open question keeps its box's colour. */
+  .he-faq.is-filled.no-tint .he-faq__item.is-open { background: var(--color-surface); }
+  .is-raised .he-faq.is-filled.no-tint .he-faq__item.is-open { background: var(--color-surface-2); }
   .he-faq__marker { display: grid; flex-shrink: 0; place-items: center; margin-top: 2px; color: var(--color-flare); transition: transform calc(250ms * var(--he-motion, 1)); }
   .he-faq__marker.is-chevron.is-open { transform: rotate(180deg); }
   .he-faq__marker.is-arrow.is-open { transform: rotate(90deg); }
@@ -79,10 +82,10 @@
   .he-ocard__bg { position: absolute; inset: 0; z-index: -2; transition: transform calc(700ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-ocard::after { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(to top, rgb(0 0 0 / 0.78), rgb(0 0 0 / 0.05) 62%); pointer-events: none; }
   .he-ocard__text { padding: 28px; }
-  .he-ocard__eyebrow { margin-bottom: 8px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; opacity: 0.8; }
+  .he-ocard__eyebrow { margin-bottom: 8px; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 11px); letter-spacing: var(--he-label-tracking, 0.14em); text-transform: var(--he-label-transform, uppercase); opacity: 0.8; font-weight: var(--he-label-weight, revert-layer); color: var(--he-label-color, revert-layer); line-height: var(--he-label-line, revert-layer); }
   .he-ocard__title { margin: 0; font-family: var(--font-display); font-size: 24px; font-weight: 700; line-height: 1.15; }
   .he-ocard__body { margin: 10px 0 0; font-size: 15px; color: rgb(255 255 255 / 0.85); }
-  .he-ocard__more { display: inline-block; margin-top: 14px; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; }
+  .he-ocard__more { display: inline-block; margin-top: 14px; font-family: var(--he-card-link-family, var(--he-label-family, var(--font-mono))); font-size: var(--he-card-link-size, var(--he-label-size, 11px)); letter-spacing: var(--he-card-link-tracking, var(--he-label-tracking, 0.12em)); text-transform: var(--he-card-link-transform, var(--he-label-transform, uppercase)); font-weight: var(--he-card-link-weight, var(--he-label-weight, revert-layer)); color: var(--he-card-link-color, var(--he-label-color, revert-layer)); line-height: var(--he-card-link-line, var(--he-label-line, revert-layer)); }
   .he-fgrid.cols-4.is-overlay .he-ocard { min-height: 320px; }
 
   .he-fgrid.is-hover-zoom .he-fgrid__item:hover .he-fill { transform: scale(1.06); }
@@ -122,6 +125,15 @@
   .he-fgrid.is-pos-floating.is-icon-plain .he-feat__icon,
   .he-fgrid.is-pos-floating.is-icon-outlined .he-feat__icon { background: var(--color-ink); }
   .he-fgrid.is-pos-floating.is-icon-circle .he-feat__icon { background: var(--color-flare); }
+  /* 3.22 — an icon at a height of its own (an illustration, an animated GIF), as wide as its file's shape makes it. */
+  .he-fgrid.has-icon-size .he-feat__icon { width: auto; height: auto; max-width: 100%; place-items: start; }
+  .he-fgrid.has-icon-size:not(.is-icon-plain) .he-feat__icon { padding: 12px; }
+  .he-fgrid.has-icon-size .he-feat__img { width: auto; height: var(--he-feat-size); max-width: 100%; object-fit: contain; }
+  .he-fgrid.has-icon-size .he-feat__icon .he-media-empty { width: var(--he-feat-size); height: var(--he-feat-size); }
+  /* 3.22 — image cards in each file's own shape, whole or capped. */
+  .he-fgrid.is-media-auto .he-icard__media { aspect-ratio: auto; }
+  .he-fgrid.is-media-auto .he-icard__media .he-fill { height: auto; }
+  .he-icard__media .he-fill { max-height: var(--he-icard-max, none); object-fit: var(--he-icard-fit, cover); }
   .he-fgrid.has-shadow.is-pos-floating .he-fgrid__item { box-shadow: 0 28px 56px -32px rgb(0 0 0 / 0.75); }
 
   /* ── V7: inline call to action ───────────────────────────────────────── */

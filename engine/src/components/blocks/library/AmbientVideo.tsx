@@ -22,6 +22,8 @@ export function AmbientVideo({ p, shape }: { p: P; shape: { width: number; heigh
   const t = useMessages();
   const ref = useRef<HTMLVideoElement>(null);
   const { playing, toggle } = useAmbientPlayback(ref);
+  // 3.22 — no controls: no button at all, not even while it is still; a still film starts on a click.
+  const startOnClick = !p.controls && !playing;
   const sources = orderedSources([p.source, ...p.sources]);
 
   const ratio = p.ratio === 'auto' ? (shape ? `${shape.width} / ${shape.height}` : '16 / 9') : p.ratio.replace('/', ' / ');
@@ -29,14 +31,20 @@ export function AmbientVideo({ p, shape }: { p: P; shape: { width: number; heigh
 
   return (
     <figure className={cn('he-ambient', `is-${p.maxWidth}`, p.rounded && 'is-rounded')}>
-      <div className="he-ambient__frame" style={style} role="img" aria-label={p.videoTitle}>
-        <video ref={ref} poster={p.posterUrl} muted loop playsInline preload="metadata" className={cn('he-ambient__video', `is-${p.fit}`)} aria-hidden="true">
+      <div
+        className={cn('he-ambient__frame', startOnClick && 'is-startable')}
+        style={style}
+        role="img"
+        aria-label={p.videoTitle}
+        onClick={startOnClick ? toggle : undefined}
+      >
+        <video ref={ref} poster={p.posterUrl} muted loop playsInline preload="none" className={cn('he-ambient__video', `is-${p.fit}`)} aria-hidden="true">
           {sources.map((file) => (
             <source key={file.src} src={file.src} type={file.type} />
           ))}
         </video>
-        {/* Always there while it is still — the only way to start it for somebody who asked for less motion. */}
-        {(p.controls || !playing) && (
+        {/* With controls: always there — the way to start it for somebody who asked for less motion. */}
+        {p.controls && (
           <button type="button" className="he-media-pause" aria-label={`${playing ? t('media.pause') : t('media.playVideo')}: ${p.videoTitle}`} onClick={toggle}>
             {playing ? <Icon.Pause size={16} /> : <Icon.Play size={16} />}
           </button>

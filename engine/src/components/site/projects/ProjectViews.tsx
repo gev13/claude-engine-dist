@@ -155,7 +155,9 @@ export async function ProjectArticle({
     </>
   );
 
-  const background = project.options.background && isColor(project.options.background) ? project.options.background : null;
+  // A project's own colour, else (3.22) the template's.
+  const own = project.options.background && isColor(project.options.background) ? project.options.background : null;
+  const background = own ?? (template.background && isColor(template.background) ? template.background : null);
   const cta = (template.cta ?? []) as AnyBlock[];
 
   return (
@@ -218,11 +220,15 @@ export async function ProjectArticle({
         />
       )}
       {background && (
-        // One project's own page colour — a black page on a charcoal site. Checked as a colour twice.
-        <style id="he-project-bg" dangerouslySetInnerHTML={{ __html: `body,.he-site{background-color:${background}}` }} />
+        /* One project's own page colour — a black page on a charcoal site. Checked as a colour twice.
+           (3.22) Also the base tone inside main, which every section paints as its own band, as a page's colour does. */
+        <style
+          id="he-project-bg"
+          dangerouslySetInnerHTML={{ __html: `body,.he-site{background-color:${background}}#main{--color-ink:${background};background-color:${background}}` }}
+        />
       )}
       {project.customCss && <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(project.customCss) }} />}
-      {project.options.scheme === 'alt' && <PageAppearanceStyle appearance={{ scheme: 'alt' }} />}
+      {(project.options.scheme === 'alt' || project.options.scheme === 'alt2') && <PageAppearanceStyle appearance={{ scheme: project.options.scheme }} />}
     </>
   );
 }

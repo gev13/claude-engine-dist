@@ -22,7 +22,8 @@ import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
 import { BlockHead } from '../parts';
 import { Carousel } from './Carousel';
-import { BgVideo, MediaFill } from './media';
+import { BgVideo, MediaFill, orderedSources } from './media';
+import { MasonryRows } from './MasonryRows';
 import { SmartLink } from './SmartLink';
 import { SiteImg } from '@/components/ui/SiteImg';
 
@@ -340,14 +341,19 @@ export function GalleryBlock(p: P<'gallery'>) {
     }
   };
 
+  // 3.22 — masonry in reading order.
+  const rowOrder = p.layout === 'masonry' && p.masonryOrder === 'rows';
+
   return (
     <section className={cn('he-lsec he-gal-sec', toneClass(p.tone))}>
       <div className="shell">
         <Head eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} />
         <div className="he-cq">
+          {rowOrder && <MasonryRows />}
           <ul
-            className={cn('he-gal', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`)}
+            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows')}
             style={{ '--cols': p.columns } as CSSProperties}
+            data-masonry-rows={rowOrder ? '' : undefined}
           >
             {visible.map((image, i) => {
               // Inside a link or the lightbox button a second control would be a button in a button.
@@ -355,7 +361,7 @@ export function GalleryBlock(p: P<'gallery'>) {
               const media = (
                 <>
                   {image.videoUrl ? (
-                    <BgVideo src={image.videoUrl} poster={image.url} className="he-fill" showControl={plain} />
+                    <BgVideo src={image.videoUrl} sources={image.videoUrlAlt ? orderedSources([image.videoUrl, image.videoUrlAlt]) : undefined} poster={image.url} className="he-fill" showControl={plain} />
                   ) : (
                     <SiteImg src={image.url} alt={image.alt ?? ''} className="he-fill" loading="lazy" decoding="async" sizes="third" />
                   )}
@@ -677,7 +683,7 @@ function ProjectsGrid(p: ProjectsProps) {
           </div>
         ) : (
           <div className="he-cq">
-            <ul className={cn('he-proj', `is-${p.layout}`, `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as CSSProperties}>
+            <ul className={cn('he-proj he-swipe-track', `is-${p.layout}`, `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as CSSProperties}>
               {shown.map(({ item, i }) => {
                 const text = (
                   <>

@@ -98,7 +98,7 @@ export function Card({
       {media && <div className="he-ucard__media">{media}</div>}
       {badge && <span className="he-badge">{badge}</span>}
       {eyebrow && (
-        <div className="he-ucard__eyebrow mb-3 font-mono text-[10px] uppercase tracking-[0.14em] text-smoke">{eyebrow}</div>
+        <div className="he-ucard__eyebrow mb-3 text-[length:var(--he-label-size,10px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{eyebrow}</div>
       )}
       {title && (
         <h3 className="m-0 font-display text-[19px] font-extrabold leading-[1.18] tracking-[-0.02em] text-bone">
@@ -108,7 +108,7 @@ export function Card({
       {children && <div className="he-ucard__body mt-3 text-[15px] text-ash">{children}</div>}
       {meta && <div className="mt-auto pt-5">{meta}</div>}
       {href && (
-        <span className="he-more mt-auto flex items-center gap-2 pt-5 font-mono text-[11px] uppercase tracking-[0.12em] text-flare-soft transition-colors group-hover:text-flare-hot">
+        <span className="he-more mt-auto flex items-center gap-2 pt-5 text-[length:var(--he-card-link-size,var(--he-label-size,11px))] tracking-[var(--he-card-link-tracking,var(--he-label-tracking,0.12em))] text-[color:var(--he-card-link-color,var(--he-label-color,var(--color-flare-soft)))] transition-colors group-hover:text-flare-hot he-lbl-card">
           {moreLabel || <MessageText k="block.readMore" />}
           <ArrowRight className="he-more__icon transition-transform duration-200 group-hover:translate-x-1" />
         </span>

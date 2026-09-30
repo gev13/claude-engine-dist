@@ -1,8 +1,10 @@
 import { z } from 'zod';
-import { isSafeHref } from './navigation';
+import { SOCIAL_NETWORKS, isSafeHref, type SocialNetwork } from './navigation';
 
 /** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
+/** 3.22 — a plain length (40px, 2.5rem, -0.02em, 0), for the few sizes set here; it lands in a style attribute. */
+const LENGTH = /^(0|-?\d*\.?\d+(px|rem|em|vw|vh|%))$/;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Site chrome
@@ -87,6 +89,25 @@ export const chromeSchema = z.object({
       glassBlur: z.number().int().min(0).max(30).optional(),
       /** Glass: the tint laid over the blur, as a percentage of the page colour. */
       glassOpacity: z.number().int().min(0).max(100).optional(),
+      /** 3.22 — glass: how much colour the blur keeps, in % (100 is the page's own; unset is 120). */
+      glassSaturate: z.number().int().min(0).max(300).optional(),
+      /** 3.22 — the thin line under the bar (unset or true, as before). */
+      border: z.boolean().optional(),
+      /** 3.22 — the page starts at the very top, under the bar, on every page (the bar stays over it). */
+      under: z.boolean().optional(),
+      /** 3.22 — the header button's own colours; each unset keeps the button style's. */
+      ctaColors: z
+        .object({
+          text: z.string().trim().regex(HEX).optional(),
+          background: z.string().trim().regex(HEX).optional(),
+          border: z.string().trim().regex(HEX).optional(),
+          hoverText: z.string().trim().regex(HEX).optional(),
+          hoverBackground: z.string().trim().regex(HEX).optional(),
+          hoverBorder: z.string().trim().regex(HEX).optional(),
+        })
+        .optional(),
+      /** 3.22 — the header button drawn as the main button (unset, as before) or the outline one. */
+      ctaStyle: z.enum(['primary', 'outline']).optional(),
       /** While scrolling: always there (as before), hide going down and return going up, or shrink. */
       behaviour: z.enum(['always', 'hide', 'shrink']).optional(),
       /** Phones: the logo at the left (as before), centred between the buttons, or (3.6) just after the menu button. */
@@ -111,8 +132,8 @@ export const chromeSchema = z.object({
       /** Which edge a drawer slides in from. */
       side: z.enum(['left', 'right']).optional(),
       align: z.enum(['left', 'center']).optional(),
-      /** Where the header buttons sit inside the open menu. */
-      ctaPosition: z.enum(['top', 'bottom']).optional(),
+      /** Where the header buttons sit inside the open menu; (3.22) `off` leaves them out of it. */
+      ctaPosition: z.enum(['top', 'bottom', 'off']).optional(),
       largeType: z.boolean().optional(),
 
       /* ── 2.19 (T26) — the full-screen menus, also opened by the menu button on wide screens ── */
@@ -133,6 +154,25 @@ export const chromeSchema = z.object({
       closeAtToggle: z.boolean().optional(),
       /** 3.17 — the service links in the menu's own type and colour (`rows`), rather than small grey text (`list`). */
       servicesLook: z.enum(['list', 'rows']).optional(),
+
+      /* ── 3.22 — the full-screen menu, closer to a site's own ── */
+      /** The service pages listed under the links (unset or true, as before). */
+      services: z.boolean().optional(),
+      /** The links' size in the full-screen menus, e.g. 40px; on phones its own. Unset keeps Link size. */
+      itemSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 40px').optional(),
+      itemSizeMobile: z.string().trim().max(40).regex(LENGTH, 'A size such as 28px').optional(),
+      itemWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
+      itemTracking: z.string().trim().max(20).regex(LENGTH, 'A spacing such as 0 or -0.02em').optional(),
+      /** What opens a link's sub-items: a + in a circle (as before), a plain +, or a chevron. */
+      expandIcon: z.enum(['circle', 'plus', 'chevron']).optional(),
+      /** The menu's own colour, instead of the page's. */
+      background: z.string().trim().regex(HEX, 'A hex colour such as #000000').optional(),
+      /** The contact details: a column at the side (the creative menu, as before), a row at the bottom left of any full-screen menu, or none. */
+      contactPosition: z.enum(['column', 'row', 'off']).optional(),
+      /** Which details it shows; each unset shows it when there is one. */
+      contactEmail: z.boolean().optional(),
+      contactAddress: z.boolean().optional(),
+      contactSocial: z.boolean().optional(),
     })
     .optional(),
 
@@ -159,6 +199,10 @@ export const chromeSchema = z.object({
       email: z.boolean().optional(),
       /** 3.11 — the copyright line in capitals like the rest of the bottom row (as before), or as written. */
       copyrightCase: z.enum(['upper', 'asWritten']).optional(),
+      /** 3.22 — between the social links written as names or short labels: nothing (as before), a slash or a dot. */
+      socialSeparator: z.enum(['none', 'slash', 'dot']).optional(),
+      /** 3.22 — these social links as a list of icon and name under the others (phone, messengers), instead of among them. */
+      contactLinks: z.array(z.enum(SOCIAL_NETWORKS)).max(12).optional(),
     })
     .optional(),
 
@@ -177,6 +221,10 @@ export const chromeSchema = z.object({
       style: z.enum(['off', 'fadeUp', 'fade', 'slide', 'curtain']).optional(),
       /** The logo over the page on the very first load, for at most a second and a half. */
       preloader: z.boolean().optional(),
+      /** 3.22 — the first page of a visit arrives the way the others do. */
+      firstLoad: z.boolean().optional(),
+      /** 3.22 — how a page leaves: fading (as before), or fading and moving up, as long as its arrival. */
+      leave: z.enum(['fade', 'fadeUp']).optional(),
     })
     .optional(),
 
@@ -198,6 +246,20 @@ export const chromeSchema = z.object({
       hideOn: z.array(z.string().trim().max(200).regex(/^\/[A-Za-z0-9._~\-/%]*\*?$/)).max(20).optional(),
       /** The width they appear from, in px. */
       minWidth: z.number().int().min(768).max(2560).optional(),
+      /* ── 3.22 — how they read ── */
+      /** The labels' face (unset, Appearance → Labels), the text's, or the headings'. */
+      font: z.enum(['label', 'body', 'display']).optional(),
+      /** Capitals (unset, as the labels) or as written. */
+      case: z.enum(['label', 'upper', 'none']).optional(),
+      /** px */
+      size: z.number().int().min(8).max(24).optional(),
+      weight: z.enum(['400', '500', '600', '700']).optional(),
+      /** Between the social links: nothing (as before), a slash or a dot. */
+      separator: z.enum(['none', 'slash', 'dot']).optional(),
+      /** Up and down the middle of the screen (as before), or down at the bottom. */
+      position: z.enum(['center', 'bottom']).optional(),
+      /** Each part stacked (as before), or the whole rail one line written up the edge. */
+      orientation: z.enum(['stacked', 'row']).optional(),
     })
     .optional(),
 
@@ -227,6 +289,8 @@ export const chromeSchema = z.object({
 
   /** GL1 — floating button back to the top of the page. */
   backToTop: z.boolean().optional(),
+  /** 3.22 — the pause buttons over background and ambient films (unset or true, as before). Off, films are moving pictures only. */
+  videoControls: z.boolean().optional(),
   /** GL3 — a footer switch that stops animation for this visitor. */
   motionToggle: z.boolean().optional(),
   /** 2.20 — stops animation for every visitor: the site-wide answer to the switch above. */
@@ -256,6 +320,11 @@ export type ResolvedChrome = {
     background: 'solid' | 'transparent' | 'glass';
     glassBlur: number;
     glassOpacity: number;
+    glassSaturate: number;
+    border: boolean;
+    under: boolean;
+    ctaColors: { text?: string; background?: string; border?: string; hoverText?: string; hoverBackground?: string; hoverBorder?: string };
+    ctaStyle: 'primary' | 'outline';
     behaviour: 'always' | 'hide' | 'shrink';
     logoMobile: 'left' | 'center' | 'afterMenu';
     height: { base?: number; laptop?: number; tablet?: number; mobile?: number };
@@ -265,8 +334,19 @@ export type ResolvedChrome = {
     variant: MobileMenuVariant;
     side: 'left' | 'right';
     align: 'left' | 'center';
-    ctaPosition: 'top' | 'bottom';
+    ctaPosition: 'top' | 'bottom' | 'off';
     largeType: boolean;
+    services: boolean;
+    itemSize?: string;
+    itemSizeMobile?: string;
+    itemWeight?: string;
+    itemTracking?: string;
+    expandIcon: 'circle' | 'plus' | 'chevron';
+    background?: string;
+    contactPosition: 'column' | 'row' | 'off';
+    contactEmail: boolean;
+    contactAddress: boolean;
+    contactSocial: boolean;
     source: 'main' | 'overlay';
     size: 'large' | 'huge';
     entrance: 'none' | 'fade' | 'slide' | 'stagger';
@@ -289,9 +369,11 @@ export type ResolvedChrome = {
     panel: boolean;
     email: boolean;
     copyrightCase: 'upper' | 'asWritten';
+    socialSeparator: 'none' | 'slash' | 'dot';
+    contactLinks: SocialNetwork[];
   };
   cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string };
-  transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean };
+  transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean; firstLoad: boolean; leave: 'fade' | 'fadeUp' };
   rails: {
     scrollSide: 'left' | 'right' | 'none';
     scrollLabel: string;
@@ -301,10 +383,18 @@ export type ResolvedChrome = {
     autoContrast: boolean;
     hideOn: string[];
     minWidth: number;
+    font: 'label' | 'body' | 'display';
+    case: 'label' | 'upper' | 'none';
+    size?: number;
+    weight?: '400' | '500' | '600' | '700';
+    separator: 'none' | 'slash' | 'dot';
+    position: 'center' | 'bottom';
+    orientation: 'stacked' | 'row';
   } | null;
   announcement: { text: string; linkLabel?: string; href?: string; dismissible: boolean } | null;
   regionBar: { message: string; buttonLabel: string; options: { label: string; href: string }[] } | null;
   backToTop: boolean;
+  videoControls: boolean;
   motionToggle: boolean;
   reduceMotion: boolean;
   themeToggle: boolean;
@@ -345,6 +435,12 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       background: c.header?.background ?? 'solid',
       glassBlur: c.header?.glassBlur ?? 14,
       glassOpacity: c.header?.glassOpacity ?? 60,
+      glassSaturate: c.header?.glassSaturate ?? 120,
+      border: c.header?.border !== false,
+      // Beside the page or cut into the first section, there is nothing for the page to run under.
+      under: beside || notch ? false : (c.header?.under ?? false),
+      ctaColors: Object.fromEntries(Object.entries(c.header?.ctaColors ?? {}).filter(([, v]) => typeof v === 'string' && HEX.test(v))),
+      ctaStyle: c.header?.ctaStyle ?? 'primary',
       behaviour: c.header?.behaviour ?? 'always',
       logoMobile: c.header?.logoMobile ?? 'left',
       height: c.header?.height ?? {},
@@ -365,6 +461,17 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       phone: c.mobileMenu?.phone || undefined,
       closeAtToggle: c.mobileMenu?.closeAtToggle ?? false,
       servicesLook: c.mobileMenu?.servicesLook ?? 'list',
+      services: c.mobileMenu?.services !== false,
+      itemSize: c.mobileMenu?.itemSize && LENGTH.test(c.mobileMenu.itemSize) ? c.mobileMenu.itemSize : undefined,
+      itemSizeMobile: c.mobileMenu?.itemSizeMobile && LENGTH.test(c.mobileMenu.itemSizeMobile) ? c.mobileMenu.itemSizeMobile : undefined,
+      itemWeight: c.mobileMenu?.itemWeight,
+      itemTracking: c.mobileMenu?.itemTracking && LENGTH.test(c.mobileMenu.itemTracking) ? c.mobileMenu.itemTracking : undefined,
+      expandIcon: c.mobileMenu?.expandIcon ?? 'circle',
+      background: c.mobileMenu?.background && HEX.test(c.mobileMenu.background) ? c.mobileMenu.background : undefined,
+      contactPosition: c.mobileMenu?.contactPosition ?? 'column',
+      contactEmail: c.mobileMenu?.contactEmail !== false,
+      contactAddress: c.mobileMenu?.contactAddress !== false,
+      contactSocial: c.mobileMenu?.contactSocial !== false,
     },
     footer: {
       variant: c.footer?.variant ?? 'sitemap',
@@ -378,9 +485,16 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       panel: c.footer?.panel ?? false,
       email: c.footer?.email ?? true,
       copyrightCase: c.footer?.copyrightCase ?? 'upper',
+      socialSeparator: c.footer?.socialSeparator ?? 'none',
+      contactLinks: c.footer?.contactLinks ?? [],
     },
     cursor: { style: c.cursor?.style ?? 'off', mediaLabel: c.cursor?.mediaLabel || undefined },
-    transition: { style: c.transition?.style ?? 'off', preloader: c.transition?.preloader ?? false },
+    transition: {
+      style: c.transition?.style ?? 'off',
+      preloader: c.transition?.preloader ?? false,
+      firstLoad: c.transition?.firstLoad ?? false,
+      leave: c.transition?.leave ?? 'fade',
+    },
     rails: c.rails?.enabled
       ? {
           scrollSide: c.rails.scrollSide ?? 'left',
@@ -391,6 +505,13 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
           autoContrast: c.rails.autoContrast ?? false,
           hideOn: c.rails.hideOn ?? [],
           minWidth: c.rails.minWidth ?? 1181,
+          font: c.rails.font ?? 'label',
+          case: c.rails.case ?? 'label',
+          size: c.rails.size,
+          weight: c.rails.weight,
+          separator: c.rails.separator ?? 'none',
+          position: c.rails.position ?? 'center',
+          orientation: c.rails.orientation ?? 'stacked',
         }
       : null,
     announcement: announcement
@@ -409,6 +530,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
         }
       : null,
     backToTop: c.backToTop ?? false,
+    videoControls: c.videoControls !== false,
     // With motion off for everyone, a switch to turn it off is a switch that does nothing.
     motionToggle: (c.motionToggle ?? false) && !c.reduceMotion,
     reduceMotion: c.reduceMotion ?? false,

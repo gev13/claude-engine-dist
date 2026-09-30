@@ -13,6 +13,7 @@ import {
   BUTTON_VARIANT_LABELS,
   CHART_DEFAULTS,
   STATUS_DEFAULTS,
+  LABEL_ROLES,
   TYPE_ROLES,
   TYPE_ROLE_LABELS,
   TIER_LABELS,
@@ -406,6 +407,15 @@ function AppearanceScreenInner() {
               </Panel>
 
               <Panel title={`${TYPE_ROLE_LABELS[role]} — base`}>
+                {(LABEL_ROLES as readonly string[]).includes(role) && (
+                  <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                    {role === 'label'
+                      ? 'The small text around the content: category chips, dates and meta rows, card eyebrows, the post’s back link and contents title, captions, form labels, the footer’s bottom row, rails and badges. Section eyebrows follow it too until the Eyebrow label role is set. Each empty field keeps what every label was drawn with (mono, 10–12px, capitals).'
+                      : role === 'footerTitle'
+                        ? 'The heading over each footer column. Empty fields follow Labels, then the drawn style.'
+                        : 'The “Learn more” / “Read more” line at the foot of a card. Empty fields follow Labels (for the mono links), then each card’s own style.'}
+                  </p>
+                )}
                 <div className="grid gap-4 sm:grid-cols-2">
                   <ChoiceField label="Font family" value={get(['typography', role, 'base', 'family']) as FontKey | undefined} groups={FONT_OPTIONS} onChange={set(['typography', role, 'base', 'family'])} />
                   <LengthField label="Font size" placeholder="e.g. 66px or clamp(36px, 7vw, 66px)" value={get(['typography', role, 'base', 'size'])} inherited={defaults[typeVar(role, 'size')]} onChange={set(['typography', role, 'base', 'size'])} />
@@ -521,6 +531,9 @@ function AppearanceScreenInner() {
             <Panel title="Page structure">
               <div className="grid gap-4 sm:grid-cols-2">
                 <LengthField label="Container width" hint="the standard content column" placeholder="1200px" value={get(['layout', 'containerWidth'])} onChange={set(['layout', 'containerWidth'])} />
+                <LengthField label="Container width — desktop" hint="1440px and below" emptyLabel="as above" value={get(['layout', 'containerWidthLaptop'])} onChange={set(['layout', 'containerWidthLaptop'])} />
+                <LengthField label="Container width — tablet" hint="1024px and below" emptyLabel="as above" value={get(['layout', 'containerWidthTablet'])} onChange={set(['layout', 'containerWidthTablet'])} />
+                <LengthField label="Container width — phones" hint="768px and below; 100% is the full screen less the phones’ side padding" emptyLabel="as above" value={get(['layout', 'containerWidthMobile'])} onChange={set(['layout', 'containerWidthMobile'])} />
                 <LengthField label="Gutter" hint="side padding at the widest breakpoint" placeholder="48px" value={get(['layout', 'gutter'])} onChange={set(['layout', 'gutter'])} />
                 <LengthField label="Corner radius" hint="cards, panels and media" placeholder="0px" value={get(['layout', 'radius'])} onChange={set(['layout', 'radius'])} />
                 <LengthField label="Section heading width" hint="how far a section’s heading runs before it wraps" placeholder="each block’s own" value={get(['layout', 'titleWidth'])} onChange={set(['layout', 'titleWidth'])} />
@@ -781,6 +794,7 @@ function AppearanceScreenInner() {
                       options={[
                         { value: 'top', label: 'At the top (default)' },
                         { value: 'bottom', label: 'Pinned to the bottom' },
+                        { value: 'off', label: 'Not in the menu' },
                       ]}
                       onChange={set(['chrome', 'mobileMenu', 'ctaPosition'])}
                     />
@@ -998,6 +1012,7 @@ function AppearanceScreenInner() {
 
               {/* Always offered since 2.19: a page or a section can use it without the visitor switch. */}
               {(
+                <>
                 <Panel title="Alternate colours">
                   <p className="m-0 mb-4 text-[13px] text-smoke">
                     A second palette — usually a light version of a dark site, or the reverse. The visitor switch changes to
@@ -1021,6 +1036,29 @@ function AppearanceScreenInner() {
                     <ColorField label="Selected text" value={get(['colorsAlt', 'selection'])} onChange={set(['colorsAlt', 'selection'])} />
                   </div>
                 </Panel>
+                <Panel title="Second alternate colours">
+                  <p className="m-0 mb-4 text-[13px] text-smoke">
+                    3.22 — a third palette for a page, a post, a project or a section (not the visitor switch), so a light
+                    section and a black project page can each have their own. Anything left empty keeps the main palette.
+                  </p>
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <ColorField label="Page background" value={get(['colorsAlt2', 'background'])} onChange={set(['colorsAlt2', 'background'])} />
+                    <ColorField label="Raised surface" value={get(['colorsAlt2', 'surface'])} onChange={set(['colorsAlt2', 'surface'])} />
+                    <ColorField label="Third surface" value={get(['colorsAlt2', 'surfaceRaised'])} onChange={set(['colorsAlt2', 'surfaceRaised'])} />
+                    <ColorField label="Primary text" value={get(['colorsAlt2', 'textPrimary'])} onChange={set(['colorsAlt2', 'textPrimary'])} />
+                    <ColorField label="Body text" value={get(['colorsAlt2', 'textBody'])} onChange={set(['colorsAlt2', 'textBody'])} />
+                    <ColorField label="Muted text" value={get(['colorsAlt2', 'textMuted'])} onChange={set(['colorsAlt2', 'textMuted'])} />
+                    <ColorField label="Primary accent" value={get(['colorsAlt2', 'primary'])} onChange={set(['colorsAlt2', 'primary'])} />
+                    <ColorField label="Hairline" value={get(['colorsAlt2', 'hairline'])} onChange={set(['colorsAlt2', 'hairline'])} />
+                    <ColorField label="Rule" value={get(['colorsAlt2', 'rule'])} onChange={set(['colorsAlt2', 'rule'])} />
+                    <ColorField label="Accent, hovered" value={get(['colorsAlt2', 'primaryHover'])} onChange={set(['colorsAlt2', 'primaryHover'])} />
+                    <ColorField label="Soft accent" value={get(['colorsAlt2', 'primarySoft'])} onChange={set(['colorsAlt2', 'primarySoft'])} />
+                    <ColorField label="Links" value={get(['colorsAlt2', 'link'])} onChange={set(['colorsAlt2', 'link'])} />
+                    <ColorField label="Links, hovered" value={get(['colorsAlt2', 'linkHover'])} onChange={set(['colorsAlt2', 'linkHover'])} />
+                    <ColorField label="Selected text" value={get(['colorsAlt2', 'selection'])} onChange={set(['colorsAlt2', 'selection'])} />
+                  </div>
+                </Panel>
+                </>
               )}
 
               <Panel title="Region suggestion bar">

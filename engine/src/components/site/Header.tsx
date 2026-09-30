@@ -345,7 +345,7 @@ export function Header(props: HeaderProps) {
         </Link>
       )}
       {cta && (
-        <Link href={cta.href} className={cn('he-hdr__cta he-btn he-btn-primary', h.ctaOnMobile && 'he-keep')}>
+        <Link href={cta.href} className={cn('he-hdr__cta he-btn', h.ctaStyle === 'outline' ? 'he-btn-outline' : 'he-btn-primary', h.ctaOnMobile && 'he-keep')}>
           {cta.label}
         </Link>
       )}
@@ -374,9 +374,22 @@ export function Header(props: HeaderProps) {
   const heights = h.height;
   const hasHeight = Boolean(heights.base || heights.laptop || heights.tablet || heights.mobile);
   const notch = h.variant === 'notch';
+  // 3.22 — the header button's own colours, as properties its rules read.
+  const cc = h.ctaColors;
+  const ctaVars = {
+    ...(cc.text ? { '--he-hdr-cta-text': cc.text } : {}),
+    ...(cc.background ? { '--he-hdr-cta-bg': cc.background } : {}),
+    ...(cc.border ? { '--he-hdr-cta-border': cc.border } : {}),
+    ...(cc.hoverText ? { '--he-hdr-cta-hover-text': cc.hoverText } : {}),
+    ...(cc.hoverBackground ? { '--he-hdr-cta-hover-bg': cc.hoverBackground } : {}),
+    ...(cc.hoverBorder ? { '--he-hdr-cta-hover-border': cc.hoverBorder } : {}),
+  };
+  const hasCtaColors = Object.keys(ctaVars).length > 0;
   const headerStyle =
-    h.background === 'glass' || hasHeight || notch
+    h.background === 'glass' || hasHeight || notch || hasCtaColors
       ? ({
+          ...ctaVars,
+          ...(h.background === 'glass' && h.glassSaturate !== 120 ? { '--he-glass-sat': `${h.glassSaturate / 100}` } : {}),
           ...(notch ? { '--he-notch-r': `${Math.max(0, Math.min(64, h.notchRadius))}px`, ...(h.notchBackground ? { '--he-notch-bg': h.notchBackground } : {}) } : {}),
           ...(h.background === 'glass' ? { '--he-glass-blur': `${h.glassBlur}px`, '--he-glass-tint': `${h.glassOpacity}%` } : {}),
           ...(heights.base ? { '--hh-base': `${heights.base}px` } : {}),
@@ -386,10 +399,13 @@ export function Header(props: HeaderProps) {
         } as React.CSSProperties)
       : undefined;
 
-  const services = [
-    { title: 'Core services', links: props.primaryServices },
-    { title: 'Specialist', links: props.secondaryServices },
-  ].filter((group) => group.links.length > 0);
+  // 3.22 — the headings are Site translations, and the lists can be left out of the menu.
+  const services = chrome.mobileMenu.services
+    ? [
+        { title: t('menu.coreServices'), links: props.primaryServices },
+        { title: t('menu.specialist'), links: props.secondaryServices },
+      ].filter((group) => group.links.length > 0)
+    : [];
 
   return (
     <>
@@ -420,6 +436,8 @@ export function Header(props: HeaderProps) {
         h.logoMobile === 'afterMenu' && 'is-logo-after',
         h.variant === 'menuButtonInline' && `is-menu-${h.menuSide}`,
         hasHeight && 'has-height',
+        !h.border && 'no-border',
+        hasCtaColors && 'has-cta-colors',
       )}
       data-collapse={h.collapseAt}
       style={headerStyle}
@@ -883,11 +901,18 @@ function MobileMenu({
   const drawer = config.variant === 'drawer' || config.variant === 'push';
   // MN5–MN7 open sub-items in place, like the accordions, in much larger type.
   const fullscreen = config.variant.startsWith('fullscreen');
-  const showContact = config.variant === 'fullscreenCreative' && Boolean(contact.email || contact.address || contact.social.length || config.phone);
+  const t = useMessages();
+  // 3.22 — only the details asked for; a row at the bottom of any full-screen menu, or the creative menu's column.
+  const email = config.contactEmail ? contact.email : undefined;
+  const address = config.contactAddress ? contact.address : undefined;
+  const social = config.contactSocial ? contact.social : [];
+  const hasContact = Boolean(email || address || social.length || config.phone);
+  const contactRow = fullscreen && config.contactPosition === 'row' && hasContact;
+  const showContact = config.variant === 'fullscreenCreative' && config.contactPosition === 'column' && hasContact;
   const picture = config.hoverImages && fullscreen ? nav.find((item) => item.id === pointed)?.imageUrl : undefined;
   const drilled = config.variant === 'drilldown' ? nav.find((i) => i.id === drill) : undefined;
 
-  const ctas = (cta || secondaryCta) && (
+  const ctas = config.ctaPosition !== 'off' && (cta || secondaryCta) && (
     <div className={cn('he-menu__cta', config.ctaPosition === 'bottom' && 'is-bottom')}>
       {cta && (
         <Link href={cta.href} className="he-btn he-btn-primary" onClick={onClose}>
@@ -944,7 +969,7 @@ function MobileMenu({
         hidden={!open}
         role="dialog"
         aria-modal="true"
-        aria-label="Menu"
+        aria-label={t('chrome.menu')}
         className={cn(
           'he-menu',
           `he-menu--${config.variant}`,
@@ -959,8 +984,27 @@ function MobileMenu({
           config.hoverImages && fullscreen && 'has-pictures',
           config.closeAtToggle && 'is-close-first',
           config.servicesLook === 'rows' && 'is-services-rows',
+          // 3.22 — the links' own size, weight and spacing; the plain + or a chevron; the menu's own colour.
+          fullscreen && config.itemSize && 'has-item-size',
+          fullscreen && config.itemSizeMobile && 'has-item-size-m',
+          fullscreen && config.itemWeight && 'has-item-weight',
+          fullscreen && config.itemTracking && 'has-item-tracking',
+          fullscreen && config.expandIcon !== 'circle' && `is-expand-${config.expandIcon}`,
+          config.background && 'has-bg',
+          contactRow && 'has-contact-row',
         )}
-        style={config.opacity < 100 ? ({ '--he-menu-alpha': `${config.opacity}%` } as React.CSSProperties) : undefined}
+        style={
+          config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking
+            ? ({
+                ...(config.opacity < 100 ? { '--he-menu-alpha': `${config.opacity}%` } : {}),
+                ...(config.background ? { '--he-menu-bg': config.background } : {}),
+                ...(config.itemSize ? { '--he-menu-size': config.itemSize } : {}),
+                ...(config.itemSizeMobile ? { '--he-menu-size-m': config.itemSizeMobile } : {}),
+                ...(config.itemWeight ? { '--he-menu-weight': config.itemWeight } : {}),
+                ...(config.itemTracking ? { '--he-menu-tracking': config.itemTracking } : {}),
+              } as React.CSSProperties)
+            : undefined
+        }
       >
         <div
           className={cn('he-menu__top', mirror && 'is-mirrored')}
@@ -974,7 +1018,7 @@ function MobileMenu({
             type="button"
             className="he-menu__close"
             onClick={onClose}
-            aria-label="Close menu"
+            aria-label={t('chrome.closeMenu')}
             style={mirror ? { position: 'absolute', left: mirror.close.left - 20, top: mirror.close.top, width: mirror.close.width, height: mirror.close.height, margin: 0 } : undefined}
           >
             <Icon.Close size={22} />
@@ -988,7 +1032,7 @@ function MobileMenu({
             <>
               <button type="button" className="he-menu__back" onClick={() => setDrill(null)}>
                 <Icon.Chevron dir="left" size={16} />
-                Back
+                {t('menu.back')}
               </button>
               <Link href={drilled.href} className="he-menu__row is-parent" onClick={onClose}>
                 {drilled.label}
@@ -1034,7 +1078,9 @@ function MobileMenu({
                       }
                     >
                       {item.label}
-                      {fullscreen ? (
+                      {fullscreen && config.expandIcon === 'chevron' ? (
+                        <Icon.Chevron dir={isOpen ? 'up' : 'down'} size={22} />
+                      ) : fullscreen ? (
                         <span className={cn('he-menu__plus', isOpen && 'is-open')} aria-hidden="true">
                           <Icon.Plus size={22} />
                         </span>
@@ -1073,23 +1119,25 @@ function MobileMenu({
           </div>
         )}
 
-        {showContact && (
-          <aside className="he-menu__aside" aria-label="Contact">
-            <div className="he-menu__heading">{config.contactTitle || 'Get in touch'}</div>
-            {config.phone && (
-              <a href={`tel:${config.phone.replace(/[^+0-9]/g, '')}`} className="he-menu__email">
-                {config.phone}
-              </a>
-            )}
-            {contact.email && (
-              <a href={`mailto:${contact.email}`} className="he-menu__email">
-                {contact.email}
-              </a>
-            )}
-            {contact.address && <p className="he-menu__address">{contact.address}</p>}
-            {contact.social.length > 0 && (
+        {(showContact || contactRow) && (
+          <aside className={cn('he-menu__aside', contactRow && 'is-row')} aria-label={t('menu.contact')}>
+            <div className="he-menu__contact">
+              <div className="he-menu__heading">{config.contactTitle || t('menu.getInTouch')}</div>
+              {config.phone && (
+                <a href={`tel:${config.phone.replace(/[^+0-9]/g, '')}`} className="he-menu__email">
+                  {config.phone}
+                </a>
+              )}
+              {email && (
+                <a href={`mailto:${email}`} className="he-menu__email">
+                  {email}
+                </a>
+              )}
+              {address && <p className="he-menu__address">{address}</p>}
+            </div>
+            {social.length > 0 && (
               <ul className="he-menu__social">
-                {contact.social.map((s) => (
+                {social.map((s) => (
                   <li key={s.network + s.href}>
                     <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
                       {socialText(s, contact.socialStyle ?? 'icon') ?? <SocialIcon network={s.network} />}

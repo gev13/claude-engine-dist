@@ -21,10 +21,20 @@ export async function VideoSource(p: P) {
   if (p.display !== 'ambient') return <VideoBlock {...p} />;
   if (parseVideoUrl(p.source)?.kind !== 'file') return <VideoBlock {...p} display="inline" />;
   const shape = p.ratio === 'auto' ? await mediaShape(p.source) : null;
+  const head = (p.eyebrow || p.title || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />;
+  // 3.22 — edge to edge of the screen, and with no space of its own above and below.
+  if (p.bleed) {
+    return (
+      <section className={cn('he-lsec he-video-sec is-bleed', TONES[p.tone ?? 'base'], p.flush && 'is-flush')}>
+        {head && <div className="shell">{head}</div>}
+        <AmbientVideo p={p} shape={shape} />
+      </section>
+    );
+  }
   return (
-    <section className={cn('he-lsec he-video-sec', TONES[p.tone ?? 'base'])}>
+    <section className={cn('he-lsec he-video-sec', TONES[p.tone ?? 'base'], p.flush && 'is-flush')}>
       <div className="shell">
-        {(p.eyebrow || p.title || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />}
+        {head}
         <AmbientVideo p={p} shape={shape} />
       </div>
     </section>

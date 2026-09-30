@@ -30,6 +30,10 @@ export type FooterProps = {
   social: SocialLink[];
   /** 2.18 — icons, names or short labels, as set in Menus. */
   socialStyle?: SocialLabelStyle;
+  /** 3.22 — between names or short labels. */
+  socialSeparator?: 'none' | 'slash' | 'dot';
+  /** 3.22 — the networks listed as icon and name, apart from the others. */
+  contactLinks?: readonly string[];
   variant?: FooterVariant;
   shareChip?: boolean;
   motionToggle?: boolean;
@@ -40,18 +44,43 @@ export type FooterProps = {
   panel?: boolean;
 };
 
-function Socials({ social, style = 'icon' }: { social: SocialLink[]; style?: SocialLabelStyle }) {
-  if (social.length === 0) return null;
+function Socials({ social, style = 'icon', separator, contacts = [] }: { social: SocialLink[]; style?: SocialLabelStyle; separator?: 'none' | 'slash' | 'dot'; contacts?: readonly string[] }) {
+  // 3.22 — the contact links go in their own list below, the rest here with a separator between names.
+  const row = social.filter((s) => !contacts.includes(s.network));
+  const listed = social.filter((s) => contacts.includes(s.network));
+  const sep = style !== 'icon' && separator === 'slash' ? '/' : style !== 'icon' && separator === 'dot' ? '·' : null;
+  if (row.length === 0 && listed.length === 0) return null;
   return (
-    <ul className={style === 'icon' ? 'he-ftr__social' : 'he-ftr__social is-text'}>
-      {social.map((s) => (
-        <li key={s.network + s.href}>
-          <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
-            {socialText(s, style) ?? <SocialIcon network={s.network} />}
-          </a>
-        </li>
-      ))}
-    </ul>
+    <>
+      {row.length > 0 && (
+        <ul className={cn(style === 'icon' ? 'he-ftr__social' : 'he-ftr__social is-text', sep && 'has-sep')}>
+          {row.map((s, i) => (
+            <li key={s.network + s.href}>
+              {sep && i > 0 && (
+                <span className="he-ftr__sep" aria-hidden="true">
+                  {sep}
+                </span>
+              )}
+              <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
+                {socialText(s, style) ?? <SocialIcon network={s.network} />}
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      {listed.length > 0 && (
+        <ul className="he-ftr__contacts">
+          {listed.map((s) => (
+            <li key={s.network + s.href}>
+              <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                <SocialIcon network={s.network} size={16} />
+                <span>{s.label || SOCIAL_LABELS[s.network]}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+    </>
   );
 }
 
@@ -139,7 +168,7 @@ export function Footer(props: FooterProps) {
               ))}
             </ul>
           )}
-          <Socials social={social} style={socialStyle} />
+          <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
           {toggles}
           <div className="he-ftr__fine">
             <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
@@ -177,7 +206,7 @@ export function Footer(props: FooterProps) {
                   {email}
                 </a>
               )}
-              <Socials social={social} style={socialStyle} />
+              <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
               <Mark siteName={siteName} logo={props.logo} />
             </div>
             <div className="he-ftr__cols">{cols}</div>
@@ -203,13 +232,13 @@ export function Footer(props: FooterProps) {
                 {email}
               </a>
             )}
-            {brandBlock && <Socials social={social} style={socialStyle} />}
+            {brandBlock && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />}
           </div>
           {cols}
         </div>
         {!brandBlock && social.length > 0 && (
           <div className="he-ftr__socialrow">
-            <Socials social={social} style={socialStyle} />
+            <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
           </div>
         )}
         {bottom}

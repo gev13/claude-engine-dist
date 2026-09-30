@@ -339,7 +339,7 @@ export function PricingBlock(p: P<'pricing'>) {
             ))}
           </div>
         )}
-        <div className={cn('he-price__plans', `is-${p.layout}`)} style={{ '--n': p.plans.length } as React.CSSProperties}>
+        <div className={cn('he-price__plans he-swipe-track', `is-${p.layout}`)} style={{ '--n': p.plans.length } as React.CSSProperties}>
           {p.plans.map((plan, i) => {
             const price = switching && yearly && plan.yearlyPrice ? plan.yearlyPrice : plan.price;
             const period = switching && yearly && plan.yearlyPeriod ? plan.yearlyPeriod : plan.period;

@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { z } from 'zod';
 import { CSS_MAX, safeCss } from '@/lib/customCode';
 import { and, desc, eq, ilike, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
-import { readingMinutes } from '@/lib/utils';
+import { postReadingMinutes } from '@/lib/utils';
 import { toSlug, uniqueSlug } from '@/lib/slug';
 import { blockInput, readListParams, seoSchema, statusEnum } from '@/server/api/schemas';
 import { badRequest, conflict, created, handle, ok, readJson } from '@/server/api/respond';
@@ -173,7 +173,7 @@ export async function POST(request: Request) {
         appearance: input.appearance ?? {},
         coverMediaId: input.coverMediaId ?? null,
         primaryCategoryId: input.primaryCategoryId ?? null,
-        readingMinutes: readingMinutes(body),
+        readingMinutes: postReadingMinutes(body, input.seo),
         publishedAt,
         authorId: guard.user.id,
       })
