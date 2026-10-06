@@ -230,6 +230,16 @@
     .he-fgrid.has-pg-m .he-fgrid__item { row-gap: var(--he-fgrid-pg-m); }
     .he-fgrid.has-pg-m .he-fgrid__item > * { margin-top: 0; margin-bottom: 0; }
   }
+  /* 3.26 — the space after the picture alone: its margin makes up the difference from the space between parts. */
+  .he-fgrid.has-mg .he-fgrid__item > :is(.he-feat__icon, .he-icard__media) { margin-bottom: calc(var(--he-fgrid-mg) - var(--he-fgrid-pg, 0px)); }
+  @media (width <= 64rem) {
+    .he-fgrid.has-mg .he-fgrid__item > :is(.he-feat__icon, .he-icard__media) { margin-bottom: calc(var(--he-fgrid-mg-t, var(--he-fgrid-mg)) - var(--he-fgrid-pg-t, var(--he-fgrid-pg, 0px))); }
+    .he-fgrid.has-mg-t .he-fgrid__item > :is(.he-feat__icon, .he-icard__media) { margin-bottom: calc(var(--he-fgrid-mg-t) - var(--he-fgrid-pg-t, var(--he-fgrid-pg, 0px))); }
+  }
+  @media (width <= 48rem) {
+    .he-fgrid.has-mg .he-fgrid__item > :is(.he-feat__icon, .he-icard__media) { margin-bottom: calc(var(--he-fgrid-mg-m, var(--he-fgrid-mg-t, var(--he-fgrid-mg))) - var(--he-fgrid-pg-m, var(--he-fgrid-pg-t, var(--he-fgrid-pg, 0px)))); }
+    .he-fgrid.has-mg-m .he-fgrid__item > :is(.he-feat__icon, .he-icard__media) { margin-bottom: calc(var(--he-fgrid-mg-m) - var(--he-fgrid-pg-m, var(--he-fgrid-pg-t, var(--he-fgrid-pg, 0px)))); }
+  }
   .he-fgrid.no-title-line .he-fgrid__link { text-decoration: none; }
   .he-fgrid__more.he-more, .he-ocard__more.he-more { display: inline-flex; align-items: center; gap: 8px; }
   /* 3.6 — an item's text inset (item style), beyond the card's own padding. */

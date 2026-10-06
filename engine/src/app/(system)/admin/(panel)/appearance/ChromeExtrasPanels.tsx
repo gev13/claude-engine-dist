@@ -137,6 +137,19 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
           <Check label="A thin line under the bar" value={header?.border} fallback onChange={set(at('border'))} />
           <Check label="The page starts at the very top, under the bar (on every page)" value={header?.under} onChange={set(at('under'))} />
         </div>
+        {/* 3.26 */}
+        <div className="max-w-[420px]">
+          <ChoiceField
+            label="A menu link is lit"
+            value={header?.activeMatch}
+            inherited="section"
+            options={[
+              { value: 'section', label: 'On its page and every page under it' },
+              { value: 'exact', label: 'On its own page only' },
+            ]}
+            onChange={set(at('activeMatch'))}
+          />
+        </div>
         <div>
           <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">The header button</p>
           <div className="grid gap-4 sm:grid-cols-4">
@@ -280,6 +293,11 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
           />
           <TextField label="Letter spacing" hint="e.g. 0 or -0.02em" value={menu?.itemTracking} maxLength={20} placeholder="as drawn" onChange={set(at('itemTracking'))} />
         </div>
+        {/* 3.26 */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TextField label="Link line height" hint="e.g. 1.2 or 54px" value={menu?.itemLineHeight} maxLength={20} placeholder="1.05" onChange={set(at('itemLineHeight'))} />
+          <TextField label="Space above and below each link" hint="e.g. 4px" value={menu?.itemPadding} maxLength={40} placeholder="10px" onChange={set(at('itemPadding'))} />
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <ChoiceField
             label="Opens a link’s sub-items"
@@ -341,6 +359,7 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
         {menu?.columnWidth && (
           <div className="grid gap-4 sm:grid-cols-3">
             <NumberField label="The page beside it" hint="% dark — 0 is the page as it is; empty is 50" min={0} max={100} placeholder="50" value={menu?.dim} onChange={set(at('dim'))} />
+            <TextField label="The column’s side padding" hint="e.g. 54px" value={menu?.columnPadding} maxLength={40} placeholder="as drawn" onChange={set(at('columnPadding'))} />
             <ChoiceField
               label="The column"
               value={menu?.columnPanel}
@@ -378,6 +397,16 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
                 { value: 'title', label: 'The heading (the details muted)' },
               ]}
               onChange={set(at('contactEmphasis'))}
+            />
+            <ChoiceField
+              label="The social links stand"
+              value={menu?.socialPlace}
+              inherited="below"
+              options={[
+                { value: 'below', label: 'Under the contact details' },
+                { value: 'beside', label: 'Beside them, on one line' },
+              ]}
+              onChange={set(at('socialPlace'))}
             />
             <ChoiceField
               label="The social links drawn"
@@ -480,6 +509,12 @@ export function PhoneMenuPanel({ chrome, set }: Props) {
               <TextField label="A drawer’s width" hint="e.g. 320px" value={phone?.width} maxLength={40} placeholder="as drawn" onChange={set(at('width'))} />
               <TextField label="Link size" hint="e.g. 18px" value={phone?.itemSize} maxLength={40} placeholder="as drawn" onChange={set(at('itemSize'))} />
               <ChoiceField label="Link weight" value={phone?.itemWeight} options={['300', '400', '500', '600', '700', '800'].map((value) => ({ value, label: value }))} onChange={set(at('itemWeight'))} />
+            </div>
+            {/* 3.26 */}
+            <div className="grid gap-4 sm:grid-cols-3">
+              <TextField label="Link line height" hint="e.g. 1.3 or 24px" value={phone?.itemLineHeight} maxLength={20} placeholder="as drawn" onChange={set(at('itemLineHeight'))} />
+              <TextField label="Space above and below each link" hint="e.g. 8px" value={phone?.itemPadding} maxLength={40} placeholder="16px" onChange={set(at('itemPadding'))} />
+              <TextField label="Link colour" hint="e.g. rgba(255,255,255,0.75)" value={phone?.itemColor} maxLength={60} placeholder="the text colour" onChange={set(at('itemColor'))} />
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <Check label="The header button as the list’s last link" value={phone?.ctaInList} onChange={set(at('ctaInList'))} />

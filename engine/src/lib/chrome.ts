@@ -7,6 +7,8 @@ const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
 const COLOR = /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
 /** 3.22 — a plain length (40px, 2.5rem, -0.02em, 0), for the few sizes set here; it lands in a style attribute. */
 const LENGTH = /^(0|-?\d*\.?\d+(px|rem|em|vw|vh|%))$/;
+/** 3.26 — a line height: a plain number (1.2) or a length (54px). */
+const LINE = /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Site chrome
@@ -112,6 +114,8 @@ export const chromeSchema = z.object({
       ctaStyle: z.enum(['primary', 'outline']).optional(),
       /** 3.23 — the header button's edge, px; unset is its button style's. */
       ctaBorderWidth: z.number().int().min(0).max(4).optional(),
+      /** 3.26 — which link is lit: the page's section, so a parent stays lit on its children (unset, as before), or only the page itself. */
+      activeMatch: z.enum(['section', 'exact']).optional(),
       /** 3.23 — the round menu button's own circle and icon colours (e.g. rgba(0,0,0,0.5)); unset is the surface. */
       menuButtonBackground: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       menuButtonColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
@@ -203,6 +207,11 @@ export const chromeSchema = z.object({
       contactEmphasis: z.enum(['value', 'title']).optional(),
       /** 3.25 — the social links in circles (as before) or as bare icons. */
       socialLook: z.enum(['circle', 'plain']).optional(),
+      /** 3.26 — the links' line height and the space above and below each (full-screen menus); the column's side padding; the social links under the contact details (as before) or beside them. */
+      itemLineHeight: z.string().trim().max(20).regex(LINE, 'A line height such as 1.2 or 54px').optional(),
+      itemPadding: z.string().trim().max(40).regex(LENGTH, 'A size such as 8px').optional(),
+      columnPadding: z.string().trim().max(40).regex(LENGTH, 'A size such as 54px').optional(),
+      socialPlace: z.enum(['below', 'beside']).optional(),
 
       /* ── 3.24 — phones: a menu of their own ── */
       onPhones: z
@@ -224,6 +233,10 @@ export const chromeSchema = z.object({
           logo: z.boolean().optional(),
           dividers: z.boolean().optional(),
           expandIcon: z.enum(['chevron', 'plus']).optional(),
+          /** 3.26 — the links' line height, the space above and below each, their colour. */
+          itemLineHeight: z.string().trim().max(20).regex(LINE, 'A line height such as 1.2 or 24px').optional(),
+          itemPadding: z.string().trim().max(40).regex(LENGTH, 'A size such as 8px').optional(),
+          itemColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
         })
         .optional(),
     })
@@ -388,6 +401,7 @@ export type ResolvedChrome = {
     ctaColors: { text?: string; background?: string; border?: string; hoverText?: string; hoverBackground?: string; hoverBorder?: string };
     ctaStyle: 'primary' | 'outline';
     ctaBorderWidth?: number;
+    activeMatch: 'section' | 'exact';
     menuButtonBackground?: string;
     menuButtonColor?: string;
     behaviour: 'always' | 'hide' | 'shrink';
@@ -432,6 +446,10 @@ export type ResolvedChrome = {
     columnPanel: 'panel' | 'none';
     contactEmphasis: 'value' | 'title';
     socialLook: 'circle' | 'plain';
+    itemLineHeight?: string;
+    itemPadding?: string;
+    columnPadding?: string;
+    socialPlace: 'below' | 'beside';
     onPhones?: {
       variant: MobileMenuVariant;
       upTo: 'mobile' | 'tablet';
@@ -444,6 +462,9 @@ export type ResolvedChrome = {
       logo: boolean;
       dividers: boolean;
       expandIcon: 'chevron' | 'plus';
+      itemLineHeight?: string;
+      itemPadding?: string;
+      itemColor?: string;
     };
   };
   footer: {
@@ -533,6 +554,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       ctaColors: Object.fromEntries(Object.entries(c.header?.ctaColors ?? {}).filter(([, v]) => typeof v === 'string' && HEX.test(v))),
       ctaStyle: c.header?.ctaStyle ?? 'primary',
       ctaBorderWidth: c.header?.ctaBorderWidth,
+      activeMatch: c.header?.activeMatch ?? 'section',
       menuButtonBackground: c.header?.menuButtonBackground && COLOR.test(c.header.menuButtonBackground) ? c.header.menuButtonBackground : undefined,
       menuButtonColor: c.header?.menuButtonColor && COLOR.test(c.header.menuButtonColor) ? c.header.menuButtonColor : undefined,
       behaviour: c.header?.behaviour ?? 'always',
@@ -577,6 +599,10 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       columnPanel: c.mobileMenu?.columnPanel ?? 'panel',
       contactEmphasis: c.mobileMenu?.contactEmphasis ?? 'value',
       socialLook: c.mobileMenu?.socialLook ?? 'circle',
+      itemLineHeight: c.mobileMenu?.itemLineHeight && LINE.test(c.mobileMenu.itemLineHeight) ? c.mobileMenu.itemLineHeight : undefined,
+      itemPadding: c.mobileMenu?.itemPadding && LENGTH.test(c.mobileMenu.itemPadding) ? c.mobileMenu.itemPadding : undefined,
+      columnPadding: c.mobileMenu?.columnPadding && LENGTH.test(c.mobileMenu.columnPadding) ? c.mobileMenu.columnPadding : undefined,
+      socialPlace: c.mobileMenu?.socialPlace ?? 'below',
       onPhones: c.mobileMenu?.onPhones?.variant
         ? {
             variant: c.mobileMenu.onPhones.variant,
@@ -590,6 +616,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
             logo: c.mobileMenu.onPhones.logo !== false,
             dividers: c.mobileMenu.onPhones.dividers !== false,
             expandIcon: c.mobileMenu.onPhones.expandIcon ?? 'chevron',
+            itemLineHeight: c.mobileMenu.onPhones.itemLineHeight && LINE.test(c.mobileMenu.onPhones.itemLineHeight) ? c.mobileMenu.onPhones.itemLineHeight : undefined,
+            itemPadding: c.mobileMenu.onPhones.itemPadding && LENGTH.test(c.mobileMenu.onPhones.itemPadding) ? c.mobileMenu.onPhones.itemPadding : undefined,
+            itemColor: c.mobileMenu.onPhones.itemColor && COLOR.test(c.mobileMenu.onPhones.itemColor) ? c.mobileMenu.onPhones.itemColor : undefined,
           }
         : undefined,
     },

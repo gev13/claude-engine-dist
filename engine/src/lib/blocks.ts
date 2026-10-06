@@ -317,6 +317,8 @@ export const blockSchemas = {
     alignWithTitle: z.boolean().optional(),
     /** `footnotes` (CF4) sets it as small print, for claims and disclaimers before the footer. */
     variant: z.enum(['default', 'footnotes']).default('default'),
+    /** 3.26 — plain paragraphs at a reading measure of 62 characters (unset, as before) or the full width. */
+    measure: z.enum(['text', 'full']).optional(),
   }),
 
   /** Heading on the left, a stack of labelled points on the right. */
@@ -378,6 +380,10 @@ export const blockSchemas = {
     partGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     partGapTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     partGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.26 — the space after the picture or icon alone, and on tablets and phones; unset is the space between parts (or the picture's own). */
+    mediaGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    mediaGapTablet: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    mediaGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.24 — a linked card's title underlined under the pointer (unset, as before) or left as it is. */
     titleHover: z.enum(['underline', 'none']).optional(),
     /** 3.24 — the card link's mark: the chevron (unset, as before) or the theme's "Read more" arrow. */
@@ -952,8 +958,17 @@ export const blockSchemas = {
     slidePlain: z.boolean().optional(),
     /** 3.25 — card slides: the "Learn more" line under a linked slide (unset, shown) or none — the whole slide is still the link. */
     slideMore: z.boolean().optional(),
-    /** 3.25 — the arrows in circles (as before) or as bare arrows, and their size in px. */
-    arrowStyle: z.enum(['circle', 'plain']).optional(),
+    /** 3.25 — the arrows in circles (as before) or as bare arrows, and their size in px. (3.26) `chevron`: bare chevrons ‹ ›. */
+    arrowStyle: z.enum(['circle', 'plain', 'chevron']).optional(),
+    /** 3.26 — card slides: a slide with no picture draws the empty picture box (unset, as before) or none. */
+    slideNoPicture: z.enum(['placeholder', 'none']).optional(),
+    /** 3.26 — card slides: the box's own colour and inner padding; the space between slides, and on phones. */
+    slideBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    slidePadding: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    slideGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    slideGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.26 — with autoplay and no loop: no pause button (unset, shown); it stops for good at the last slide or on any touch, arrow or focus. */
+    autoplayButton: z.boolean().optional(),
     arrowSize: z.number().int().min(12).max(64).optional(),
   }),
 

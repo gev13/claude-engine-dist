@@ -299,6 +299,8 @@ export const blockStyleSchema = z.object({
       subheading: typeOverride.optional(),
       /** 3.12 — the cards' small labels and "/01" numbers, apart from the section's eyebrow. */
       cardLabel: typeOverride.optional(),
+      /** 3.26 — the cards' link lines ("Learn more", "Read more"), apart from the site's Card links role. */
+      cardLink: typeOverride.optional(),
     })
     .optional(),
 

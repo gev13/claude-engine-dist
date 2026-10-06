@@ -494,8 +494,10 @@ export function checkArchive(input: CheckInput): CheckResult {
             idMap.set(values.id as string, sameKey.id as string);
             values.id = sameKey.id;
             action = input.whenAddressMatches === 'skip' ? 'skip' : 'update';
-          } else if (byChecksum && typeof values.checksum === 'string' && byChecksum.has(values.checksum)) {
-            // The same file under another name: keep ours, point the archive's references at it.
+          } else if (byChecksum && typeof values.checksum === 'string' && byChecksum.has(values.checksum) && !input.hasFile(values.filename as string)) {
+            /* The same file under another name, and the archive does not carry it: keep ours, point the archive's
+               references at it. (3.26) When the archive does carry it, it is kept at its own address instead —
+               pages imported in a later batch still name that address, and a rewrite made here never reaches them. */
             const twin = byChecksum.get(values.checksum)!;
             idMap.set(values.id as string, twin.id as string);
             urlMap[`/media/${values.filename as string}`] = twin.url as string;

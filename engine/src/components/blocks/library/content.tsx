@@ -180,6 +180,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     ...(p.partGap ? { '--he-fgrid-pg': p.partGap } : {}),
     ...(p.partGapTablet ? { '--he-fgrid-pg-t': p.partGapTablet } : {}),
     ...(p.partGapMobile ? { '--he-fgrid-pg-m': p.partGapMobile } : {}),
+    // 3.26 — the space after the picture alone, per tier.
+    ...(p.mediaGap ? { '--he-fgrid-mg': p.mediaGap } : {}),
+    ...(p.mediaGapTablet ? { '--he-fgrid-mg-t': p.mediaGapTablet } : {}),
+    ...(p.mediaGapMobile ? { '--he-fgrid-mg-m': p.mediaGapMobile } : {}),
   } as React.CSSProperties;
   // 3.24 — the card link's mark: the chevron as before, or the theme's "Read more" arrow (which Appearance → Buttons styles).
   const moreMark =
@@ -337,6 +341,9 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     p.partGap && 'has-pg',
     p.partGapTablet && 'has-pg-t',
     p.partGapMobile && 'has-pg-m',
+    p.mediaGap && 'has-mg',
+    p.mediaGapTablet && 'has-mg-t',
+    p.mediaGapMobile && 'has-mg-m',
     p.titleHover === 'none' && 'no-title-line',
   );
   return (

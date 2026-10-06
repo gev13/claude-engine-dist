@@ -104,3 +104,10 @@ follows the rows.
   and projects the archive does not carry keep theirs.
 - `seo.readingMinutes` (1–600) on a post is its reading time, kept instead of
   the counted one.
+
+## Duplicate files (3.26)
+
+A file whose bytes match one already on this site is kept at its own address
+when the archive carries it — a page imported in a later batch still names
+that address. Only when the archive does not carry the file are its
+references pointed at the matching file here.

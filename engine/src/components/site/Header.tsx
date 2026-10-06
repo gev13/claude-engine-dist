@@ -265,7 +265,8 @@ export function Header(props: HeaderProps) {
   const current = currentPath(pathname, props.defaultLocale);
   const isActive = (href: string) => {
     const target = href.replace(/\/+$/, '') || '/';
-    return current === target || (target !== '/' && current.startsWith(`${target}/`));
+    // 3.26 — `exact`: only the page itself, never its parent on a child page.
+    return current === target || (h.activeMatch !== 'exact' && target !== '/' && current.startsWith(`${target}/`));
   };
   const openItem = nav.find((item) => item.id === openId && hasChildren(item));
 
@@ -876,7 +877,7 @@ function MobileMenu({
   const closeRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
   /** 3.17 — where the menu button and the header's logo are, when both are on screen. (3.24) With the header hidden, the button's own look too. */
-  const [mirror, setMirror] = useState<{ close: DOMRect; logo: DOMRect; look?: React.CSSProperties } | null>(null);
+  const [mirror, setMirror] = useState<{ close: DOMRect; logo: DOMRect | null; look?: React.CSSProperties; x: number; y: number } | null>(null);
   /** 3.24 — phones (or tablets too) get a menu of their own when one is set. */
   const [onPhone, setOnPhone] = useState(false);
   const upTo = config.onPhones?.upTo;
@@ -899,7 +900,15 @@ function MobileMenu({
     // 3.24 — the header is about to go; the close button keeps the menu button's circle.
     const drawn = config.hideHeader && toggle ? getComputedStyle(toggle) : null;
     const look = drawn ? { background: drawn.backgroundColor, color: drawn.color, borderRadius: drawn.borderRadius } : undefined;
-    setMirror(onScreen(close) && onScreen(logo) ? { close: close!, logo: logo!, look } : null);
+    /* 3.26 — measured from the menu's own top bar, which the copies are placed in: it starts at the
+       menu's side padding — 20px on a phone, up to 72px in a full-screen menu, which a fixed 20 misplaced.
+       The close button follows the menu button even when the logo is out of sight. */
+    const bar = panelRef.current?.querySelector('.he-menu__top')?.getBoundingClientRect();
+    setMirror(
+      onScreen(close)
+        ? { close: close!, logo: onScreen(logo) ? logo! : null, look, x: bar ? bar.left : 20, y: bar ? bar.top : 0 }
+        : null,
+    );
   }, [open, config.closeAtToggle, config.hideHeader, toggleRef]);
 
 
@@ -1074,9 +1083,16 @@ function MobileMenu({
           phone && !phone.logo && 'is-no-brand',
           phone && !phone.dividers && 'no-dividers',
           !fullscreen && phone?.expandIcon === 'plus' && 'is-expand-plus',
+          // 3.26 — the links' line height and padding, the column's side padding; the phones' own.
+          fullscreen && !phone && config.itemLineHeight && 'has-item-line',
+          fullscreen && !phone && config.itemPadding && 'has-item-pad',
+          column && config.columnPadding && 'has-col-pad',
+          phone?.itemLineHeight && 'has-phone-line',
+          phone?.itemPadding && 'has-phone-pad',
+          phone?.itemColor && 'has-phone-color',
         )}
         style={
-          config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || column || phone
+          config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || config.itemLineHeight || config.itemPadding || column || phone
             ? ({
                 ...(config.opacity < 100 ? { '--he-menu-alpha': `${config.opacity}%` } : {}),
                 ...(config.background ? { '--he-menu-bg': config.background } : {}),
@@ -1088,15 +1104,21 @@ function MobileMenu({
                 ...(phone?.width ? { '--he-drawer-w': `min(${phone.width}, 100vw)` } : {}),
                 ...(phone?.itemSize ? { '--he-menu-psize': phone.itemSize } : {}),
                 ...(phone?.itemWeight ? { '--he-menu-pweight': phone.itemWeight } : {}),
+                ...(config.itemLineHeight ? { '--he-menu-line': config.itemLineHeight } : {}),
+                ...(config.itemPadding ? { '--he-menu-pad': config.itemPadding } : {}),
+                ...(column && config.columnPadding ? { '--he-menu-col-pad': config.columnPadding } : {}),
+                ...(phone?.itemLineHeight ? { '--he-menu-pline': phone.itemLineHeight } : {}),
+                ...(phone?.itemPadding ? { '--he-menu-ppad': phone.itemPadding } : {}),
+                ...(phone?.itemColor ? { '--he-menu-pcolor': phone.itemColor } : {}),
               } as React.CSSProperties)
             : undefined
         }
       >
         <div
           className={cn('he-menu__top', mirror && 'is-mirrored')}
-          style={mirror ? ({ '--he-mx': '20px', height: `${Math.ceil(Math.max(mirror.close.bottom, mirror.logo.bottom)) + 12}px` } as React.CSSProperties) : undefined}
+          style={mirror ? ({ '--he-mx': `${mirror.x}px`, height: `${Math.ceil(Math.max(mirror.close.bottom, mirror.logo?.bottom ?? 0) - mirror.y) + 12}px` } as React.CSSProperties) : undefined}
         >
-          <span className="he-menu__brand" style={mirror ? { position: 'absolute', left: mirror.logo.left - 20, top: mirror.logo.top, height: mirror.logo.height } : undefined}>
+          <span className="he-menu__brand" style={mirror?.logo ? { position: 'absolute', left: mirror.logo.left - mirror.x, top: mirror.logo.top - mirror.y, height: mirror.logo.height } : mirror ? { visibility: 'hidden' } : undefined}>
             <Brand siteName={siteName} brand={brand} onClick={onClose} />
           </span>
           <button
@@ -1107,7 +1129,7 @@ function MobileMenu({
             aria-label={t('chrome.closeMenu')}
             style={
               mirror
-                ? { position: 'absolute', left: mirror.close.left - 20, top: mirror.close.top, width: mirror.close.width, height: mirror.close.height, margin: 0, ...mirror.look }
+                ? { position: 'absolute', left: mirror.close.left - mirror.x, top: mirror.close.top - mirror.y, width: mirror.close.width, height: mirror.close.height, margin: 0, ...mirror.look }
                 : undefined
             }
           >
@@ -1218,7 +1240,13 @@ function MobileMenu({
 
         {(showContact || contactRow) && (
           <aside
-            className={cn('he-menu__aside', contactRow && 'is-row', config.contactEmphasis === 'title' && 'is-title-strong', config.socialLook === 'plain' && 'is-social-plain')}
+            className={cn(
+              'he-menu__aside',
+              contactRow && 'is-row',
+              config.contactEmphasis === 'title' && 'is-title-strong',
+              config.socialLook === 'plain' && 'is-social-plain',
+              contactRow && config.socialPlace === 'beside' && 'is-social-beside',
+            )}
             aria-label={t('menu.contact')}
           >
             <div className="he-menu__contact">

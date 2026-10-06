@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { isColor } from './theme';
+import { isColor, isLength } from './theme';
 
 /**
  * 3.24 — how a project card is drawn, shared by the projects block and the
@@ -29,6 +29,14 @@ export const projectCardSchema = z.object({
     .optional(),
   /** How far the picture zooms under the pointer (the zoom hover), e.g. 1.06. */
   zoom: z.number().min(1).max(1.3).optional(),
+  /** 3.26 — the title's size, weight and letter spacing; the category's size; the space under the picture; the gaps between cards. */
+  titleSize: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  titleWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
+  titleTracking: z.string().trim().max(20).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  categorySize: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  textGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  columnGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  rowGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
 });
 
 export type ProjectCardOptions = z.infer<typeof projectCardSchema>;
@@ -53,5 +61,25 @@ export function projectCardLook(card: ProjectCardOptions | undefined): { classNa
   if (card.reveal === 'link') className.push('has-reveal');
   if (card.revealColor && isColor(card.revealColor)) style['--he-proj-reveal'] = card.revealColor;
   if (typeof card.zoom === 'number' && card.zoom >= 1 && card.zoom <= 1.3) style['--he-proj-zoom'] = card.zoom;
+  // 3.26 — each a class and a property, only when set.
+  const lengths: [keyof ProjectCardOptions, string, string][] = [
+    ['titleSize', 'has-title-size', '--he-proj-title-size'],
+    ['titleTracking', 'has-title-tracking', '--he-proj-title-tracking'],
+    ['categorySize', 'has-cat-size', '--he-proj-cat-size'],
+    ['textGap', 'has-text-gap', '--he-proj-text-gap'],
+    ['columnGap', 'has-col-gap', '--he-proj-col-gap'],
+    ['rowGap', 'has-row-gap', '--he-proj-row-gap'],
+  ];
+  for (const [key, cls, prop] of lengths) {
+    const value = card[key];
+    if (typeof value === 'string' && isLength(value)) {
+      className.push(cls);
+      style[prop] = value;
+    }
+  }
+  if (card.titleWeight) {
+    className.push('has-title-weight');
+    style['--he-proj-title-weight'] = card.titleWeight;
+  }
   return { className, style };
 }

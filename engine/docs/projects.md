@@ -70,6 +70,10 @@ link.
 *(3.25)* The link line sits inside its card, right under the title and a
 year or summary when the layout shows them; it used to overlap the next row.
 
+*(3.26)* The cards also take the title's size, weight and letter spacing,
+the category's size, the space under the picture, and the gaps between
+columns and rows — on the block and on the archives.
+
 ## Listing projects anywhere
 
 A **Projects** block's *Where the projects come from* can be **From Projects**:

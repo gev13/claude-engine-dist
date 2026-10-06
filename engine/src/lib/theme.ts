@@ -588,6 +588,26 @@ export const themeSchema = z.object({
     })
     .optional(),
 
+  /** 3.26 — rich text (posts, rich-text blocks): its size, heading scale, spacing and lists. Unset draws it as before. */
+  richText: z
+    .object({
+      /** The size and line height: its own 17px / 1.72 (unset) or the body role's. */
+      text: z.enum(['own', 'body']).optional(),
+      /** h2 and h3 as a share of the theme's: 0.85 and 0.9 (unset); 1 is exactly the theme's. */
+      headingScale: z.number().min(0.5).max(1.5).optional(),
+      /** The space between paragraphs, e.g. 1.35em. */
+      paragraphGap: length.optional(),
+      /** The space above an h2 or h3, above an h4, and after any of them. */
+      headingTop: length.optional(),
+      subheadingTop: length.optional(),
+      headingBottom: length.optional(),
+      /** Bullet lists: a short dash (unset), a disc, or nothing; their indent and the space between items. */
+      listMarker: z.enum(['dash', 'disc', 'none']).optional(),
+      listIndent: length.optional(),
+      listGap: length.optional(),
+    })
+    .optional(),
+
   /** 3.24 — text links under the pointer (header, footer, card links, the menu's sub-links): their colour only (as before), an underline, or a line that sweeps out and back in. */
   links: z
     .object({

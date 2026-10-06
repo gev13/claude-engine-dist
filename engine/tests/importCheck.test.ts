@@ -165,6 +165,19 @@ describe('a merge', () => {
     expect((page.seo as { ogImageId: string }).ogImageId).toBe(ID(70));
   });
 
+  it('keeps a duplicate the archive carries at its own address, for pages imported in a later batch (3.26)', () => {
+    const sum = 'a'.repeat(64);
+    const existing: ExistingSnapshot = { media: [{ id: ID(70), filename: '2025/08/brand-2.gif', url: '/media/2025/08/brand-2.gif', checksum: sum }] };
+    const { prepared, urlMap, skippedMedia } = run(
+      { media: [{ id: ID(1), filename: '2026/01/brand.gif', originalName: 'brand.gif', mimeType: 'image/gif', extension: 'gif', byteSize: 1, checksum: sum }] },
+      { strategy: 'merge', existing, files: ['2026/01/brand.gif'] },
+    );
+    expect(prepared.media![0]!.action).toBe('create');
+    expect(prepared.media![0]!.values.id).toBe(ID(1));
+    expect(skippedMedia).toEqual([]);
+    expect(urlMap).toEqual({});
+  });
+
   it('leaves a link pair it already has', () => {
     const existing: ExistingSnapshot = { posts: [{ id: ID(1) }], categories: [{ id: ID(10) }], post_categories: [{ postId: ID(1), categoryId: ID(10) }] };
     const { prepared } = run({ post_categories: [{ postId: ID(1), categoryId: ID(10) }] }, { strategy: 'merge', existing });

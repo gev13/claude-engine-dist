@@ -83,6 +83,8 @@ function useAutoplay(enabled: boolean, interval: number, next: () => void, rootR
     playing,
     running,
     togglePause: () => setUserPaused((v) => !v),
+    /** 3.26 — stops for good: a slider whose motion ends by itself, once somebody takes over. */
+    stop: () => setUserPaused(true),
     hold: {
       onPointerEnter: () => setHeld(true),
       onPointerLeave: () => setHeld(false),
@@ -268,14 +270,16 @@ function Arrows({
   atEnd: boolean;
   className?: string;
   /** 3.25 — bare arrows (← →) instead of chevrons in circles, at a size of their own. */
-  look?: 'circle' | 'plain';
+  look?: 'circle' | 'plain' | 'chevron';
   size?: number;
 }) {
   const t = useMessages();
   const plain = look === 'plain';
-  const glyph = size ?? (plain ? 24 : 20);
+  // 3.26 — `chevron`: bare chevrons, drawn like the bare arrows.
+  const bare = plain || look === 'chevron';
+  const glyph = size ?? (bare ? 24 : 20);
   return (
-    <div className={cn('he-arrows', className, plain && 'is-plain')}>
+    <div className={cn('he-arrows', className, bare && 'is-plain')}>
       <button type="button" className="he-arrow is-prev" aria-label={t('block.previousSlide')} onClick={onPrev} disabled={atStart}>
         {plain ? <Icon.ArrowRight size={glyph} className="he-arrow__flip" /> : <Icon.Chevron dir="left" size={glyph} />}
       </button>
@@ -522,7 +526,7 @@ function FilmstripSlider(p: P) {
 
 /* ── Cards, products, promo cards ─────────────────────────────────────────── */
 
-function CardSlide({ s, mode, more = true }: { s: CarouselSlide; mode: P['mode']; more?: boolean }) {
+function CardSlide({ s, mode, more = true, noPicture = false }: { s: CarouselSlide; mode: P['mode']; more?: boolean; noPicture?: boolean }) {
   const t = useMessages();
   if (mode === 'heroCards') {
     return (
@@ -548,10 +552,13 @@ function CardSlide({ s, mode, more = true }: { s: CarouselSlide; mode: P['mode']
 
   const inner = (
     <>
-      <div className="he-card__media">
-        <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={s.alt} className="he-card__img" showControl={false} sizes="third" />
-        {s.badge && <span className="he-card__badge">{s.badge}</span>}
-      </div>
+      {/* 3.26 — a slide with no picture can leave the picture box out. */}
+      {!(noPicture && !s.imageUrl && !s.videoUrl) && (
+        <div className="he-card__media">
+          <MediaFill imageUrl={s.imageUrl} videoUrl={s.videoUrl} videoUrlAlt={s.videoUrlAlt} alt={s.alt} className="he-card__img" showControl={false} sizes="third" />
+          {s.badge && <span className="he-card__badge">{s.badge}</span>}
+        </div>
+      )}
       <div className="he-card__body">
         {s.eyebrow && <div className="he-card__eyebrow">{s.eyebrow}</div>}
         {s.title && <h3 className="he-card__title">{s.title}</h3>}
@@ -641,8 +648,27 @@ function TrackCarousel(p: P) {
 
   const auto = useAutoplay(p.autoplay, p.interval, next, rootRef);
   useDrag(p.drag, trackRef);
+  /* 3.26 — autoplay with no loop and no pause button: the motion ends by itself, at the last slide,
+     or for good the moment somebody touches the track, an arrow or a control. */
+  const quiet = p.autoplay && !p.loop && p.autoplayButton === false;
+  const { stop } = auto;
+  useEffect(() => {
+    if (quiet && edges.end) stop();
+  }, [quiet, edges.end, stop]);
+  const takeOver = (move: () => void) => () => {
+    if (quiet) stop();
+    move();
+  };
   const arrows = (
-    <Arrows onPrev={prev} onNext={next} atStart={!p.loop && edges.start} atEnd={!p.loop && edges.end} className={`is-${p.arrows}`} look={p.arrowStyle} size={p.arrowSize} />
+    <Arrows
+      onPrev={takeOver(prev)}
+      onNext={takeOver(next)}
+      atStart={!p.loop && edges.start}
+      atEnd={!p.loop && edges.end}
+      className={`is-${p.arrows}`}
+      look={p.arrowStyle}
+      size={p.arrowSize}
+    />
   );
 
   return (
@@ -659,6 +685,11 @@ function TrackCarousel(p: P) {
         typeof p.slideRadius === 'number' && 'has-slide-radius',
         p.slideAlign === 'center' && 'is-slide-center',
         p.slidePlain && 'is-slide-plain',
+        // 3.26 — the slide box's own colour and padding, the space between slides.
+        p.slideBackground && 'has-slide-bg',
+        p.slidePadding && 'has-slide-pad',
+        p.slideGap && 'has-slide-gap',
+        p.slideGapMobile && 'has-slide-gap-m',
       )}
       aria-roledescription="carousel"
       aria-label={p.title || 'Carousel'}
@@ -670,6 +701,10 @@ function TrackCarousel(p: P) {
           '--pv-mobile': view.mobile,
           ...(p.slideRatio ? { '--he-car-ratio': p.slideRatio.replace('/', ' / ') } : {}),
           ...(typeof p.slideRadius === 'number' ? { '--he-car-radius': `${p.slideRadius}px` } : {}),
+          ...(p.slideBackground ? { '--he-car-bg': p.slideBackground } : {}),
+          ...(p.slidePadding ? { '--he-car-pad': p.slidePadding } : {}),
+          ...(p.slideGap ? { '--he-car-gap': p.slideGap } : {}),
+          ...(p.slideGapMobile ? { '--he-car-gap-m': p.slideGapMobile } : {}),
         } as React.CSSProperties
       }
       {...auto.hold}
@@ -690,16 +725,24 @@ function TrackCarousel(p: P) {
 
       <div className={cn('he-car__viewport', p.arrows === 'edge' && 'is-edge')}>
         {(p.arrows === 'side' || p.arrows === 'edge') && count > 1 && arrows}
-        <div ref={trackRef} className="he-car__track" onScroll={onScroll} tabIndex={0} aria-label={t('block.slidesScroll')}>
+        <div
+          ref={trackRef}
+          className="he-car__track"
+          onScroll={onScroll}
+          tabIndex={0}
+          aria-label={t('block.slidesScroll')}
+          onPointerDown={quiet ? stop : undefined}
+          onFocus={quiet ? stop : undefined}
+        >
           {p.slides.map((s, i) => (
             <div key={i} className="he-car__slide" role="group" aria-roledescription="slide" aria-label={`${i + 1} of ${count}`}>
-              <CardSlide s={s} mode={mode} more={p.slideMore !== false} />
+              <CardSlide s={s} mode={mode} more={p.slideMore !== false} noPicture={p.slideNoPicture === 'none'} />
             </div>
           ))}
         </div>
       </div>
 
-      {(p.indicator !== 'none' || p.autoplay || p.arrows === 'bottom') && count > 1 && (
+      {(p.indicator !== 'none' || (p.autoplay && !quiet) || p.arrows === 'bottom') && count > 1 && (
         // 3.24 — `bottom`: the arrows on the right of this row, the indicator on its left.
         <div className={cn('shell he-car__foot', p.arrows === 'bottom' && 'has-arrows')}>
           <Indicator
@@ -714,7 +757,7 @@ function TrackCarousel(p: P) {
             slides={p.slides}
             counter={p.counter}
           />
-          {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
+          {p.autoplay && !quiet && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
           {p.arrows === 'bottom' && arrows}
         </div>
       )}

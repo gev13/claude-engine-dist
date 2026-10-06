@@ -10,6 +10,44 @@ improvements.
 
 ---
 
+## 3.26.0 — 2026-10-06
+
+**Rich text, text sliders and the details.** Every option is off, or draws
+what it drew before, until it is set.
+
+Fixed:
+
+- **An import could leave a picture missing.** A file whose bytes matched one
+  already on the site was skipped and its address rewritten only in the same
+  import; pages arriving in a later batch still named the skipped address.
+  It is now kept at its own address when the archive carries it.
+- **The menu's close button** with *Close button where the menu button is*
+  sat off the menu button in a full-screen menu, by the menu's side padding.
+
+Added:
+
+- **Rich text** (Appearance → Typography): the Body role's size, headings at
+  the theme's exact size, paragraph and heading spacing, disc or no bullets,
+  list indent and item spacing. Plain Text paragraphs can run the full width.
+- **Card sliders**: slides without a picture box, the slide's colour, padding
+  and spacing, bare chevrons, and autoplay that stops by itself without a
+  pause button when it does not loop.
+- **Project cards**: the title's size, weight and spacing, the category's
+  size, the space under the picture, column and row gaps.
+- **Card grid**: the space after the picture, apart from the other parts.
+- **Design → Typography → Card links** per block.
+- **Menus**: link line height and spacing, the column's side padding, social
+  links beside the contact details; the phone menu's spacing and colour.
+- **Header**: a menu link lit on its own page only.
+
+Checked with a computed-style diff of a live site's copy (15 addresses) at
+1440, 1024 and 375px against 3.25.0 **and against 3.22.0**, and of 54
+engine-demo, library and template pages against 3.25.0: no change. (The
+page diffs reported for 3.23.0–3.25.0 had run on one address because of a
+shell quoting mistake; the 3.22.0 comparison covers those releases.)
+
+---
+
 ## 3.25.0 — 2026-09-30
 
 **Menus and sliders, the details.** Every option is off, or draws what it

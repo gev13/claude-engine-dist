@@ -1727,8 +1727,27 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
               <div className="flex items-end pb-3">
                 <PropCheckOn label="“Learn more” under a linked slide" k="slideMore" props={props} set={(next) => set(withOpt(next, 'slideMore', next.slideMore === false ? false : undefined))} />
               </div>
-              <PropSelect label="Arrows drawn" k="arrowStyle" fallback="circle" options={[['circle', 'Chevrons in circles'], ['plain', 'Bare arrows ← →']]} props={props} set={set} />
+              <PropSelect label="Arrows drawn" k="arrowStyle" fallback="circle" options={[['circle', 'Chevrons in circles'], ['plain', 'Bare arrows ← →'], ['chevron', 'Bare chevrons ‹ ›']]} props={props} set={set} />
               <OptNumber label="Arrow size" hint="px; empty is 20 (24 bare)" step="1" k="arrowSize" props={props} set={set} />
+              {/* 3.26 — text-only slides: no empty picture box, the box's colour and padding, the space between slides. */}
+              <PropSelect label="A slide with no picture" k="slideNoPicture" fallback="placeholder" options={[['placeholder', 'Keeps an empty picture box'], ['none', 'Has no picture box']]} props={props} set={set} />
+              <Field label="The slide’s colour" hint="a colour; empty is the card’s">
+                <Input value={str(props, 'slideBackground')} placeholder="the card’s" onChange={(e) => set(withOpt(props, 'slideBackground', e.target.value.trim() || undefined))} />
+              </Field>
+              <Field label="Inside the slide" hint="padding, e.g. 20px">
+                <Input value={str(props, 'slidePadding')} placeholder="20px 22px 24px" onChange={(e) => set(withOpt(props, 'slidePadding', e.target.value.trim() || undefined))} />
+              </Field>
+              <Field label="Between slides" hint="e.g. 30px; empty is 20px">
+                <Input value={str(props, 'slideGap')} placeholder="20px" onChange={(e) => set(withOpt(props, 'slideGap', e.target.value.trim() || undefined))} />
+              </Field>
+              <Field label="— on phones" hint="empty keeps the one above, or 12px">
+                <Input value={str(props, 'slideGapMobile')} placeholder="12px" onChange={(e) => set(withOpt(props, 'slideGapMobile', e.target.value.trim() || undefined))} />
+              </Field>
+              {props.autoplay === true && props.loop === false && (
+                <div className="flex items-end pb-3 sm:col-span-2">
+                  <PropCheckOn label="A pause button (without one, it stops at the last slide or when touched)" k="autoplayButton" props={props} set={(next) => set(withOpt(next, 'autoplayButton', next.autoplayButton === false ? false : undefined))} />
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -4939,6 +4958,11 @@ function TypeFields({
               The text starts level with the heading, below the eyebrow
             </label>
           )}
+          {/* 3.26 */}
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.measure === 'full'} onChange={(e) => set(withOpt(props, 'measure', e.target.checked ? 'full' : undefined))} />
+            The paragraphs below run the full width (rather than about 62 characters)
+          </label>
           <StringListRepeater
             label="Paragraphs"
             hint="One box per paragraph. Enter starts a new line inside the same paragraph."
@@ -5105,6 +5129,16 @@ function TypeFields({
                   </Field>
                   <Field label="— on phones" hint="empty keeps the one above">
                     <Input value={str(props, 'partGapMobile')} placeholder="as above" onChange={(e) => set(withOpt(props, 'partGapMobile', e.target.value.trim() || undefined))} />
+                  </Field>
+                  {/* 3.26 — the space after the picture alone. */}
+                  <Field label="Space after the picture" hint="e.g. 20px; empty is the space between parts">
+                    <Input value={str(props, 'mediaGap')} placeholder="as between parts" onChange={(e) => set(withOpt(props, 'mediaGap', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="— on tablets" hint="empty keeps the one above">
+                    <Input value={str(props, 'mediaGapTablet')} placeholder="as above" onChange={(e) => set(withOpt(props, 'mediaGapTablet', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="— on phones" hint="empty keeps the one above">
+                    <Input value={str(props, 'mediaGapMobile')} placeholder="as above" onChange={(e) => set(withOpt(props, 'mediaGapMobile', e.target.value.trim() || undefined))} />
                   </Field>
                 </>
               )}

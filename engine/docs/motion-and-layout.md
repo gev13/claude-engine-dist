@@ -485,3 +485,25 @@ Every option below is off, or draws what it drew before, until it is set.
 - **Carousel (card sliders)**: *“Learn more” under a linked slide* can be
   switched off — the whole slide is still the link; *Arrows drawn*: chevrons
   in circles (as before) or bare arrows ← →, with *Arrow size*.
+
+## Sliders, cards, menus and the lit link (3.26)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Carousel (card sliders)**: a slide with no picture can leave the picture
+  box out; the slide's own colour and padding; the space between slides (and
+  on phones); bare chevrons ‹ ›. With autoplay and no loop, the pause button
+  can be left off — the slider then stops at the last slide, or for good the
+  moment somebody touches it, presses an arrow or tabs into it.
+- **Card grid → Space after the picture** (and on tablets and phones), apart
+  from the space between the other parts.
+- **Design → Typography → Card links**: “Learn more” and “Read more” in a
+  size, weight and face of the block's own, apart from Appearance's Card links
+  role.
+- **Full-screen menu**: the links' line height and the space above and below
+  each; the column's side padding; the social links beside the contact
+  details. *Close button where the menu button is* now lands exactly on the
+  menu button in a full-screen menu too (it was off by the menu's side
+  padding). **Menu on phones**: the links' line height, spacing and colour.
+- **Header → A menu link is lit**: on its page and every page under it (as
+  before), or on its own page only.

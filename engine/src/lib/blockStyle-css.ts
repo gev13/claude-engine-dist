@@ -239,6 +239,8 @@ export const SUBHEADINGS = ':is(h3,h4,h5,h6,.he-faq__btn,.he-faq__q):not(.type-e
 /** The section's eyebrow, the hero's kicker, and (unless Card labels says otherwise) the cards' labels. */
 export const EYEBROWS = ':is(.he-eyebrow .type-eyebrow,.he-hero__kicker,.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow)';
 /** Cards' small labels and "/01" numbers — as heavy as the eyebrow rule, written after it. */
+/** 3.26 — the cards' link lines, written after body (which also reaches a span) so they can differ from it. */
+export const CARD_LINKS = ':is(.he-more,.he-fgrid__more,.he-ocard__more,.he-card__more,.he-plst__more):not(.he-show__more)';
 export const CARD_LABELS = ':is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow):not(.type-eyebrow)';
 
 export function blockStyleToCss(
@@ -363,6 +365,8 @@ export function blockStyleToCss(
   const cardLabel = typeDecls(style.typography?.cardLabel);
   // `:not(.type-eyebrow)` lifts it to the eyebrow rule's weight, so being written later is enough to win.
   if (cardLabel.length) parts.push(block(`${root} ${CARD_LABELS}`, cardLabel));
+  const cardLink = typeDecls(style.typography?.cardLink);
+  if (cardLink.length) parts.push(block(`${root} ${CARD_LINKS}`, cardLink));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
   if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
 
@@ -377,6 +381,7 @@ export function blockStyleToCss(
       block(`${root} ${SUBHEADINGS}`, tierDecls(style.typography?.subheading, tier)),
       block(`${root} ${EYEBROWS}`, tierDecls(style.typography?.eyebrow, tier)),
       block(`${root} ${CARD_LABELS}`, tierDecls(style.typography?.cardLabel, tier)),
+      block(`${root} ${CARD_LINKS}`, tierDecls(style.typography?.cardLink, tier)),
       // 3.13 — the section's gap on this tier.
       block(root, tierGap && isLength(tierGap) ? [['--he-gap', tierGap]] : []),
     ].join('');

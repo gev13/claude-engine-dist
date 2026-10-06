@@ -96,6 +96,8 @@ export function StatsBlock(p: P<'stats'>) {
 
 /* ── prose ────────────────────────────────────────────────────────────────── */
 export function ProseBlock(p: P<'prose'>) {
+  // 3.26 — plain paragraphs at the reading measure (as before) or the full width.
+  const measure = p.measure === 'full' ? 'max-w-none' : 'max-w-[62ch]';
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <div
@@ -121,7 +123,7 @@ export function ProseBlock(p: P<'prose'>) {
                  text silently runs together — reported from real use. Runs of
                  spaces are still collapsed, so it does not turn prose into
                  preformatted text. */
-              <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-5">
+              <p key={i} className={cn('mt-4 whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-5', measure)}>
                 {text}
               </p>
             ))}
@@ -132,7 +134,7 @@ export function ProseBlock(p: P<'prose'>) {
               <Prose html={p.html} />
             ) : (
               p.paragraphs.map((text, i) => (
-                <p key={i} className="mt-4 max-w-[62ch] whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-0">
+                <p key={i} className={cn('mt-4 whitespace-pre-line text-[length:var(--he-block-lead,17px)] text-ash first:mt-0', measure)}>
                   {text}
                 </p>
               ))

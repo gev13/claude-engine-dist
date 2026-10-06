@@ -488,6 +488,55 @@ function AppearanceScreenInner() {
                 </div>
               </Panel>
 
+              {/* 3.26 — rich text (posts, rich-text blocks), as before until set. */}
+              <Panel title="Rich text">
+                <p className="m-0 mb-4 text-[13px] leading-relaxed text-ash">
+                  Posts and every rich-text field. Empty draws it as it always was: 17px text, headings a little smaller than the theme’s, a short dash before each item.
+                </p>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <ChoiceField
+                    label="Text size and line height"
+                    value={theme.richText?.text}
+                    inherited="own"
+                    options={[
+                      { value: 'own', label: 'Its own — 17px / 1.72' },
+                      { value: 'body', label: 'The Body role’s' },
+                    ]}
+                    onChange={set(['richText', 'text'])}
+                  />
+                  <Field label="Headings’ scale" hint="of the theme’s h2 and h3 — 1 is exactly theirs; empty is 0.85 / 0.9">
+                    <Input
+                      type="number"
+                      min={0.5}
+                      max={1.5}
+                      step={0.05}
+                      value={theme.richText?.headingScale ?? ''}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        set(['richText', 'headingScale'])(e.target.value === '' || Number.isNaN(n) ? undefined : Math.min(1.5, Math.max(0.5, n)));
+                      }}
+                    />
+                  </Field>
+                  <LengthField label="Between paragraphs" placeholder="e.g. 1.35em" emptyLabel="1.1em" value={get(['richText', 'paragraphGap'])} onChange={set(['richText', 'paragraphGap'])} />
+                  <LengthField label="Above an h2 or h3" placeholder="e.g. 48px" emptyLabel="2em / 1.7em" value={get(['richText', 'headingTop'])} onChange={set(['richText', 'headingTop'])} />
+                  <LengthField label="Above an h4" placeholder="e.g. 40px" emptyLabel="1.5em" value={get(['richText', 'subheadingTop'])} onChange={set(['richText', 'subheadingTop'])} />
+                  <LengthField label="After a heading" placeholder="e.g. 16px" emptyLabel="as between paragraphs" value={get(['richText', 'headingBottom'])} onChange={set(['richText', 'headingBottom'])} />
+                  <ChoiceField
+                    label="Before each bullet item"
+                    value={theme.richText?.listMarker}
+                    inherited="dash"
+                    options={[
+                      { value: 'dash', label: 'A short dash' },
+                      { value: 'disc', label: 'A disc' },
+                      { value: 'none', label: 'Nothing' },
+                    ]}
+                    onChange={set(['richText', 'listMarker'])}
+                  />
+                  <LengthField label="List indent" placeholder="e.g. 32px" emptyLabel="as drawn" value={get(['richText', 'listIndent'])} onChange={set(['richText', 'listIndent'])} />
+                  <LengthField label="Between list items" placeholder="e.g. 4px" emptyLabel="0.5em" value={get(['richText', 'listGap'])} onChange={set(['richText', 'listGap'])} />
+                </div>
+              </Panel>
+
               <EyebrowMarkerPanel theme={theme} set={set} />
 
               <LocaleFonts set={set} get={get} />

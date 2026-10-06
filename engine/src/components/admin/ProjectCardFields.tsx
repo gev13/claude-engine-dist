@@ -51,6 +51,37 @@ export function ProjectCardFields({ value, onChange }: { value: ProjectCardOptio
           </Select>
         </Field>
       </div>
+      {/* 3.26 — the title's type, the category's size, the space under the picture, the gaps between cards. */}
+      <div className="grid gap-3 sm:grid-cols-4">
+        <Field label="Title size" hint="e.g. 20px; empty is the layout’s" htmlFor={`${id}-tsize`}>
+          <Input id={`${id}-tsize`} maxLength={40} value={card.titleSize ?? ''} placeholder="as drawn" onChange={(e) => update({ titleSize: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Title weight" htmlFor={`${id}-tweight`}>
+          <Select id={`${id}-tweight`} value={card.titleWeight ?? ''} onChange={(e) => update({ titleWeight: (e.target.value || undefined) as ProjectCardOptions['titleWeight'] })}>
+            <option value="">As drawn</option>
+            {['300', '400', '500', '600', '700', '800'].map((w) => (
+              <option key={w} value={w}>
+                {w}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Title letter spacing" hint="e.g. -0.03em" htmlFor={`${id}-ttrack`}>
+          <Input id={`${id}-ttrack`} maxLength={20} value={card.titleTracking ?? ''} placeholder="as drawn" onChange={(e) => update({ titleTracking: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Category size" hint="e.g. 15px" htmlFor={`${id}-csize`}>
+          <Input id={`${id}-csize`} maxLength={40} value={card.categorySize ?? ''} placeholder="as drawn" onChange={(e) => update({ categorySize: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Space under the picture" hint="e.g. 12px; empty is 16px" htmlFor={`${id}-tgap`}>
+          <Input id={`${id}-tgap`} maxLength={40} value={card.textGap ?? ''} placeholder="16px" onChange={(e) => update({ textGap: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Between columns" hint="e.g. 32px; empty is 24px" htmlFor={`${id}-cgap`}>
+          <Input id={`${id}-cgap`} maxLength={40} value={card.columnGap ?? ''} placeholder="24px" onChange={(e) => update({ columnGap: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Between rows" hint="e.g. 32px; empty is 44px" htmlFor={`${id}-rgap`}>
+          <Input id={`${id}-rgap`} maxLength={40} value={card.rowGap ?? ''} placeholder="44px" onChange={(e) => update({ rowGap: e.target.value.trim() || undefined })} />
+        </Field>
+      </div>
       <label className="flex items-center gap-2 text-[13px] text-ash">
         <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.reveal === 'link'} onChange={(e) => update({ reveal: e.target.checked ? 'link' : undefined })} />
         On hover, the category line slides away and a link line slides in

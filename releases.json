@@ -1,6 +1,14 @@
 {
-  "latest": "3.25.0",
+  "latest": "3.26.0",
   "releases": [
+    {
+      "version": "3.26.0",
+      "date": "2026-10-06",
+      "summary": "Rich text from the theme (body size, exact heading sizes, spacing, disc bullets), text-only card sliders, project card type and gaps, card grid picture spacing, a card-link role per block, menu spacing and padding, an exact-page lit link; fixed: duplicate files in batch imports, the full-screen menu's mirrored close button. Off until chosen.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.25.0",
       "date": "2026-09-30",

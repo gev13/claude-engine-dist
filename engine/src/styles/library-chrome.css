@@ -207,6 +207,14 @@
   .he-menu__aside.is-social-plain .he-menu__social { gap: 18px; }
   .he-menu__aside.is-social-plain .he-menu__social a { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; }
   .he-menu.no-dividers .he-menu__row { border-bottom: 0; }
+  /* ── 3.26: the links' line height and padding, the column's side padding, the icons beside the contact details; the phones' own ── */
+  .he-menu.is-fullscreen.has-item-line .he-menu__row { line-height: var(--he-menu-line); }
+  .he-menu.is-fullscreen.has-item-pad .he-menu__row { padding-block: var(--he-menu-pad); }
+  .he-menu.is-fullscreen.has-column.has-col-pad { padding-inline: var(--he-menu-col-pad); }
+  .he-menu__aside.is-row.is-social-beside { flex-wrap: nowrap; column-gap: 32px; }
+  .he-menu.has-phone-line .he-menu__list .he-menu__row { line-height: var(--he-menu-pline); }
+  .he-menu.has-phone-pad .he-menu__list .he-menu__row { padding-block: var(--he-menu-ppad); }
+  .he-menu.has-phone-color .he-menu__list .he-menu__row { color: var(--he-menu-pcolor); }
 
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }

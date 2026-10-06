@@ -106,6 +106,7 @@ const TYPE_ROLE_LABELS = {
   subheading: 'Card and item titles',
   eyebrow: 'Eyebrow — the small label over the heading',
   cardLabel: 'Card labels and numbers',
+  cardLink: 'Card links — “Learn more”, “Read more”',
   body: 'Body text',
 } as const;
 const GLITCH_TINTS = [
@@ -549,7 +550,7 @@ export function BlockDesignPanel({
           Overrides the global Appearance settings for this section. Leave everything empty to follow the site theme.
         </p>
 
-        {(['heading', 'subheading', 'eyebrow', 'cardLabel', 'body'] as const).map((role) => (
+        {(['heading', 'subheading', 'eyebrow', 'cardLabel', 'cardLink', 'body'] as const).map((role) => (
           <div key={role} className="mb-4 border-t-2 border-hairline pt-4 last:mb-0">
             <span className="mb-3 block font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">
               {TYPE_ROLE_LABELS[role]}

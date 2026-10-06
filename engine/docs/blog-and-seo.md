@@ -266,3 +266,20 @@ Every option below is off, or draws what it drew before, until it is set.
 - **Appearance → Blog → Each card shows → Titles**, and the same in a Post
   list's cards: every line (as before), or two or three lines at most with an
   ellipsis.
+
+## Rich text from the theme (3.26)
+
+**Appearance → Typography → Rich text** reaches posts and every rich-text
+field. Empty draws it as it always was (17px / 1.72, headings at 0.85 and 0.9
+of the theme's h2 and h3, a short dash before each bullet item).
+
+- **Text size and line height**: its own, or the Body role's.
+- **Headings' scale**: 1 is exactly the theme's h2 and h3.
+- **Between paragraphs**, **above an h2 or h3**, **above an h4**, **after a
+  heading**.
+- **Before each bullet item**: a dash, a disc or nothing, with the list's
+  indent and the space between items.
+
+A block's own Body text size (Design → Typography) reaches its rich text too.
+The Text block's plain paragraphs can run the full width instead of about 62
+characters.

@@ -643,6 +643,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
   }
 
+  // 3.26 — rich text, set from the theme; unlayered, so it beats the `prose-edge` utility.
+  if (safeSelector === ':root') {
+    const rich = richTextCss(theme.richText);
+    if (rich) parts.push(rich);
+  }
+
   // 3.24 — text links under the pointer: an underline, or a line that sweeps out to the left and back in from the right.
   if (safeSelector === ':root') {
     const links = linkHoverCss(theme.links);
@@ -745,4 +751,36 @@ export function linkHoverCss(links: Theme['links']): string {
     `@media (prefers-reduced-motion:reduce){${hovers}{animation:none;background-size:100% var(--he-sweep-w)}}` +
     `${still}{animation:none;background-size:100% var(--he-sweep-w)}`
   );
+}
+
+/* 3.26 — rich text from the theme. Each rule only when its value is set; the
+   heading's space after it is written before the space above one, so a
+   heading straight after another takes the space above. */
+export function richTextCss(rich: Theme['richText']): string {
+  if (!rich) return '';
+  const len = (v: string | undefined) => (v && isLength(v) ? v : undefined);
+  const out: string[] = [];
+  if (rich.text === 'body') out.push('.prose-edge{font-size:var(--he-body-size);line-height:var(--he-body-line)}');
+  const scale = rich.headingScale;
+  if (typeof scale === 'number' && scale >= 0.5 && scale <= 1.5) {
+    out.push(`.prose-edge h2{font-size:calc(var(--he-h2-size) * ${scale})}.prose-edge h3{font-size:calc(var(--he-h3-size) * ${scale})}`);
+  }
+  const gap = len(rich.paragraphGap);
+  if (gap) out.push(`.prose-edge>*+*{margin-top:${gap}}`);
+  const after = len(rich.headingBottom);
+  if (after) out.push(`.prose-edge :is(h2,h3,h4)+*{margin-top:${after}}`);
+  const top = len(rich.headingTop);
+  if (top) out.push(`.prose-edge :is(h2,h3){margin-top:${top}}`);
+  const subTop = len(rich.subheadingTop);
+  if (subTop) out.push(`.prose-edge h4{margin-top:${subTop}}`);
+  const indent = len(rich.listIndent);
+  if (rich.listMarker === 'disc' || rich.listMarker === 'none') {
+    out.push(`.prose-edge ul{list-style:${rich.listMarker === 'disc' ? 'disc' : 'none'};padding-left:${indent ?? (rich.listMarker === 'disc' ? '1.2em' : '0')}}.prose-edge ul>li{padding-left:0}.prose-edge ul>li::before{content:none}`);
+  } else if (indent) {
+    out.push(`.prose-edge ul>li{padding-left:${indent}}`);
+  }
+  if (indent) out.push(`.prose-edge ol{padding-left:${indent}}`);
+  const listGap = len(rich.listGap);
+  if (listGap) out.push(`.prose-edge li+li{margin-top:${listGap}}`);
+  return out.join('');
 }
