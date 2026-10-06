@@ -293,6 +293,18 @@ function NavigationScreenInner() {
                         <option value="legal">Bottom bar</option>
                       </Select>
                     </Field>
+                    {/* 3.27 — two menus in one footer column. */}
+                    {ci > 0 && (column.placement ?? 'main') === 'main' && (
+                      <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash sm:col-span-3">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-flare"
+                          checked={column.stack === true}
+                          onChange={(e) => setFooter(footer.map((c, i) => (i === ci ? { ...c, stack: e.target.checked || undefined } : c)))}
+                        />
+                        Stack under the column before (one footer column, two menus)
+                      </label>
+                    )}
                     <div className="flex items-end gap-1 pb-1">
                       <AdminButton
                         variant="ghost"

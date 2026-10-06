@@ -10,6 +10,39 @@ improvements.
 
 ---
 
+## 3.27.0 — 2026-10-06
+
+**Pictures, slides, forms and the footer.** Every option is off, or draws
+what it drew before, until it is set.
+
+Fixed:
+
+- **Image blocks carry the picture's width and height** from the library, so
+  a lazy picture keeps its space before it loads and the page no longer
+  jumps (layout shift, anchors landing short).
+- **A block's body colour no longer reaches a slider's counter, dots, arrows
+  or pause button.**
+
+Added:
+
+- **Sliders in columns** start at the column's edge (with *Blocks inside a
+  row's columns without their own space*).
+- **Card slides**: padding per side, the title-to-text gap, the picture's
+  width (centred with centred words) and no box behind it.
+- **Form**: labels for screen readers only, and an outline send button.
+  **Form fields** (Appearance): height, corners, side padding, text box
+  height.
+- **Footer**: no tagline; the social and contact links in the head column;
+  two menus stacked in one column; footer link and social-name type roles;
+  on phones, open lists and a centred bottom row.
+- **Menus**: the colour of a column menu's dim; space above the phone list.
+
+Checked with a computed-style diff against 3.26.0 of 54 engine demo,
+library and template pages (1440/375) and of a live site's copy (15
+addresses, 1440/1024/375): no change.
+
+---
+
 ## 3.26.0 — 2026-10-06
 
 **Rich text, text sliders and the details.** Every option is off, or draws

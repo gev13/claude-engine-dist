@@ -359,6 +359,7 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
         {menu?.columnWidth && (
           <div className="grid gap-4 sm:grid-cols-3">
             <NumberField label="The page beside it" hint="% dark — 0 is the page as it is; empty is 50" min={0} max={100} placeholder="50" value={menu?.dim} onChange={set(at('dim'))} />
+            <TextField label="Dimmed with" hint="a colour — empty is black" value={menu?.dimColor} maxLength={60} placeholder="#000000" onChange={set(at('dimColor'))} />
             <TextField label="The column’s side padding" hint="e.g. 54px" value={menu?.columnPadding} maxLength={40} placeholder="as drawn" onChange={set(at('columnPadding'))} />
             <ChoiceField
               label="The column"
@@ -515,6 +516,7 @@ export function PhoneMenuPanel({ chrome, set }: Props) {
               <TextField label="Link line height" hint="e.g. 1.3 or 24px" value={phone?.itemLineHeight} maxLength={20} placeholder="as drawn" onChange={set(at('itemLineHeight'))} />
               <TextField label="Space above and below each link" hint="e.g. 8px" value={phone?.itemPadding} maxLength={40} placeholder="16px" onChange={set(at('itemPadding'))} />
               <TextField label="Link colour" hint="e.g. rgba(255,255,255,0.75)" value={phone?.itemColor} maxLength={60} placeholder="the text colour" onChange={set(at('itemColor'))} />
+              <TextField label="Space above the list" hint="under the close button, e.g. 48px" value={phone?.listTop} maxLength={40} placeholder="as drawn" onChange={set(at('listTop'))} />
             </div>
             <div className="flex flex-wrap gap-x-6 gap-y-2">
               <Check label="The header button as the list’s last link" value={phone?.ctaInList} onChange={set(at('ctaInList'))} />
@@ -645,6 +647,36 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
             })}
           </div>
         </Field>
+        {/* 3.27 — the head column, and the footer on phones. */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Check label="The site’s tagline under the logo" value={footer?.tagline} fallback onChange={set(['chrome', 'footer', 'tagline'])} />
+          <Check label="On phones, each menu a list that opens (unticked: open lists)" value={footer?.accordionMobile} fallback onChange={set(['chrome', 'footer', 'accordionMobile'])} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ChoiceField
+            label="The social and contact links"
+            value={footer?.socialPlace}
+            inherited="below"
+            options={[
+              { value: 'below', label: 'Below the columns' },
+              { value: 'head', label: 'In the head column, under the logo' },
+            ]}
+            onChange={set(['chrome', 'footer', 'socialPlace'])}
+          />
+          <ChoiceField
+            label="The bottom row on phones"
+            value={footer?.bottomAlignMobile}
+            inherited="left"
+            options={[
+              { value: 'left', label: 'From the left' },
+              { value: 'center', label: 'Centred' },
+            ]}
+            onChange={set(['chrome', 'footer', 'bottomAlignMobile'])}
+          />
+        </div>
+        <p className="m-0 text-[12px] text-smoke">
+          A footer column can sit under the one before it (Menus → Footer menu → Stack under the column before). The links’ and the bottom row’s type is Typography → Footer links.
+        </p>
       </div>
     </Panel>
   );

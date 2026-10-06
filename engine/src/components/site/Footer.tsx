@@ -44,6 +44,12 @@ export type FooterProps = {
   logo?: FooterLogo;
   /** 3.1 — drawn as a panel (Appearance → Shape → Panels). */
   panel?: boolean;
+  /** 3.27 — the social and contact links in the head column rather than below the columns. */
+  socialInHead?: boolean;
+  /** 3.27 — on phones, every menu an open list rather than one that opens. */
+  openLists?: boolean;
+  /** 3.27 — on phones, the bottom row centred. */
+  bottomCentred?: boolean;
 };
 
 function Socials({ social, style = 'icon', separator, contacts = [] }: { social: SocialLink[]; style?: SocialLabelStyle; separator?: 'none' | 'slash' | 'dot'; contacts?: readonly string[] }) {
@@ -150,12 +156,28 @@ export function Footer(props: FooterProps) {
     </div>
   );
 
-  const cols = main.map((column) => <FooterColumn key={column.id} title={column.title} items={column.items} />);
+  /* 3.27 — a column marked `stack` sits under the one before it, in one grid cell; a lone column renders as it always did. */
+  const groups: Column[][] = [];
+  for (const column of main) {
+    if (column.stack && groups.length > 0) groups[groups.length - 1]!.push(column);
+    else groups.push([column]);
+  }
+  const col = (column: Column) => <FooterColumn key={column.id} title={column.title} items={column.items} collapsible={!props.openLists} />;
+  const cols = groups.map((group) =>
+    group.length === 1 ? (
+      col(group[0]!)
+    ) : (
+      <div key={group[0]!.id} className="he-ftr__stack">
+        {group.map(col)}
+      </div>
+    ),
+  );
+  const looks = cn(props.openLists && 'is-open-lists', props.bottomCentred && 'is-bottom-centred');
 
   if (variant === 'centered') {
     const links = main.flatMap((c) => c.items);
     return (
-      <footer className={cn('he-ftr he-ftr--centered', props.panel && 'is-panel')}>
+      <footer className={cn('he-ftr he-ftr--centered', props.panel && 'is-panel', looks)}>
         <div className="shell he-ftr__center">
           <Mark siteName={siteName} logo={props.logo} />
           {tagline && <p className="he-ftr__tagline">{tagline}</p>}
@@ -193,14 +215,14 @@ export function Footer(props: FooterProps) {
 
   if (variant === 'inset') {
     return (
-      <footer className={cn('he-ftr he-ftr--inset', props.panel && 'is-panel')}>
+      <footer className={cn('he-ftr he-ftr--inset', props.panel && 'is-panel', looks)}>
         <div className="he-ftr__card">
           {props.shareChip && (
             <div className="he-ftr__chip">
               <ShareChip />
             </div>
           )}
-          <div className="he-ftr__cardgrid" style={{ '--he-footer-cols': main.length || 1 } as React.CSSProperties}>
+          <div className="he-ftr__cardgrid" style={{ '--he-footer-cols': groups.length || 1 } as React.CSSProperties}>
             <div className="he-ftr__cardbrand">
               {tagline && <p className="he-ftr__tagline">{tagline}</p>}
               {email && (
@@ -220,11 +242,13 @@ export function Footer(props: FooterProps) {
   }
 
   const brandBlock = variant === 'brand';
+  // 3.27 — the social and contact links in the head column, where the brand footer already has them.
+  const socialHead = brandBlock || props.socialInHead === true;
 
   return (
-    <footer className={cn('he-ftr', `he-ftr--${variant}`, props.panel && 'is-panel')}>
+    <footer className={cn('he-ftr', `he-ftr--${variant}`, props.panel && 'is-panel', looks)}>
       <div className="shell">
-        <div className="he-ftr__grid" style={{ '--he-footer-cols': main.length || 1 } as React.CSSProperties}>
+        <div className="he-ftr__grid" style={{ '--he-footer-cols': groups.length || 1 } as React.CSSProperties}>
           <div className="he-ftr__lead">
             <Mark siteName={siteName} logo={props.logo} />
             {tagline && <p className="he-ftr__tagline">{tagline}</p>}
@@ -234,11 +258,11 @@ export function Footer(props: FooterProps) {
                 {email}
               </a>
             )}
-            {brandBlock && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />}
+            {socialHead && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />}
           </div>
           {cols}
         </div>
-        {!brandBlock && social.length > 0 && (
+        {!socialHead && social.length > 0 && (
           <div className="he-ftr__socialrow">
             <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
           </div>

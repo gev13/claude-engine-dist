@@ -12,7 +12,6 @@ import {
   FaqBlock,
   FigureBlock,
   HeroBlock,
-  ImageBlock,
   InfoPanelBlock,
   NumberedListBlock,
   PagerBlock,
@@ -47,6 +46,7 @@ import {
 } from './library/showcase';
 import { ProjectsSource } from './library/ProjectsSource';
 import { VideoSource } from './library/VideoSource';
+import { ImageSource } from './ImageSource';
 import { SectionVideo } from './library/SectionVideo';
 import { BreadcrumbsBlock, BusinessHoursBlock, ChartBlock, PriceListBlock, ReviewsBlock, SearchBlock, TextPathBlock } from './library/widgets';
 import { FlipBoxBlock, HotspotsBlock, ShareBlock, TocBlock } from './library/widgets-client';
@@ -80,7 +80,7 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
   postList: PostListBlock,
   contactForm: ContactFormBlock,
   infoPanel: InfoPanelBlock,
-  image: ImageBlock,
+  image: ImageSource,
   table: TableBlock,
   spacer: SpacerBlock,
   figure: FigureBlock,

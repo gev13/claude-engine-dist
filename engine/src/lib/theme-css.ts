@@ -323,9 +323,18 @@ function fieldCss(theme: Theme, scope: string): string {
   push(field, 'background-color', f.background, isColor);
   push(field, 'border-color', f.border, isColor);
   push(field, 'color', f.text, isColor);
-  if (field.length === 0) return '';
+  // 3.27 — the fields' size: one-line fields and drop-downs, then every field's corners and padding, then a text box.
+  const box = `${scope}:is(input.he-fb__input:not([type=file]),select.he-fb__input,button.he-fb__input,textarea.he-fb__input,.he-nl__input,.he-field)`;
+  const sized: string[] = [];
+  if (f.height && isLength(f.height)) sized.push(block(`${scope}:is(input.he-fb__input:not([type=file]),select.he-fb__input,button.he-fb__input,.he-nl__input,input.he-field)`, [['height', f.height], ['padding-block', '0']]));
+  const shape: Decl[] = [];
+  push(shape, 'border-radius', f.radius, isLength);
+  push(shape, 'padding-inline', f.paddingInline, isLength);
+  if (shape.length) sized.push(block(box, shape));
+  if (f.textareaHeight && isLength(f.textareaHeight)) sized.push(block(`${scope}textarea.he-fb__input`, [['min-height', f.textareaHeight], ['height', f.textareaHeight]]));
+  if (field.length === 0) return sized.join('');
   const chip = field.filter(([property]) => property !== 'color');
-  return block(`${scope}${INPUT_SELECTOR}`, field) + (chip.length ? block(`${scope}.he-fb__choice input:not(:checked)+span`, chip) : '');
+  return block(`${scope}${INPUT_SELECTOR}`, field) + (chip.length ? block(`${scope}.he-fb__choice input:not(:checked)+span`, chip) : '') + sized.join('');
 }
 
 function shapeCss(theme: Theme, scope: string): string {
@@ -637,6 +646,8 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
      specificity, so a Design panel spacing (one class) still wins. */
   if (theme.layout?.nestedFlush === true && safeSelector === ':root') {
     parts.push(':where(.he-nested section){padding-block:0}');
+    // 3.27 — and a slider in a column starts at the column's edge, as the blocks beside it do, not a page gutter in.
+    parts.push(':where(.he-nested) .he-car__viewport:not(.is-edge) .he-car__track{--pad:0px}');
   }
   // 3.23 — the space under an eyebrow, before its heading.
   if (theme.layout?.eyebrowGap && isLength(theme.layout.eyebrowGap) && safeSelector === ':root') {

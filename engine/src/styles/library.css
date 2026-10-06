@@ -589,7 +589,8 @@
   }
   .he-ftr__colchev { display: none; }
   .he-ftr__links { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
-  .he-ftr__links a { display: inline-block; padding: 4px 0; font-size: 14px; color: var(--color-ash); }
+  /* 3.27 — footer text reads the Footer text role first, then its own drawn value. */
+  .he-ftr__links a { display: inline-block; padding: 4px 0; font-size: var(--he-footer-text-size, 14px); color: var(--he-footer-text-color, var(--color-ash)); font-family: var(--he-footer-text-family, revert-layer); font-weight: var(--he-footer-text-weight, revert-layer); line-height: var(--he-footer-text-line, revert-layer); letter-spacing: var(--he-footer-text-tracking, revert-layer); text-transform: var(--he-footer-text-transform, revert-layer); }
   .he-ftr__links a:hover { color: var(--color-flare-soft); }
 
   /* Below 768px a column collapses to its heading. */
@@ -602,6 +603,16 @@
     .he-ftr__col.is-open .he-ftr__links { padding-bottom: 12px; }
     .he-ftr__grid { gap: 0; }
     .he-ftr__lead { padding-bottom: 24px; }
+  }
+  /* 3.27 — two menus stacked in one footer column; open lists on phones; the bottom row centred on phones. */
+  .he-ftr__stack { display: grid; align-content: start; gap: 28px; }
+  @media (width <= 768px) {
+    .he-ftr__stack { gap: 0; }
+    .he-ftr__col.is-static { border-bottom: 0; }
+    .he-ftr__col.is-static .he-ftr__coltoggle { padding: 14px 0 4px; }
+    .he-ftr__col.is-static:not(.is-open) .he-ftr__links { display: grid; padding-bottom: 12px; }
+    .he-ftr.is-bottom-centred .he-ftr__bottom { flex-direction: column; align-items: center; text-align: center; }
+    .he-ftr.is-bottom-centred .he-ftr__legal { justify-content: center; }
   }
 
   .he-ftr__social { display: flex; flex-wrap: wrap; gap: var(--he-gap, 8px); margin: 0; padding: 0; list-style: none; }
@@ -618,14 +629,14 @@
   .he-ftr__socialrow { padding-bottom: 20px; }
   /* 2.18 — names or short labels ("Fb. / Ig.") instead of icons. */
   .he-ftr__social.is-text { gap: 6px 18px; }
-  .he-ftr__social.is-text a { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; font-size: 14px; }
+  .he-ftr__social.is-text a { width: auto; height: auto; padding: 0; border: 0; border-radius: 0; font-size: var(--he-footer-social-size, 14px); color: var(--he-footer-social-color, var(--color-ash)); font-family: var(--he-footer-social-family, revert-layer); font-weight: var(--he-footer-social-weight, revert-layer); line-height: var(--he-footer-social-line, revert-layer); letter-spacing: var(--he-footer-social-tracking, revert-layer); text-transform: var(--he-footer-social-transform, revert-layer); }
   /* 3.22 — a separator between names ("Fb. / Ig."), and the contact links as icon and name, one a line. */
   .he-ftr__social.has-sep { gap: 6px 10px; }
   .he-ftr__social.has-sep li { display: flex; align-items: center; gap: 10px; }
-  .he-ftr__sep { font-size: 14px; color: var(--color-smoke); }
+  .he-ftr__sep { font-size: var(--he-footer-social-size, 14px); color: var(--color-smoke); }
   .he-ftr__contacts { display: grid; gap: 10px; margin: 16px 0 0; padding: 0; list-style: none; }
   .he-ftr__socialrow .he-ftr__contacts { margin-top: 12px; }
-  .he-ftr__contacts a { display: inline-flex; align-items: center; gap: 10px; font-size: 14px; color: var(--color-ash); }
+  .he-ftr__contacts a { display: inline-flex; align-items: center; gap: 10px; font-size: var(--he-footer-text-size, 14px); color: var(--he-footer-text-color, var(--color-ash)); font-family: var(--he-footer-text-family, revert-layer); font-weight: var(--he-footer-text-weight, revert-layer); line-height: var(--he-footer-text-line, revert-layer); letter-spacing: var(--he-footer-text-tracking, revert-layer); text-transform: var(--he-footer-text-transform, revert-layer); }
   .he-ftr__contacts a:hover { color: var(--color-flare-soft); }
 
   .he-ftr__copy.is-as-written { text-transform: none; letter-spacing: 0.02em; }
@@ -637,13 +648,13 @@
     gap: var(--he-gap, 12px 24px);
     padding-block: 16px;
     border-top: 1px solid var(--color-hairline);
-    font-family: var(--he-label-family, var(--font-mono));
-    font-size: var(--he-label-size, 10px);
-    letter-spacing: var(--he-label-tracking, 0.14em);
-    text-transform: var(--he-label-transform, uppercase);
-    color: var(--he-label-color, var(--color-smoke));
-    font-weight: var(--he-label-weight, revert-layer);
-    line-height: var(--he-label-line, revert-layer);
+    font-family: var(--he-footer-text-family, var(--he-label-family, var(--font-mono)));
+    font-size: var(--he-footer-text-size, var(--he-label-size, 10px));
+    letter-spacing: var(--he-footer-text-tracking, var(--he-label-tracking, 0.14em));
+    text-transform: var(--he-footer-text-transform, var(--he-label-transform, uppercase));
+    color: var(--he-footer-text-color, var(--he-label-color, var(--color-smoke)));
+    font-weight: var(--he-footer-text-weight, var(--he-label-weight, revert-layer));
+    line-height: var(--he-footer-text-line, var(--he-label-line, revert-layer));
   }
   .he-ftr__legal { display: flex; flex-wrap: wrap; gap: var(--he-gap, 6px 20px); margin: 0; padding: 0; list-style: none; }
   .he-ftr__legal a { color: inherit; padding: 4px 0; }

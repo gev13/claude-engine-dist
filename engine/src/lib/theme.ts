@@ -177,7 +177,7 @@ const fontKey = z.string().refine((value) => value in FONT_STACKS, 'Not a font t
 
 /* ── Typography ───────────────────────────────────────────────────────────── */
 
-export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'footerTitle', 'cardLink'] as const;
+export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial'] as const;
 export type TypeRole = (typeof TYPE_ROLES)[number];
 
 export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
@@ -193,6 +193,8 @@ export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
   label: 'Labels (chips, meta, small captions)',
   footerTitle: 'Footer column titles',
   cardLink: 'Card links (Learn more, Read more)',
+  footerText: 'Footer links, contacts and bottom row',
+  footerSocial: 'Footer social names (Fb. / Ig.)',
 };
 
 /**
@@ -202,7 +204,7 @@ export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
  * and an unset role leaves every label exactly as it was. Footer column
  * titles and card links read their own role first, then Labels.
  */
-export const LABEL_ROLES = ['label', 'footerTitle', 'cardLink'] as const;
+export const LABEL_ROLES = ['label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial'] as const;
 
 /** The custom-property stem of a role: `footerTitle` → `footer-title`. */
 export function roleVar(role: TypeRole): string {
@@ -623,6 +625,11 @@ export const themeSchema = z.object({
       background: color.optional(),
       border: color.optional(),
       text: color.optional(),
+      /** 3.27 — a one-line field's height, every field's corners and side padding, a text box's height. */
+      height: length.optional(),
+      radius: length.optional(),
+      paddingInline: length.optional(),
+      textareaHeight: length.optional(),
     })
     .optional(),
 

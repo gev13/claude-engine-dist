@@ -1734,9 +1734,17 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
               <Field label="The slide’s colour" hint="a colour; empty is the card’s">
                 <Input value={str(props, 'slideBackground')} placeholder="the card’s" onChange={(e) => set(withOpt(props, 'slideBackground', e.target.value.trim() || undefined))} />
               </Field>
-              <Field label="Inside the slide" hint="padding, e.g. 20px">
+              <Field label="Inside the slide" hint="padding — one to four lengths, e.g. 36px 20px 42px">
                 <Input value={str(props, 'slidePadding')} placeholder="20px 22px 24px" onChange={(e) => set(withOpt(props, 'slidePadding', e.target.value.trim() || undefined))} />
               </Field>
+              {/* 3.27 */}
+              <Field label="Title to text" hint="e.g. 22px; empty is 8px">
+                <Input value={str(props, 'slideTitleGap')} placeholder="8px" onChange={(e) => set(withOpt(props, 'slideTitleGap', e.target.value.trim() || undefined))} />
+              </Field>
+              <Field label="Picture width" hint="e.g. 250px or 66%; empty fills the slide">
+                <Input value={str(props, 'slideImageWidth')} placeholder="the slide’s" onChange={(e) => set(withOpt(props, 'slideImageWidth', e.target.value.trim() || undefined))} />
+              </Field>
+              <PropSelect label="Behind the picture" k="slideImageBox" fallback="surface" options={[['surface', 'The surface colour'], ['none', 'Nothing']]} props={props} set={(next) => set(withOpt(next, 'slideImageBox', next.slideImageBox === 'none' ? 'none' : undefined))} />
               <Field label="Between slides" hint="e.g. 30px; empty is 20px">
                 <Input value={str(props, 'slideGap')} placeholder="20px" onChange={(e) => set(withOpt(props, 'slideGap', e.target.value.trim() || undefined))} />
               </Field>
@@ -3979,6 +3987,15 @@ function TypeFields({
           <label className="flex items-center gap-2 text-[14px] text-ash">
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.optionalMark === false} onChange={(e) => set(withOpt(props, 'optionalMark', e.target.checked ? false : undefined))} />
             Leave “(optional)” off the questions that need no answer
+          </label>
+          {/* 3.27 */}
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.labels === 'hidden'} onChange={(e) => set(withOpt(props, 'labels', e.target.checked ? 'hidden' : undefined))} />
+            Hide the questions’ labels — the placeholders say what goes where (screen readers still hear the labels)
+          </label>
+          <label className="flex items-center gap-2 text-[14px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.submitStyle === 'outline'} onChange={(e) => set(withOpt(props, 'submitStyle', e.target.checked ? 'outline' : undefined))} />
+            The send button as the outline button
           </label>
           <label className="flex items-center gap-2 text-[14px] text-ash">
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.submitArrow === true} onChange={(e) => set(withOpt(props, 'submitArrow', e.target.checked || undefined))} />

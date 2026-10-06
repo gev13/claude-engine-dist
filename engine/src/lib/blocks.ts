@@ -964,7 +964,17 @@ export const blockSchemas = {
     slideNoPicture: z.enum(['placeholder', 'none']).optional(),
     /** 3.26 — card slides: the box's own colour and inner padding; the space between slides, and on phones. */
     slideBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
-    slidePadding: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** (3.27) One to four lengths, as CSS writes padding: `36px 20px 42px`. */
+    slidePadding: z
+      .string()
+      .trim()
+      .max(80)
+      .refine((v) => { const parts = v.split(/\s+/); return parts.length >= 1 && parts.length <= 4 && parts.every((part) => isLength(part)); }, 'One to four CSS lengths')
+      .optional(),
+    /** 3.27 — the space between a slide's title and its text; the picture's width (centred with centred words) and its box. */
+    slideTitleGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    slideImageWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    slideImageBox: z.enum(['surface', 'none']).optional(),
     slideGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     slideGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.26 — with autoplay and no loop: no pause button (unset, shown); it stops for good at the last slide or on any touch, arrow or focus. */
@@ -1831,6 +1841,9 @@ export const blockSchemas = {
     /* ── 3.4 ─────────────────────────────────────────────────────────────── */
     /** false leaves "(optional)" off the questions that need no answer. */
     optionalMark: z.boolean().optional(),
+    /** 3.27 — the questions' labels shown (unset) or kept for screen readers only, the placeholders doing the work; the send button as the main button (unset) or the outline one. */
+    labels: z.enum(['shown', 'hidden']).optional(),
+    submitStyle: z.enum(['primary', 'outline']).optional(),
     /** An arrow on the send button, as on the site's other buttons. */
     submitArrow: z.boolean().optional(),
     /** Space inside the card: one length, or two (top and bottom, then the sides). */

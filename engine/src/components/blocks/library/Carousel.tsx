@@ -690,6 +690,10 @@ function TrackCarousel(p: P) {
         p.slidePadding && 'has-slide-pad',
         p.slideGap && 'has-slide-gap',
         p.slideGapMobile && 'has-slide-gap-m',
+        // 3.27 — the title-to-text gap, the picture's width and a picture with no box behind it.
+        p.slideTitleGap && 'has-title-gap',
+        p.slideImageWidth && 'has-img-w',
+        p.slideImageBox === 'none' && 'is-img-bare',
       )}
       aria-roledescription="carousel"
       aria-label={p.title || 'Carousel'}
@@ -705,6 +709,8 @@ function TrackCarousel(p: P) {
           ...(p.slidePadding ? { '--he-car-pad': p.slidePadding } : {}),
           ...(p.slideGap ? { '--he-car-gap': p.slideGap } : {}),
           ...(p.slideGapMobile ? { '--he-car-gap-m': p.slideGapMobile } : {}),
+          ...(p.slideTitleGap ? { '--he-car-title-gap': p.slideTitleGap } : {}),
+          ...(p.slideImageWidth ? { '--he-car-img-w': p.slideImageWidth } : {}),
         } as React.CSSProperties
       }
       {...auto.hold}

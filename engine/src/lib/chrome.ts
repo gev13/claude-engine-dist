@@ -201,6 +201,8 @@ export const chromeSchema = z.object({
       phoneLabel: z.string().trim().max(20).optional(),
       /** 3.25 — with a width: how dark the page beside the column is, 0–100 (unset is 50). */
       dim: z.number().int().min(0).max(100).optional(),
+      /** 3.27 — the colour of that dim; unset is black. */
+      dimColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       /** 3.25 — with a width: the column in the menu's colour (as before) or none — the links stand on the dimmed page. */
       columnPanel: z.enum(['panel', 'none']).optional(),
       /** 3.25 — the contact row: the heading small and muted, the details large (as before), or the heading strong and the details muted. */
@@ -237,6 +239,8 @@ export const chromeSchema = z.object({
           itemLineHeight: z.string().trim().max(20).regex(LINE, 'A line height such as 1.2 or 24px').optional(),
           itemPadding: z.string().trim().max(40).regex(LENGTH, 'A size such as 8px').optional(),
           itemColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
+          /** 3.27 — the space above the list, under the close button. */
+          listTop: z.string().trim().max(40).regex(LENGTH, 'A size such as 48px').optional(),
         })
         .optional(),
     })
@@ -269,6 +273,12 @@ export const chromeSchema = z.object({
       socialSeparator: z.enum(['none', 'slash', 'dot']).optional(),
       /** 3.23 — between the legal links in the bottom row: nothing (as before), a bar, a slash or a dot. */
       legalSeparator: z.enum(['none', 'bar', 'slash', 'dot']).optional(),
+      /** 3.27 — the site's tagline under the logo (unset, shown) or not; the social and contact links in the head column, in its place, or below the columns (unset, as before). */
+      tagline: z.boolean().optional(),
+      socialPlace: z.enum(['head', 'below']).optional(),
+      /** 3.27 — on phones: each menu a list that opens (unset, as before) or open lists; the bottom row from the left (unset) or centred. */
+      accordionMobile: z.boolean().optional(),
+      bottomAlignMobile: z.enum(['left', 'center']).optional(),
       /** 3.22 — these social links as a list of icon and name under the others (phone, messengers), instead of among them. */
       contactLinks: z.array(z.enum(SOCIAL_NETWORKS)).max(12).optional(),
     })
@@ -443,6 +453,7 @@ export type ResolvedChrome = {
     socialNetworks?: SocialNetwork[];
     phoneLabel?: string;
     dim?: number;
+    dimColor?: string;
     columnPanel: 'panel' | 'none';
     contactEmphasis: 'value' | 'title';
     socialLook: 'circle' | 'plain';
@@ -465,6 +476,7 @@ export type ResolvedChrome = {
       itemLineHeight?: string;
       itemPadding?: string;
       itemColor?: string;
+      listTop?: string;
     };
   };
   footer: {
@@ -481,6 +493,10 @@ export type ResolvedChrome = {
     copyrightCase: 'upper' | 'asWritten';
     socialSeparator: 'none' | 'slash' | 'dot';
     legalSeparator: 'none' | 'bar' | 'slash' | 'dot';
+    tagline: boolean;
+    socialPlace: 'head' | 'below';
+    accordionMobile: boolean;
+    bottomAlignMobile: 'left' | 'center';
     contactLinks: SocialNetwork[];
   };
   cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string; linkedMedia: 'off' | 'word' | 'arrow'; discSize?: number; discColor?: string };
@@ -596,6 +612,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       socialNetworks: c.mobileMenu?.socialNetworks?.length ? c.mobileMenu.socialNetworks : undefined,
       phoneLabel: c.mobileMenu?.phoneLabel || undefined,
       dim: c.mobileMenu?.dim,
+      dimColor: c.mobileMenu?.dimColor && COLOR.test(c.mobileMenu.dimColor) ? c.mobileMenu.dimColor : undefined,
       columnPanel: c.mobileMenu?.columnPanel ?? 'panel',
       contactEmphasis: c.mobileMenu?.contactEmphasis ?? 'value',
       socialLook: c.mobileMenu?.socialLook ?? 'circle',
@@ -619,6 +636,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
             itemLineHeight: c.mobileMenu.onPhones.itemLineHeight && LINE.test(c.mobileMenu.onPhones.itemLineHeight) ? c.mobileMenu.onPhones.itemLineHeight : undefined,
             itemPadding: c.mobileMenu.onPhones.itemPadding && LENGTH.test(c.mobileMenu.onPhones.itemPadding) ? c.mobileMenu.onPhones.itemPadding : undefined,
             itemColor: c.mobileMenu.onPhones.itemColor && COLOR.test(c.mobileMenu.onPhones.itemColor) ? c.mobileMenu.onPhones.itemColor : undefined,
+            listTop: c.mobileMenu.onPhones.listTop && LENGTH.test(c.mobileMenu.onPhones.listTop) ? c.mobileMenu.onPhones.listTop : undefined,
           }
         : undefined,
     },
@@ -636,6 +654,10 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       copyrightCase: c.footer?.copyrightCase ?? 'upper',
       socialSeparator: c.footer?.socialSeparator ?? 'none',
       legalSeparator: c.footer?.legalSeparator ?? 'none',
+      tagline: c.footer?.tagline !== false,
+      socialPlace: c.footer?.socialPlace ?? 'below',
+      accordionMobile: c.footer?.accordionMobile !== false,
+      bottomAlignMobile: c.footer?.bottomAlignMobile ?? 'left',
       contactLinks: c.footer?.contactLinks ?? [],
     },
     cursor: {

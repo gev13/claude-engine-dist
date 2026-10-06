@@ -21,9 +21,11 @@ import { sampleBlock } from '@/content/demo/samples';
    (`postList`, `servicesIndex`) cannot be rendered here without one.
    `tests/bandProbe.test.ts` covers all 63 types at the level that does not
    need rendering: that each has a sample, and that the sample parses.
+   (3.27) `image` left this list: it reads the picture's stored size from the
+   library now, like the video block.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const SYNCHRONOUS = ['hero', 'cta', 'prose', 'faq', 'quote', 'stats', 'cardGrid', 'heading', 'image', 'table'];
+const SYNCHRONOUS = ['hero', 'cta', 'prose', 'faq', 'quote', 'stats', 'cardGrid', 'heading', 'table'];
 
 const render = async (type: string) => {
   const element = await BandProbe({ params: Promise.resolve({ type }) });

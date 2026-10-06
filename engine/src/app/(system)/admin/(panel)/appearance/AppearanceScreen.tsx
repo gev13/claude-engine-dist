@@ -321,6 +321,11 @@ function AppearanceScreenInner() {
                   <ColorField label="Field fill" placeholder="the page colour" value={get(['fields', 'background'])} onChange={set(['fields', 'background'])} />
                   <ColorField label="Field edge" placeholder="the hairline" value={get(['fields', 'border'])} onChange={set(['fields', 'border'])} />
                   <ColorField label="Field text" placeholder="the primary text" value={get(['fields', 'text'])} onChange={set(['fields', 'text'])} />
+                  {/* 3.27 — the fields' size. */}
+                  <LengthField label="One-line field height" placeholder="e.g. 44px" emptyLabel="as drawn (52px)" value={get(['fields', 'height'])} onChange={set(['fields', 'height'])} />
+                  <LengthField label="Corners" placeholder="e.g. 8px" emptyLabel="as drawn" value={get(['fields', 'radius'])} onChange={set(['fields', 'radius'])} />
+                  <LengthField label="Side padding" placeholder="e.g. 16px" emptyLabel="as drawn" value={get(['fields', 'paddingInline'])} onChange={set(['fields', 'paddingInline'])} />
+                  <LengthField label="Text box height" placeholder="e.g. 160px" emptyLabel="as drawn" value={get(['fields', 'textareaHeight'])} onChange={set(['fields', 'textareaHeight'])} />
                 </div>
               </Panel>
 
@@ -431,7 +436,11 @@ function AppearanceScreenInner() {
                       ? 'The small text around the content: category chips, dates and meta rows, card eyebrows, the post’s back link and contents title, captions, form labels, the footer’s bottom row, rails and badges. Section eyebrows follow it too until the Eyebrow label role is set. Each empty field keeps what every label was drawn with (mono, 10–12px, capitals).'
                       : role === 'footerTitle'
                         ? 'The heading over each footer column. Empty fields follow Labels, then the drawn style.'
-                        : 'The “Learn more” / “Read more” line at the foot of a card. Empty fields follow Labels (for the mono links), then each card’s own style.'}
+                        : role === 'footerText'
+                          ? 'The footer’s menu links, its contact links and its bottom row (copyright and legal links). Empty fields keep what each was drawn with — the bottom row follows Labels first.'
+                          : role === 'footerSocial'
+                            ? 'The footer’s social links when Menus shows them as names or short labels. Empty fields keep the drawn 14px.'
+                            : 'The “Learn more” / “Read more” line at the foot of a card. Empty fields follow Labels (for the mono links), then each card’s own style.'}
                   </p>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -630,7 +639,7 @@ function AppearanceScreenInner() {
                   checked={theme.layout?.nestedFlush === true}
                   onChange={(e) => set(['layout', 'nestedFlush'])(e.target.checked || undefined)}
                 />
-                Blocks inside a row’s columns without their own space above and below
+                Blocks inside a row’s columns without their own space above and below (and sliders start at the column’s edge)
               </label>
             </Panel>
 

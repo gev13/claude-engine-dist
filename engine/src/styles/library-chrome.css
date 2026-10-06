@@ -215,6 +215,8 @@
   .he-menu.has-phone-line .he-menu__list .he-menu__row { line-height: var(--he-menu-pline); }
   .he-menu.has-phone-pad .he-menu__list .he-menu__row { padding-block: var(--he-menu-ppad); }
   .he-menu.has-phone-color .he-menu__list .he-menu__row { color: var(--he-menu-pcolor); }
+  /* 3.27 — space above the phone menu's list. */
+  .he-menu.has-phone-top .he-menu__body { padding-top: var(--he-menu-ptop); }
 
   .he-menu--fullscreenCentered .he-menu__body { display: flex; flex-direction: column; justify-content: center; text-align: center; }
   .he-menu--fullscreenCentered .he-menu__row { justify-content: center; font-size: clamp(28px, 5vw, 56px); letter-spacing: 0.04em; text-align: center; text-transform: uppercase; }

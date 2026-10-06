@@ -277,7 +277,7 @@ export default async function SiteLayout({
             {footerWrap(
               <Footer
               siteName={settings.name}
-              tagline={settings.tagline}
+              tagline={chrome.footer.tagline ? settings.tagline : undefined}
               email={chrome.footer.email ? settings.contactEmail : undefined}
               address={navigation.footerAddress}
               columns={navigation.footer}
@@ -286,6 +286,9 @@ export default async function SiteLayout({
               socialStyle={navigation.socialStyle}
               socialSeparator={chrome.footer.socialSeparator}
               legalSeparator={chrome.footer.legalSeparator}
+              socialInHead={chrome.footer.socialPlace === 'head'}
+              openLists={!chrome.footer.accordionMobile}
+              bottomCentred={chrome.footer.bottomAlignMobile === 'center'}
               contactLinks={chrome.footer.contactLinks}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}

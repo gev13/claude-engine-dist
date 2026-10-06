@@ -231,7 +231,8 @@ function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number
    and headings that live in spans or paragraphs of their own — each of those
    belongs to its own role, or keeps the size it is drawn at (a counter's big
    number, a button's label). */
-export const BODY = ':is(p,li,td,span,.he-ucard__body,.he-figs__label,.he-stat__label):not(.type-eyebrow,.he-ilist__slash,.he-title-after,.he-hero__kicker,.he-mrows__num,.he-counter__value,.he-faq__q,.he-cbtn *,.he-btn *)';
+/* 3.27 — and never a slider's indicator, arrows or pause button, which keep their own colours (`.he-ind`, `.he-arrows`, `.he-pause`). */
+export const BODY = ':is(p,li,td,span,.he-ucard__body,.he-figs__label,.he-stat__label):not(.type-eyebrow,.he-ilist__slash,.he-title-after,.he-hero__kicker,.he-mrows__num,.he-counter__value,.he-faq__q,.he-cbtn *,.he-btn *,.he-ind,.he-ind *,.he-arrows *,.he-pause *)';
 /** Every heading, but not a list's small title, which is a label drawn as an h3. */
 export const HEADINGS = ':is(h1,h2,h3,h4,h5,h6):not(.he-ilist__title)';
 /** Card and item titles, the FAQ's questions and a list's titles — as heavy as HEADINGS (the :not), written after it. */

@@ -1039,7 +1039,13 @@ function MobileMenu({
           onClick={onClose}
           aria-hidden="true"
           // 3.25 — how dark the page beside a column menu is.
-          style={column && typeof config.dim === 'number' ? { background: `rgb(0 0 0 / ${config.dim}%)` } : undefined}
+          style={
+            column && config.dimColor
+              ? { background: `color-mix(in srgb, ${config.dimColor} ${config.dim ?? 50}%, transparent)` }
+              : column && typeof config.dim === 'number'
+                ? { background: `rgb(0 0 0 / ${config.dim}%)` }
+                : undefined
+          }
         />
       )}
       <div
@@ -1090,6 +1096,7 @@ function MobileMenu({
           phone?.itemLineHeight && 'has-phone-line',
           phone?.itemPadding && 'has-phone-pad',
           phone?.itemColor && 'has-phone-color',
+          phone?.listTop && 'has-phone-top',
         )}
         style={
           config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || config.itemLineHeight || config.itemPadding || column || phone
@@ -1110,6 +1117,7 @@ function MobileMenu({
                 ...(phone?.itemLineHeight ? { '--he-menu-pline': phone.itemLineHeight } : {}),
                 ...(phone?.itemPadding ? { '--he-menu-ppad': phone.itemPadding } : {}),
                 ...(phone?.itemColor ? { '--he-menu-pcolor': phone.itemColor } : {}),
+                ...(phone?.listTop ? { '--he-menu-ptop': phone.listTop } : {}),
               } as React.CSSProperties)
             : undefined
         }

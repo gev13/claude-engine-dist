@@ -507,3 +507,31 @@ Every option below is off, or draws what it drew before, until it is set.
   padding). **Menu on phones**: the links' line height, spacing and colour.
 - **Header → A menu link is lit**: on its page and every page under it (as
   before), or on its own page only.
+
+## Pictures, slides, forms, the footer and the menus (3.27)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Image blocks carry the picture's size.** A picture from the library gets
+  its stored width and height in the page, so its space is kept before it
+  loads — the page no longer jumps, and links to a part of the page land
+  where they should. (Fixed; nothing to set.)
+- **Blocks inside a row's columns without their own space** (Appearance →
+  Layout) now also starts a slider at the column's edge.
+- **Carousel (card sliders)**: *Inside the slide* takes one to four lengths
+  (`36px 20px 42px`); *Title to text*; *Picture width* (e.g. 250px or 66%,
+  centred with centred words); *Behind the picture*: the surface colour or
+  nothing. A block's Body text colour no longer reaches the slider's counter,
+  dots, arrows or pause button.
+- **Form**: *Hide the questions' labels* (screen readers still hear them;
+  the placeholders say what goes where) and *The send button as the outline
+  button*. **Appearance → Colours → Form fields**: a one-line field's height,
+  the fields' corners and side padding, and a text box's height.
+- **Footer** (Appearance → Footer): the site's tagline under the logo or not;
+  the social and contact links in the head column; on phones, open lists
+  instead of lists that open, and the bottom row centred. **Menus → Footer
+  menu → Stack under the column before** puts two menus in one column.
+  **Typography → Footer links, contacts and bottom row** and **Footer social
+  names** are two new roles, empty until set.
+- **Full-screen menu → Dimmed with**: the colour of the page's dim beside a
+  column menu. **Menu on phones → Space above the list.**

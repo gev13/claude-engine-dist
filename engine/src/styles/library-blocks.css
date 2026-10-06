@@ -471,10 +471,16 @@
   .he-arrows.is-plain .he-arrow:hover:not(:disabled) > svg { color: inherit; }
   .he-arrow__flip { transform: scaleX(-1); }
   /* 3.26 — card slides: the box's own colour and padding, and the space between slides (and on phones). */
-  .he-car.has-slide-bg .he-card { background: var(--he-car-bg); }
-  .he-car.has-slide-pad .he-card__body { padding: var(--he-car-pad); }
+  /* Through the track, so they beat "no box behind a slide" (`is-slide-plain`), which is written later in this file. */
+  .he-car.has-slide-bg .he-car__track .he-card { background: var(--he-car-bg); }
+  .he-car.has-slide-pad .he-car__track .he-card__body { padding: var(--he-car-pad); }
   .he-car.has-slide-gap .he-car__track { --gap: var(--he-car-gap); }
   @media (width <= 48rem) { .he-car.has-slide-gap-m .he-car__track { --gap: var(--he-car-gap-m); } }
+  /* 3.27 — the title-to-text gap (the body's own gap is 8px), the picture at a width of its own, centred with centred words, and without a box. */
+  .he-car.has-title-gap .he-card__title { margin-bottom: calc(var(--he-car-title-gap) - 8px); }
+  .he-car.has-img-w .he-card__media { width: var(--he-car-img-w); max-width: 100%; }
+  .he-car.has-img-w.is-slide-center .he-card__media { margin-inline: auto; }
+  .he-car.is-img-bare .he-card__media { background: transparent; }
   /* 3.24 — card slides: their own picture shape and corners, the words centred, no box behind. */
   .he-car.has-slide-ratio .he-card__media { aspect-ratio: var(--he-car-ratio); }
   .he-car.is-slide-plain .he-card { overflow: visible; border-radius: 0; background: transparent; clip-path: none; }

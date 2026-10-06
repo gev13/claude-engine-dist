@@ -37,14 +37,29 @@ const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
 const FILE_ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png';
 const FILE_HINT = 'PDF, Word, JPG or PNG, up to 8 MB.';
 
-function Field({ field, uid, value, onChange, mark }: { field: FormField; uid: string; value: Values[string] | undefined; onChange: (next: Values[string]) => void; mark: boolean }) {
+function Field({
+  field,
+  uid,
+  value,
+  onChange,
+  mark,
+  hideLabel = false,
+}: {
+  field: FormField;
+  uid: string;
+  value: Values[string] | undefined;
+  onChange: (next: Values[string]) => void;
+  mark: boolean;
+  /** 3.27 — the label kept for screen readers only. */
+  hideLabel?: boolean;
+}) {
   const t = useMessages();
   // One text node, as the markup always was.
   const optional = mark && <span className="he-fb__opt">{` (${t('form.optional')})`}</span>;
   const id = `${uid}-${field.id}`;
   const hint = field.help ? `${id}-help` : undefined;
   const label = (
-    <label className="he-fb__label" htmlFor={id}>
+    <label className={hideLabel ? 'he-fb__label sr-only' : 'he-fb__label'} htmlFor={id}>
       {field.label}
       {!field.required && optional}
     </label>
@@ -348,7 +363,7 @@ export function FormBlock(p: P) {
         )}
         <div className="he-fb__grid">
           {current.fields.map((field) => (
-            <Field key={field.id} field={field} uid={uid} value={values[field.id]} onChange={set(field.id)} mark={p.optionalMark !== false} />
+            <Field key={field.id} field={field} uid={uid} value={values[field.id]} onChange={set(field.id)} mark={p.optionalMark !== false} hideLabel={p.labels === 'hidden'} />
           ))}
         </div>
         {/* A trap for bots: people never see it, so anything typed here is not from a person. */}
@@ -368,7 +383,12 @@ export function FormBlock(p: P) {
               {t('form.back')}
             </button>
           )}
-          <button type="submit" className={cn('he-cbtn is-medium is-primary', submitPad.className)} style={submitPad.style} disabled={state === 'sending'}>
+          <button
+            type="submit"
+            className={cn('he-cbtn is-medium', p.submitStyle === 'outline' ? 'is-outline' : 'is-primary', submitPad.className)}
+            style={submitPad.style}
+            disabled={state === 'sending'}
+          >
             {/* A span, so the theme's arrow compartment (which looks for the arrow after the label) applies. */}
             <span>{state === 'sending' ? t('form.sending') : last ? p.submitLabel || t('form.submit') : t('form.next')}</span>
             {p.submitArrow && <ArrowRight />}

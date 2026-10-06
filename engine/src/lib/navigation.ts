@@ -92,6 +92,8 @@ const footerColumn = z.object({
    * beside the copyright, which is where short policy links belong.
    */
   placement: z.enum(['main', 'legal']).optional(),
+  /** 3.27 — stacked under the column before it (one footer column holding two menus) rather than a column of its own. */
+  stack: z.boolean().optional(),
   items: z.array(childItem).max(20),
 });
 

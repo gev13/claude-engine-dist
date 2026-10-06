@@ -222,9 +222,29 @@ function ShareGlyph({ network }: { network: 'x' | 'linkedin' | 'facebook' }) {
  * 768px it becomes the button that opens the column, so a long footer
  * collapses into a short list of headings on a phone.
  */
-export function FooterColumn({ title, items }: { title: string; items: NavChild[] }) {
+export function FooterColumn({ title, items, collapsible = true }: { title: string; items: NavChild[]; collapsible?: boolean }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+
+  // 3.27 — an open list on phones too: a plain heading, no button to press.
+  if (!collapsible) {
+    return (
+      <div className="he-ftr__col is-static">
+        <h2 className="he-ftr__coltitle">
+          <span className="he-ftr__coltoggle">{title}</span>
+        </h2>
+        <ul className="he-ftr__links">
+          {items.map((item) => (
+            <li key={item.id}>
+              <Link href={item.href} {...linkAttrs(item)}>
+                {item.label}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </div>
+    );
+  }
 
   return (
     <div className={cn('he-ftr__col', open && 'is-open')}>
