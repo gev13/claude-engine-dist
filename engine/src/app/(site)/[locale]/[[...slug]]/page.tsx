@@ -9,7 +9,7 @@ import { getProjectTemplate } from '@/server/content/projectTemplate';
 import { safeCss } from '@/lib/customCode';
 import { handleMiss } from '@/server/content/miss';
 import { JsonLd } from '@/components/site/JsonLd';
-import { buildMetadata } from '@/lib/seo/metadata';
+import { buildMetadata, homeSlashUrl } from '@/lib/seo/metadata';
 import { heroImage } from '@/lib/seo/heroImage';
 import { shareImage } from '@/server/seo/shareImage';
 import {
@@ -359,8 +359,16 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
     services,
   ];
 
+  // 3.28 — the slashed home page's canonical and og:url (Next would print them without the slash); a page's own canonical wins.
+  const slashedHome = page.seo.canonicalUrl ? null : homeSlashUrl(path, locale);
   return (
     <>
+      {slashedHome && (
+        <>
+          <link rel="canonical" href={slashedHome} />
+          <meta property="og:url" content={slashedHome} />
+        </>
+      )}
       <BlockRenderer
         blocks={page.blocks}
         showNames={page.template === 'library'}

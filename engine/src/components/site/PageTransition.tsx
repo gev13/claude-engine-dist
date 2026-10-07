@@ -3,6 +3,7 @@
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { motionReduced } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
 type Style = 'fadeUp' | 'fade' | 'slide' | 'curtain';
 
@@ -31,7 +32,18 @@ export const FIRST_ENTER_SCRIPT =
  * asked for less motion gets none of it. The content is in the HTML
  * whatever happens, so nothing here delays a crawler.
  */
-export function PageTransition({ style, leave = 'fade', firstLoad = false }: { style: Style; leave?: 'fade' | 'fadeUp'; firstLoad?: boolean }) {
+export function PageTransition({
+  style,
+  leave = 'fade',
+  firstLoad = false,
+  preloader = false,
+}: {
+  style: Style;
+  leave?: 'fade' | 'fadeUp';
+  firstLoad?: boolean;
+  /** 3.28 — the loading screen covers every page change, from the leaving page until the next one has arrived. */
+  preloader?: boolean;
+}) {
   const pathname = usePathname();
   const router = useRouter();
   const first = useRef(true);
@@ -42,7 +54,7 @@ export function PageTransition({ style, leave = 'fade', firstLoad = false }: { s
     const main = document.getElementById('main');
     if (!main) return;
     main.classList.remove('he-page-leave');
-    document.documentElement.classList.remove('he-curtain-leave');
+    document.documentElement.classList.remove('he-curtain-leave', 'he-pre-nav');
     leaving.current = false;
     if (first.current) {
       first.current = false;
@@ -83,13 +95,14 @@ export function PageTransition({ style, leave = 'fade', firstLoad = false }: { s
       leaving.current = true;
       main.classList.add('he-page-leave');
       if (style === 'curtain') document.documentElement.classList.add('he-curtain-leave');
+      if (preloader) document.documentElement.classList.add('he-pre-nav');
       window.setTimeout(() => router.push(url.pathname + url.search + url.hash), leave === 'fadeUp' && style !== 'curtain' ? LEAVE_UP_MS : LEAVE_MS[style]);
     };
     // Back from the cache with the leaving class still on: undo it.
     const onShow = (event: PageTransitionEvent) => {
       if (!event.persisted) return;
       document.getElementById('main')?.classList.remove('he-page-leave', 'he-page-enter');
-      document.documentElement.classList.remove('he-curtain-leave', 'he-curtain-enter');
+      document.documentElement.classList.remove('he-curtain-leave', 'he-curtain-enter', 'he-pre-nav');
       leaving.current = false;
     };
     // Capture, not bubble: Next's <Link> calls preventDefault in React's own
@@ -102,7 +115,7 @@ export function PageTransition({ style, leave = 'fade', firstLoad = false }: { s
       document.removeEventListener('click', onClick, { capture: true });
       window.removeEventListener('pageshow', onShow);
     };
-  }, [router, style, leave]);
+  }, [router, style, leave, preloader]);
 
   return style === 'curtain' ? <div className="he-curtain" aria-hidden="true" /> : null;
 }
@@ -116,7 +129,7 @@ export function PageTransition({ style, leave = 'fade', firstLoad = false }: { s
  * class to change), and the stylesheet hides it — the node itself is left
  * alone, so hydration finds what the server wrote.
  */
-export function Preloader({ children }: { children: React.ReactNode }) {
+export function Preloader({ children, background, size, own = false }: { children: React.ReactNode; /** 3.28 — its colour, the picture's size, a picture of its own (which does not pulse). */ background?: string; size?: string; own?: boolean }) {
   const [done, setDone] = useState(false);
   useEffect(() => {
     const hide = () => setDone(true);
@@ -129,7 +142,11 @@ export function Preloader({ children }: { children: React.ReactNode }) {
     };
   }, []);
   return (
-    <div className={done ? 'he-preloader is-done' : 'he-preloader'} aria-hidden="true">
+    <div
+      className={cn('he-preloader', done && 'is-done', own && 'has-own')}
+      aria-hidden="true"
+      style={background || size ? ({ ...(background ? { background } : {}), ...(size ? { '--he-pre-size': size } : {}) } as React.CSSProperties) : undefined}
+    >
       <script
         dangerouslySetInnerHTML={{
           __html:

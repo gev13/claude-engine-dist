@@ -174,8 +174,15 @@ function Indicator({
     const n = (value: number) => (counter?.pad === false ? String(value) : pad(value));
     const separator = counter?.separator ?? 'slash';
     return (
-      <span className={cn('he-ind he-ind--counter', counter?.font === 'body' && 'is-body')} aria-live="polite">
-        {n(active + 1)}
+      <span className={cn('he-ind he-ind--counter', counter?.font === 'body' && 'is-body', counter?.roll && 'is-roll')} aria-live="polite">
+        {counter?.roll ? (
+          // 3.28 — the number rolls up: a new element per slide, so its entrance plays each time.
+          <span className="he-ind__cur">
+            <span key={active}>{n(active + 1)}</span>
+          </span>
+        ) : (
+          n(active + 1)
+        )}
         {separator === 'line' ? (
           <>
             <span className="he-ind__line" aria-hidden="true" />
@@ -263,6 +270,7 @@ function Arrows({
   className,
   look,
   size,
+  own,
 }: {
   onPrev: () => void;
   onNext: () => void;
@@ -272,14 +280,17 @@ function Arrows({
   /** 3.25 — bare arrows (← →) instead of chevrons in circles, at a size of their own. */
   look?: 'circle' | 'plain' | 'chevron';
   size?: number;
+  /** 3.28 — the buttons' own box, fill, glyph colour, gap, disabled faintness and hover. */
+  own?: ArrowLook;
 }) {
   const t = useMessages();
   const plain = look === 'plain';
   // 3.26 — `chevron`: bare chevrons, drawn like the bare arrows.
   const bare = plain || look === 'chevron';
   const glyph = size ?? (bare ? 24 : 20);
+  const vars = own ? arrowVars(own) : undefined;
   return (
-    <div className={cn('he-arrows', className, bare && 'is-plain')}>
+    <div className={cn('he-arrows', className, bare && 'is-plain', vars?.className)} style={vars?.style}>
       <button type="button" className="he-arrow is-prev" aria-label={t('block.previousSlide')} onClick={onPrev} disabled={atStart}>
         {plain ? <Icon.ArrowRight size={glyph} className="he-arrow__flip" /> : <Icon.Chevron dir="left" size={glyph} />}
       </button>
@@ -288,6 +299,25 @@ function Arrows({
       </button>
     </div>
   );
+}
+
+/** 3.28 — a carousel's own arrow buttons. */
+type ArrowLook = Pick<P, 'arrowBox' | 'arrowFill' | 'arrowColor' | 'arrowGap' | 'arrowDisabled' | 'arrowHover'>;
+const arrowLook = (p: P): ArrowLook | undefined =>
+  p.arrowBox || p.arrowFill || p.arrowColor || p.arrowGap || typeof p.arrowDisabled === 'number' || p.arrowHover
+    ? { arrowBox: p.arrowBox, arrowFill: p.arrowFill, arrowColor: p.arrowColor, arrowGap: p.arrowGap, arrowDisabled: p.arrowDisabled, arrowHover: p.arrowHover }
+    : undefined;
+function arrowVars(a: ArrowLook): { className: string; style: React.CSSProperties } {
+  return {
+    className: cn(a.arrowBox && 'has-box', a.arrowFill && 'has-fill', a.arrowColor && 'has-glyph', a.arrowGap && 'has-gap', typeof a.arrowDisabled === 'number' && 'has-off', a.arrowHover === 'none' && 'is-still'),
+    style: {
+      ...(a.arrowBox ? { '--he-arr-box': `${a.arrowBox}px` } : {}),
+      ...(a.arrowFill ? { '--he-arr-fill': a.arrowFill } : {}),
+      ...(a.arrowColor ? { '--he-arr-color': a.arrowColor } : {}),
+      ...(a.arrowGap ? { '--he-arr-gap': a.arrowGap } : {}),
+      ...(typeof a.arrowDisabled === 'number' ? { '--he-arr-off': a.arrowDisabled / 100 } : {}),
+    } as React.CSSProperties,
+  };
 }
 
 /**
@@ -514,7 +544,7 @@ function FilmstripSlider(p: P) {
         </p>
         <div className="he-film__controls">
           {p.arrows !== 'none' && count > 1 && (
-            <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />
+            <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" own={arrowLook(p)} />
           )}
           <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
           {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
@@ -668,6 +698,7 @@ function TrackCarousel(p: P) {
       className={`is-${p.arrows}`}
       look={p.arrowStyle}
       size={p.arrowSize}
+      own={arrowLook(p)}
     />
   );
 
@@ -694,6 +725,9 @@ function TrackCarousel(p: P) {
         p.slideTitleGap && 'has-title-gap',
         p.slideImageWidth && 'has-img-w',
         p.slideImageBox === 'none' && 'is-img-bare',
+        // 3.28 — no lift under the pointer; the desktop's slides per view at 1024px.
+        p.slideHover === 'none' && 'is-hover-none',
+        p.desktopAt1024 && 'is-desk-1024',
       )}
       aria-roledescription="carousel"
       aria-label={p.title || 'Carousel'}
@@ -828,7 +862,7 @@ function HeroSlider(p: P) {
         ))}
 
         {p.arrows !== 'none' && count > 1 && (
-          <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-side" />
+          <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-side" own={arrowLook(p)} />
         )}
 
         <div className="he-cslide__controls">
@@ -878,7 +912,7 @@ function MediaSlider(p: P) {
               </div>
             ))}
             {p.arrows !== 'none' && count > 1 && (
-              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-side" />
+              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-side" own={arrowLook(p)} />
             )}
           </div>
           {current?.specs && current.specs.length > 0 && (
@@ -967,7 +1001,7 @@ function QuoteSlider(p: P) {
         {count > 1 && (
           <div className="he-qslide__controls">
             {p.arrows !== 'none' && (
-              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />
+              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" own={arrowLook(p)} />
             )}
             <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
             {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
@@ -1030,7 +1064,7 @@ function CoverFlow(p: P) {
             <Indicator kind={p.indicator} count={count} active={active} onGo={go} onPrev={prev} onNext={next} running={auto.running} interval={p.interval} slides={p.slides} counter={p.counter} />
             {p.autoplay && <PauseButton playing={auto.playing} onToggle={auto.togglePause} />}
             {p.arrows !== 'none' && count > 1 && (
-              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" />
+              <Arrows onPrev={prev} onNext={next} atStart={!p.loop && active === 0} atEnd={!p.loop && active === count - 1} className="is-inline" own={arrowLook(p)} />
             )}
           </div>
         </div>

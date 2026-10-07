@@ -105,7 +105,12 @@ export function ProseBlock(p: P<'prose'>) {
           p.columns === 'two' && 'he-cols2 grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-16',
           p.columns === 'two' && p.alignWithTitle && p.eyebrow && 'he-align-title',
           p.variant === 'footnotes' && 'he-footnotes',
+          // 3.28 — no heading above the text: the theme can drop the text's own top margin.
+          !p.eyebrow && !p.title && 'he-prose-bare',
+          // 3.28 — the block's own space between paragraphs.
+          p.paragraphGap && 'he-pgap',
         )}
+        style={p.paragraphGap ? ({ '--he-prose-gap': p.paragraphGap } as React.CSSProperties) : undefined}
       >
         <div>
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
@@ -197,7 +202,13 @@ export function CardGridBlock(p: P<'cardGrid'> & { blockId?: string }) {
           ))}
         </div>
       ) : (
-        <CardGrid cols={p.columns} dividers={p.dividers} className={gapTiers(p).className} style={gapTiers(p).style}>
+        <CardGrid
+          cols={p.columns}
+          dividers={p.dividers}
+          // 3.28 — a column count of its own on tablets.
+          className={cn(gapTiers(p).className, p.columnsTablet && 'he-cgrid-t')}
+          style={p.columnsTablet ? ({ ...gapTiers(p).style, '--cols-t': p.columnsTablet } as React.CSSProperties) : gapTiers(p).style}
+        >
           {cards}
         </CardGrid>
       )}
@@ -339,6 +350,21 @@ export function CheckListsBlock(p: P<'checkLists'>) {
 }
 
 /* ── faq ──────────────────────────────────────────────────────────────────── */
+/** 3.28 — the FAQ's own corners, row fill, padding and gap, icon and answer indent, as custom properties; nothing for an untouched block. */
+function faqVars(p: P<'faq'>): React.CSSProperties | undefined {
+  const vars: Record<string, string> = {};
+  if (p.rowRadius) vars['--he-faq-radius'] = p.rowRadius;
+  if (p.rowBackground) vars['--he-faq-row-bg'] = p.rowBackground;
+  if (p.rowPadding) vars['--he-faq-row-pad'] = p.rowPadding;
+  if (p.rowGap) vars['--he-faq-row-gap'] = p.rowGap;
+  if (p.iconSize) vars['--he-faq-icon-size'] = p.iconSize;
+  if (typeof p.iconBox === 'number') vars['--he-faq-icon-box'] = `${p.iconBox}px`;
+  if (p.iconColor) vars['--he-faq-icon-color'] = p.iconColor;
+  if (p.iconBackground) vars['--he-faq-icon-bg'] = p.iconBackground;
+  if (p.answerIndent) vars['--he-faq-answer-indent'] = p.answerIndent;
+  return Object.keys(vars).length ? (vars as React.CSSProperties) : undefined;
+}
+
 export function FaqBlock(p: P<'faq'>) {
   if (p.variant === 'media') {
     return (
@@ -353,8 +379,19 @@ export function FaqBlock(p: P<'faq'>) {
       items={p.items}
       look={p.style}
       icon={p.icon}
-      className={cn(p.insetDividers && 'is-inset-lines', p.openTint === false && 'no-tint') || undefined}
-      style={p.rowRadius ? ({ '--he-faq-radius': p.rowRadius } as React.CSSProperties) : undefined}
+      defaultOpen={p.defaultOpen}
+      closedColor={p.closedColor}
+      answerBelow={p.answerPlacement === 'below'}
+      speed={
+        typeof p.openSpeed === 'number' || p.openEasing === 'smooth'
+          ? {
+              ...(typeof p.openSpeed === 'number' ? { transitionDuration: `calc(${p.openSpeed}ms * var(--he-motion, 1))` } : {}),
+              ...(p.openEasing === 'smooth' ? { transitionTimingFunction: 'cubic-bezier(0.645, 0.045, 0.355, 1)' } : {}),
+            }
+          : undefined
+      }
+      className={cn(p.insetDividers && 'is-inset-lines', p.openTint === false && 'no-tint', p.rowBackground && 'has-row-bg', p.rowPadding && 'has-row-pad', p.rowGap && 'has-row-gap') || undefined}
+      style={faqVars(p)}
     />
   );
 
@@ -496,7 +533,9 @@ export function PagerBlock(p: P<'pager'>) {
 /* ── image ────────────────────────────────────────────────────────────────── */
 export function ImageBlock(p: P<'image'>) {
   const masked = p.mask !== 'none';
-  const narrow = p.size !== 'full';
+  // 3.28 — the file's own width, or a cap of its own, as the most it grows to.
+  const cap = p.maxWidth ? p.maxWidth : p.size === 'natural' && p.width ? `${p.width}px` : undefined;
+  const narrow = p.size !== 'full' || Boolean(cap);
   const rounded = !masked && (p.rounded || p.captionStyle === 'lead');
   const img = (
     <SiteImg
@@ -525,7 +564,10 @@ export function ImageBlock(p: P<'image'>) {
   );
   return (
     <Section size="md">
-      <figure className={cn(narrow && `he-img-size is-${p.size}`, narrow && p.align === 'center' ? 'mx-auto my-0' : 'm-0')}>
+      <figure
+        className={cn(narrow && `he-img-size is-${p.size}`, narrow && p.align === 'center' ? 'mx-auto my-0' : narrow && p.align === 'right' ? 'my-0 ml-auto mr-0' : 'm-0')}
+        style={cap ? { maxWidth: cap } : undefined}
+      >
         {linked}
         {p.captionStyle === 'lead'
           ? (p.captionLead || p.caption) && (

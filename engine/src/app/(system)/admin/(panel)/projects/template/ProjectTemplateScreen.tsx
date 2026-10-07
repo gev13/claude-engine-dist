@@ -139,6 +139,63 @@ export function ProjectTemplateScreen() {
           </div>
         </Panel>
 
+        {/* 3.28 — the page's and the archives' last details. */}
+        <Panel title="Details">
+          <div className="grid gap-3 sm:grid-cols-3">
+            {(
+              [
+                ['heroZoom', 'The hero picture grows a little on scroll'],
+                ['backLink', 'A round “back” button (pages and archives)'],
+                ['tagsColumn', 'The tags in a column beside the title'],
+              ] as const
+            ).map(([key, label]) => (
+              <label key={key} className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.look?.[key] === true} onChange={(e) => set('look', { ...form.look, [key]: e.target.checked || undefined })} />
+                {label}
+              </label>
+            ))}
+            {(
+              [
+                ['titleSize', 'Title size', 'e.g. 80px'],
+                ['titleSizeLaptop', 'Title ≤1440', ''],
+                ['titleSizeTablet', 'Title ≤1024', ''],
+                ['titleSizeMobile', 'Title on phones', ''],
+                ['heroGap', 'Hero to categories', 'e.g. 40px'],
+                ['categoryGap', 'Under the categories', 'e.g. 16px'],
+                ['introGap', 'Under the title', 'e.g. 16px'],
+                ['tagsTitleSize', '“Tags” size', ''],
+                ['tagsColor', 'Tag links’ colour', 'a colour'],
+                ['archiveTitleSize', 'Archive title size', 'e.g. 64px'],
+                ['archiveTop', 'Above an archive’s title', ''],
+                ['archiveTopMobile', 'On phones', ''],
+                ['archiveGap', 'Archive title to cards', 'e.g. 120px'],
+                ['archiveGapMobile', 'On phones', 'e.g. 32px'],
+              ] as const
+            ).map(([key, label, hint]) => (
+              <Field key={key} label={label} hint={hint || undefined}>
+                <Input value={(form.look?.[key] as string | undefined) ?? ''} placeholder="as drawn" onChange={(e) => set('look', { ...form.look, [key]: e.target.value.trim() || undefined })} />
+              </Field>
+            ))}
+            {(
+              [
+                ['categoryWeight', 'Categories’ weight'],
+                ['tagsTitleWeight', '“Tags” weight'],
+              ] as const
+            ).map(([key, label]) => (
+              <Field key={key} label={label}>
+                <Select value={form.look?.[key] ?? ''} onChange={(e) => set('look', { ...form.look, [key]: (e.target.value || undefined) as never })}>
+                  <option value="">As drawn</option>
+                  {['300', '400', '500', '600', '700', '800'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            ))}
+          </div>
+        </Panel>
+
         <Panel title="More projects">
           <div className="flex flex-col gap-5">
             <label className="flex items-center gap-2 text-[13px] text-ash">

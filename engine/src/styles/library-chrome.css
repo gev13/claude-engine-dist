@@ -408,3 +408,8 @@
 @media (width <= 768px) {
   .he-site[data-header='notch'] #main > :first-child { --he-ns-now: var(--he-ns-mobile, 64px); border-top-width: var(--he-ns-now); }
 }
+
+/* 3.28 — the two-bar menu icon, long over short; sizes and colour from the theme. */
+.he-hdr__bars { display: grid; gap: var(--he-mi-gap, 5px); justify-items: start; width: var(--he-mi-w, 22px); transition: transform calc(0.35s * var(--he-motion, 1)) ease, opacity calc(0.35s * var(--he-motion, 1)) ease; }
+.he-hdr__bars i { display: block; width: 100%; height: var(--he-mi-t, 2px); border-radius: 1px; background: var(--he-mi-c, currentColor); }
+.he-hdr__bars i + i { width: var(--he-mi-s, 80%); }

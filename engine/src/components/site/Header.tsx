@@ -8,6 +8,7 @@ import type { ResolvedChrome } from '@/lib/chrome';
 import { type NavChild, type NavItem, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import type { ServiceRef } from '@/lib/site';
 import type { Theme } from '@/lib/theme';
+import { motionReduced } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 import { Icon, SocialIcon } from './icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
@@ -269,6 +270,8 @@ export function Header(props: HeaderProps) {
     return current === target || (h.activeMatch !== 'exact' && target !== '/' && current.startsWith(`${target}/`));
   };
   const openItem = nav.find((item) => item.id === openId && hasChildren(item));
+  // 3.28 — a dropdown with a duration stays in the page while closed, so it can fade out as well as in.
+  const fadesOut = typeof h.dropdown?.duration === 'number';
 
   const close = () => setOpenId(null);
   const enter = (id: string) => {
@@ -305,18 +308,41 @@ export function Header(props: HeaderProps) {
               className="he-hdr__item"
               onPointerEnter={(e) => e.pointerType === 'mouse' && enter(item.id)}
               onPointerLeave={(e) => e.pointerType === 'mouse' && leave()}
+              // 3.28 — a parent link opens its submenu on focus too, and closes it when focus leaves the item.
+              onFocus={h.parentLink === 'link' ? () => enter(item.id) : undefined}
+              onBlur={
+                h.parentLink === 'link'
+                  ? (e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget as Node | null)) leave();
+                    }
+                  : undefined
+              }
             >
-              <button
-                type="button"
-                aria-expanded={open}
-                aria-controls={`he-mega-${item.id}`}
-                onClick={() => setOpenId(open ? null : item.id)}
-                className={cn('he-hdr__link', (open || isActive(item.href)) && 'is-open')}
-              >
-                {item.label}
-                <Icon.Chevron size={14} className="he-hdr__chev" />
-              </button>
-              {chrome.megaMenu === 'compact' && open && <MegaPanel variant="compact" item={item} onNavigate={close} />}
+              {h.parentLink === 'link' ? (
+                <Link
+                  href={item.href}
+                  {...linkAttrs(item)}
+                  aria-current={isActive(item.href) ? 'page' : undefined}
+                  aria-haspopup="true"
+                  aria-expanded={open}
+                  className={cn('he-hdr__link', (open || isActive(item.href)) && 'is-open', isActive(item.href) && 'is-active')}
+                >
+                  {item.label}
+                  <Icon.Chevron size={14} className="he-hdr__chev" />
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  aria-controls={`he-mega-${item.id}`}
+                  onClick={() => setOpenId(open ? null : item.id)}
+                  className={cn('he-hdr__link', (open || isActive(item.href)) && 'is-open')}
+                >
+                  {item.label}
+                  <Icon.Chevron size={14} className="he-hdr__chev" />
+                </button>
+              )}
+              {chrome.megaMenu === 'compact' && (open || fadesOut) && <MegaPanel variant="compact" item={item} onNavigate={close} shown={fadesOut ? open : undefined} />}
             </li>
           );
         })}
@@ -366,7 +392,15 @@ export function Header(props: HeaderProps) {
       aria-label={menuOpen ? 'Close menu' : `Open ${h.menuLabel.toLowerCase()}`}
       onClick={() => setMenuOpen((v) => !v)}
     >
-      <Icon.Menu size={20} />
+      {h.menuIcon === 'bars' ? (
+        // 3.28 — two bars, long and short; sized and coloured by the theme (chromeCss).
+        <span className="he-hdr__bars" aria-hidden="true">
+          <i />
+          <i />
+        </span>
+      ) : (
+        <Icon.Menu size={20} />
+      )}
       {showLabel && <span className="he-hdr__toggle-label">{h.menuLabel}</span>}
     </button>
   );
@@ -588,6 +622,7 @@ export function Header(props: HeaderProps) {
         }}
         config={chrome.mobileMenu}
         toggleRef={toggleRef}
+        isActive={isActive}
         nav={chrome.mobileMenu.source === 'overlay' && props.overlayNav && props.overlayNav.length > 0 ? props.overlayNav : nav}
         phoneNav={
           chrome.mobileMenu.onPhones?.source === 'phone' && props.phoneMenuNav && props.phoneMenuNav.length > 0
@@ -645,17 +680,20 @@ function MegaPanel({
   variant,
   item,
   onNavigate,
+  shown,
 }: {
   variant: 'compact' | 'sheet' | 'cards';
   item: NavItem;
   onNavigate: () => void;
+  /** 3.28 — set when the panel stays in the page while closed: whether it is open. */
+  shown?: boolean;
 }) {
   const { groups, cards } = splitChildren(item.children);
   const id = `he-mega-${item.id}`;
 
   if (variant === 'compact') {
     return (
-      <div id={id} className="he-mega he-mega--compact">
+      <div id={id} className={cn('he-mega he-mega--compact', shown && 'is-shown')} inert={shown === false ? true : undefined}>
         {groups.length > 0 && (
           <div className="he-mega__links">
             <LinkGroups groups={groups} onNavigate={onNavigate} />
@@ -854,8 +892,11 @@ function MobileMenu({
   brand,
   contact,
   toggleRef,
+  isActive,
 }: {
   open: boolean;
+  /** 3.28 — whether a link is the current page's, to mark it when the drawer colours it. */
+  isActive?: (href: string) => boolean;
   onClose: () => void;
   config: ResolvedChrome['mobileMenu'];
   /** 3.17 — the menu button, whose place the close button can take. */
@@ -957,6 +998,22 @@ function MobileMenu({
   const column = fullscreen && !phone && Boolean(config.columnWidth);
   // 3.24 — the site's header out of sight while a full-screen menu is open.
   const hidesHeader = config.hideHeader && fullscreen;
+  // 3.28 — sub-items as a second column beside the list (wide screens, the full-screen menus).
+  const beside = fullscreen && !phone && config.submenuLayout === 'beside';
+  // 3.28 — the current page's link marked, when the drawer gives it a colour.
+  const current = (href: string) => (config.drawer?.activeColor && isActive?.(href) ? ('page' as const) : undefined);
+
+  /* 3.28 — with a duration, the full-screen menu fades out too: it stays on screen while it leaves. */
+  const [leaving, setLeaving] = useState(false);
+  const wasOpen = useRef(open);
+  useEffect(() => {
+    const closed = wasOpen.current && !open;
+    wasOpen.current = open;
+    if (!closed || !fullscreen || !config.duration || motionReduced()) return setLeaving(false);
+    setLeaving(true);
+    const timer = window.setTimeout(() => setLeaving(false), config.duration);
+    return () => window.clearTimeout(timer);
+  }, [open, fullscreen, config.duration]);
 
   useEffect(() => {
     if (!hidesHeader) return;
@@ -1008,7 +1065,7 @@ function MobileMenu({
             <ul>
               {group.links.map((link) => (
                 <li key={link.id}>
-                  <Link href={link.href} {...linkAttrs(link)} onClick={onClose}>
+                  <Link href={link.href} {...linkAttrs(link)} aria-current={current(link.href)} onClick={onClose}>
                     {link.label}
                   </Link>
                 </li>
@@ -1020,7 +1077,7 @@ function MobileMenu({
           <ul>
             {cards.map((card) => (
               <li key={card.id}>
-                <Link href={card.href} {...linkAttrs(card)} onClick={onClose}>
+                <Link href={card.href} {...linkAttrs(card)} aria-current={current(card.href)} onClick={onClose}>
                   {card.label}
                 </Link>
               </li>
@@ -1035,7 +1092,7 @@ function MobileMenu({
     <>
       {(drawer || column) && open && (
         <div
-          className="he-menu-backdrop"
+          className={cn('he-menu-backdrop', drawer && config.drawer && 'is-drawer')}
           onClick={onClose}
           aria-hidden="true"
           // 3.25 — how dark the page beside a column menu is.
@@ -1051,7 +1108,7 @@ function MobileMenu({
       <div
         id="he-menu"
         ref={panelRef}
-        hidden={!open}
+        hidden={!open && !leaving}
         role="dialog"
         aria-modal="true"
         aria-label={t('chrome.menu')}
@@ -1097,6 +1154,9 @@ function MobileMenu({
           phone?.itemPadding && 'has-phone-pad',
           phone?.itemColor && 'has-phone-color',
           phone?.listTop && 'has-phone-top',
+          // 3.28 — sub-items beside the list; leaving.
+          beside && 'is-sub-beside',
+          leaving && 'is-leaving',
         )}
         style={
           config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || config.itemLineHeight || config.itemPadding || column || phone
@@ -1165,7 +1225,7 @@ function MobileMenu({
                 if (!hasChildren(item)) {
                   return (
                     <li key={item.id} onPointerEnter={config.hoverImages ? () => setPointed(item.id) : undefined}>
-                      <Link href={item.href} {...linkAttrs(item)} className="he-menu__row" onClick={onClose}>
+                      <Link href={item.href} {...linkAttrs(item)} aria-current={current(item.href)} className="he-menu__row" onClick={onClose}>
                         {item.label}
                       </Link>
                     </li>
@@ -1190,6 +1250,8 @@ function MobileMenu({
                       aria-expanded={isOpen}
                       onClick={() =>
                         setExpanded((prev) => {
+                          // 3.28 — beside the list there is room for one open item at a time.
+                          if (beside) return prev.has(item.id) ? new Set() : new Set([item.id]);
                           const next = new Set(prev);
                           if (next.has(item.id)) next.delete(item.id);
                           else next.add(item.id);
@@ -1208,7 +1270,7 @@ function MobileMenu({
                         <Icon.Chevron dir={isOpen ? 'up' : 'down'} size={18} />
                       )}
                     </button>
-                    {isOpen && childList(item)}
+                    {isOpen && !beside && childList(item)}
                   </li>
                 );
               })}
@@ -1221,6 +1283,13 @@ function MobileMenu({
               )}
             </ul>
           )}
+
+          {!drilled &&
+            beside &&
+            (() => {
+              const shown = items.find((item) => expanded.has(item.id) && hasChildren(item));
+              return shown ? <div className="he-menu__beside">{childList(shown)}</div> : null;
+            })()}
 
           {!drilled &&
             services.map((group) => (

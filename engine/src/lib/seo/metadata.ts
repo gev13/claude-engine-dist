@@ -60,6 +60,10 @@ export function buildMetadata(opts: {
      slash every other address has when the trailing slash is `always`. */
   const home = slashMode() === 'always' ? '/' : '';
   const canonical = seo.canonicalUrl?.trim() || `${SITE_URL}${ownPath === '/' ? home : ownPath}`;
+  /* 3.28 — Next prints a root URL as a bare origin ("https://site.com") whatever it is given, unless its own
+     build-time `trailingSlash` is on. So the slashed home's canonical and og:url are left out here and written
+     by the page itself (`HomeSlashTags`), which React lifts into the head. */
+  const slashHome = ownPath === '/' && home === '/' && !seo.canonicalUrl?.trim();
 
   /* hreflang has to be reciprocal *and* self-referential, or search engines
      discard the set entirely — so this page is in its own list. x-default
@@ -108,7 +112,7 @@ export function buildMetadata(opts: {
        the map's keys would not do: a page that exists only in English still
        produces two entries there, `en` and `x-default`, both pointing at
        itself — a set that relates a page to nothing but itself. */
-    alternates: { canonical, ...((opts.translations?.length ?? 0) > 1 ? { languages } : {}) },
+    alternates: { ...(slashHome ? {} : { canonical }), ...((opts.translations?.length ?? 0) > 1 ? { languages } : {}) },
     robots: {
       ...robots,
       googleBot: { ...robots, 'max-image-preview': 'large', 'max-snippet': -1, 'max-video-preview': -1 },
@@ -120,7 +124,7 @@ export function buildMetadata(opts: {
       alternateLocale: (opts.translations ?? [])
         .filter((translation) => translation.locale !== locale)
         .map((translation) => ogLocale(translation.locale)),
-      url: canonical,
+      ...(slashHome ? {} : { url: canonical }),
       title: seo.ogTitle?.trim() || title,
       description: seo.ogDescription?.trim() || description,
       images: [ogImage],
@@ -137,4 +141,11 @@ export function buildMetadata(opts: {
     },
     ...(Object.keys(other).length ? { other } : {}),
   };
+}
+
+/** 3.28 — the slashed home page's canonical and og:url, written as tags because Next would drop the slash (see `slashHome`). */
+export function homeSlashUrl(path: string, locale?: string): string | null {
+  const config = localeConfig();
+  const ownPath = withSlash(localePath(locale ?? config.defaultLocale, path, config));
+  return ownPath === '/' && slashMode() === 'always' ? `${SITE_URL}/` : null;
 }

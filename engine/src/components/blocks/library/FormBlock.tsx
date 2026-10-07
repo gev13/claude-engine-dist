@@ -400,7 +400,31 @@ export function FormBlock(p: P) {
     );
 
   return (
-    <section className={cn('he-lsec he-fb', TONES[p.tone ?? 'base'], `is-${p.layout}`, center && 'is-center', p.wide && 'is-wide', p.compactChoices && 'is-compact')}>
+    <section
+      className={cn(
+        'he-lsec he-fb',
+        TONES[p.tone ?? 'base'],
+        `is-${p.layout}`,
+        center && 'is-center',
+        p.wide && 'is-wide',
+        p.compactChoices && 'is-compact',
+        // 3.28 — the card into the gutter, the fields past its padding, edge to edge on phones, the outline send button's edge.
+        p.cardBleed && 'has-bleed',
+        p.fieldInset && 'has-inset',
+        p.bleedMobile && 'is-bleed-m',
+        (p.submitBorder || typeof p.submitBorderWidth === 'number') && 'has-submit-edge',
+      )}
+      style={
+        p.cardBleed || p.fieldInset || p.submitBorder || typeof p.submitBorderWidth === 'number'
+          ? ({
+              ...(p.cardBleed ? { '--he-fb-bleed': p.cardBleed } : {}),
+              ...(p.fieldInset ? { '--he-fb-inset': p.fieldInset } : {}),
+              ...(p.submitBorder ? { '--he-fb-submit-edge': p.submitBorder } : {}),
+              ...(typeof p.submitBorderWidth === 'number' ? { '--he-fb-submit-bw': `${p.submitBorderWidth}px` } : {}),
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       <div className="shell">
         {(p.eyebrow || p.title || p.intro) && <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.align} className="mb-9" />}
         <div className="he-fb__box" style={p.cardPadding || p.cardPaddingMobile ? ({ ...(p.cardPadding ? { '--he-fb-pad': p.cardPadding } : {}), ...(p.cardPaddingMobile ? { '--he-fb-pad-m': p.cardPaddingMobile } : {}) } as React.CSSProperties) : undefined}>

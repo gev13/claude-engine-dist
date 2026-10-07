@@ -16,7 +16,7 @@ import { SOCIAL_LABELS, opensElsewhere, socialText, type SocialLabelStyle, type 
  * sit stuck with its top hidden. So this measures, on load and on resize,
  * and marks the page only when it fits (and, unless asked, not on phones).
  */
-export function RevealFooter({ onMobile }: { onMobile: boolean }) {
+export function RevealFooter({ onMobile, minWidth }: { onMobile: boolean; /** 3.28 — the reveal only from this width up. */ minWidth?: number }) {
   useEffect(() => {
     const site = document.querySelector<HTMLElement>('.he-site');
     const footer = document.querySelector<HTMLElement>('.he-ftr-wrap');
@@ -24,7 +24,8 @@ export function RevealFooter({ onMobile }: { onMobile: boolean }) {
     const decide = () => {
       const phone = window.matchMedia('(width <= 48rem)').matches;
       const fits = footer.offsetHeight <= window.innerHeight * 0.8;
-      site.classList.toggle('has-reveal', fits && (onMobile || !phone));
+      const wide = minWidth ? window.matchMedia(`(min-width: ${minWidth}px)`).matches : onMobile || !phone;
+      site.classList.toggle('has-reveal', fits && wide);
     };
     decide();
     const observer = new ResizeObserver(decide);
@@ -35,7 +36,27 @@ export function RevealFooter({ onMobile }: { onMobile: boolean }) {
       window.removeEventListener('resize', decide);
       site.classList.remove('has-reveal');
     };
-  }, [onMobile]);
+  }, [onMobile, minWidth]);
+  return null;
+}
+
+/**
+ * 3.28 — marks the footer's link to the current page (`aria-current`), so the
+ * theme can set its weight and colour. Rendered only when one is set; the
+ * footer itself is a server component and does not know the page.
+ */
+export function FooterActive() {
+  const pathname = usePathname();
+  useEffect(() => {
+    const trim = (path: string) => path.replace(/\/+$/, '') || '/';
+    const here = trim(window.location.pathname);
+    for (const link of document.querySelectorAll<HTMLAnchorElement>('.he-ftr a[href]')) {
+      const url = new URL(link.href, window.location.href);
+      const same = url.origin === window.location.origin && trim(url.pathname) === here;
+      if (same) link.setAttribute('aria-current', 'page');
+      else if (link.getAttribute('aria-current') === 'page') link.removeAttribute('aria-current');
+    }
+  }, [pathname]);
   return null;
 }
 
@@ -57,6 +78,12 @@ type Rails = {
   orientation?: 'stacked' | 'row';
   /** 3.23 — which social links, in this order; unset is every one. */
   networks?: string[];
+  /** 3.28 — the progress line's place, colours and direction; the distance from the edge. */
+  barPlace?: 'above' | 'below';
+  barTrack?: string;
+  barFill?: string;
+  barDirection?: 'down' | 'up';
+  inset?: string;
 };
 
 /** 3.22 — the rails' own type, as properties their rules read; nothing for what was left unset. */
@@ -67,6 +94,9 @@ function railStyle(rails: Rails): React.CSSProperties {
     ...(rails.case && rails.case !== 'label' ? { '--he-rail-transform': rails.case === 'upper' ? 'uppercase' : 'none', '--he-rail-tracking': rails.case === 'upper' ? '0.14em' : '0' } : {}),
     ...(rails.size ? { '--he-rail-size': `${Math.max(8, Math.min(24, rails.size))}px` } : {}),
     ...(rails.weight ? { '--he-rail-weight': rails.weight } : {}),
+    ...(rails.barTrack ? { '--he-rail-track': rails.barTrack } : {}),
+    ...(rails.barFill ? { '--he-rail-fill': rails.barFill } : {}),
+    ...(rails.inset ? { '--he-rail-inset': rails.inset } : {}),
   } as React.CSSProperties;
 }
 
@@ -116,6 +146,12 @@ export function SideRails({ rails, social, socialStyle }: { rails: Rails; social
       ownWidth && 'has-min',
       rails.position === 'bottom' && 'is-bottom',
       rails.orientation === 'row' && 'is-row',
+      // 3.28 — the words in a row are turned half round, so above and below, down and up swap there.
+      rails.barPlace && (rails.barPlace === 'above') === (rails.orientation !== 'row') && 'is-bar-first',
+      rails.barDirection && (rails.barDirection === 'up') === (rails.orientation !== 'row') && 'is-fill-up',
+      rails.barTrack && 'has-track',
+      rails.barFill && 'has-fill',
+      rails.inset && 'has-inset',
     ]
       .filter(Boolean)
       .join(' ');

@@ -1,3 +1,5 @@
+import { blogCss } from './blogCss';
+import { chromeCss } from './chromeCss';
 import {
   BREAKPOINTS,
   BUTTON_VARIANTS,
@@ -474,6 +476,42 @@ function shapeCss(theme: Theme, scope: string): string {
       ]),
     );
   }
+  // 3.28 — the arrow's drawing, size, place and motion.
+  const arrows = `${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)')}`;
+  if (buttons.arrowStyle === 'filled') parts.push(block(`${at('.he-btn>svg:last-child>path')},${at('.he-cbtn>svg:last-child:not(:first-child)>path')}`, [['fill', 'currentColor'], ['stroke-linejoin', 'round']]));
+  if (buttons.arrowSize && isLength(buttons.arrowSize)) {
+    // Every button's arrow, the text buttons' too.
+    parts.push(block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)')}`, [['width', buttons.arrowSize], ['height', buttons.arrowSize]]));
+  }
+  if (buttons.arrowGap && isLength(buttons.arrowGap)) parts.push(block(at(':is(.he-btn,.he-cbtn):has(>svg:last-child)'), [['gap', buttons.arrowGap]]));
+  if (buttons.arrowHover === 'slide') {
+    parts.push(
+      `${at(':is(.he-btn,.he-cbtn):hover>svg:last-child:not(:first-child)')},${at('.he-btn:hover>svg:last-child')}{animation:he-arrow-slide calc(400ms * var(--he-motion,1)) cubic-bezier(0.645,0.045,0.355,1)}`,
+      '@keyframes he-arrow-slide{0%{translate:0;opacity:1}45%{translate:60%;opacity:0}55%{translate:-60%;opacity:0}100%{translate:0;opacity:1}}',
+      `@media (prefers-reduced-motion:reduce){${arrows}{animation:none!important}}`,
+    );
+  }
+  // 3.28 — "Text" buttons under the pointer.
+  if ((buttons.textHoverColor && isColor(buttons.textHoverColor)) || buttons.textUnderline === false) {
+    parts.push(
+      block(at('.he-cbtn.is-text:hover'), [
+        ...(buttons.textHoverColor && isColor(buttons.textHoverColor) ? ([['color', buttons.textHoverColor]] as Decl[]) : []),
+        ...(buttons.textUnderline === false ? ([['border-color', 'transparent']] as Decl[]) : []),
+      ]),
+    );
+  }
+  // 3.28 — a true large size.
+  const large = buttons.large;
+  if (large && ((large.height && isLength(large.height)) || (large.paddingX && isLength(large.paddingX)) || (large.fontSize && isLength(large.fontSize)))) {
+    parts.push(
+      block(at('.he-cbtn.is-large:not(.is-icon-only,.is-text)'), [
+        ...(large.height && isLength(large.height) ? ([['height', large.height], ['padding-block', '0']] as Decl[]) : []),
+        ...(large.paddingX && isLength(large.paddingX) ? ([['padding-inline', large.paddingX]] as Decl[]) : []),
+        ...(large.fontSize && isLength(large.fontSize) ? ([['font-size', large.fontSize]] as Decl[]) : []),
+      ]),
+    );
+  }
+
   // 3.6 — "Read more" as words alone.
   if (buttons.more === 'none') parts.push(block(at('.he-more__icon'), [['display', 'none']]));
   // 3.17.1 — the "Read more" links' own weight.
@@ -649,6 +687,10 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     // 3.27 — and a slider in a column starts at the column's edge, as the blocks beside it do, not a page gutter in.
     parts.push(':where(.he-nested) .he-car__viewport:not(.is-edge) .he-car__track{--pad:0px}');
   }
+  // 3.28 — the Text block's words start at the top when there is no heading above them.
+  if (theme.layout?.proseTop === 'heading' && safeSelector === ':root') {
+    parts.push('.he-prose-bare>div:first-child>:first-child{margin-top:0}');
+  }
   // 3.23 — the space under an eyebrow, before its heading.
   if (theme.layout?.eyebrowGap && isLength(theme.layout.eyebrowGap) && safeSelector === ':root') {
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
@@ -658,6 +700,24 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   if (safeSelector === ':root') {
     const rich = richTextCss(theme.richText);
     if (rich) parts.push(rich);
+  }
+
+  // 3.28 — how the entrances move.
+  if (safeSelector === ':root') {
+    const entrance = entranceCss(theme.entrance);
+    if (entrance) parts.push(entrance);
+  }
+
+  // 3.28 — the blog's details.
+  if (safeSelector === ':root') {
+    const blog = blogCss(theme.blog);
+    if (blog) parts.push(blog);
+  }
+
+  // 3.28 — the header's, menus' and footer's details.
+  if (safeSelector === ':root') {
+    const chrome = chromeCss(theme.chrome);
+    if (chrome) parts.push(chrome);
   }
 
   // 3.24 — text links under the pointer: an underline, or a line that sweeps out to the left and back in from the right.
@@ -729,39 +789,87 @@ function phoneLayoutCss(theme: Theme): string {
   return rules.length ? `@media (max-width:768px){${rules.join('')}}` : '';
 }
 
+const EASINGS = { soft: 'cubic-bezier(0.2,0.7,0.2,1)', ease: 'ease', easeOut: 'ease-out', easeInOut: 'ease-in-out', linear: 'linear' } as const;
+
+/* 3.28 — the entrances' distance, length and easing, over the drawn ones; the
+   slow fade keeps its own length. Nothing when unset. */
+export function entranceCss(entrance: Theme['entrance']): string {
+  if (!entrance) return '';
+  const out: string[] = [];
+  const ms = typeof entrance.duration === 'number' && entrance.duration >= 0 && entrance.duration <= 3000 ? entrance.duration : undefined;
+  const ease = entrance.easing ? EASINGS[entrance.easing] : undefined;
+  if (ms !== undefined || ease) {
+    const d = (own: number) => `calc(${ms ?? own}ms * var(--he-motion,1))`;
+    const e = (own: string) => ease ?? own;
+    const soft = EASINGS.soft;
+    out.push(
+      `.he-reveal:not(.he-reveal--fadeSlow,.he-reveal--blur){transition:opacity ${d(700)} ${e('ease-out')},transform ${d(800)} ${e(soft)}}`,
+      `.he-reveal.he-reveal--blur{transition:opacity ${d(700)} ${e('ease-out')},filter ${d(900)} ${e('ease-out')},transform ${d(800)} ${e(soft)}}`,
+      `.he-reveal:is(.he-reveal--left,.he-reveal--right) .shell{transition:transform ${d(800)} ${e(soft)}}`,
+      `.he-ri.is-anim:not(.he-ri--fadeSlow){animation-duration:${d(700)};animation-timing-function:${e(soft)}}`,
+    );
+  }
+  const distance = entrance.distance && isLength(entrance.distance) ? entrance.distance : undefined;
+  if (distance) {
+    out.push(
+      `.he-reveal-on .he-reveal--rise:not(.is-in){transform:translateY(${distance})}`,
+      `.he-ri--rise.is-anim{animation-name:he-ri-rise-own}@keyframes he-ri-rise-own{from{opacity:0;translate:0 ${distance}}}`,
+    );
+  }
+  const slow = entrance.slowDuration;
+  if (typeof slow === 'number' && slow >= 0 && slow <= 5000) out.push(`:root{--he-rv-slow:${slow}ms}`);
+  return out.join('');
+}
+
 /* 3.24 — the text links a "link hover" reaches, each with what counts as pointing at it: a card's
-   link line answers the whole card, which is the link. */
-const LINK_TARGETS: readonly [target: string, hover: string][] = [
-  ['.he-hdr__link', '.he-hdr__link:hover'],
-  ['.he-ftr__links a', '.he-ftr__links a:hover'],
-  ['.he-ftr__legal a', '.he-ftr__legal a:hover'],
-  ['.he-menu__sub a', '.he-menu__sub a:hover'],
-  ['.he-more', 'a:hover .he-more,.he-more:hover'],
-  ['.he-fgrid__more', '.he-fgrid__item:hover .he-fgrid__more'],
-  ['.he-card__more', 'a.he-card:hover .he-card__more'],
+   link line answers the whole card, which is the link. (3.28) Each belongs to an area, which can
+   choose its own hover; the footer's contact links are reached only when theirs is chosen. */
+type LinkArea = 'header' | 'menu' | 'footer' | 'contacts' | 'body';
+const LINK_TARGETS: readonly [target: string, hover: string, area: LinkArea][] = [
+  ['.he-hdr__link', '.he-hdr__link:hover', 'header'],
+  ['.he-ftr__links a', '.he-ftr__links a:hover', 'footer'],
+  ['.he-ftr__legal a', '.he-ftr__legal a:hover', 'footer'],
+  ['.he-menu__sub a', '.he-menu__sub a:hover', 'menu'],
+  ['.he-more', 'a:hover .he-more,.he-more:hover', 'body'],
+  // 3.28 — a card whose "Learn more" is a link of its own answers only that link.
+  ['.he-fgrid__more', '.he-fgrid:not(.is-links-own) .he-fgrid__item:hover .he-fgrid__more,a.he-fgrid__more:hover', 'body'],
+  ['.he-card__more', 'a.he-card:hover .he-card__more', 'body'],
+  ['.he-ftr__contacts a>span', '.he-ftr__contacts a:hover>span', 'contacts'],
 ];
 
 export function linkHoverCss(links: Theme['links']): string {
-  const hover = links?.hover;
-  if (hover !== 'underline' && hover !== 'sweep') return '';
+  const all = links?.hover === 'underline' || links?.hover === 'sweep' ? links.hover : undefined;
+  const areas = links?.areas ?? {};
+  const styleOf = (area: LinkArea) => {
+    const own = areas[area];
+    if (own) return own;
+    return area === 'contacts' ? undefined : all;
+  };
+  const underline = LINK_TARGETS.filter(([, , area]) => styleOf(area) === 'underline');
+  const sweep = LINK_TARGETS.filter(([, , area]) => styleOf(area) === 'sweep');
+  if (underline.length === 0 && sweep.length === 0) return '';
   const width = links?.lineWidth && isLength(links.lineWidth) ? links.lineWidth : 'max(1px,0.08em)';
-  const targets = LINK_TARGETS.map(([target]) => target).join(',');
-  const hovers = LINK_TARGETS.map(([, on]) => on).join(',');
-  if (hover === 'underline') {
-    return `${hovers}{text-decoration:underline;text-decoration-thickness:${width};text-underline-offset:0.25em}`;
+  const out: string[] = [];
+  if (underline.length) {
+    out.push(`${underline.map(([, on]) => on).join(',')}{text-decoration:underline;text-decoration-thickness:${width};text-underline-offset:0.25em}`);
   }
-  const still = hovers
-    .split(',')
-    .map((on) => `.he-reduce-motion ${on}`)
-    .join(',');
-  return (
-    `:root{--he-sweep-w:${width}}` +
-    `${targets}{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-origin:content-box;background-position:0 100%;background-size:0% var(--he-sweep-w)}` +
-    `${hovers}{animation:he-link-sweep calc(400ms * var(--he-motion,1)) cubic-bezier(0.58,0.3,0.005,1) forwards}` +
-    '@keyframes he-link-sweep{0%{background-size:100% var(--he-sweep-w);background-position:0 100%}50%{background-size:0% var(--he-sweep-w);background-position:0 100%}50.01%{background-size:0% var(--he-sweep-w);background-position:100% 100%}100%{background-size:100% var(--he-sweep-w);background-position:100% 100%}}' +
-    `@media (prefers-reduced-motion:reduce){${hovers}{animation:none;background-size:100% var(--he-sweep-w)}}` +
-    `${still}{animation:none;background-size:100% var(--he-sweep-w)}`
-  );
+  if (sweep.length) {
+    const targets = sweep.map(([target]) => target).join(',');
+    const hovers = sweep.map(([, on]) => on).join(',');
+    const still = hovers
+      .split(',')
+      .map((on) => `.he-reduce-motion ${on}`)
+      .join(',');
+    out.push(
+      `:root{--he-sweep-w:${width}}` +
+        `${targets}{background-image:linear-gradient(currentColor,currentColor);background-repeat:no-repeat;background-origin:content-box;background-position:0 100%;background-size:0% var(--he-sweep-w)}` +
+        `${hovers}{animation:he-link-sweep calc(400ms * var(--he-motion,1)) cubic-bezier(0.58,0.3,0.005,1) forwards}` +
+        '@keyframes he-link-sweep{0%{background-size:100% var(--he-sweep-w);background-position:0 100%}50%{background-size:0% var(--he-sweep-w);background-position:0 100%}50.01%{background-size:0% var(--he-sweep-w);background-position:100% 100%}100%{background-size:100% var(--he-sweep-w);background-position:100% 100%}}' +
+        `@media (prefers-reduced-motion:reduce){${hovers}{animation:none;background-size:100% var(--he-sweep-w)}}` +
+        `${still}{animation:none;background-size:100% var(--he-sweep-w)}`,
+    );
+  }
+  return out.join('');
 }
 
 /* 3.26 — rich text from the theme. Each rule only when its value is set; the
@@ -784,6 +892,10 @@ export function richTextCss(rich: Theme['richText']): string {
   if (top) out.push(`.prose-edge :is(h2,h3){margin-top:${top}}`);
   const subTop = len(rich.subheadingTop);
   if (subTop) out.push(`.prose-edge h4{margin-top:${subTop}}`);
+  // 3.28 — and on phones.
+  const topM = len(rich.headingTopMobile);
+  const subTopM = len(rich.subheadingTopMobile);
+  if (topM || subTopM) out.push(`@media (max-width:768px){${topM ? `.prose-edge :is(h2,h3){margin-top:${topM}}` : ''}${subTopM ? `.prose-edge h4{margin-top:${subTopM}}` : ''}}`);
   const indent = len(rich.listIndent);
   if (rich.listMarker === 'disc' || rich.listMarker === 'none') {
     out.push(`.prose-edge ul{list-style:${rich.listMarker === 'disc' ? 'disc' : 'none'};padding-left:${indent ?? (rich.listMarker === 'disc' ? '1.2em' : '0')}}.prose-edge ul>li{padding-left:0}.prose-edge ul>li::before{content:none}`);

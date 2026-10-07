@@ -535,3 +535,77 @@ Every option below is off, or draws what it drew before, until it is set.
   names** are two new roles, empty until set.
 - **Full-screen menu → Dimmed with**: the colour of the page's dim beside a
   column menu. **Menu on phones → Space above the list.**
+
+## The header, menus, footer, motion, buttons and blocks — the last details (3.28)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+**Header** (Appearance → Header & menus → *Desktop dropdowns* and *Header
+details*): the compact dropdown's alignment (centred or from the link's left
+edge), distance below the bar, width, colour (rgba for glass) and blur,
+edge, corners and padding; item height, size, padding, colour, hover colour
+and row tint; *Opens and closes in* (ms) — a fade with a small rise in, and
+a fade out (the panel then stays in the page while closed, `inert`). *Dim the
+other top links* (and how far). The top links' colour change in ms. The menu
+icon as two bars, long over short, with their sizes, colour and a hover.
+Side padding per tier (left / right). The header button's height, padding,
+text size, weight and hover length — the same on phones. Glass and blur off
+on phones. The top links' colour on project pages. A menu item with a
+submenu can be a link to its own page (*A link with a submenu*).
+
+**Link hover per area** (Appearance → Typography → links): header links,
+menu sub-links, footer menus and legal links, footer contact links (no line
+unless set) and card links each take *colour only*, an underline or the
+sweep; empty follows the site's choice.
+
+**Menus** (*Menu details*): a full-screen menu's sub-items in a column
+beside the list (one open at a time, the others dimmed, the open one moved
+right); a hover that keeps the colour and slides right; a fade in *and out*
+(ms); the space above the list; the contact text's size and colour. The side
+drawer (and the phones' drawer): the current page's link colour, an open
+item's tint and corners, sub-items' size and indent, the page behind
+(colour, how much, blur).
+
+**Footer** (*Footer details*): filled social and contact icons; the contact
+links' size and weight; every column the same width; the links' line height
+and the space between them; the column titles' letter spacing; the current
+page's link weight and colour; separator and divider colours and the space
+at the separators; the reveal only from a width up. **Typography → Footer
+bottom row** is a role of its own, empty until set (it then follows Footer
+text, then Labels).
+
+**Motion** (Appearance → Spacing and motion, and Motion → *Motion details*):
+how far a rise travels, how long an entrance takes and its easing, where on
+the screen it starts (85 — when its top reaches 85% of the screen's height)
+and *Plays again each time it comes back into view*; a **Slow fade**
+entrance (1 s, its length set there too). A block's Design tab → Effects →
+*Each part in turn* brings its cards, logos and list items in one by one.
+The loading screen's own picture (an animated GIF works) and colour, its
+width, *Between every two pages* (with a page-change style) and *The header
+fades with the page*. The pointer's disc arrow (a line or filled) and size,
+the disc's blur, the disc over pictures that open the lightbox, and how fast
+the ring catches up. The rails' line above or below the words, its track and
+fill colours, which way it fills, and the rails' distance from the edge. A
+media band's parallax: *Or: picture size* (% of the band) and *Or: moves
+per pixel scrolled* replace the strength.
+
+**Buttons** (Appearance → Buttons): the arrow drawn with a solid head, its
+size, the space before it, a slide out and back on hover; "Text" buttons'
+hover colour and line; the large size's height, side padding and text size.
+A section's Design tab → *Button colours in this section* (main and
+outline, at rest and pointed at). The Buttons block: *Each keeps its own
+width on phones*.
+
+**Sliders, cards and grids**: the carousel's arrow box, fill, colour, the
+space between them, a disabled arrow's opacity and no change on hover;
+linked card slides without the lift; *Desktop slides per view at exactly
+1024px*; a counter that rolls. A Design tab's *Reaches past its place by*
+lets a panel or a column reach into the page gutter (tablets up). Swiping:
+a card width from 20%, its own on tablets and phones, bare chevron arrows
+and their box. Card grids, reviews: *Columns on tablets*. Logo wall: the
+space between rows. Reviews: card padding, the photo's size in px, the
+review text, the name (face, size, weight) and the role (size, colour) —
+written on the elements so a block's body type does not override them.
+Image: *Its own size, never wider*, *At most* and a right alignment. Text:
+*Space between paragraphs*. Compare: corners, the handle's size and colours.
+Video: *load the player with the page* (inline).

@@ -83,6 +83,17 @@ const BACKGROUND_REPEATS = ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'] as co
 /* ── Effects (package 3, phase C) ─────────────────────────────────────────── */
 
 export const REVEALS = SECTION_REVEALS;
+
+/** 3.28 — one button variant's colours in a section. */
+const sectionColor = z.string().trim().max(60).refine(isColor, 'Not a valid colour');
+const sectionButtonColors = z.object({
+  background: sectionColor.optional(),
+  text: sectionColor.optional(),
+  border: sectionColor.optional(),
+  hoverBackground: sectionColor.optional(),
+  hoverText: sectionColor.optional(),
+  hoverBorder: sectionColor.optional(),
+});
 export const REVEAL_DELAYS = [100, 200, 300, 500, 800] as const;
 export const HOVER_EFFECTS = ['lift', 'grow', 'shadow', 'tilt'] as const;
 export const DIVIDER_SHAPES = ['wave', 'curve', 'tilt', 'triangle', 'zigzag', 'arrow'] as const;
@@ -288,6 +299,8 @@ export const blockStyleSchema = z.object({
   clip: z.boolean().optional(),
   /** 2.21 — the block as a panel: inset from the page's edges, in the panel colour and corners set in Appearance. */
   panel: z.boolean().optional(),
+  /** 3.28 — wider than its place by this much on each side, from tablets up: a panel or a column reaching into the page's gutter. */
+  bleed: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
 
   typography: z
     .object({
@@ -311,6 +324,8 @@ export const blockStyleSchema = z.object({
    */
   /* 3.5 — `none` keeps a section still when the site gives every section an entrance. */
   reveal: z.enum([...REVEALS, 'none']).optional(),
+  /** 3.28 — the entrance plays on each part in turn (headings, text, cards, list items, logos) rather than on the block as one piece. */
+  revealItems: z.boolean().optional(),
   /** P3-C1 — milliseconds before the entrance plays, for sections that follow one another. */
   revealDelay: z.union([z.literal(100), z.literal(200), z.literal(300), z.literal(500), z.literal(800)]).optional(),
 
@@ -375,9 +390,15 @@ export const blockStyleSchema = z.object({
 
   swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
   /** 3.22 — how much of the width each card takes while swiping, in %; unset is 84, so the next card peeks in. */
-  swipeWidth: z.number().int().min(40).max(100).optional(),
+  swipeWidth: z.number().int().min(20).max(100).optional(),
+  /** 3.28 — each card's share on tablets and on phones, over the one above. */
+  swipeWidthTablet: z.number().int().min(20).max(100).optional(),
+  swipeWidthMobile: z.number().int().min(20).max(100).optional(),
   /** 3.22 — ‹ › buttons for the swipe: none (unset, as before), under the cards on the right, or either side of them. Hidden when the cards fit. */
   swipeArrows: z.enum(['none', 'belowRight', 'sides']).optional(),
+  /** 3.28 — those buttons in circles (unset, as before) or as bare chevrons, and their box in px. */
+  swipeArrowLook: z.enum(['circle', 'plain']).optional(),
+  swipeArrowBox: z.number().int().min(20).max(80).optional(),
 
   /** Hidden at these widths and below — how visibility was stored before 2.19; still read. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),
@@ -395,6 +416,18 @@ export const blockStyleSchema = z.object({
    * stretch to fill the row).
    */
   buttonsMobile: z.enum(['fit', 'full']).optional(),
+
+  /**
+   * 3.28 — this section's own button colours, over the theme's: the main and
+   * the outline button, at rest and under the pointer. A hover left empty
+   * follows the theme's; set it to the resting colour for no change.
+   */
+  buttonColors: z
+    .object({
+      primary: sectionButtonColors.optional(),
+      outline: sectionButtonColors.optional(),
+    })
+    .optional(),
 
   /** Kept out of the render entirely, without being deleted. */
   disabled: z.boolean().optional(),

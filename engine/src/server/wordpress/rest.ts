@@ -122,6 +122,7 @@ export async function readRestSite(input: string): Promise<{ ok: true; site: WpS
         slug: String(row.slug ?? ''),
         status: String(row.status ?? 'publish'),
         date: row.date_gmt ? `${String(row.date_gmt)}Z` : null,
+        modified: row.modified_gmt ? `${String(row.modified_gmt)}Z` : null,
         content: String((row.content as Json | undefined)?.rendered ?? ''),
         rendered: true,
         excerpt: plain(String((row.excerpt as Json | undefined)?.rendered ?? '')),

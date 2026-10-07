@@ -59,6 +59,8 @@ export const MESSAGES = {
   'blog.clear': 'Clear',
   'blog.browse': 'Browse',
   'blog.categories': 'Categories',
+  // 3.28 — the phones' button that opens an archive's filters.
+  'blog.filters': 'Filters',
   'blog.viewAll': 'View all',
   'blog.read': 'Read',
   'blog.nothingYet': 'Nothing published yet.',
@@ -74,6 +76,9 @@ export const MESSAGES = {
 
   /* ── Projects (2.14) ─────────────────────────────────────────────────── */
   'project.view': 'View project',
+  // 3.28 — the project page's round back button and its tags column.
+  'project.back': 'Back',
+  'project.tags': 'Tags',
   'project.none': 'No projects here yet.',
   'project.client': 'Client',
   'project.year': 'Year',

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from '@/components/ui/SiteLink';
 import { Icon } from '@/components/site/icons';
 import { cn } from '@/lib/utils';
+import type { ResolvedBlog } from '@/lib/blog';
 
 type Target = { title: string; href: string } | null;
 
@@ -22,6 +23,7 @@ export function FloatingNext({
   labels,
   phones = false,
   dismissKey,
+  look,
 }: {
   next: Target;
   previous: Target;
@@ -30,6 +32,8 @@ export function FloatingNext({
   phones?: boolean;
   /** 3.22 — closing it is remembered for this post only (its id), rather than for the whole visit. */
   dismissKey?: string;
+  /** 3.28 — which neighbour, when it shows and hides, its controls and its look. */
+  look?: ResolvedBlog['upNext'];
 }) {
   const [shown, setShown] = useState(false);
   const [dismissed, setDismissed] = useState(true);
@@ -41,13 +45,21 @@ export function FloatingNext({
     } catch {
       setDismissed(false);
     }
-    const check = () => setShown(window.scrollY > document.documentElement.scrollHeight * 0.33 - window.innerHeight);
+    // 3.28 — from the start, and out of the way while the related posts are on screen.
+    const related = look?.hideOverRelated ? document.querySelector('.he-related') : null;
+    const check = () => {
+      const past = look?.from === 'start' || window.scrollY > document.documentElement.scrollHeight * 0.33 - window.innerHeight;
+      const box = related?.getBoundingClientRect();
+      const overRelated = Boolean(box && box.top < window.innerHeight && box.bottom > 0);
+      setShown(past && !overRelated);
+    };
     check();
     window.addEventListener('scroll', check, { passive: true });
     return () => window.removeEventListener('scroll', check);
-  }, [storageKey]);
+  }, [storageKey, look?.from, look?.hideOverRelated]);
 
-  const target = next ?? previous;
+  // 3.28 — `newer`: the newer post only, so the newest post shows none.
+  const target = look?.pick === 'newer' ? next : (next ?? previous);
   if (!target || dismissed) return null;
 
   const dismiss = () => {
@@ -60,11 +72,27 @@ export function FloatingNext({
   };
 
   return (
-    <aside className={cn('he-upnext', shown && 'is-shown', phones && 'on-phones')} aria-label={labels.upNext} aria-hidden={shown ? undefined : true}>
-      <p className="he-upnext__label">{next ? labels.upNext : labels.previous}</p>
+    <aside
+      className={cn('he-upnext', shown && 'is-shown', phones && 'on-phones', look?.close === false && 'no-close', look?.titleSize && 'has-title-size', look?.titleWeight && 'has-title-weight')}
+      aria-label={labels.upNext}
+      aria-hidden={shown ? undefined : true}
+      style={
+        look && (look.width || look.background || typeof look.radius === 'number' || look.titleSize || look.titleWeight)
+          ? ({
+              ...(look.width ? { width: `min(${look.width}px, calc(100vw - 40px))` } : {}),
+              ...(look.background ? { background: look.background } : {}),
+              ...(typeof look.radius === 'number' ? { borderRadius: `${look.radius}px` } : {}),
+              ...(look.titleSize ? { '--he-upnext-title-size': look.titleSize } : {}),
+              ...(look.titleWeight ? { '--he-upnext-title-weight': look.titleWeight } : {}),
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
+      <p className="he-upnext__label">{target === next ? labels.upNext : labels.previous}</p>
       <Link href={target.href} className="he-upnext__title" tabIndex={shown ? undefined : -1}>
         {target.title}
       </Link>
+      {look?.arrows !== false && (
       <div className="he-upnext__nav">
         {previous && (
           <Link href={previous.href} aria-label={`${labels.previous}: ${previous.title}`} tabIndex={shown ? undefined : -1}>
@@ -77,9 +105,12 @@ export function FloatingNext({
           </Link>
         )}
       </div>
-      <button type="button" className="he-upnext__close" onClick={dismiss} aria-label={labels.dismiss} tabIndex={shown ? undefined : -1}>
-        <Icon.Close size={14} />
-      </button>
+      )}
+      {look?.close !== false && (
+        <button type="button" className="he-upnext__close" onClick={dismiss} aria-label={labels.dismiss} tabIndex={shown ? undefined : -1}>
+          <Icon.Close size={14} />
+        </button>
+      )}
     </aside>
   );
 }

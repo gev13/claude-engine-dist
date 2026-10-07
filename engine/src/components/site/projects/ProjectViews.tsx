@@ -15,7 +15,7 @@ import type { Locale } from '@/lib/locales';
 import { parsePageSchema } from '@/lib/structuredData';
 import { messageReader } from '@/lib/messages';
 import { absoluteWithSlash, pagedPath, projectPath, projectTermPath, type Permalinks } from '@/lib/permalinks';
-import { projectItem, type ProjectTemplate } from '@/lib/projects';
+import { projectItem, projectLookCss, type ProjectTemplate } from '@/lib/projects';
 import { breadcrumbs, graph, itemList, webPage, ORG_ID, type Crumb, customNodes } from '@/lib/seo/jsonld';
 import { isColor } from '@/lib/theme';
 import { cn, isoDate } from '@/lib/utils';
@@ -25,6 +25,7 @@ import type { Paging } from '@/server/content/resolve';
 import { pageTrail } from '@/server/content/trail';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
+import { HeroZoom, ProjectBack } from './ProjectMotion';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A project's page, and a project category's or tag's archive (2.14)
@@ -52,7 +53,8 @@ function HeroMedia({ project, className }: { project: ProjectDetail; className?:
     <div className={cn('he-prj-hero__media', className)}>
       <SiteImg
         src={media.url}
-        alt=""
+        // 3.28 — the project's own name, for search and for anybody who cannot see the picture.
+        alt={project.title}
         className="he-fill"
         fetchPriority="high"
         priority
@@ -144,6 +146,7 @@ export async function ProjectArticle({
       ))}
     </ul>
   );
+  const look = template.look ?? {};
   const heading = (
     <>
       {chips}
@@ -154,6 +157,26 @@ export async function ProjectArticle({
       {template.showDetails && <Details project={project} t={t} />}
     </>
   );
+  // 3.28 — the tags in a column of their own beside the heading.
+  const head =
+    look.tagsColumn && project.tags.length > 0 ? (
+      <div className="he-prj-headgrid">
+        <div>{heading}</div>
+        <aside className="he-prj-tags" aria-label={t('project.tags')}>
+          <p className="he-prj-tags__title">{t('project.tags')}</p>
+          <ul>
+            {project.tags.map((tag) => (
+              <li key={tag.slug}>
+                <Link href={projectTermPath(permalinks, 'tag', tag.slug)}>{tag.name}</Link>
+              </li>
+            ))}
+          </ul>
+        </aside>
+      </div>
+    ) : (
+      heading
+    );
+  const lookCss = projectLookCss(template.look);
 
   // A project's own colour, else (3.22) the template's.
   const own = project.options.background && isColor(project.options.background) ? project.options.background : null;
@@ -163,7 +186,7 @@ export async function ProjectArticle({
   return (
     <>
       <article
-        className={cn('he-prj', `is-${template.header}`, template.headWidth && 'has-head-w', template.categoryStyle === 'plain' && 'is-cats-plain', template.heroHeight && 'has-hero-h', template.heroHeightMobile && 'has-hero-hm')}
+        className={cn('he-prj', `is-${template.header}`, template.headWidth && 'has-head-w', template.categoryStyle === 'plain' && 'is-cats-plain', template.heroHeight && 'has-hero-h', template.heroHeightMobile && 'has-hero-hm', look.heroZoom && 'has-hero-zoom')}
         // 3.23 — the hero's height and the heading column's width, from the page template.
         style={
           template.heroHeight || template.heroHeightMobile || template.headWidth
@@ -180,16 +203,18 @@ export async function ProjectArticle({
             <HeroMedia project={project} />
           </header>
         )}
-        <Section size="lg">
+        <Section size="lg" className="he-prj-head">
           {template.header === 'split' ? (
             <div className="he-prj-split">
-              <div>{heading}</div>
+              <div>{head}</div>
               <HeroMedia project={project} className="is-framed" />
             </div>
           ) : (
-            heading
+            head
           )}
         </Section>
+        {look.backLink && <ProjectBack href={primary ? projectTermPath(permalinks, 'category', primary.slug) : '/'} label={t('project.back')} />}
+        {look.heroZoom && template.header === 'fullBleed' && <HeroZoom />}
         <BlockRenderer blocks={project.blocks} trail={trail} currentProjectId={project.id} locale={locale} />
       </article>
 
@@ -239,6 +264,7 @@ export async function ProjectArticle({
           dangerouslySetInnerHTML={{ __html: `body,.he-site{background-color:${background}}#main{--color-ink:${background};background-color:${background}}` }}
         />
       )}
+      {lookCss && <style id="he-project-look" dangerouslySetInnerHTML={{ __html: lookCss }} />}
       {project.customCss && <style id="he-page-css" dangerouslySetInnerHTML={{ __html: safeCss(project.customCss) }} />}
       {(project.options.scheme === 'alt' || project.options.scheme === 'alt2') && <PageAppearanceStyle appearance={{ scheme: project.options.scheme }} />}
     </>
@@ -286,9 +312,11 @@ export async function ProjectArchiveView({
     source: 'collection',
   });
 
+  const lookCss = projectLookCss(template.look);
   return (
     <>
-      <Section size="lg">
+      <Section size="lg" className="he-prja-head">
+        {template.look?.backLink && <ProjectBack href="/" label={t('project.back')} />}
         <Heading level={1} className="max-w-[20ch]">
           {term.name}
         </Heading>
@@ -311,6 +339,8 @@ export async function ProjectArchiveView({
           crumbs,
         ])}
       />
+      {/* 3.28 — the template's details; last, like the page's own CSS. */}
+      {lookCss && <style id="he-project-look" dangerouslySetInnerHTML={{ __html: lookCss }} />}
     </>
   );
 }

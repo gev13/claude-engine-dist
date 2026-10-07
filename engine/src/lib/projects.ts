@@ -40,6 +40,11 @@ export const PROJECT_ORDER_LABELS: Record<ProjectOrder, string> = {
 
 const text = (max: number) => z.string().trim().max(max);
 
+/* 3.28 — the template details' small fields. */
+const lookLength = z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional();
+const lookColour = z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional();
+const lookWeight = z.enum(['300', '400', '500', '600', '700', '800']).optional();
+
 export const projectTemplateSchema = z.object({
   header: z.enum(PROJECT_HEADERS).default('fullBleed'),
   /** Client, year and a link to the live work, under the intro. */
@@ -87,9 +92,74 @@ export const projectTemplateSchema = z.object({
    * blocks, checked with `collectInvalidBlocks` on save like a popup's.
    */
   cta: z.array(z.unknown()).max(20).default([]),
+  /** 3.28 — the project page's and its archives' last details; written by `projectLookCss`, each unset as drawn. */
+  look: z
+    .object({
+      /** The hero picture grows a little (to 1.05) over the first 400px of scrolling. */
+      heroZoom: z.boolean().optional(),
+      /** A round "back" button at the top left that goes back in history, on project pages and their archives. */
+      backLink: z.boolean().optional(),
+      /** The tags in a column of their own beside the title and intro (under them on phones). */
+      tagsColumn: z.boolean().optional(),
+      tagsTitleSize: lookLength,
+      tagsTitleWeight: lookWeight,
+      tagsColor: lookColour,
+      titleSize: lookLength,
+      titleSizeLaptop: lookLength,
+      titleSizeTablet: lookLength,
+      titleSizeMobile: lookLength,
+      /** The space from the hero to the category line, its weight, the space under it and under the title. */
+      heroGap: lookLength,
+      categoryWeight: lookWeight,
+      categoryGap: lookLength,
+      introGap: lookLength,
+      /** A category's or a tag's page: the title's size, the space above it, and from it to the cards. */
+      archiveTitleSize: lookLength,
+      archiveTop: lookLength,
+      archiveTopMobile: lookLength,
+      archiveGap: lookLength,
+      archiveGapMobile: lookLength,
+    })
+    .optional(),
 });
 
 export type ProjectTemplate = z.output<typeof projectTemplateSchema>;
+export type ProjectLook = NonNullable<ProjectTemplate['look']>;
+
+/**
+ * 3.28 — the template's details as CSS for the project page and its
+ * archives (a <style> they render). Each rule only when its value is set;
+ * every value checked again, since it lands in a <style> element.
+ */
+export function projectLookCss(look: ProjectLook | undefined): string {
+  if (!look) return '';
+  const len = (v: unknown) => (typeof v === 'string' && isLength(v) ? v : undefined);
+  const col = (v: unknown) => (typeof v === 'string' && isColor(v) ? v : undefined);
+  const wgt = (v: unknown) => (typeof v === 'string' && /^[3-8]00$/.test(v) ? v : undefined);
+  const rule = (selector: string, decls: [string, string | undefined][]) => {
+    const body = decls.filter(([, v]) => v).map(([p, v]) => `${p}:${v}`).join(';');
+    return body ? `${selector}{${body}}` : '';
+  };
+  const at = (query: string, css: string) => (css ? `@media ${query}{${css}}` : '');
+  const out = [
+    rule('.he-prj-head h1', [['font-size', len(look.titleSize)], ['max-width', len(look.titleSize) ? 'none' : undefined]]),
+    at('(max-width:1440px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeLaptop)]])),
+    at('(max-width:1024px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeTablet)]])),
+    at('(max-width:768px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeMobile)]])),
+    rule('.he-prj-head', [['padding-top', len(look.heroGap)]]),
+    rule('.he-prj-head .he-prj-chips', [['margin-bottom', len(look.categoryGap)]]),
+    rule('.he-prj-head .he-prj-chips a', [['font-weight', wgt(look.categoryWeight)]]),
+    rule('.he-prj-head .he-prj-intro', [['margin-top', len(look.introGap)]]),
+    rule('.he-prj-tags__title', [['font-size', len(look.tagsTitleSize)], ['font-weight', wgt(look.tagsTitleWeight)]]),
+    rule('.he-prj-tags a', [['color', col(look.tagsColor)]]),
+    rule('.he-prja-head h1', [['font-size', len(look.archiveTitleSize)], ['max-width', len(look.archiveTitleSize) ? 'none' : undefined]]),
+    rule('.he-prja-head', [['padding-top', len(look.archiveTop)]]),
+    at('(max-width:768px)', rule('.he-prja-head', [['padding-top', len(look.archiveTopMobile)]])),
+    len(look.archiveGap) ? `.he-prja-head{padding-bottom:0}.he-prja-head+.he-proj-sec{padding-top:${len(look.archiveGap)}}` : '',
+    at('(max-width:768px)', len(look.archiveGapMobile) ? `.he-prja-head+.he-proj-sec{padding-top:${len(look.archiveGapMobile)}}` : ''),
+  ];
+  return out.filter(Boolean).join('');
+}
 
 /** Never throws: an unreadable row is the plain defaults. */
 export function resolveProjectTemplate(value: unknown): ProjectTemplate {
@@ -155,7 +225,8 @@ export function projectItem(card: ProjectCard) {
     summary: card.summary,
     imageUrl: card.coverUrl ?? undefined,
     hoverImageUrl: card.hoverUrl ?? undefined,
-    alt: '',
+    // 3.28 — the project's name, as the picture's alt text.
+    alt: card.title.slice(0, 200),
     href: card.href,
     chips: card.categories.map((category) => ({ label: category.name, href: category.href })),
   };

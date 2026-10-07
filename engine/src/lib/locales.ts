@@ -96,8 +96,23 @@ export function localeName(code: Locale): string {
   return languageInfo(code).name;
 }
 
+/* 3.28 — the main language's region (Settings), e.g. US: `og:locale` en_US and `<html lang="en-US">`.
+   Held process-wide like the trailing slash; set by `routingConfig()`. Unset keeps each language's own. */
+type RegionGlobal = { __heRegion?: string };
+export function setMainRegion(region: string | undefined): void {
+  (globalThis as RegionGlobal).__heRegion = region && /^[A-Z]{2}$/.test(region) ? region : undefined;
+}
+const mainRegion = (code: Locale): string | undefined => (code === localeConfig().defaultLocale ? (globalThis as RegionGlobal).__heRegion : undefined);
+
 export function ogLocale(code: Locale): string {
-  return languageInfo(code).og;
+  const region = mainRegion(code);
+  return region ? `${code}_${region}` : languageInfo(code).og;
+}
+
+/** 3.28 — the `lang` attribute: the language, with the main language's region when one is set. */
+export function htmlLang(code: Locale): string {
+  const region = mainRegion(code);
+  return region ? `${code}-${region}` : code;
 }
 
 export function localeDir(code: Locale): 'ltr' | 'rtl' {

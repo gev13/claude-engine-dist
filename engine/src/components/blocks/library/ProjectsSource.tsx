@@ -40,7 +40,7 @@ export async function ProjectsSource(p: Props) {
   };
   const [cards, total] = await Promise.all([
     listProjectCards(query, permalinks),
-    block.pagination === 'loadMore' ? countProjects(query) : Promise.resolve(0),
+    block.pagination === 'loadMore' || block.pagination === 'infinite' ? countProjects(query) : Promise.resolve(0),
   ]);
 
   return (
@@ -50,7 +50,7 @@ export async function ProjectsSource(p: Props) {
         // A carousel has no "more"; pages and load-more both need the grid.
         layout={block.layout === 'carousel' && block.pagination !== 'none' ? 'classic' : block.layout}
         items={cards.map(projectItem)}
-        more={block.pagination === 'loadMore' ? { query: projectQueryString(query), total } : undefined}
+        more={block.pagination === 'loadMore' || block.pagination === 'infinite' ? { query: projectQueryString(query), total } : undefined}
       />
       {paging && block.pagination === 'pages' && (
         <div className="shell">

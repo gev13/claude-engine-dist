@@ -16,12 +16,18 @@ import { useEffect, useRef } from 'react';
 
 const ROW = 4;
 
-export function MasonryRows() {
+export function MasonryRows({ turn = false }: { /** 3.28 — item i in column i mod n, in turn, rather than the next free spot. */ turn?: boolean }) {
   const ref = useRef<HTMLSpanElement>(null);
 
   useEffect(() => {
     const list = ref.current?.parentElement?.querySelector<HTMLElement>('[data-masonry-rows]');
     if (!list) return;
+    // 3.28 — the column each item takes, from the grid's column count at this width.
+    const columns = () => {
+      if (!turn) return;
+      const count = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+      (Array.from(list.children) as HTMLElement[]).forEach((item, i) => (item.style.gridColumn = String((i % count) + 1)));
+    };
 
     const place = (item: HTMLElement) => {
       item.style.removeProperty('--he-span');
@@ -32,18 +38,21 @@ export function MasonryRows() {
     const sizes = new ResizeObserver((entries) => entries.forEach((entry) => place(entry.target as HTMLElement)));
     const watch = () => {
       for (const item of Array.from(list.children) as HTMLElement[]) sizes.observe(item);
+      columns();
     };
     watch();
     list.classList.add('is-packed');
     // "Load more" appends: measure the new items as they arrive.
     const added = new MutationObserver(watch);
     added.observe(list, { childList: true });
+    window.addEventListener('resize', columns);
     return () => {
       sizes.disconnect();
       added.disconnect();
+      window.removeEventListener('resize', columns);
       list.classList.remove('is-packed');
     };
-  }, []);
+  }, [turn]);
 
   return <span ref={ref} hidden />;
 }

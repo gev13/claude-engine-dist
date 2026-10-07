@@ -313,6 +313,8 @@
   @media (width <= 48rem) {
     .he-hd { padding-block: 44px; }
     .he-btns.is-full > .he-cbtn, .he-btns > .he-cbtn:not(.is-icon-only):not(.is-text) { flex: 1 1 100%; }
+    /* 3.28 — each keeps its own width. */
+    .he-btns.is-keep-m > .he-cbtn:not(.is-icon-only):not(.is-text), .he-btns.is-keep-m.is-full > .he-cbtn { flex: 0 0 auto; }
     .he-notice.is-large { padding: 18px; font-size: 16px; }
     .he-cd__units { gap: 10px; }
     .he-cd__units.is-plain { gap: 18px; }

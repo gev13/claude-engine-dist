@@ -18,6 +18,8 @@ import {
 } from '@/lib/embeds';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
 import { projectCardLook } from '@/lib/projectCard';
+import { buttonPadProps } from '@/lib/buttonPad';
+import { ArrowRight } from '@/components/ui/Button';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
@@ -93,8 +95,18 @@ export function CompareBlock(p: P<'compare'>) {
         <figure className="he-cmp__fig">
           <div
             ref={frameRef}
-            className={cn('he-cmp', `is-${p.orientation}`, `is-handle-${p.handle}`)}
-            style={{ ...ratioStyle(p.ratio), '--pos': `${pos}%` } as CSSProperties}
+            className={cn('he-cmp', `is-${p.orientation}`, `is-handle-${p.handle}`, typeof p.radius === 'number' && 'has-radius', (p.knobSize || p.knobBackground || p.knobColor) && 'has-knob')}
+            style={
+              {
+                ...ratioStyle(p.ratio),
+                '--pos': `${pos}%`,
+                // 3.28 — corners and the handle's own look.
+                ...(typeof p.radius === 'number' ? { '--he-cmp-radius': `${p.radius}px` } : {}),
+                ...(p.knobSize ? { '--he-cmp-knob': `${p.knobSize}px` } : {}),
+                ...(p.knobBackground ? { '--he-cmp-knob-bg': p.knobBackground } : {}),
+                ...(p.knobColor ? { '--he-cmp-knob-fg': p.knobColor } : {}),
+              } as CSSProperties
+            }
             onPointerDown={(e) => {
               // On a touch screen an up-and-down wipe would fight the page's own scrolling,
               // so a vertical comparison starts only from its handle.
@@ -164,13 +176,13 @@ export function CompareBlock(p: P<'compare'>) {
 
 /* ── EL10: video ──────────────────────────────────────────────────────────── */
 
-function Player({ source, title, poster }: { source: VideoSource; title: string; poster?: string }) {
+function Player({ source, title, poster, autoplay = true }: { source: VideoSource; title: string; poster?: string; /** 3.28 */ autoplay?: boolean }) {
   if (source.kind === 'file') {
-    return <video src={source.src} poster={poster} controls autoPlay playsInline className="he-fill he-video__player" aria-label={title} />;
+    return <video src={source.src} poster={poster} controls autoPlay={autoplay} playsInline className="he-fill he-video__player" aria-label={title} />;
   }
   return (
     <iframe
-      src={videoEmbedUrl(source)}
+      src={videoEmbedUrl(source, autoplay)}
       title={title}
       className="he-video__player"
       allow="autoplay; encrypted-media; picture-in-picture; fullscreen"
@@ -190,14 +202,17 @@ export function VideoBlock(p: P<'video'>) {
   const [current, setCurrent] = useState(0);
   const item = items[current] ?? items[0]!;
   const source = useMemo(() => parseVideoUrl(item.source), [item.source]);
-  const [playing, setPlaying] = useState(false);
+  // 3.28 — inline, the player can be there from the start (waiting for its own play button).
+  const loadNow = p.loadNow === true && p.display === 'inline';
+  const [playing, setPlaying] = useState(loadNow);
+  const [picked, setPicked] = useState(false);
   const frameRef = useRef<HTMLDivElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
   // The play button disappears when the player replaces it, so focus follows to the player.
   useEffect(() => {
-    if (playing && p.display === 'inline') frameRef.current?.querySelector<HTMLElement>('iframe, video')?.focus();
-  }, [playing, p.display, current]);
+    if (playing && p.display === 'inline' && (!loadNow || picked)) frameRef.current?.querySelector<HTMLElement>('iframe, video')?.focus();
+  }, [playing, p.display, current, loadNow, picked]);
 
   if (!source) return null;
   const host = source.kind === 'file' ? undefined : VIDEO_HOST_LABEL[source.kind];
@@ -208,6 +223,7 @@ export function VideoBlock(p: P<'video'>) {
   };
   const pick = (i: number) => {
     setCurrent(i);
+    setPicked(true);
     start();
   };
 
@@ -264,7 +280,7 @@ export function VideoBlock(p: P<'video'>) {
             {showFrame ? (
               <div ref={frameRef} className="he-video__frame" style={ratioStyle(p.ratio)}>
                 {playing && p.display === 'inline' ? (
-                  <Player key={current} source={source} title={item.videoTitle} poster={item.posterUrl} />
+                  <Player key={current} source={source} title={item.videoTitle} poster={item.posterUrl} autoplay={!loadNow || picked} />
                 ) : (
                   <>
                     {item.posterUrl ? (
@@ -315,15 +331,24 @@ export function GalleryBlock(p: P<'gallery'>) {
   const more = paged && revealed < count;
   const showMore = () => setRevealed((n) => Math.min(count, n + p.perPage));
   const sentinel = useRef<HTMLDivElement>(null);
+  // 3.28 — one lot at a time: after each, a short "Loading" pause and the end must come into view again.
+  const [waiting, setWaiting] = useState(false);
   useEffect(() => {
-    if (p.pagination !== 'infinite' || !more || !sentinel.current) return;
+    if (p.pagination !== 'infinite' || !more || !sentinel.current || waiting) return;
     const observer = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) showMore();
-    }, { rootMargin: '0px 0px 400px 0px' });
+      if (!entries.some((e) => e.isIntersecting)) return;
+      if (!p.batchOnce) return showMore();
+      observer.disconnect();
+      setWaiting(true);
+      window.setTimeout(() => {
+        showMore();
+        setWaiting(false);
+      }, 500);
+    }, { rootMargin: p.batchOnce ? '0px' : '0px 0px 400px 0px' });
     observer.observe(sentinel.current);
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- re-armed after each lot
-  }, [p.pagination, more, revealed]);
+  }, [p.pagination, more, revealed, waiting]);
 
   // A swipe on a touch screen moves the lightbox, like the arrow keys.
   const swipeFrom = useRef<{ x: number; y: number } | null>(null);
@@ -343,16 +368,18 @@ export function GalleryBlock(p: P<'gallery'>) {
   };
 
   // 3.22 — masonry in reading order.
-  const rowOrder = p.layout === 'masonry' && p.masonryOrder === 'rows';
+  // 3.28 — or each picture in its column in turn, on the same packed grid.
+  const rowOrder = p.layout === 'masonry' && (p.masonryOrder === 'rows' || p.masonryOrder === 'turn');
+  const viewer = p.viewer ?? {};
 
   return (
     <section className={cn('he-lsec he-gal-sec', toneClass(p.tone))}>
       <div className="shell">
         <Head eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} />
         <div className="he-cq">
-          {rowOrder && <MasonryRows />}
+          {rowOrder && <MasonryRows turn={p.masonryOrder === 'turn'} />}
           <ul
-            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows')}
+            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows', p.gapLength && 'has-gap')}
             style={
               {
                 '--cols': p.columns,
@@ -360,6 +387,7 @@ export function GalleryBlock(p: P<'gallery'>) {
                 ...(p.columnsTablet ? { '--cols-t': p.columnsTablet } : {}),
                 ...(p.columnsMobile ? { '--cols-m': p.columnsMobile } : {}),
                 ...(typeof p.radius === 'number' ? { '--he-gal-radius': `${p.radius}px` } : {}),
+                ...(p.gapLength ? { '--he-gal-gap': p.gapLength } : {}),
               } as CSSProperties
             }
             data-masonry-rows={rowOrder ? '' : undefined}
@@ -407,8 +435,8 @@ export function GalleryBlock(p: P<'gallery'>) {
         </div>
         {more && (
           <div className="he-show__more">
-            <button type="button" className="he-cbtn is-outline is-medium" onClick={showMore}>
-              {t('archive.loadMore')}
+            <button type="button" className="he-cbtn is-outline is-medium" onClick={showMore} aria-busy={waiting || undefined}>
+              {waiting ? t('archive.loading') : t('archive.loadMore')}
             </button>
           </div>
         )}
@@ -423,7 +451,27 @@ export function GalleryBlock(p: P<'gallery'>) {
       {p.lightbox && (
         <dialog
           ref={dialogRef}
-          className="he-lightbox"
+          className={cn(
+            'he-lightbox',
+            // 3.28 — the viewer's own look.
+            viewer.backdrop && 'has-backdrop',
+            viewer.peek && 'has-peek',
+            viewer.closeSide === 'left' && 'is-close-left',
+            viewer.closeBackground && 'has-close-bg',
+            viewer.arrows === 'bottomRight' && 'is-arrows-corner',
+            viewer.arrowStyle === 'plain' && 'is-arrows-plain',
+            viewer.counter === false && 'no-count',
+            typeof viewer.speed === 'number' && 'has-speed',
+          )}
+          style={
+            viewer.backdrop || viewer.closeBackground || typeof viewer.speed === 'number'
+              ? ({
+                  ...(viewer.backdrop ? { '--he-lb-backdrop': viewer.backdrop } : {}),
+                  ...(viewer.closeBackground ? { '--he-lb-close': viewer.closeBackground } : {}),
+                  ...(typeof viewer.speed === 'number' ? { '--he-lb-speed': `${viewer.speed}ms` } : {}),
+                } as CSSProperties)
+              : undefined
+          }
           aria-label={t('block.pictureViewer')}
           onClose={() => setOpen(null)}
           onClick={(e) => {
@@ -438,8 +486,15 @@ export function GalleryBlock(p: P<'gallery'>) {
             if (e.key === 'ArrowLeft') go(-1);
           }}
         >
+          {/* 3.28 — the pictures either side, at half size. */}
+          {viewer.peek && open !== null && count > 2 && (
+            <>
+              <SiteImg key={`p${open}`} src={p.images[(open - 1 + count) % count]!.url} alt="" className="he-lightbox__peek is-prev" aria-hidden="true" />
+              <SiteImg key={`n${open}`} src={p.images[(open + 1) % count]!.url} alt="" className="he-lightbox__peek is-next" aria-hidden="true" />
+            </>
+          )}
           {current && open !== null && (
-            <figure className="he-lightbox__fig">
+            <figure key={typeof viewer.speed === 'number' ? open : undefined} className="he-lightbox__fig">
               {current.videoUrl ? (
                 // Opened on purpose, so it has the browser's own controls and sound can be turned on.
                 <video src={current.videoUrl} poster={current.url} className="he-lightbox__img" controls autoPlay muted loop playsInline aria-label={current.alt || current.caption || undefined} />
@@ -589,7 +644,9 @@ function ProjectsGrid(p: ProjectsProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const cursorRef = useRef<HTMLDivElement>(null);
   // A manual list that loads more shows `perPage` first and reveals the rest a lot at a time.
-  const manualLimit = p.source !== 'collection' && p.pagination === 'loadMore' ? revealed : Infinity;
+  // 3.28 — or loads them by itself as the button comes into view.
+  const loads = p.pagination === 'loadMore' || p.pagination === 'infinite';
+  const manualLimit = p.source !== 'collection' && loads ? revealed : Infinity;
   const shown = all
     .map((item, i) => ({ item, i }))
     .filter(({ item }) => !category || cardCategories(item).includes(category))
@@ -599,7 +656,8 @@ function ProjectsGrid(p: ProjectsProps) {
   const canLoad =
     p.source === 'collection'
       ? Boolean(p.more && all.length < p.more.total)
-      : p.pagination === 'loadMore' && revealed < all.length;
+      : loads && revealed < all.length;
+  const moreRef = useRef<HTMLButtonElement>(null);
 
   async function loadMore() {
     if (p.source !== 'collection') {
@@ -620,6 +678,20 @@ function ProjectsGrid(p: ProjectsProps) {
       setLoading(false);
     }
   }
+
+  // 3.28 — infinite: the button loads the next lot when it reaches the screen, and again while it stays there.
+  const loadRef = useRef(loadMore);
+  loadRef.current = loadMore;
+  useEffect(() => {
+    if (p.pagination !== 'infinite' || !canLoad || loading) return;
+    const button = moreRef.current;
+    if (!button || !('IntersectionObserver' in window)) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) void loadRef.current();
+    }, { rootMargin: '0px 0px 200px 0px' });
+    observer.observe(button);
+    return () => observer.disconnect();
+  }, [p.pagination, canLoad, loading, all.length, revealed]);
 
   useEffect(() => {
     const sync = () => setStill(motionReduced());
@@ -765,7 +837,7 @@ function ProjectsGrid(p: ProjectsProps) {
 
         {canLoad && (
           <div className="he-show__more">
-            <button type="button" className="he-cbtn is-outline is-medium" onClick={() => void loadMore()} aria-busy={loading || undefined}>
+            <button ref={moreRef} type="button" className="he-cbtn is-outline is-medium" onClick={() => void loadMore()} aria-busy={loading || undefined}>
               {loading ? t('archive.loading') : t('archive.loadMore')}
             </button>
           </div>
@@ -773,9 +845,21 @@ function ProjectsGrid(p: ProjectsProps) {
 
         {p.link && (
           <div className="he-show__more">
-            <SmartLink href={p.link.href} className="he-cbtn is-outline is-medium">
-              {p.link.label}
-            </SmartLink>
+            {/* 3.28 — the link's own arrow, padding and size; untouched, the same medium outline as before. */}
+            {p.link.arrow || p.link.pad || p.linkSize ? (
+              <SmartLink
+                href={p.link.href}
+                className={cn('he-cbtn is-outline', `is-${p.linkSize ?? 'medium'}`, buttonPadProps(p.link.pad).className)}
+                style={buttonPadProps(p.link.pad).style as CSSProperties | undefined}
+              >
+                <span>{p.link.label}</span>
+                {p.link.arrow && <ArrowRight />}
+              </SmartLink>
+            ) : (
+              <SmartLink href={p.link.href} className="he-cbtn is-outline is-medium">
+                {p.link.label}
+              </SmartLink>
+            )}
           </div>
         )}
       </div>

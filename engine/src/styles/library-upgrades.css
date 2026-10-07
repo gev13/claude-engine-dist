@@ -289,6 +289,7 @@
 .he-ri--left.is-anim { animation-name: he-ri-left; }
 .he-ri--right.is-anim { animation-name: he-ri-right; }
 .he-ri--blur.is-anim { animation-name: he-ri-blur; }
+.he-ri--fadeSlow.is-anim { animation: he-ri-fade calc(var(--he-rv-slow, 1000ms) * var(--he-motion, 1)) ease both; }
 @keyframes he-ri-fade { from { opacity: 0; } }
 @keyframes he-ri-rise { from { opacity: 0; translate: 0 28px; } }
 @keyframes he-ri-zoom { from { opacity: 0; scale: 0.94; } }
@@ -363,4 +364,12 @@
 @keyframes he-notch-cap {
   from { transform: translateY(calc(-200px - var(--he-cap-o, 0px))); }
   to { transform: translateY(calc(var(--he-scroll-max, 0px) - 200px - var(--he-cap-o, 0px))); }
+}
+
+/* 3.28 — a Text block's own space between paragraphs, over the utilities and the theme's rich text. */
+.he-pgap :is(p + p, .prose-edge > * + *) { margin-top: var(--he-prose-gap); }
+
+/* 3.28 — the plain card grid's own column count on tablets, over the utilities. */
+@media (48rem < width < 64rem) {
+  .he-cgrid-t { grid-template-columns: repeat(var(--cols-t), minmax(0, 1fr)); }
 }

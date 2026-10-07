@@ -38,6 +38,20 @@
   .he-faq__marker { display: grid; flex-shrink: 0; place-items: center; margin-top: 2px; color: var(--color-flare); transition: transform calc(250ms * var(--he-motion, 1)); }
   .he-faq__marker.is-chevron.is-open { transform: rotate(180deg); }
   .he-faq__marker.is-arrow.is-open { transform: rotate(90deg); }
+  /* 3.28 — plain boxed questions; the boxes' own fill, padding and gap; the +/− in a circle; the answer below the box. */
+  .he-faq.is-plain .he-faq__item { background: none; border: 0; }
+  .he-faq.has-row-bg .he-faq__item { border-radius: var(--he-faq-radius, 14px); background: var(--he-faq-row-bg); }
+  .he-faq.has-row-pad .he-faq__btn { padding: var(--he-faq-row-pad); }
+  .he-faq.has-row-gap { gap: var(--he-faq-row-gap); }
+  .he-faq.has-pm .he-faq__btn { align-items: center; }
+  .he-faq__pm { position: relative; display: grid; flex-shrink: 0; place-items: center; width: var(--he-faq-icon-box, 48px); height: var(--he-faq-icon-box, 48px); border-radius: 50%; background: var(--he-faq-icon-bg, transparent); color: var(--he-faq-icon-color, var(--color-bone)); transition: transform calc(350ms * var(--he-motion, 1)); }
+  .he-faq__pm::before, .he-faq__pm::after { content: ''; position: absolute; width: var(--he-faq-icon-size, 14px); height: 1.5px; border-radius: 1px; background: currentColor; transition: transform calc(350ms * var(--he-motion, 1)); }
+  .he-faq__pm::after { transform: rotate(90deg); }
+  .he-faq__pm.is-open { transform: rotate(180deg); }
+  .he-faq__pm.is-open::after { transform: rotate(0deg); }
+  .he-faq.is-answer-below .he-faq__item, .he-faq.is-answer-below .he-faq__item.is-open { border: 0; background: none; }
+  .he-faq.is-answer-below.has-row-bg .he-faq__btn { border-radius: var(--he-faq-radius, 14px); background: var(--he-faq-row-bg); }
+  .he-faq.is-answer-below .he-faq__answer { max-width: none; padding: 16px 0 8px var(--he-faq-answer-indent, 20px); }
 
   /* ── V2: rows ────────────────────────────────────────────────────────── */
 
@@ -239,6 +253,10 @@
   .he-band.has-parallax.is-plx-strong { --amp: 12%; --inset: -18%; }
   .he-band__layer { position: absolute; inset: var(--inset) 0; z-index: -2; transform: translate3d(0, calc(var(--shift, 0) * var(--amp)), 0); will-change: transform; }
   .he-band.is-plx-horizontal .he-band__layer { inset: 0 var(--inset); transform: translate3d(calc(var(--shift, 0) * var(--amp) * -1), 0, 0); }
+  /* 3.28 — a strength of its own: the picture's size, and pixels moved per pixel scrolled. */
+  .he-band.has-parallax.has-plx-size { --inset: var(--he-plx-inset); }
+  .he-band.has-plx-speed .he-band__layer { transform: translate3d(0, var(--shift-px, 0px), 0); }
+  .he-band.has-plx-speed.is-plx-horizontal .he-band__layer { transform: translate3d(var(--shift-px, 0px), 0, 0); }
   @media (prefers-reduced-motion: reduce) {
     .he-band__layer { transform: none; }
   }

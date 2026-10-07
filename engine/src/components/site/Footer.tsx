@@ -50,9 +50,23 @@ export type FooterProps = {
   openLists?: boolean;
   /** 3.27 — on phones, the bottom row centred. */
   bottomCentred?: boolean;
+  /** 3.28 — the social and contact icons filled rather than drawn in lines. */
+  filledIcons?: boolean;
 };
 
-function Socials({ social, style = 'icon', separator, contacts = [] }: { social: SocialLink[]; style?: SocialLabelStyle; separator?: 'none' | 'slash' | 'dot'; contacts?: readonly string[] }) {
+function Socials({
+  social,
+  style = 'icon',
+  separator,
+  contacts = [],
+  filled = false,
+}: {
+  social: SocialLink[];
+  style?: SocialLabelStyle;
+  separator?: 'none' | 'slash' | 'dot';
+  contacts?: readonly string[];
+  filled?: boolean;
+}) {
   // 3.22 — the contact links go in their own list below, the rest here with a separator between names.
   const row = social.filter((s) => !contacts.includes(s.network));
   const listed = social.filter((s) => contacts.includes(s.network));
@@ -70,7 +84,7 @@ function Socials({ social, style = 'icon', separator, contacts = [] }: { social:
                 </span>
               )}
               <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
-                {socialText(s, style) ?? <SocialIcon network={s.network} />}
+                {socialText(s, style) ?? <SocialIcon network={s.network} filled={filled} />}
               </a>
             </li>
           ))}
@@ -81,7 +95,7 @@ function Socials({ social, style = 'icon', separator, contacts = [] }: { social:
           {listed.map((s) => (
             <li key={s.network + s.href}>
               <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
-                <SocialIcon network={s.network} size={16} />
+                <SocialIcon network={s.network} size={16} filled={filled} />
                 <span>{s.label || SOCIAL_LABELS[s.network]}</span>
               </a>
             </li>
@@ -192,7 +206,7 @@ export function Footer(props: FooterProps) {
               ))}
             </ul>
           )}
-          <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
+          <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
           {toggles}
           <div className="he-ftr__fine">
             <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
@@ -230,7 +244,7 @@ export function Footer(props: FooterProps) {
                   {email}
                 </a>
               )}
-              <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
+              <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
               <Mark siteName={siteName} logo={props.logo} />
             </div>
             <div className="he-ftr__cols">{cols}</div>
@@ -258,13 +272,13 @@ export function Footer(props: FooterProps) {
                 {email}
               </a>
             )}
-            {socialHead && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />}
+            {socialHead && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />}
           </div>
           {cols}
         </div>
         {!socialHead && social.length > 0 && (
           <div className="he-ftr__socialrow">
-            <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} />
+            <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
           </div>
         )}
         {bottom}

@@ -283,3 +283,44 @@ of the theme's h2 and h3, a short dash before each bullet item).
 A block's own Body text size (Design → Typography) reaches its rich text too.
 The Text block's plain paragraphs can run the full width instead of about 62
 characters.
+
+## The last details (3.28)
+
+Every option below is off, or draws what it drew before, until it is set.
+
+- **Dates** on archive cards, the post list and related posts follow
+  Settings → Date format and time zone (they were always "24 Sept 2026").
+- **Appearance → Blog → Details — archive cards**: *Contained* puts the
+  picture flush at the top and the words on a panel of their own colour,
+  padding (and on phones) and corners; the gap between cards; columns on
+  tablets; no colour change when pointed at; the date's and the reading
+  time's type, the title's face, size (and on phones), weight, line height
+  and spacing; a filled category chip; "Read more" type and the space above
+  it. They reach the blog index, categories, related posts drawn as archive
+  cards (with a hover of their own) and a post list set to *Drawn as the
+  blog's archive cards* (which can also leave out "All writing →").
+- **— archives**: the title per tier and the space above it; the "Category"
+  label's type and place; breadcrumbs' size and "Home" weight, and a
+  category's trail without the blog (Home › Category — the structured data
+  follows); the category menu drawn as a select naming the current category;
+  on phones, the count and categories behind a *Filters* button (with the
+  row under the title); the pager's alignment, button size, gap, face, size,
+  weight, no disabled "previous", and ← → arrows; the space from the row to
+  the cards and under them.
+- **— a post**: the container's, the contents column's and the text
+  column's widths; the space under the cover; the title per tier and its
+  width; the line above the title with only the category in the accent; the
+  contents shown once it sticks, on a panel, with its title and item type,
+  the current item's colour and the FAQ questions listed too; solid share
+  icons on one panel; tablets keeping the columns; on phones, the share row
+  at the end and no contents; links without underline; tables (size,
+  padding, lines under rows only, their colour); list markers' colour;
+  related posts' heading and width.
+- **Blocks inside the article**: a paragraph holding only `[[block:2]]`
+  draws the post's second block there, in the article's column (a slider,
+  an FAQ, a picture); placed blocks are not repeated after the article. The
+  space around them is a detail above.
+- **Rich text**: the space above headings on phones.
+- **Up next** (the corner card): the newer post only, shown from the start,
+  hidden over related posts, without a close button or arrows, its width,
+  colour, corners and title type.

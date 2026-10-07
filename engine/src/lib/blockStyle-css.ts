@@ -207,9 +207,11 @@ function swipeTarget(root: string, isRow: boolean): string {
  * has already been told `column-reverse` at this width; swiping wins, and
  * has to say so rather than inherit a stacking rule.
  */
-function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number, arrowsBelow = false): string {
+function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number, arrowsBelow = false, arrowBox?: number): string {
   const target = swipeTarget(root, isRow);
-  const share = typeof width === 'number' && Number.isInteger(width) && width >= 40 && width <= 100 ? width : 84;
+  const share = typeof width === 'number' && Number.isInteger(width) && width >= 20 && width <= 100 ? width : 84;
+  // 3.28 — room for buttons of their own size.
+  const below = typeof arrowBox === 'number' && arrowBox >= 20 && arrowBox <= 80 ? `${arrowBox + 20}px` : '64px';
   return (
     `@media (max-width:${maxWidth}px){` +
     `${target}{display:flex;flex-direction:row;grid-template-columns:none;` +
@@ -221,7 +223,7 @@ function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number
        that says "this scrolls" — no arrows, no dots, no script. */
     `${target}>*{flex:0 0 ${share}%;min-width:0;scroll-snap-align:start}` +
     // 3.22 — room under the cards for the arrows placed there.
-    (arrowsBelow ? `${target}{margin-bottom:64px}` : '') +
+    (arrowsBelow ? `${target}{margin-bottom:${below}}` : '') +
     `}`
   );
 }
@@ -311,6 +313,11 @@ export function blockStyleToCss(
   if (style.clip && !legs) shape.push(['overflow', 'hidden']);
 
   parts.push(block(root, [...panel, ...boxDecls(style.spacing?.base), ...own, ...background, ...border, ...shape]));
+  // 3.28 — reaching into the gutter by the bleed, on each side, from tablets up.
+  if (style.bleed && isLength(style.bleed)) {
+    const from = style.panel ? 'min(var(--he-panel-inset,24px),3vw)' : '0px';
+    parts.push(`@media (min-width:769px){${root}{margin-inline:calc(${from} - ${style.bleed})}}`);
+  }
 
   if (ownsBand) {
     parts.push(neutralisePadding(root, style.spacing?.base));
@@ -402,7 +409,17 @@ export function blockStyleToCss(
     /* Its own media query rather than a line in the one above: the track
        rules carry their own selectors, and folding two selector sets into one
        block would mean emitting the wider one's declarations for both. */
-    if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth, style.swipeWidth, style.swipeArrows === 'belowRight'));
+    if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth, style.swipeWidth, style.swipeArrows === 'belowRight', style.swipeArrowBox));
+  }
+  // 3.28 — the cards' share on tablets and phones (a grid that is not swiping there ignores it).
+  if (style.swipeOn) {
+    const target = swipeTarget(root, isRow);
+    for (const [share, max] of [
+      [style.swipeWidthTablet, 1024],
+      [style.swipeWidthMobile, 768],
+    ] as const) {
+      if (typeof share === 'number' && Number.isInteger(share) && share >= 20 && share <= 100) parts.push(`@media (max-width:${max}px){${target}>*{flex:0 0 ${share}%}}`);
+    }
   }
 
   /* 2.19 (T32) — hidden on exactly the tiers chosen, each its own range, so
@@ -423,6 +440,26 @@ export function blockStyleToCss(
         ? `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}}`
         : `@media (max-width:768px){${row}{flex-direction:column;align-items:stretch;gap:12px}${button}{flex:0 0 auto;width:100%;justify-content:space-between;text-align:left;white-space:normal;line-height:1.35}}`,
     );
+  }
+
+  /* 3.28 — the section's own button colours, as the properties every button reads. */
+  const colours = style.buttonColors;
+  if (colours) {
+    const decls: string[] = [];
+    for (const variant of ['primary', 'outline'] as const) {
+      const c = colours[variant];
+      if (!c) continue;
+      const pairs: [string, string | undefined][] = [
+        ['bg', c.background],
+        ['text', c.text],
+        ['border', c.border],
+        ['hover-bg', c.hoverBackground],
+        ['hover-text', c.hoverText],
+        ['hover-border', c.hoverBorder],
+      ];
+      for (const [name, value] of pairs) if (value && isColor(value)) decls.push(`--he-btn-${variant}-${name}:${value}`);
+    }
+    if (decls.length) parts.push(`${root}{${decls.join(';')}}`);
   }
 
   /* A fixed background is the parallax effect, and it has two well-known

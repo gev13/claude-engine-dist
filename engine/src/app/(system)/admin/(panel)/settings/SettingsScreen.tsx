@@ -48,7 +48,7 @@ const KNOWN: KnownField[] = [
     key: 'site.dateFormat',
     label: 'Date format',
     kind: 'choice',
-    hint: 'how post dates render',
+    hint: 'how dates render — on posts, and (3.28) on cards and archives too once one is chosen',
     options: [
       { value: 'd MMMM yyyy', label: '9 September 2026' },
       { value: 'MMMM d, yyyy', label: 'September 9, 2026' },
@@ -58,6 +58,8 @@ const KNOWN: KnownField[] = [
     ],
   },
   { key: 'site.timeZone', label: 'Time zone', kind: 'text', hint: 'IANA name, e.g. Europe/London' },
+  // 3.28
+  { key: 'site.region', label: 'Main language’s region', kind: 'text', hint: 'two capitals, e.g. US — og:locale en_US and lang="en-US"; empty keeps the language’s own (en_GB for English)' },
   {
     key: 'seo.discourageSearchEngines',
     label: 'Discourage search engines',
@@ -100,6 +102,19 @@ const KNOWN: KnownField[] = [
     label: 'Redirect www to the bare domain',
     kind: 'boolean',
     hint: 'www.yoursite.com → yoursite.com, every page and file, permanently (301). Needs the www address to reach this server (a DNS record, and a certificate covering it); the site address must be the one without www. Set on each server — it is not exported',
+  },
+  // 3.28
+  {
+    key: 'seo.redirectsFirst',
+    label: 'Redirects answer before pages',
+    kind: 'boolean',
+    hint: 'each redirect answers with its own status (301 or 302) — otherwise a page address can only answer 308. A redirect then wins over a live page at the same address',
+  },
+  {
+    key: 'seo.lowercaseUrls',
+    label: 'Addresses in capitals go to lowercase',
+    kind: 'boolean',
+    hint: '/About-Us/ answers with a 301 to /about-us/. Pictures and files keep their spelling',
   },
   // 3.19
   {

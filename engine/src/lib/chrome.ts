@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SOCIAL_LABEL_STYLES, SOCIAL_NETWORKS, isSafeHref, type SocialLabelStyle, type SocialNetwork } from './navigation';
+import { SOCIAL_LABEL_STYLES, SOCIAL_NETWORKS, imageUrl, isSafeHref, type SocialLabelStyle, type SocialNetwork } from './navigation';
 
 /** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
 const HEX = /^#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
@@ -9,6 +9,63 @@ const COLOR = /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\
 const LENGTH = /^(0|-?\d*\.?\d+(px|rem|em|vw|vh|%))$/;
 /** 3.26 — a line height: a plain number (1.2) or a length (54px). */
 const LINE = /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/;
+/** 3.28 — one to four lengths, as padding is written (7px 12px). */
+const BOX = /^(0|-?\d*\.?\d+(px|rem|em|%))(\s+(0|-?\d*\.?\d+(px|rem|em|%))){0,3}$/;
+
+/** 3.28 — the grammars, for the stylesheet writer that checks every value again (`chromeCss.ts`). */
+export const CHROME_GRAMMAR = { COLOR, LENGTH, LINE, BOX } as const;
+
+/* 3.28 — the small fields of the last round's details: each optional, each a checked value. */
+const len = (hint = 'A size such as 16px') => z.string().trim().max(40).regex(LENGTH, hint).optional();
+const colour = () => z.string().trim().max(60).regex(COLOR, 'A colour').optional();
+const box = () => z.string().trim().max(60).regex(BOX, 'One to four sizes, such as 7px 12px').optional();
+const ms = () => z.number().int().min(0).max(3000).optional();
+const weight = () => z.enum(['300', '400', '500', '600', '700', '800']).optional();
+const sides = () => z.object({ left: len(), right: len() }).optional();
+
+/** 3.28 — the desktop dropdown (the compact panel); every part unset keeps the drawn one. */
+const dropdownSchema = z.object({
+  /** Centred under its link (as before) or from the link's left edge. */
+  align: z.enum(['center', 'start']).optional(),
+  /** How far below the bar it opens, its width. */
+  top: len(),
+  width: len(),
+  background: colour(),
+  /** Blur behind it, px. */
+  blur: z.number().int().min(0).max(40).optional(),
+  /** false: no edge line. */
+  border: z.boolean().optional(),
+  radius: len(),
+  padding: box(),
+  itemHeight: len(),
+  itemSize: len(),
+  itemPadding: box(),
+  itemColor: colour(),
+  itemHoverColor: colour(),
+  itemHoverBackground: colour(),
+  itemRadius: len(),
+  /** Opening and closing, ms: a fade with a small rise in, a fade out. Unset opens as before and closes at once. */
+  duration: ms(),
+  rise: len(),
+});
+export type DropdownLook = z.infer<typeof dropdownSchema>;
+
+/** 3.28 — the phone drawer's details. */
+const drawerSchema = z.object({
+  /** The current page's link. */
+  activeColor: colour(),
+  /** An open item: a tint behind it, and its corners. */
+  openBackground: colour(),
+  openRadius: len(),
+  /** The sub-items' size and indent. */
+  subSize: len(),
+  subIndent: len(),
+  /** The page behind: colour, how much of it (0–100), the blur (px; 0 is none). */
+  backdrop: colour(),
+  backdropOpacity: z.number().int().min(0).max(100).optional(),
+  backdropBlur: z.number().int().min(0).max(30).optional(),
+});
+export type DrawerLook = z.infer<typeof drawerSchema>;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Site chrome
@@ -116,6 +173,35 @@ export const chromeSchema = z.object({
       ctaBorderWidth: z.number().int().min(0).max(4).optional(),
       /** 3.26 — which link is lit: the page's section, so a parent stays lit on its children (unset, as before), or only the page itself. */
       activeMatch: z.enum(['section', 'exact']).optional(),
+      /** 3.28 — a menu item with a submenu: a button that opens it (unset, as before) or a link to its own page that opens it on hover and focus. */
+      parentLink: z.enum(['button', 'link']).optional(),
+      /** 3.28 — the desktop dropdowns' look and motion. */
+      dropdown: dropdownSchema.optional(),
+      /** 3.28 — the other top links dim while one is pointed at or open; how far, 0–100 (unset 50). */
+      dimSiblings: z.boolean().optional(),
+      dimOpacity: z.number().int().min(0).max(100).optional(),
+      /** 3.28 — how long a top link's colour change takes, ms (unset 150). */
+      linkDuration: ms(),
+      /** 3.28 — the menu icon: three short lines (unset, as before) or two bars, long and short; their sizes, colour and hover. */
+      menuIcon: z.enum(['lines', 'bars']).optional(),
+      menuIconWidth: len(),
+      menuIconShort: len(),
+      menuIconThickness: len(),
+      menuIconGap: len(),
+      menuIconColor: colour(),
+      menuIconHover: z.enum(['none', 'grow']).optional(),
+      /** 3.28 — the bar's side padding per tier; each side unset keeps the stylesheet's. */
+      padding: z.object({ base: sides(), laptop: sides(), tablet: sides(), mobile: sides() }).optional(),
+      /** 3.28 — the header button: height, padding, type, and how long its hover takes (ms); the same on phones. */
+      ctaHeight: len(),
+      ctaPadding: box(),
+      ctaSize: len(),
+      ctaWeight: weight(),
+      ctaDuration: ms(),
+      /** 3.28 — glass on phones too (unset, as before) or only above 768px. */
+      glassPhones: z.boolean().optional(),
+      /** 3.28 — the top links' colour on project pages. */
+      projectLinkColor: colour(),
       /** 3.23 — the round menu button's own circle and icon colours (e.g. rgba(0,0,0,0.5)); unset is the surface. */
       menuButtonBackground: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       menuButtonColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
@@ -215,6 +301,22 @@ export const chromeSchema = z.object({
       columnPadding: z.string().trim().max(40).regex(LENGTH, 'A size such as 54px').optional(),
       socialPlace: z.enum(['below', 'beside']).optional(),
 
+      /* ── 3.28 — the full-screen menu's last details ── */
+      /** A link's sub-items open under it (as before) or as a second column beside the list, the other links dimmed. */
+      submenuLayout: z.enum(['inline', 'beside']).optional(),
+      /** Under the pointer: the accent colour (as before) or the link keeps its colour and moves right. */
+      itemHover: z.enum(['colour', 'shift']).optional(),
+      shiftBy: len(),
+      /** How long the menu takes to fade in and out, ms; unset arrives as before and goes at once. */
+      duration: ms(),
+      /** The space above the list. */
+      listTop: len(),
+      /** The contact row's text size and colour. */
+      contactSize: len(),
+      contactColor: colour(),
+      /** The side drawer's details (side and push drawers, and the phones' drawer). */
+      drawer: drawerSchema.optional(),
+
       /* ── 3.24 — phones: a menu of their own ── */
       onPhones: z
         .object({
@@ -281,6 +383,28 @@ export const chromeSchema = z.object({
       bottomAlignMobile: z.enum(['left', 'center']).optional(),
       /** 3.22 — these social links as a list of icon and name under the others (phone, messengers), instead of among them. */
       contactLinks: z.array(z.enum(SOCIAL_NETWORKS)).max(12).optional(),
+
+      /* ── 3.28 — the footer's last details ── */
+      /** The social and contact icons: lines (as before) or filled. */
+      iconSet: z.enum(['line', 'filled']).optional(),
+      /** The contact links' size and weight. */
+      contactSize: len(),
+      contactWeight: weight(),
+      /** The link columns: the first wider (as before) or all equal. */
+      columns: z.enum(['auto', 'equal']).optional(),
+      /** The menus' links: line height and the space between them; the column titles' letter spacing. */
+      linkLineHeight: z.string().trim().max(20).regex(LINE, 'A line height such as 17px or 1.2').optional(),
+      linkGap: len(),
+      titleTracking: len('A spacing such as -0.4px'),
+      /** The current page's link: its weight and colour. */
+      activeWeight: weight(),
+      activeColor: colour(),
+      /** The separators between social and legal links: colour and space; the line above the bottom row. */
+      separatorColor: colour(),
+      separatorGap: len(),
+      dividerColor: colour(),
+      /** The reveal from this width up, px; unset follows the phone switch. */
+      revealMinWidth: z.number().int().min(320).max(2560).optional(),
     })
     .optional(),
 
@@ -295,6 +419,12 @@ export const chromeSchema = z.object({
       /** 3.24 — that disc's size, px, and colour. */
       discSize: z.number().int().min(24).max(160).optional(),
       discColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
+      /** 3.28 — the disc's arrow drawn in a line (as before) or filled, its size (px); the disc's blur (unset, a light one); pictures that open the lightbox too; how long the ring takes to catch up (ms, unset about 250). */
+      arrowStyle: z.enum(['stroke', 'filled']).optional(),
+      arrowSize: z.number().int().min(8).max(64).optional(),
+      discBlur: z.boolean().optional(),
+      lightbox: z.boolean().optional(),
+      follow: z.number().int().min(0).max(1000).optional(),
     })
     .optional(),
 
@@ -308,6 +438,14 @@ export const chromeSchema = z.object({
       firstLoad: z.boolean().optional(),
       /** 3.22 — how a page leaves: fading (as before), or fading and moving up, as long as its arrival. */
       leave: z.enum(['fade', 'fadeUp']).optional(),
+      /** 3.28 — the loading screen's own picture (an animated GIF too) and colour; unset, the logo on the page colour. */
+      preloaderImage: imageUrl.optional(),
+      preloaderBackground: colour(),
+      preloaderSize: len('A size such as 180px'),
+      /** 3.28 — the loading screen between every two pages, not only on the first load (needs a page-change style). */
+      preloaderEvery: z.boolean().optional(),
+      /** 3.28 — the header fades out and in with the page. */
+      headerFade: z.boolean().optional(),
     })
     .optional(),
 
@@ -345,6 +483,12 @@ export const chromeSchema = z.object({
       orientation: z.enum(['stacked', 'row']).optional(),
       /** 3.23 — which social links the rail shows, in this order; unset is every one. */
       networks: z.array(z.enum(SOCIAL_NETWORKS)).max(20).optional(),
+      /** 3.28 — the progress line: above or below the words (as drawn: after them), its track and fill colours, which way it fills; the rails' distance from the edge. */
+      barPlace: z.enum(['above', 'below']).optional(),
+      barTrack: z.union([z.literal('transparent'), z.string().trim().max(60).regex(COLOR, 'A colour')]).optional(),
+      barFill: colour(),
+      barDirection: z.enum(['down', 'up']).optional(),
+      inset: len('A size such as 48px'),
     })
     .optional(),
 
@@ -412,6 +556,10 @@ export type ResolvedChrome = {
     ctaStyle: 'primary' | 'outline';
     ctaBorderWidth?: number;
     activeMatch: 'section' | 'exact';
+    parentLink: 'button' | 'link';
+    /** 3.28 — the rest of the header's details are written by `chromeCss`; these few change the markup. */
+    dropdown?: DropdownLook;
+    menuIcon: 'lines' | 'bars';
     menuButtonBackground?: string;
     menuButtonColor?: string;
     behaviour: 'always' | 'hide' | 'shrink';
@@ -461,6 +609,10 @@ export type ResolvedChrome = {
     itemPadding?: string;
     columnPadding?: string;
     socialPlace: 'below' | 'beside';
+    submenuLayout: 'inline' | 'beside';
+    itemHover: 'colour' | 'shift';
+    duration?: number;
+    drawer?: DrawerLook;
     onPhones?: {
       variant: MobileMenuVariant;
       upTo: 'mobile' | 'tablet';
@@ -498,9 +650,35 @@ export type ResolvedChrome = {
     accordionMobile: boolean;
     bottomAlignMobile: 'left' | 'center';
     contactLinks: SocialNetwork[];
+    iconSet: 'line' | 'filled';
+    columns: 'auto' | 'equal';
+    /** 3.28 — the current page's link is marked only when it is styled. */
+    activeLink: boolean;
+    revealMinWidth?: number;
   };
-  cursor: { style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend'; mediaLabel?: string; linkedMedia: 'off' | 'word' | 'arrow'; discSize?: number; discColor?: string };
-  transition: { style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain'; preloader: boolean; firstLoad: boolean; leave: 'fade' | 'fadeUp' };
+  cursor: {
+    style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend';
+    mediaLabel?: string;
+    linkedMedia: 'off' | 'word' | 'arrow';
+    discSize?: number;
+    discColor?: string;
+    arrowStyle: 'stroke' | 'filled';
+    arrowSize?: number;
+    discBlur: boolean;
+    lightbox: boolean;
+    follow?: number;
+  };
+  transition: {
+    style: 'off' | 'fadeUp' | 'fade' | 'slide' | 'curtain';
+    preloader: boolean;
+    firstLoad: boolean;
+    leave: 'fade' | 'fadeUp';
+    preloaderImage?: string;
+    preloaderBackground?: string;
+    preloaderSize?: string;
+    preloaderEvery: boolean;
+    headerFade: boolean;
+  };
   rails: {
     scrollSide: 'left' | 'right' | 'none';
     scrollLabel: string;
@@ -518,6 +696,11 @@ export type ResolvedChrome = {
     position: 'center' | 'bottom';
     orientation: 'stacked' | 'row';
     networks?: SocialNetwork[];
+    barPlace?: 'above' | 'below';
+    barTrack?: string;
+    barFill?: string;
+    barDirection?: 'down' | 'up';
+    inset?: string;
   } | null;
   announcement: { text: string; linkLabel?: string; href?: string; dismissible: boolean } | null;
   regionBar: { message: string; buttonLabel: string; options: { label: string; href: string }[] } | null;
@@ -571,6 +754,9 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       ctaStyle: c.header?.ctaStyle ?? 'primary',
       ctaBorderWidth: c.header?.ctaBorderWidth,
       activeMatch: c.header?.activeMatch ?? 'section',
+      parentLink: c.header?.parentLink ?? 'button',
+      dropdown: c.header?.dropdown,
+      menuIcon: c.header?.menuIcon ?? 'lines',
       menuButtonBackground: c.header?.menuButtonBackground && COLOR.test(c.header.menuButtonBackground) ? c.header.menuButtonBackground : undefined,
       menuButtonColor: c.header?.menuButtonColor && COLOR.test(c.header.menuButtonColor) ? c.header.menuButtonColor : undefined,
       behaviour: c.header?.behaviour ?? 'always',
@@ -620,6 +806,10 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       itemPadding: c.mobileMenu?.itemPadding && LENGTH.test(c.mobileMenu.itemPadding) ? c.mobileMenu.itemPadding : undefined,
       columnPadding: c.mobileMenu?.columnPadding && LENGTH.test(c.mobileMenu.columnPadding) ? c.mobileMenu.columnPadding : undefined,
       socialPlace: c.mobileMenu?.socialPlace ?? 'below',
+      submenuLayout: c.mobileMenu?.submenuLayout ?? 'inline',
+      itemHover: c.mobileMenu?.itemHover ?? 'colour',
+      duration: c.mobileMenu?.duration,
+      drawer: c.mobileMenu?.drawer,
       onPhones: c.mobileMenu?.onPhones?.variant
         ? {
             variant: c.mobileMenu.onPhones.variant,
@@ -659,6 +849,10 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       accordionMobile: c.footer?.accordionMobile !== false,
       bottomAlignMobile: c.footer?.bottomAlignMobile ?? 'left',
       contactLinks: c.footer?.contactLinks ?? [],
+      iconSet: c.footer?.iconSet ?? 'line',
+      columns: c.footer?.columns ?? 'auto',
+      activeLink: Boolean(c.footer?.activeWeight || c.footer?.activeColor),
+      revealMinWidth: c.footer?.revealMinWidth,
     },
     cursor: {
       style: c.cursor?.style ?? 'off',
@@ -666,12 +860,22 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       linkedMedia: c.cursor?.linkedMedia ?? 'off',
       discSize: c.cursor?.discSize,
       discColor: c.cursor?.discColor && COLOR.test(c.cursor.discColor) ? c.cursor.discColor : undefined,
+      arrowStyle: c.cursor?.arrowStyle ?? 'stroke',
+      arrowSize: c.cursor?.arrowSize,
+      discBlur: c.cursor?.discBlur !== false,
+      lightbox: c.cursor?.lightbox ?? false,
+      follow: c.cursor?.follow,
     },
     transition: {
       style: c.transition?.style ?? 'off',
       preloader: c.transition?.preloader ?? false,
       firstLoad: c.transition?.firstLoad ?? false,
       leave: c.transition?.leave ?? 'fade',
+      preloaderImage: c.transition?.preloaderImage || undefined,
+      preloaderBackground: c.transition?.preloaderBackground && COLOR.test(c.transition.preloaderBackground) ? c.transition.preloaderBackground : undefined,
+      preloaderSize: c.transition?.preloaderSize && LENGTH.test(c.transition.preloaderSize) ? c.transition.preloaderSize : undefined,
+      preloaderEvery: Boolean(c.transition?.preloader && c.transition.preloaderEvery && (c.transition.style ?? 'off') !== 'off'),
+      headerFade: Boolean(c.transition?.headerFade && (c.transition.style ?? 'off') !== 'off'),
     },
     rails: c.rails?.enabled
       ? {
@@ -691,6 +895,11 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
           position: c.rails.position ?? 'center',
           orientation: c.rails.orientation ?? 'stacked',
           networks: c.rails.networks?.length ? c.rails.networks : undefined,
+          barPlace: c.rails.barPlace,
+          barTrack: c.rails.barTrack === 'transparent' || (c.rails.barTrack && COLOR.test(c.rails.barTrack)) ? c.rails.barTrack : undefined,
+          barFill: c.rails.barFill && COLOR.test(c.rails.barFill) ? c.rails.barFill : undefined,
+          barDirection: c.rails.barDirection,
+          inset: c.rails.inset && LENGTH.test(c.rails.inset) ? c.rails.inset : undefined,
         }
       : null,
     announcement: announcement

@@ -166,7 +166,7 @@ describe('R9/R13 — the post and the blog index', () => {
     expect(blog.meta).toEqual({ show: true, author: true, readingTime: true, categories: true });
     expect([blog.excerpt, blog.searchOff, blog.toolbar, blog.browseLabel]).toEqual([true, false, false, true]);
     expect(blog.related.cards).toBe('text');
-    expect(blog.upNext).toEqual({ phones: false, dismiss: 'visit' });
+    expect(blog.upNext).toMatchObject({ phones: false, dismiss: 'visit' });
     expect(blogSchema.safeParse({ share: { position: 'beside' } }).success).toBe(true);
   });
 
@@ -197,7 +197,7 @@ describe('R11/R12/R14/R18/R19/R21 — the chrome, off until chosen', () => {
     expect(c.mobileMenu.itemSize).toBeUndefined();
     expect(c.header).toMatchObject({ glassSaturate: 120, border: true, under: false, ctaStyle: 'primary', ctaColors: {} });
     expect(c.footer).toMatchObject({ socialSeparator: 'none', contactLinks: [] });
-    expect(c.transition).toEqual({ style: 'off', preloader: false, firstLoad: false, leave: 'fade' });
+    expect(c.transition).toMatchObject({ style: 'off', preloader: false, firstLoad: false, leave: 'fade' });
     expect(c.videoControls).toBe(true);
   });
 

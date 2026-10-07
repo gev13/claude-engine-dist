@@ -41,6 +41,7 @@ html.he-cursor-link .he-cursor.is-blend .he-cursor__dot { width: 56px; height: 5
 html.he-cursor-media .he-cursor__ring { opacity: 0; }
 .he-cursor__disc { position: absolute; top: 50%; left: 50%; display: grid; place-items: center; width: var(--he-cursor-disc, 64px); height: var(--he-cursor-disc, 64px); translate: -50% -50%; border-radius: 50%; background: var(--he-cursor-disc-bg, color-mix(in srgb, var(--color-bone) 20%, transparent)); color: var(--color-bone); backdrop-filter: blur(2px); animation: he-cursor-disc calc(200ms * var(--he-motion, 1)) ease-out; }
 @keyframes he-cursor-disc { from { scale: 0.4; opacity: 0; } }
+.he-cursor__disc.no-blur { backdrop-filter: none; }
 
 /* ── T28: page transitions ───────────────────────────────────────────────── */
 
@@ -74,7 +75,13 @@ html.he-curtain-enter .he-curtain { animation: he-curtain-out calc(480ms * var(-
 .he-preloader.is-done { animation: he-pre-out 0.35s ease forwards; }
 html.he-pre-skip .he-preloader { display: none; }
 .he-preloader__mark { font-family: var(--font-display); font-size: clamp(22px, 3vw, 34px); font-weight: 700; color: var(--color-bone); animation: he-pre-pulse 1.2s ease-in-out infinite alternate; }
-.he-preloader__mark img { display: block; max-width: min(180px, 50vw); height: auto; }
+.he-preloader__mark img { display: block; max-width: min(var(--he-pre-size, 180px), 50vw); height: auto; }
+/* 3.28 — the loading screen between pages: back over the leaving page until the next one arrives. */
+html.he-pre-nav .he-preloader { display: grid; visibility: visible; animation: he-fade calc(300ms * var(--he-motion, 1)) ease both; }
+html.he-pre-nav .he-preloader__mark, .he-preloader.has-own .he-preloader__mark { animation: none; }
+/* 3.28 — the header leaves and arrives with the page. */
+.he-site[data-header-fade]:has(#main.he-page-leave) .he-hdr { animation: he-pt-fade-out calc(400ms * var(--he-motion, 1)) ease both; }
+.he-site[data-header-fade]:has(#main.he-page-enter) .he-hdr { animation: he-fade calc(400ms * var(--he-motion, 1)) ease both; }
 @keyframes he-pre-out { to { opacity: 0; visibility: hidden; } }
 @keyframes he-pre-pulse { from { opacity: 0.55; } to { opacity: 1; } }
 
@@ -122,6 +129,13 @@ html.he-pre-skip .he-preloader { display: none; }
 .he-rail.is-row .he-rail__social a:has(svg) { writing-mode: horizontal-tb; rotate: 180deg; }
 .he-rail.is-row .he-rail__top { flex-direction: row; }
 .he-rail.is-row .he-rail__social { flex-direction: row; gap: 8px; }
+/* 3.28 — the progress line before the words, filling the other way, in colours of its own; the distance from the edge. */
+.he-rail.is-bar-first .he-rail__bar { order: -1; }
+.he-rail.is-fill-up .he-rail__bar > span { transform-origin: bottom; }
+.he-rail.has-track .he-rail__bar { background: var(--he-rail-track); }
+.he-rail.has-fill .he-rail__bar > span { background: var(--he-rail-fill); }
+.he-rail.has-inset.is-left { left: var(--he-rail-inset); }
+.he-rail.has-inset.is-right { right: var(--he-rail-inset); }
 
 /* ── T33: cards that answer the pointer ────────────────────────────────────
    `.he-ch` is only on a card whose list chose an effect. Lift, grow and

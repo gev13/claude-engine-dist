@@ -208,7 +208,36 @@ const SOCIAL: Record<SocialNetwork, React.ReactNode> = {
   phone: <path d="M5.5 3.5h3.3l1.7 4.3-2.3 1.4a11 11 0 0 0 6.6 6.6l1.4-2.3 4.3 1.7v3.3a2 2 0 0 1-2.2 2A17 17 0 0 1 3.5 5.7a2 2 0 0 1 2-2.2z" />,
 };
 
-export function SocialIcon({ network, className, size = 18 }: P & { network: SocialNetwork }) {
+/* 3.28 — the same marks filled, for footers that draw solid icons. A network
+   without a filled shape here keeps its line mark. Even-odd, so the holes
+   (the play button, the handset) read as holes. */
+const SOCIAL_FILLED: Partial<Record<SocialNetwork, string>> = {
+  x: 'M4 3h4.6l4 5.6L17.4 3H20l-6.1 7.1L21 21h-4.6l-4.4-6.1L6.6 21H4l6.8-7.8z',
+  linkedin:
+    'M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 7.5V17h2.5v-6.5zm1.25-4a1.4 1.4 0 1 0 0 2.8 1.4 1.4 0 0 0 0-2.8zM11 10.5V17h2.5v-3.4c0-1 .6-1.6 1.4-1.6s1.3.6 1.3 1.6V17h2.5v-4c0-2-1.2-2.8-2.7-2.8-1 0-1.8.4-2.3 1.1v-.8z',
+  instagram:
+    'M7.5 3h9A4.5 4.5 0 0 1 21 7.5v9a4.5 4.5 0 0 1-4.5 4.5h-9A4.5 4.5 0 0 1 3 16.5v-9A4.5 4.5 0 0 1 7.5 3zM12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5zm5-3.3a1.1 1.1 0 1 0 0 2.2 1.1 1.1 0 0 0 0-2.2z',
+  facebook: 'M14.5 3.5h-2a4 4 0 0 0-4 4v3h-2.5v3.5h2.5v6.5h3.5V14h2.8l.7-3.5h-3.5V8a1 1 0 0 1 1-1h2.5z',
+  youtube: 'M6.5 5.5h11a4 4 0 0 1 4 4v5a4 4 0 0 1-4 4h-11a4 4 0 0 1-4-4v-5a4 4 0 0 1 4-4zm4 3.8v5.4l4.3-2.7z',
+  tiktok: 'M15 3.5c.5 2.4 2 3.9 4.5 4.1v3.3c-1.7 0-3.2-.5-4.5-1.4v5.8a5.8 5.8 0 1 1-5.8-5.8v3.4a2.4 2.4 0 1 0 2.4 2.4V3.5z',
+  vimeo: 'M3 8.5l1 1.2c1.2-.9 2-1.2 2.3-.4.6 1.7 1.5 6.5 2.6 8.4 1.1 1.9 2.6 1.3 4.3-.3 2.6-2.4 5.9-6.8 6.6-9.8.6-2.6-.8-3.8-3.3-2.8-1.2.5-2.3 1.7-2.8 3.3 1.7-.7 2.6.1 1.6 2.3-1 2.1-2.5 4.1-3.2 3.3-.7-.8-1.4-6.6-2.4-8.3-1-1.7-2.5-1.1-3.8 0z',
+  telegram: 'M21.5 3.5 2.6 10.8c-.9.4-.9 1.6 0 1.9l4.6 1.5 1.8 5.6c.2.7 1.1.9 1.6.4l2.6-2.5 4.6 3.4c.6.4 1.4.1 1.6-.6L23 4.8c.2-.9-.7-1.6-1.5-1.3zM9.5 13.8l8.3-6-6.6 7.3-.3 3z',
+  whatsapp:
+    'M12 3a9 9 0 0 0-7.8 13.5L3 21l4.6-1.2A9 9 0 1 0 12 3zM9 7.8c.3 0 .6 0 .8.5l1 2.2c.1.3 0 .6-.2.8l-.7.8c.9 1.6 2.2 2.9 3.8 3.8l.8-.7c.2-.2.5-.3.8-.2l2.2 1c.5.2.5.5.5.8 0 1.3-1.1 2.4-2.4 2.4C11.7 19 7 14.3 7 10.2c0-1.3.9-2.4 2-2.4z',
+  twitch: 'M5 3 3.5 7v13h4.5v2.5h2.5L13 20h3.5l5-5V3zm14.5 11-3 3H13l-2.5 2.5V17H7V5h12.5zM15 8h2v5h-2zm-4.5 0h2v5h-2z',
+  email: 'M4 5h16a2 2 0 0 1 2 2v.4l-10 6.3L2 7.4V7a2 2 0 0 1 2-2zM2 9.7l10 6.3 10-6.3V17a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2z',
+  phone: 'M5.5 3.5h3.3l1.7 4.3-2.3 1.4a11 11 0 0 0 6.6 6.6l1.4-2.3 4.3 1.7v3.3a2 2 0 0 1-2.2 2A17 17 0 0 1 3.5 5.7a2 2 0 0 1 2-2.2z',
+};
+
+export function SocialIcon({ network, className, size = 18, filled = false }: P & { network: SocialNetwork; filled?: boolean }) {
+  const solid = filled ? SOCIAL_FILLED[network] : undefined;
+  if (solid) {
+    return (
+      <Svg className={className} size={size} fill>
+        <path d={solid} fillRule="evenodd" />
+      </Svg>
+    );
+  }
   return (
     <Svg className={className} size={size}>
       {SOCIAL[network]}
@@ -258,7 +287,15 @@ const SHARE: Record<Exclude<ShareNetwork, 'x' | 'linkedin' | 'facebook'>, React.
   ),
 };
 
-export function ShareIcon({ network, className, size = 18 }: P & { network: ShareNetwork }) {
+export function ShareIcon({ network, className, size = 18, filled = false }: P & { network: ShareNetwork; /** 3.28 — the solid mark, where there is one. */ filled?: boolean }) {
+  const solid = filled && network !== 'copy' && network !== 'native' ? SOCIAL_FILLED[network as SocialNetwork] : undefined;
+  if (solid) {
+    return (
+      <Svg className={className} size={size} fill>
+        <path d={solid} fillRule="evenodd" />
+      </Svg>
+    );
+  }
   return (
     <Svg className={className} size={size}>
       {network === 'x' || network === 'linkedin' || network === 'facebook' ? SOCIAL[network] : SHARE[network]}

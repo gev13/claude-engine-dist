@@ -73,6 +73,9 @@ close it instead of the buttons (it counts as OK).
 the notice appears — a cookie can stand before the text, and the policy link
 can have its own weight.
 
+**3.28** — the notice's text size and weight, its distance from the bottom
+of the screen, its padding and its side insets on phones.
+
 ## Bot protection — Security → Bot protection
 
 Every public form already has a hidden trap for bots and a rate limit. A
@@ -129,6 +132,10 @@ A form block's settings, under its questions:
   `48px 56px`; phones keep their tighter padding). A card form follows the
   site's card corners, as the contained FAQ does, so a site with cut cards
   gets a cut form card.
+
+**The form card (3.28)**: *Card past the column* (into the page gutter),
+*Fields past the padding*, *Edge to edge on phones*, and the outline send
+button's edge colour and width.
 
 ## Webhooks — Enquiries → Webhooks
 

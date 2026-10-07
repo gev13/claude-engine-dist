@@ -53,6 +53,9 @@
   .he-swipe-nav__btn { display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 1px solid var(--color-hairline); border-radius: 999px; background: var(--color-surface); color: var(--color-bone); cursor: pointer; pointer-events: auto; transition: opacity calc(200ms * var(--he-motion, 1)), border-color calc(200ms * var(--he-motion, 1)); }
   .he-swipe-nav__btn:hover:not(:disabled) { border-color: var(--color-rule); }
   .he-swipe-nav__btn:disabled { opacity: 0.35; cursor: default; }
+  /* 3.28 — bare chevrons, and a box of their own. */
+  .he-swipe-nav.is-plain .he-swipe-nav__btn { border: 0; border-radius: 0; background: none; }
+  .he-swipe-nav.has-box .he-swipe-nav__btn { width: var(--he-swipe-btn); height: var(--he-swipe-btn); }
 
   /* The shell's side padding, as a value other rules can compute with. */
   :root { --he-shell-pad: 20px; }
@@ -951,4 +954,27 @@
   .he-reduce-motion .he-mq__cell[aria-hidden='true'],
   .he-reduce-motion .he-mq__foot { display: none; }
   .he-reduce-motion .he-scrollcue::after { animation: none; }
+
+  /* 3.28 — a carousel's own arrow buttons: box, fill, glyph, gap, disabled faintness, no change under the pointer. */
+  .he-arrows.has-gap { gap: var(--he-arr-gap); }
+  .he-arrows.has-box .he-arrow { width: var(--he-arr-box); height: var(--he-arr-box); }
+  .he-arrows.has-fill .he-arrow { border-color: transparent; background: var(--he-arr-fill); }
+  .he-arrows.has-glyph .he-arrow { color: var(--he-arr-color); }
+  .he-arrows.has-off .he-arrow:disabled { opacity: var(--he-arr-off); }
+  .he-arrows.is-still .he-arrow:hover:not(:disabled) { background: var(--he-arr-fill, transparent); opacity: 1; }
+  .he-arrows.is-still .he-arrow:hover:not(:disabled) > svg { color: inherit; }
+  /* 3.28 — linked card slides that stay put under the pointer. */
+  .he-car.is-hover-none a.he-card:hover { transform: none; }
+  .he-car.is-hover-none a.he-card:hover .he-card__img { transform: none; }
+  /* 3.28 — the counter's number rolling up to the next. */
+  .he-ind--counter.is-roll .he-ind__cur { display: inline-block; overflow: hidden; vertical-align: bottom; }
+  .he-ind--counter.is-roll .he-ind__cur > span { display: inline-block; animation: he-ind-roll calc(350ms * var(--he-motion, 1)) cubic-bezier(0.645, 0.045, 0.355, 1); }
+  @keyframes he-ind-roll { from { translate: 0 100%; } }
+  .he-reduce-motion .he-ind--counter.is-roll .he-ind__cur > span { animation: none; }
+  @media (prefers-reduced-motion: reduce) { .he-ind--counter.is-roll .he-ind__cur > span { animation: none; } }
+  /* 3.28 — at exactly 1024px, the desktop's slides per view and gap. */
+  @media (width > 1023.98px) and (width <= 64rem) {
+    .he-car.is-desk-1024 .he-car__track { --pv: var(--pv-laptop, var(--pv-base, 3)); --gap: 20px; }
+    .he-car.is-desk-1024.has-slide-gap .he-car__track { --gap: var(--he-car-gap); }
+  }
 }

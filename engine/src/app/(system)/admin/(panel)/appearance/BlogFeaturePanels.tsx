@@ -191,6 +191,54 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
                 checked={blog?.upNext?.dismiss === 'post'}
                 onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, dismiss: v ? 'post' : undefined }))}
               />
+              {/* 3.28 — which post, when it shows, its controls and its look. */}
+              <Check label="The newer post only (none on the newest post)" checked={blog?.upNext?.pick === 'newer'} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, pick: v ? 'newer' : undefined }))} />
+              <Check label="Shown from the start, not after a third of the post" checked={blog?.upNext?.from === 'start'} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, from: v ? 'start' : undefined }))} />
+              <Check label="Hidden while the related posts are on screen" checked={blog?.upNext?.hideOverRelated === true} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, hideOverRelated: v || undefined }))} />
+              <Check label="A close button" checked={blog?.upNext?.close !== false} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, close: v ? undefined : false }))} />
+              <Check label="Arrows to both neighbours" checked={blog?.upNext?.arrows !== false} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, arrows: v ? undefined : false }))} />
+              <div className="grid gap-3 sm:grid-cols-5">
+                <Field label="Width" hint="px">
+                  <Input
+                    type="number"
+                    min={200}
+                    max={480}
+                    value={blog?.upNext?.width ?? ''}
+                    placeholder="320"
+                    onChange={(e) =>
+                      set(['blog', 'upNext'])(tidy({ ...blog?.upNext, width: e.target.value === '' ? undefined : Math.min(480, Math.max(200, Math.round(Number(e.target.value)) || 320)) }))
+                    }
+                  />
+                </Field>
+                <Field label="Colour" hint="e.g. rgb(40,40,40)">
+                  <Input value={blog?.upNext?.background ?? ''} placeholder="the surface" onChange={(e) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, background: e.target.value.trim() || undefined }))} />
+                </Field>
+                <Field label="Corners" hint="px">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={32}
+                    value={blog?.upNext?.radius ?? ''}
+                    placeholder="the cards’"
+                    onChange={(e) =>
+                      set(['blog', 'upNext'])(tidy({ ...blog?.upNext, radius: e.target.value === '' ? undefined : Math.min(32, Math.max(0, Math.round(Number(e.target.value)) || 0)) }))
+                    }
+                  />
+                </Field>
+                <Field label="Title size" hint="e.g. 19px">
+                  <Input value={blog?.upNext?.titleSize ?? ''} placeholder="16px" onChange={(e) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, titleSize: e.target.value.trim() || undefined }))} />
+                </Field>
+                <Field label="Title weight">
+                  <Select value={blog?.upNext?.titleWeight ?? ''} onChange={(e) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, titleWeight: (e.target.value || undefined) as never }))}>
+                    <option value="">700 (as drawn)</option>
+                    {['400', '500', '600', '700', '800'].map((w) => (
+                      <option key={w} value={w}>
+                        {w}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+              </div>
             </div>
           )}
           <Choice

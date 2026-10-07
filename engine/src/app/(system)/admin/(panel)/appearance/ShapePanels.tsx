@@ -167,6 +167,37 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           ]}
           onChange={set(['buttons', 'moreWeight'])}
         />
+        {/* 3.28 — the arrow's drawing, size, space and motion; text buttons; the large size. */}
+        <ChoiceField
+          label="The arrow is drawn"
+          value={buttons.arrowStyle}
+          inherited="stroke"
+          options={[
+            { value: 'stroke', label: 'In a line' },
+            { value: 'filled', label: 'With a solid head' },
+          ]}
+          onChange={set(['buttons', 'arrowStyle'])}
+        />
+        <LengthField label="Arrow size" placeholder="e.g. 24px" emptyLabel="as drawn (15–16px)" value={buttons.arrowSize} onChange={set(['buttons', 'arrowSize'])} />
+        <LengthField label="Space before the arrow" placeholder="e.g. 4px" emptyLabel="as drawn (10px)" value={buttons.arrowGap} onChange={set(['buttons', 'arrowGap'])} />
+        <ChoiceField
+          label="The arrow, pointed at"
+          value={buttons.arrowHover}
+          inherited="none"
+          options={[
+            { value: 'none', label: 'Stays' },
+            { value: 'slide', label: 'Slides out and back in' },
+          ]}
+          onChange={set(['buttons', 'arrowHover'])}
+        />
+        <ColorField label="“Text” buttons, pointed at" value={buttons.textHoverColor} placeholder="the link hover colour" onChange={set(['buttons', 'textHoverColor'])} />
+        <label className="flex items-center gap-2.5 self-end pb-2 text-[14px] text-ash">
+          <input type="checkbox" className="h-4 w-4 accent-flare" checked={buttons.textUnderline !== false} onChange={(e) => set(['buttons', 'textUnderline'])(e.target.checked ? undefined : false)} />
+          A line under “Text” buttons, pointed at
+        </label>
+        <LengthField label="Large buttons: height" placeholder="e.g. 52px" emptyLabel="from the padding" value={buttons.large?.height} onChange={set(['buttons', 'large', 'height'])} />
+        <LengthField label="Large buttons: side padding" placeholder="e.g. 24px" emptyLabel="from the padding" value={buttons.large?.paddingX} onChange={set(['buttons', 'large', 'paddingX'])} />
+        <LengthField label="Large buttons: text size" placeholder="e.g. 16px" emptyLabel="a little larger" value={buttons.large?.fontSize} onChange={set(['buttons', 'large', 'fontSize'])} />
       </div>
     </Panel>
   );

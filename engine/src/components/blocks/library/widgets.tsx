@@ -360,11 +360,43 @@ export function ReviewsBlock(p: P<'reviews'>) {
   if (card.background && isColor(card.background)) cardVars['--he-rev-bg'] = card.background;
   if (typeof card.radius === 'number' && card.radius >= 0 && card.radius <= 40) cardVars['--he-rev-radius'] = `${card.radius}px`;
   const circle = (color?: string) => (color && isColor(color) ? { background: color } : undefined);
+  /* 3.28 — the card's padding, the photo's size and the type of the text, the name and the role.
+     Written on the elements themselves, so a block's own body type (which reaches every span) does not override them. */
+  if (card.padding) cardVars['--he-rev-pad'] = card.padding;
+  if (card.avatarPx) cardVars['--he-rev-avatar'] = `${card.avatarPx}px`;
+  if (p.columnsTablet) cardVars['--cols-t'] = String(p.columnsTablet);
+  const own = (entries: [string, string | undefined][]) => {
+    const style = Object.fromEntries(entries.filter(([, v]) => v));
+    return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
+  };
+  const textStyle = own([
+    ['fontSize', card.textSize],
+    ['lineHeight', card.textLine],
+  ]);
+  const nameStyle = own([
+    ['fontFamily', card.nameFont === 'display' ? 'var(--font-display)' : card.nameFont === 'body' ? 'var(--he-body-family)' : undefined],
+    ['fontSize', card.nameSize],
+    ['fontWeight', card.nameWeight],
+  ]);
+  const roleStyle = own([
+    ['fontSize', card.roleSize],
+    ['color', card.roleColor && isColor(card.roleColor) ? card.roleColor : undefined],
+  ]);
   // 3.22 — masonry in reading order.
   const rowOrder = p.layout === 'masonry' && p.masonryOrder === 'rows';
   const list = (
     <ul
-      className={cn('he-rev__list he-swipe-track', `is-${p.layout}`, card.border === false && 'no-border', card.quoteMark && 'has-mark', rowOrder && 'is-rows', card.avatarSize && card.avatarSize !== 'small' && `is-avatar-${card.avatarSize}`)}
+      className={cn(
+        'he-rev__list he-swipe-track',
+        `is-${p.layout}`,
+        card.border === false && 'no-border',
+        card.quoteMark && 'has-mark',
+        rowOrder && 'is-rows',
+        card.avatarSize && card.avatarSize !== 'small' && `is-avatar-${card.avatarSize}`,
+        card.padding && 'has-pad',
+        card.avatarPx && 'has-avatar-px',
+        p.columnsTablet && 'has-cols-t',
+      )}
       style={{ '--cols': p.columns, ...cardVars } as React.CSSProperties}
       data-masonry-rows={rowOrder ? '' : undefined}
     >
@@ -382,7 +414,7 @@ export function ReviewsBlock(p: P<'reviews'>) {
               )}
               {r.title && <p className="he-rev__title">{r.title}</p>}
               <blockquote className="he-rev__text">
-                <p>{r.text}</p>
+                <p style={textStyle}>{r.text}</p>
               </blockquote>
               <figcaption className="he-rev__who">
                 {r.avatarUrl ? (
@@ -395,8 +427,14 @@ export function ReviewsBlock(p: P<'reviews'>) {
                   </span>
                 )}
                 <span>
-                  <span className="he-rev__name">{r.name}</span>
-                  {line && <span className="he-rev__meta">{line}</span>}
+                  <span className="he-rev__name" style={nameStyle}>
+                    {r.name}
+                  </span>
+                  {line && (
+                    <span className="he-rev__meta" style={roleStyle}>
+                      {line}
+                    </span>
+                  )}
                 </span>
               </figcaption>
             </figure>

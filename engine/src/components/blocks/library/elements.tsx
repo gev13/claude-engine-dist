@@ -92,7 +92,7 @@ const BUTTON_ICON = {
 export function ButtonsBlock(p: P<'buttons'>) {
   return (
     <section className={cn('he-lsec he-btns-sec', toneClass(p.tone))}>
-      <div className={cn('shell he-btns', `is-${p.align}`, p.fullWidth && 'is-full')}>
+      <div className={cn('shell he-btns', `is-${p.align}`, p.fullWidth && 'is-full', p.keepWidthMobile && 'is-keep-m')}>
         {p.items.map((b, i) => {
           const icon = b.icon === 'none' ? null : BUTTON_ICON[b.icon];
           const own = buttonPadProps(b.pad);

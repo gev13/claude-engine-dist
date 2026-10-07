@@ -21,7 +21,7 @@ describe('the site chrome', () => {
     expect(chrome.footer).toMatchObject({ reveal: false, revealOnMobile: false });
     expect(chrome.footer.background).toBeUndefined();
     expect(chrome.cursor.style).toBe('off');
-    expect(chrome.transition).toEqual({ style: 'off', preloader: false, firstLoad: false, leave: 'fade' });
+    expect(chrome.transition).toMatchObject({ style: 'off', preloader: false, firstLoad: false, leave: 'fade' });
     expect(chrome.rails).toBeNull();
   });
 

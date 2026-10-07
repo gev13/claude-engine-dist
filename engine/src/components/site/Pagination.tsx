@@ -40,6 +40,7 @@ export function Pagination({
   style = 'numbers',
   labels,
   listId,
+  glyph = 'chevron',
 }: {
   current: number;
   total: number;
@@ -48,7 +49,10 @@ export function Pagination({
   labels: PaginationLabels;
   /** The list a "Load more" appends to. */
   listId?: string;
+  /** 3.28 — the previous and next buttons as ‹ › (as before) or ← →. */
+  glyph?: 'chevron' | 'arrow';
 }) {
+  const [back, on] = glyph === 'arrow' ? ['←', '→'] : ['‹', '›'];
   if (total <= 1) return null;
 
   if (style === 'loadMore') {
@@ -64,11 +68,11 @@ export function Pagination({
     <nav className="he-pager" aria-label={labels.nav}>
       {current > 1 ? (
         <Link href={href(current - 1)} className="he-pager__btn" rel="prev" aria-label={labels.previous}>
-          ‹
+          {back}
         </Link>
       ) : (
         <span className="he-pager__btn" aria-hidden="true" data-disabled="">
-          ‹
+          {back}
         </span>
       )}
       {style === 'numbers' &&
@@ -91,11 +95,11 @@ export function Pagination({
         )}
       {current < total ? (
         <Link href={href(current + 1)} className="he-pager__btn" rel="next" aria-label={labels.next}>
-          ›
+          {on}
         </Link>
       ) : (
         <span className="he-pager__btn" aria-hidden="true" data-disabled="">
-          ›
+          {on}
         </span>
       )}
     </nav>

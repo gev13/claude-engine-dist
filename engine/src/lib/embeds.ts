@@ -59,9 +59,11 @@ export function parseVideoUrl(input: string): VideoSource | null {
 }
 
 /** The player to load once a visitor presses play. YouTube plays from its no-cookie domain. */
-export function videoEmbedUrl(video: HostedVideo): string {
-  if (video.kind === 'youtube') return `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0`;
-  return `https://player.vimeo.com/video/${video.id}?autoplay=1&dnt=1${video.hash ? `&h=${video.hash}` : ''}`;
+export function videoEmbedUrl(video: HostedVideo, autoplay = true): string {
+  // 3.28 — a player loaded with the page waits for its own play button.
+  const play = autoplay ? 1 : 0;
+  if (video.kind === 'youtube') return `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=${play}&rel=0`;
+  return `https://player.vimeo.com/video/${video.id}?autoplay=${play}&dnt=1${video.hash ? `&h=${video.hash}` : ''}`;
 }
 
 export type MapPlace = { provider: 'openstreetmap' | 'google'; address: string; lat?: number; lng?: number; zoom: number };

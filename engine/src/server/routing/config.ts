@@ -9,6 +9,9 @@ import { CAPTCHA_CSP, CAPTCHA_SETTING_KEY, captchaSettingsSchema } from '@/lib/c
 import { ANALYTICS_PATTERN, CODE_SETTING_KEY } from '@/lib/customCode';
 import { MEDIA_SETTING_KEY, resolveMediaSettings } from '@/lib/mediaSettings';
 import { setImageMode } from '@/lib/responsive';
+import { setSiteDates } from '@/lib/dates';
+import { setMainRegion } from '@/lib/locales';
+import { siteSettingsSchema, type SiteSettings } from '@/lib/siteSettings';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    The routing configuration, cached per process
@@ -40,6 +43,13 @@ export type RoutingConfig = {
   csp: string;
   /** Whether engine images carry a `srcset` (2.17, Settings → Media). */
   responsiveImages: boolean;
+  /** 3.28 — Settings → "Redirects answer before pages" and "Lowercase addresses". */
+  redirectsFirst?: boolean;
+  lowercaseUrls?: boolean;
+  /** 3.28 — Settings → the main language's region. */
+  region?: string;
+  /** 3.28 — Settings → date format and time zone, for every date on the site. */
+  dates?: { format?: SiteSettings['dateFormat']; zone?: string };
   /** 3.21 — Settings → "Redirect www to the bare domain". */
   wwwRedirect: boolean;
 };
@@ -68,6 +78,11 @@ const holder = globalThis as unknown as { __heRouting?: Cache };
 
 const FALLBACK: RoutingConfig = { permalinks: DEFAULT_PERMALINKS, queryRules: [], pathRules: [], csp: buildCsp({ isProd }), responsiveImages: false, wwwRedirect: false };
 const WWW_SETTING_KEY = 'seo.wwwRedirect';
+/** 3.28 — the site's date format and zone, for the dates on cards and posts (`lib/dates.ts`). */
+const DATE_KEYS = ['site.dateFormat', 'site.timeZone', 'site.region'];
+/** 3.28 — redirect rules before pages, and lowercase addresses. */
+const REDIRECTS_FIRST_KEY = 'seo.redirectsFirst';
+const LOWERCASE_KEY = 'seo.lowercaseUrls';
 
 async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
   try {
@@ -75,7 +90,7 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
       db
         .select({ key: settings.key, value: settings.value })
         .from(settings)
-        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY, MEDIA_SETTING_KEY, WWW_SETTING_KEY])),
+        .where(inArray(settings.key, [PERMALINKS_SETTING_KEY, INTEGRATIONS_SETTING_KEY, CAPTCHA_SETTING_KEY, CODE_SETTING_KEY, MEDIA_SETTING_KEY, WWW_SETTING_KEY, ...DATE_KEYS, REDIRECTS_FIRST_KEY, LOWERCASE_KEY])),
       db
         .select({
           id: redirects.id,
@@ -104,6 +119,10 @@ async function load(): Promise<{ value: RoutingConfig; ok: boolean }> {
         csp: publicCsp(byKey),
         responsiveImages: resolveMediaSettings(byKey.get(MEDIA_SETTING_KEY)).responsive,
         wwwRedirect: byKey.get(WWW_SETTING_KEY) === true,
+        redirectsFirst: byKey.get(REDIRECTS_FIRST_KEY) === true,
+        region: typeof byKey.get('site.region') === 'string' ? (byKey.get('site.region') as string) : undefined,
+        lowercaseUrls: byKey.get(LOWERCASE_KEY) === true,
+        dates: { format: parseDateFormat(byKey.get('site.dateFormat')), zone: typeof byKey.get('site.timeZone') === 'string' ? (byKey.get('site.timeZone') as string) : undefined },
         permalinks: resolvePermalinks(byKey.get(PERMALINKS_SETTING_KEY)),
         queryRules: shaped.filter((rule) => rule.matchQuery !== ''),
         pathRules: shaped.filter((rule) => rule.matchQuery === ''),
@@ -124,6 +143,8 @@ export async function routingConfig(): Promise<RoutingConfig> {
     holder.__heRouting = { value, expires: Date.now() + (ok ? TTL_MS : RETRY_MS) };
     setSlashMode(value.permalinks.trailingSlash);
     setImageMode(value.responsiveImages);
+    setSiteDates(value.dates?.format, value.dates?.zone);
+    setMainRegion(value.region);
     return value;
   });
   holder.__heRouting = { value: cache?.value ?? FALLBACK, expires: 0, pending };
@@ -138,4 +159,10 @@ export async function getPermalinks(): Promise<Permalinks> {
 /** Drop this process's copy, so the next request reads what was just saved. */
 export function invalidateRouting(): void {
   holder.__heRouting = undefined;
+}
+
+/** 3.28 — a stored date format, only when it is one the site offers. */
+function parseDateFormat(value: unknown): SiteSettings['dateFormat'] {
+  const parsed = siteSettingsSchema.shape.dateFormat.safeParse(value);
+  return parsed.success ? parsed.data : undefined;
 }

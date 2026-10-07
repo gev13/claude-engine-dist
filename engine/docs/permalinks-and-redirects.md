@@ -104,6 +104,20 @@ Redirects answered by a route are 308/307 (Next.js's permanent and temporary
 redirects), which search engines treat exactly as 301/302. The trailing-slash
 redirect and query rules are answered earlier, by the middleware, as true 301s.
 
+## Redirects before pages, file extensions, capitals (3.28)
+
+- **Settings → Redirects answer before pages**: path rules run in the
+  middleware, before pages and before the trailing slash is put right, so
+  each answers with its own status (301/302) in one hop — `/old/` included.
+  A rule then wins over live content at the same address. Off, a rule still
+  answers only where a page would 404, and a route can only answer 308.
+- **Addresses with a file extension** (`.php`, `.xml`, `.html`, `.asp`)
+  reach the redirect rules — `/index.php`, `/sitemap_index.xml`,
+  `/post-sitemap.xml` — except the engine's own sitemaps. With no rule they
+  are served as before.
+- **Settings → Addresses in capitals go to lowercase**: an address in capitals answers a 301
+  to its lowercase spelling, with the slash put right in the same hop.
+
 ## www to the bare domain (3.21)
 
 **Settings → Redirect www to the bare domain.** Every request to

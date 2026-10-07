@@ -639,7 +639,7 @@
   .he-ftr__contacts a { display: inline-flex; align-items: center; gap: 10px; font-size: var(--he-footer-text-size, 14px); color: var(--he-footer-text-color, var(--color-ash)); font-family: var(--he-footer-text-family, revert-layer); font-weight: var(--he-footer-text-weight, revert-layer); line-height: var(--he-footer-text-line, revert-layer); letter-spacing: var(--he-footer-text-tracking, revert-layer); text-transform: var(--he-footer-text-transform, revert-layer); }
   .he-ftr__contacts a:hover { color: var(--color-flare-soft); }
 
-  .he-ftr__copy.is-as-written { text-transform: none; letter-spacing: 0.02em; }
+  .he-ftr__copy.is-as-written { text-transform: none; letter-spacing: var(--he-footer-bottom-tracking, 0.02em); }
   .he-ftr__bottom {
     display: flex;
     flex-wrap: wrap;
@@ -648,13 +648,14 @@
     gap: var(--he-gap, 12px 24px);
     padding-block: 16px;
     border-top: 1px solid var(--color-hairline);
-    font-family: var(--he-footer-text-family, var(--he-label-family, var(--font-mono)));
-    font-size: var(--he-footer-text-size, var(--he-label-size, 10px));
-    letter-spacing: var(--he-footer-text-tracking, var(--he-label-tracking, 0.14em));
-    text-transform: var(--he-footer-text-transform, var(--he-label-transform, uppercase));
-    color: var(--he-footer-text-color, var(--he-label-color, var(--color-smoke)));
-    font-weight: var(--he-footer-text-weight, var(--he-label-weight, revert-layer));
-    line-height: var(--he-footer-text-line, var(--he-label-line, revert-layer));
+    /* 3.28 — the Footer bottom row role first, then Footer text, then Labels. */
+    font-family: var(--he-footer-bottom-family, var(--he-footer-text-family, var(--he-label-family, var(--font-mono))));
+    font-size: var(--he-footer-bottom-size, var(--he-footer-text-size, var(--he-label-size, 10px)));
+    letter-spacing: var(--he-footer-bottom-tracking, var(--he-footer-text-tracking, var(--he-label-tracking, 0.14em)));
+    text-transform: var(--he-footer-bottom-transform, var(--he-footer-text-transform, var(--he-label-transform, uppercase)));
+    color: var(--he-footer-bottom-color, var(--he-footer-text-color, var(--he-label-color, var(--color-smoke))));
+    font-weight: var(--he-footer-bottom-weight, var(--he-footer-text-weight, var(--he-label-weight, revert-layer)));
+    line-height: var(--he-footer-bottom-line, var(--he-footer-text-line, var(--he-label-line, revert-layer)));
   }
   .he-ftr__legal { display: flex; flex-wrap: wrap; gap: var(--he-gap, 6px 20px); margin: 0; padding: 0; list-style: none; }
   .he-ftr__legal a { color: inherit; padding: 4px 0; }

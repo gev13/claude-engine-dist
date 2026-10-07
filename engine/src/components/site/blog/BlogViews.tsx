@@ -1,3 +1,5 @@
+import { cn } from '@/lib/utils';
+import { FiltersToggle } from './FiltersToggle';
 import Link from '@/components/ui/SiteLink';
 import { BlockRenderer } from '@/components/blocks/Renderer';
 import { BlogList } from '@/components/site/BlogList';
@@ -16,7 +18,7 @@ import { absoluteWithSlash, blogIndexPath, categoryPath, feedPath, pagedPath, po
 import { SITE_URL } from '@/lib/env';
 import { blogNode, breadcrumbs, graph, itemList, webPage, type Crumb } from '@/lib/seo/jsonld';
 import { site } from '@/lib/site';
-import { formatDate } from '@/lib/utils';
+import { cardDate } from '@/lib/dates';
 import type { CategoryRef } from '@/server/content/categories';
 import { listCategories } from '@/server/content/categories';
 import { getMessages } from '@/server/content/messages';
@@ -123,7 +125,14 @@ async function CategoryBar({
     active
       ? 'he-chip border-2 border-flare bg-flare px-4 py-2 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-bone he-lbl'
       : 'he-chip border-2 border-hairline px-4 py-2 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-ash))] transition-colors hover:border-rule hover:text-bone he-lbl';
-  const wrap = (node: React.ReactNode) => (bare ? node : <Section size="sm">{node}</Section>);
+  const wrap = (node: React.ReactNode) =>
+    bare ? (
+      node
+    ) : (
+      <Section size="sm" className="he-arch-bar">
+        {node}
+      </Section>
+    );
   if (categories.length === 0) return search ? wrap(search) : null;
   const research =
     blog.chipResearch === 'show' || (blog.chipResearch === 'auto' && (await countPosts({ kind: 'research', locale })) > 0);
@@ -138,7 +147,8 @@ async function CategoryBar({
           )}
           <details className="he-catmenu">
             <summary className="he-catmenu__button">
-              {t('blog.categories')}
+              {/* 3.28 — drawn as a select, it names the category being shown. */}
+              {(blog.look.archive.filterLook === 'select' && categories.find((c) => c.slug === current)?.name) || t('blog.categories')}
               <span aria-hidden="true">▾</span>
             </summary>
             <DetailsDismiss />
@@ -189,12 +199,15 @@ async function CategoryBar({
 }
 
 /** 3.22 — one row under an archive's title: breadcrumbs on the left, the count and the categories on the right. */
-function ArchiveToolbar({ crumbs, count, bar }: { crumbs?: React.ReactNode; count?: React.ReactNode; bar?: React.ReactNode }) {
+function ArchiveToolbar({ crumbs, count, bar, filters }: { crumbs?: React.ReactNode; count?: React.ReactNode; bar?: React.ReactNode; /** 3.28 — phones: the end of the row behind this button's label. */ filters?: string }) {
   if (!crumbs && !count && !bar) return null;
   return (
-    <Section size="sm">
-      <div className="he-blogbar">
-        <div className="he-blogbar__start">{crumbs}</div>
+    <Section size="sm" className="he-arch-bar">
+      <div className={cn('he-blogbar', filters && 'has-filters')}>
+        <div className="he-blogbar__start">
+          {crumbs}
+          {filters && <FiltersToggle label={filters} />}
+        </div>
         <div className="he-blogbar__end">
           {count}
           {bar}
@@ -221,7 +234,7 @@ function ArchiveCrumbs({ trail }: { trail: Crumb[] }) {
 
 /** 2.22 — one post as a large card: its cover on the left, the words on the right. */
 function FeaturedPost({ post, permalinks, t }: { post: PostListItem; permalinks: Permalinks; t: T }) {
-  const meta = [post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article')), post.publishedAt ? formatDate(post.publishedAt) : null]
+  const meta = [post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article')), post.publishedAt ? cardDate(post.publishedAt) : null]
     .filter(Boolean)
     .join(' · ');
   return (
@@ -318,7 +331,7 @@ export async function BlogIndexView({
       {first ? (
         <BlockRenderer blocks={[first]} trail={trail} locale={locale} />
       ) : (
-        <Section size="lg">
+        <Section size="lg" className="he-arch-head">
           {blog.archiveBreadcrumbs && !toolbar && <ArchiveCrumbs trail={trail} />}
           <Heading level={1} className="max-w-[18ch]">
             {site.blogLabel}
@@ -333,6 +346,7 @@ export async function BlogIndexView({
           crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
           count={blog.resultCount && builtIn && latest.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
           bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} current="all" bare />}
+          filters={blog.look.archive.phoneFilters ? t('blog.filters') : undefined}
         />
       ) : (
         <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} />
@@ -361,7 +375,7 @@ export async function BlogIndexView({
       ) : (
         <>
         {page && rest.length > 0 && <BlockRenderer blocks={rest} trail={trail} locale={locale} />}
-        <Section size="lg">
+        <Section size="lg" className="he-arch-list">
           {latest.length === 0 ? (
             <p className="m-0 text-[16px] text-smoke">{t('blog.nothingYet')}</p>
           ) : (
@@ -383,6 +397,7 @@ export async function BlogIndexView({
                 style={blog.archivePager}
                 labels={paginationLabels(t)}
                 listId={ARCHIVE_LIST_ID}
+                glyph={blog.look.archive.pagerGlyph}
               />
             </>
           )}
@@ -439,7 +454,7 @@ function SearchResults({
               eyebrow={
                 <>
                   {p.kind === 'research' ? t('blog.research') : (p.categoryName ?? t('blog.article'))}
-                  {p.publishedAt ? ` — ${formatDate(p.publishedAt)}` : ''}
+                  {p.publishedAt ? ` — ${cardDate(p.publishedAt)}` : ''}
                 </>
               }
               title={p.title}
@@ -486,7 +501,8 @@ export async function ArchiveView({
   const path = pagedPath(base, paging.number, permalinks);
   const trail: Crumb[] = [
     { name: t('chrome.home'), path: '/' },
-    { name: site.blogLabel, path: blogIndexPath(permalinks) },
+    // 3.28 — a category's trail can leave the blog out: Home › Category.
+    ...(kind === 'category' && blog.look.archive.crumbsWithoutBlog ? [] : [{ name: site.blogLabel, path: blogIndexPath(permalinks) }]),
     { name: title, path: base },
   ];
   const crumbs = breadcrumbs(trail);
@@ -514,7 +530,7 @@ export async function ArchiveView({
 
   return (
     <>
-      <Section size="lg">
+      <Section size="lg" className="he-arch-head">
         {blog.archiveBreadcrumbs && !toolbar && <ArchiveCrumbs trail={trail} />}
         {picture ? (
           <div className="he-arch-hero">
@@ -548,13 +564,14 @@ export async function ArchiveView({
           count={blog.resultCount && posts.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
           // 3.23 — the toolbar row is the index's: its categories are there on every archive.
           bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} bare />}
+          filters={blog.look.archive.phoneFilters ? t('blog.filters') : undefined}
         />
       ) : (
         blog.archiveBar && <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} current={current} search={archiveSearch} />
       )}
       {around.before.length > 0 && <BlockRenderer blocks={around.before} trail={trail} locale={locale} />}
 
-      <Section size="lg">
+      <Section size="lg" className="he-arch-list">
         {posts.length === 0 ? (
           <p className="m-0 text-[16px] text-smoke">{empty}</p>
         ) : (
@@ -575,6 +592,7 @@ export async function ArchiveView({
               style={blog.archivePager}
               labels={paginationLabels(t)}
               listId={ARCHIVE_LIST_ID}
+              glyph={blog.look.archive.pagerGlyph}
             />
           </>
         )}

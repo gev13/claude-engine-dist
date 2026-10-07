@@ -93,6 +93,13 @@ export const siteSettingsSchema = z.object({
   /* 3.21 — www.example.com answers with a permanent redirect to the site's own
      address (example.com). Never exported: it belongs to the server's domain. */
   wwwRedirect: z.boolean().optional(),
+  /* 3.28 — redirect rules answer before pages, with their own status (301/302): a route can only answer 307/308.
+     Live content no longer wins over a rule for the same address. And an address in capitals answers with a 301
+     to its lowercase spelling. Both off until switched on. */
+  redirectsFirst: z.boolean().optional(),
+  lowercaseUrls: z.boolean().optional(),
+  /** 3.28 — the main language's region, two capitals (US, GB): `og:locale` en_US, `lang="en-US"`. Unset keeps the language's own. */
+  region: z.string().trim().regex(/^(|[A-Z]{2})$/, 'Two capital letters, e.g. US').optional(),
 
   /* 3.19 — the sitemaps. Both off until switched on, so an untouched site's XML is unchanged. */
   /** Opened in a browser, the sitemaps show as a table with links (an XSL stylesheet); search engines read the same XML. */
@@ -188,6 +195,9 @@ export const SITE_SETTING_FIELDS = {
   'seo.sitemapStyle': 'sitemapStyle',
   'seo.sitemapImages': 'sitemapImages',
   'seo.wwwRedirect': 'wwwRedirect',
+  'seo.redirectsFirst': 'redirectsFirst',
+  'seo.lowercaseUrls': 'lowercaseUrls',
+  'site.region': 'region',
   'pages.notFoundPageId': 'notFoundPageId',
   'pages.notFoundLinkLabel': 'notFoundLinkLabel',
   'pages.notFoundLinkHref': 'notFoundLinkHref',

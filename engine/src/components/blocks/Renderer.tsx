@@ -135,7 +135,10 @@ const registry: Record<string, (props: any) => React.ReactNode | Promise<React.R
 /** The reveal-on-scroll classes, when a block or row asks for them. */
 const revealClass = (style: ParsedBlock['style']) =>
   // 3.5 — `none` marks a section the site-wide entrance leaves alone.
-  style?.reveal === 'none' ? 'he-noreveal' : style?.reveal && `he-reveal he-reveal--${style.reveal}`;
+  style?.reveal === 'none'
+    ? 'he-noreveal'
+    : // 3.28 — or each of its parts in turn, rather than the block as one piece.
+      style?.reveal && (style.revealItems ? 'he-reveal-items' : `he-reveal he-reveal--${style.reveal}`);
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
 /** Named widths, applied by overriding the container the inner `.shell` reads. */
@@ -161,6 +164,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
       id={style.anchorId}
       className={cn(`he-b-${block.id}`, shellClass(style))}
       data-reveal-delay={revealDelay(style)}
+      data-reveal-effect={revealEffect(style)}
       data-glitch={glitchScope(style)}
       {...glitchTiming(style)}
     >
@@ -175,7 +179,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
 /** 3.22 — ‹ › for a grid that swipes, when the Design tab asks for them. */
 function swipeArrows(style: BlockStyle) {
   if (!style.swipeOn || !style.swipeArrows || style.swipeArrows === 'none') return null;
-  return <SwipeArrows placement={style.swipeArrows} />;
+  return <SwipeArrows placement={style.swipeArrows} look={style.swipeArrowLook} box={style.swipeArrowBox} />;
 }
 
 /** Width, entrance, hover, sticky, snap and shape classes a styled block or row carries (P3-C). */
@@ -206,6 +210,8 @@ function shellClass(style: BlockStyle) {
   );
 }
 
+/** 3.28 — the entrance each part plays, when the parts enter one by one. */
+const revealEffect = (style: BlockStyle) => (style.revealItems && style.reveal && style.reveal !== 'none' ? style.reveal : undefined);
 const revealDelay = (style: BlockStyle) => (style.reveal && style.reveal !== 'none' && style.revealDelay ? style.revealDelay : undefined);
 /** 3.5 — seconds between glitch bursts and the length of each, read by GlitchObserver. */
 const glitchTiming = (style: BlockStyle) =>
@@ -282,6 +288,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       id={style?.anchorId}
       className={cn('he-row', `he-b-${block.id}`, style && shellClass(style))}
       data-reveal-delay={style ? revealDelay(style) : undefined}
+      data-reveal-effect={style ? revealEffect(style) : undefined}
       data-glitch={style ? glitchScope(style) : undefined}
       {...(style ? glitchTiming(style) : {})}
     >

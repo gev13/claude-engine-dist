@@ -5,7 +5,7 @@ import { cornerShapeSchema } from './shape';
 import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
 
 /** The entrances a section can play as it scrolls into view (SC4); blockStyle's REVEALS is this list. */
-export const SECTION_REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur'] as const;
+export const SECTION_REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur', 'fadeSlow'] as const;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Global theme
@@ -177,7 +177,7 @@ const fontKey = z.string().refine((value) => value in FONT_STACKS, 'Not a font t
 
 /* ── Typography ───────────────────────────────────────────────────────────── */
 
-export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial'] as const;
+export const TYPE_ROLES = ['body', 'lede', 'eyebrow', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial', 'footerBottom'] as const;
 export type TypeRole = (typeof TYPE_ROLES)[number];
 
 export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
@@ -195,6 +195,7 @@ export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
   cardLink: 'Card links (Learn more, Read more)',
   footerText: 'Footer links, contacts and bottom row',
   footerSocial: 'Footer social names (Fb. / Ig.)',
+  footerBottom: 'Footer bottom row (copyright, legal links)',
 };
 
 /**
@@ -204,7 +205,7 @@ export const TYPE_ROLE_LABELS: Record<TypeRole, string> = {
  * and an unset role leaves every label exactly as it was. Footer column
  * titles and card links read their own role first, then Labels.
  */
-export const LABEL_ROLES = ['label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial'] as const;
+export const LABEL_ROLES = ['label', 'footerTitle', 'cardLink', 'footerText', 'footerSocial', 'footerBottom'] as const;
 
 /** The custom-property stem of a role: `footerTitle` → `footer-title`. */
 export function roleVar(role: TypeRole): string {
@@ -419,6 +420,22 @@ export const themeSchema = z.object({
    * section as one piece; parts arriving together follow one another.
    */
   revealItems: z.boolean().optional(),
+  /**
+   * 3.28 — how every entrance moves: how far a rise travels, how long and with
+   * what easing, where on the screen it starts (85 — when its top reaches 85%
+   * of the screen's height), and whether it plays again each time it comes
+   * back into view. The slow fade's own length. Each unset keeps the drawn one.
+   */
+  entrance: z
+    .object({
+      distance: length.optional(),
+      duration: z.number().int().min(0).max(3000).optional(),
+      easing: z.enum(['soft', 'ease', 'easeOut', 'easeInOut', 'linear']).optional(),
+      start: z.number().int().min(50).max(100).optional(),
+      replay: z.boolean().optional(),
+      slowDuration: z.number().int().min(0).max(5000).optional(),
+    })
+    .optional(),
   gap: length.optional(),
   /** 3.13 — the site's space between items on tablets and on phones. */
   gapTablet: length.optional(),
@@ -491,6 +508,16 @@ export const themeSchema = z.object({
       moreWeight: z.enum(['400', '500', '600', '700', '800']).optional(),
       /** 3.6 — the buttons' arrow pointing right (as drawn) or up and to the right. */
       arrow: z.enum(['right', 'diagonal']).optional(),
+      /** 3.28 — the buttons' arrow drawn in a line (as before) or with a solid head; its size; the space before it; under the pointer it stays (as before) or slides out and back in. */
+      arrowStyle: z.enum(['stroke', 'filled']).optional(),
+      arrowSize: length.optional(),
+      arrowGap: length.optional(),
+      arrowHover: z.enum(['none', 'slide']).optional(),
+      /** 3.28 — "Text" buttons under the pointer: their colour, and the line under them (unset, shown). */
+      textHoverColor: color.optional(),
+      textUnderline: z.boolean().optional(),
+      /** 3.28 — the large size: its height, side padding and text size; each unset keeps the drawn proportions. */
+      large: z.object({ height: length.optional(), paddingX: length.optional(), fontSize: length.optional() }).optional(),
     })
     .optional(),
 
@@ -572,6 +599,8 @@ export const themeSchema = z.object({
       firstGapMobile: length.optional(),
       /** 3.15 — phones: the space between a section's parts — heading, intro, list — and between its cards. */
       itemGapMobile: length.optional(),
+      /** 3.28 — the Text block's space above its words: always (unset, as before) or only under a heading. */
+      proseTop: z.enum(['always', 'heading']).optional(),
       /** 3.23 — blocks inside a row's column lose their band's own space above and below, as the classic blocks always did. */
       nestedFlush: z.boolean().optional(),
       /** 3.23 — the space between an eyebrow and the heading under it (e.g. 12px); unset is each block's own (28px). */
@@ -603,6 +632,9 @@ export const themeSchema = z.object({
       headingTop: length.optional(),
       subheadingTop: length.optional(),
       headingBottom: length.optional(),
+      /** 3.28 — the space above headings on phones (≤768px), over the two above. */
+      headingTopMobile: length.optional(),
+      subheadingTopMobile: length.optional(),
       /** Bullet lists: a short dash (unset), a disc, or nothing; their indent and the space between items. */
       listMarker: z.enum(['dash', 'disc', 'none']).optional(),
       listIndent: length.optional(),
@@ -616,6 +648,17 @@ export const themeSchema = z.object({
       hover: z.enum(['color', 'underline', 'sweep']).optional(),
       /** The line's thickness, e.g. 0.18em; unset is a hairline. */
       lineWidth: length.optional(),
+      /** 3.28 — the hover per area; each unset follows the one above. `none` is the area's own colour change only.
+          The footer's contact links take a line only when theirs is set. */
+      areas: z
+        .object({
+          header: z.enum(['none', 'underline', 'sweep']).optional(),
+          menu: z.enum(['none', 'underline', 'sweep']).optional(),
+          footer: z.enum(['none', 'underline', 'sweep']).optional(),
+          contacts: z.enum(['none', 'underline', 'sweep']).optional(),
+          body: z.enum(['none', 'underline', 'sweep']).optional(),
+        })
+        .optional(),
     })
     .optional(),
 

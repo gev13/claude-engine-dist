@@ -99,6 +99,12 @@ export const cookieNoticeSchema = z.object({
   textColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
   radius: z.number().int().min(0).max(40).optional(),
   width: z.number().int().min(240).max(1200).optional(),
+  /** 3.28 — the text's size and weight, the space from the bottom of the screen, the padding, and the side insets on phones (px). */
+  textSize: z.number().min(10).max(24).optional(),
+  textWeight: z.enum(['300', '400', '500', '600', '700']).optional(),
+  bottom: z.number().int().min(0).max(120).optional(),
+  padding: z.string().trim().max(40).regex(/^(\d{1,3}px)(\s+\d{1,3}px){0,3}$/, 'Up to four px sizes, e.g. 16px 20px').optional(),
+  insetMobile: z.number().int().min(0).max(48).optional(),
 
   /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
      `notice` is the banner as it always was: a recorded answer and nothing

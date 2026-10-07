@@ -403,7 +403,9 @@ export function TocBlock(p: P<'toc'>) {
     if (!self || !scope) return;
 
     const found: TocItem[] = [];
-    scope.querySelectorAll<HTMLHeadingElement>(p.levels === 'h2' ? 'h2' : 'h2, h3').forEach((h) => {
+    // 3.28 — with `questions`, an FAQ's questions are listed in their place among the headings.
+    const selector = `${p.levels === 'h2' ? 'h2' : 'h2, h3'}${p.questions ? ', .he-faq__q' : ''}`;
+    scope.querySelectorAll<HTMLElement>(selector).forEach((h) => {
       const text = h.textContent?.trim();
       if (!text || h.closest('.he-toc-sec') || h.getClientRects().length === 0) return;
       if (!h.id) {
@@ -412,7 +414,7 @@ export function TocBlock(p: P<'toc'>) {
         for (let n = 2; document.getElementById(candidate); n++) candidate = `${base}-${n}`;
         h.id = candidate;
       }
-      found.push({ id: h.id, text, level: h.tagName === 'H3' ? 3 : 2 });
+      found.push({ id: h.id, text, level: h.tagName === 'H3' || h.classList.contains('he-faq__q') ? 3 : 2 });
     });
     setItems(found);
     if (p.collapsible && window.matchMedia('(width <= 48rem)').matches) setOpen(false);
@@ -431,7 +433,7 @@ export function TocBlock(p: P<'toc'>) {
       if (el) observer.observe(el);
     });
     return () => observer.disconnect();
-  }, [p.scope, p.levels, p.highlight, p.collapsible]);
+  }, [p.scope, p.levels, p.highlight, p.collapsible, p.questions]);
 
   if (items && items.length === 0) return null;
 
@@ -536,7 +538,7 @@ export function ShareBlock(p: P<'share'>) {
             };
             const content = (
               <>
-                {p.style !== 'text' && <ShareIcon network={network} />}
+                {p.style !== 'text' && <ShareIcon network={network} filled={p.iconSet === 'filled'} />}
                 {named && <span>{network === 'copy' && copied ? 'Copied' : SHARE_LABELS[network]}</span>}
               </>
             );

@@ -81,6 +81,19 @@ export function ProjectCardFields({ value, onChange }: { value: ProjectCardOptio
         <Field label="Between rows" hint="e.g. 32px; empty is 44px" htmlFor={`${id}-rgap`}>
           <Input id={`${id}-rgap`} maxLength={40} value={card.rowGap ?? ''} placeholder="44px" onChange={(e) => update({ rowGap: e.target.value.trim() || undefined })} />
         </Field>
+        {/* 3.28 — the words on a panel of their own. */}
+        <Field label="Words on a panel" hint="its colour" htmlFor={`${id}-bbg`}>
+          <Input id={`${id}-bbg`} maxLength={60} value={card.bodyBackground ?? ''} placeholder="none" onChange={(e) => update({ bodyBackground: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Panel padding" hint="e.g. 20px 24px" htmlFor={`${id}-bpad`}>
+          <Input id={`${id}-bpad`} maxLength={60} value={card.bodyPadding ?? ''} placeholder="20px 24px" onChange={(e) => update({ bodyPadding: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="On phones" htmlFor={`${id}-bpadm`}>
+          <Input id={`${id}-bpadm`} maxLength={60} value={card.bodyPaddingMobile ?? ''} placeholder="16px" onChange={(e) => update({ bodyPaddingMobile: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="Under the title" hint="e.g. 0; empty is 6px (0.4rem with the link line)" htmlFor={`${id}-ugap`}>
+          <Input id={`${id}-ugap`} maxLength={40} value={card.titleGap ?? ''} placeholder="as drawn" onChange={(e) => update({ titleGap: e.target.value.trim() || undefined })} />
+        </Field>
       </div>
       <label className="flex items-center gap-2 text-[13px] text-ash">
         <input type="checkbox" className="h-4 w-4 accent-flare" checked={card.reveal === 'link'} onChange={(e) => update({ reveal: e.target.checked ? 'link' : undefined })} />
@@ -90,6 +103,9 @@ export function ProjectCardFields({ value, onChange }: { value: ProjectCardOptio
         <div className="grid gap-3 sm:grid-cols-3">
           <Field label="Its words" hint="empty is the Site translation “View project”" htmlFor={`${id}-label`}>
             <Input id={`${id}-label`} maxLength={40} value={card.revealLabel ?? ''} onChange={(e) => update({ revealLabel: e.target.value || undefined })} />
+          </Field>
+          <Field label="Its size" hint="e.g. 15px" htmlFor={`${id}-rsize`}>
+            <Input id={`${id}-rsize`} maxLength={40} value={card.revealSize ?? ''} placeholder="as drawn" onChange={(e) => update({ revealSize: e.target.value.trim() || undefined })} />
           </Field>
           <ColorField label="Its colour" placeholder="the accent" value={card.revealColor} onChange={(v) => update({ revealColor: v || undefined })} />
           <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">

@@ -59,8 +59,23 @@ export async function GET(request: Request) {
     if (!locale || !config.locales.includes(locale)) {
       return badRequest('Which language?');
     }
+    /* 3.28 — the main language: only the engine's own words, as overrides of the built-in wording
+       ("Read more" → "Read More"). Its details and menus are the originals, edited in Settings and Menus. */
     if (locale === config.defaultLocale) {
-      return badRequest('That is the main language — it is the original, not a translation.');
+      const raw = await readRaw([MESSAGES_SETTING_KEY]);
+      const stored = (raw.get(MESSAGES_SETTING_KEY) ?? {}) as Record<string, unknown>;
+      return ok({
+        locale,
+        defaultLocale: config.defaultLocale,
+        main: true,
+        site: [],
+        menus: [],
+        words: (Object.keys(MESSAGES) as MessageKey[]).map((key) => ({
+          key,
+          source: MESSAGES[key],
+          target: typeof stored[key] === 'string' ? (stored[key] as string) : '',
+        })),
+      });
     }
 
     const suffix = (key: string) => localeKey(key, locale, config.defaultLocale);
@@ -126,8 +141,23 @@ export async function PUT(request: Request) {
 
     const config = localeConfig();
     if (!config.locales.includes(input.locale)) return badRequest('That language is not configured.');
+    // 3.28 — the main language's own wording: every word written replaces the built-in one; an empty field restores it.
     if (input.locale === config.defaultLocale) {
-      return badRequest('The main language is the original; edit it in Settings and Menus.');
+      const words: Record<string, string> = {};
+      for (const [key, value] of Object.entries(input.words)) {
+        if (key in MESSAGES && typeof value === 'string' && value.trim() !== '' && value !== MESSAGES[key as MessageKey]) words[key] = value;
+      }
+      await writeSetting(MESSAGES_SETTING_KEY, words, guard.user.id);
+      await audit({
+        actorId: guard.user.id,
+        actorEmail: guard.user.email,
+        action: 'site.translations.update',
+        targetType: 'site',
+        summary: `Updated the main language's (${input.locale}) wording`,
+        ip: clientIp(request.headers),
+      });
+      revalidateEverything();
+      return ok({ saved: true });
     }
 
     const suffix = (key: string) => localeKey(key, input.locale, config.defaultLocale);

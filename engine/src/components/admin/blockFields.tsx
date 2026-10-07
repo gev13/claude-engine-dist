@@ -768,9 +768,9 @@ function MediaInput({
 }
 
 /** An optional {label, href} pair, edited as two fields. */
-function OptLink({ label, props, set, k }: { label: string; props: Props; set: Setter; k: string }) {
-  const value = (props[k] ?? {}) as { label?: string; href?: string };
-  const update = (patch: { label?: string; href?: string }) => {
+function OptLink({ label, props, set, k, arrow = false }: { label: string; props: Props; set: Setter; k: string; arrow?: boolean }) {
+  const value = (props[k] ?? {}) as { label?: string; href?: string; arrow?: boolean };
+  const update = (patch: { label?: string; href?: string; arrow?: boolean }) => {
     const next = { ...value, ...patch };
     set(withOpt(props, k, next.label || next.href ? next : undefined));
   };
@@ -782,6 +782,13 @@ function OptLink({ label, props, set, k }: { label: string; props: Props; set: S
       <Field label={`${label} — link`}>
         <Input value={value.href ?? ''} placeholder="/path or https://" spellCheck={false} onChange={(e) => update({ href: e.target.value.trim() })} />
       </Field>
+      {/* 3.28 — an arrow on the button, for blocks that draw one. */}
+      {arrow && (value.label || value.href) && (
+        <label className="flex items-center gap-2 text-[14px] text-ash">
+          <input type="checkbox" className="h-4 w-4 accent-flare" checked={value.arrow === true} onChange={(e) => update({ arrow: e.target.checked || undefined })} />
+          An arrow on the button
+        </label>
+      )}
     </div>
   );
 }
@@ -1029,7 +1036,23 @@ type PriceGroup = { title?: string; note?: string; items: PriceItem[] };
 type HoursDay = { day: Weekday; slots: { open: string; close: string }[] };
 type NoteItem = { label: string; text: string };
 type ReviewItem = { name: string; role?: string; company?: string; meta?: string; avatarUrl?: string; avatarColor?: string; rating?: number; title?: string; text: string; date?: string; source?: string };
-type ReviewCard = { background?: string; radius?: number; border?: boolean; quoteMark?: boolean; avatarSize?: 'small' | 'medium' | 'large' };
+type ReviewCard = {
+  background?: string;
+  radius?: number;
+  border?: boolean;
+  quoteMark?: boolean;
+  avatarSize?: 'small' | 'medium' | 'large';
+  // 3.28
+  avatarPx?: number;
+  padding?: string;
+  textSize?: string;
+  textLine?: string;
+  nameFont?: 'body' | 'display';
+  nameSize?: string;
+  nameWeight?: string;
+  roleSize?: string;
+  roleColor?: string;
+};
 type ReviewSummary = { rating: number; count?: string; label?: string; link?: { label: string; href: string } };
 type PlaylistItem = { source: string; videoTitle: string; posterUrl?: string; duration?: string };
 type FormFieldRow = {
@@ -1065,6 +1088,16 @@ function OptNumber({ label, k, props, set, hint, step = 'any' }: { label: string
         value={typeof value === 'number' ? value : ''}
         onChange={(e) => set({ ...props, [k]: e.target.value === '' ? undefined : Number(e.target.value) })}
       />
+    </Field>
+  );
+}
+
+/** 3.28 — a line of text (a colour, a length) that stores nothing when it is cleared. */
+function OptText({ label, k, props, set, hint, placeholder }: { label: string; k: string; props: Record<string, unknown>; set: (p: Record<string, unknown>) => void; hint?: string; placeholder?: string }) {
+  const value = props[k];
+  return (
+    <Field label={label} hint={hint}>
+      <Input value={typeof value === 'string' ? value : ''} placeholder={placeholder} onChange={(e) => set(withOpt(props, k, e.target.value.trim() || undefined))} />
     </Field>
   );
 }
@@ -1628,6 +1661,16 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
                     <option value="body">The text’s</option>
                   </Select>
                 </Field>
+                {/* 3.28 */}
+                <label className="flex items-end gap-2 pb-3 text-[13px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={(props.counter as { roll?: boolean } | undefined)?.roll === true}
+                    onChange={(e) => set(withOpt(props, 'counter', tidyObject({ ...(props.counter as object), roll: e.target.checked || undefined })))}
+                  />
+                  The number rolls to the next
+                </label>
               </>
             )}
             <Field label="Arrows">
@@ -1729,6 +1772,17 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
               </div>
               <PropSelect label="Arrows drawn" k="arrowStyle" fallback="circle" options={[['circle', 'Chevrons in circles'], ['plain', 'Bare arrows ← →'], ['chevron', 'Bare chevrons ‹ ›']]} props={props} set={set} />
               <OptNumber label="Arrow size" hint="px; empty is 20 (24 bare)" step="1" k="arrowSize" props={props} set={set} />
+              {/* 3.28 — the arrow buttons' own look; linked slides without the lift; desktop values at 1024px. */}
+              <OptNumber label="Arrow button box" hint="px; empty is 44" step="1" k="arrowBox" props={props} set={set} />
+              <OptText label="Arrow button fill" hint="a colour" placeholder="none" k="arrowFill" props={props} set={set} />
+              <OptText label="Arrow colour" hint="a colour" placeholder="the text’s" k="arrowColor" props={props} set={set} />
+              <OptText label="Space between the arrows" hint="e.g. 10px" placeholder="8px" k="arrowGap" props={props} set={set} />
+              <OptNumber label="A disabled arrow" hint="% opacity; empty is 30" step="1" k="arrowDisabled" props={props} set={set} />
+              <PropSelect label="Arrows, pointed at" k="arrowHover" fallback="fill" options={[['fill', 'Fill in'], ['none', 'No change']]} props={props} set={set} />
+              <PropSelect label="Linked slides, pointed at" k="slideHover" fallback="lift" options={[['lift', 'Lift, the picture zooms'], ['none', 'No change']]} props={props} set={set} />
+              <div className="flex items-end pb-3">
+                <PropCheck label="Desktop slides per view at exactly 1024px" k="desktopAt1024" props={props} set={set} />
+              </div>
               {/* 3.26 — text-only slides: no empty picture box, the box's colour and padding, the space between slides. */}
               <PropSelect label="A slide with no picture" k="slideNoPicture" fallback="placeholder" options={[['placeholder', 'Keeps an empty picture box'], ['none', 'Has no picture box']]} props={props} set={set} />
               <Field label="The slide’s colour" hint="a colour; empty is the card’s">
@@ -2845,6 +2899,8 @@ function TypeFields({
             <PropSelect label="Size" k="size" fallback="medium" options={[['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']]} props={props} set={set} />
             <div className="flex items-end pb-3">
               <PropCheck label="Stretch to full width" k="fullWidth" props={props} set={set} />
+              {/* 3.28 */}
+              <PropCheck label="Each keeps its own width on phones" k="keepWidthMobile" props={props} set={set} />
             </div>
           </div>
           <Repeater
@@ -3217,6 +3273,11 @@ function TypeFields({
           <div className="grid gap-3 sm:grid-cols-3">
             <PropSelect label="Direction" k="orientation" fallback="horizontal" options={[['horizontal', 'Side by side'], ['vertical', 'Top and bottom']]} props={props} set={set} />
             <PropSelect label="Handle" k="handle" fallback="circle" options={[['circle', 'Round handle'], ['arrows', 'Arrows'], ['line', 'Line only']]} props={props} set={set} />
+            {/* 3.28 */}
+            <OptNumber label="Corners" hint="px; 0 is square, empty the cards’" step="1" k="radius" props={props} set={set} />
+            <OptNumber label="Handle size" hint="px; empty is 48" step="1" k="knobSize" props={props} set={set} />
+            <OptText label="Handle fill" hint="a colour" placeholder="white" k="knobBackground" props={props} set={set} />
+            <OptText label="Handle arrows" hint="a colour" placeholder="near black" k="knobColor" props={props} set={set} />
             <PropSelect
               label="Shape"
               k="ratio"
@@ -3339,6 +3400,8 @@ function TypeFields({
           {arr<PlaylistItem>(props, 'playlist').length > 0 && (
             <PropSelect label="Playlist sits" k="playlistPosition" fallback="side" options={[['side', 'Beside the player'], ['below', 'Below the player']]} props={props} set={set} />
           )}
+          {/* 3.28 */}
+          <PropCheck label="Inline: load the player with the page (it asks the video’s host on every view)" k="loadNow" props={props} set={set} />
         </>
       );
     }
@@ -3351,7 +3414,7 @@ function TypeFields({
           <div className="grid gap-3 sm:grid-cols-3">
             <PropSelect label="Layout" k="layout" fallback="grid" options={[['grid', 'Even grid'], ['masonry', 'Masonry — natural shapes'], ['metro', 'Metro — mixed tile sizes']]} props={props} set={set} />
             {str(props, 'layout') === 'masonry' && (
-              <PropSelect label="Masonry order" k="masonryOrder" fallback="columns" options={[['columns', 'Column by column'], ['rows', 'Row by row — more are added below']]} props={props} set={set} />
+              <PropSelect label="Masonry order" k="masonryOrder" fallback="columns" options={[['columns', 'Column by column'], ['rows', 'Row by row — more are added below'], ['turn', 'Each column in turn — picture 1, 2, 3 across, then down']]} props={props} set={set} />
             )}
             <Field label="Per row">
               <Select value={String(num(props, 'columns', 3))} onChange={(e) => set({ ...props, columns: Number(e.target.value) })}>
@@ -3400,6 +3463,77 @@ function TypeFields({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.lightbox !== false} onChange={(e) => set({ ...props, lightbox: e.target.checked })} />
             Open pictures in a full-screen viewer
           </label>
+          {/* 3.28 — the gap at every width, and the viewer's own look. */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <OptText label="Gap at every width" hint="e.g. 30px" placeholder="the gap above" k="gapLength" props={props} set={set} />
+            {props.lightbox !== false &&
+              (
+                [
+                  ['backdrop', 'Viewer backdrop', 'e.g. rgba(22,21,25,0.99)'],
+                  ['closeBackground', 'Close button fill', 'e.g. rgba(0,0,0,0.6)'],
+                ] as const
+              ).map(([key, label, hint]) => (
+                <Field key={key} label={label} hint={hint}>
+                  <Input
+                    value={((props.viewer as Record<string, unknown> | undefined)?.[key] as string | undefined) ?? ''}
+                    placeholder="as drawn"
+                    onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), [key]: e.target.value.trim() || undefined })))}
+                  />
+                </Field>
+              ))}
+            {props.lightbox !== false && (
+              <>
+                {(
+                  [
+                    ['closeSide', 'Close button', [['right', 'Top right'], ['left', 'Top left']]],
+                    ['arrows', 'Arrows', [['sides', 'Either side'], ['bottomRight', 'Bottom right']]],
+                    ['arrowStyle', 'Arrows drawn', [['circle', 'In circles'], ['plain', 'Bare']]],
+                  ] as const
+                ).map(([key, label, options]) => (
+                  <Field key={key} label={label}>
+                    <Select
+                      value={((props.viewer as Record<string, unknown> | undefined)?.[key] as string | undefined) ?? ''}
+                      onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), [key]: e.target.value || undefined })))}
+                    >
+                      <option value="">As drawn</option>
+                      {options.map(([v, l]) => (
+                        <option key={v} value={v}>
+                          {l}
+                        </option>
+                      ))}
+                    </Select>
+                  </Field>
+                ))}
+                <Field label="Picture change" hint="ms — a fade">
+                  <Input
+                    type="number"
+                    min={0}
+                    max={2000}
+                    value={((props.viewer as { speed?: number } | undefined)?.speed as number | undefined) ?? ''}
+                    onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), speed: e.target.value === '' ? undefined : Math.min(2000, Math.max(0, Math.round(Number(e.target.value) || 0))) })))}
+                  />
+                </Field>
+                <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={(props.viewer as { peek?: boolean } | undefined)?.peek === true}
+                    onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), peek: e.target.checked || undefined })))}
+                  />
+                  The pictures either side, at half size
+                </label>
+                <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={(props.viewer as { counter?: boolean } | undefined)?.counter !== false}
+                    onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), counter: e.target.checked ? undefined : false })))}
+                  />
+                  The “1 / 12” counter
+                </label>
+              </>
+            )}
+          </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <PropSelect
               label="A long gallery"
@@ -3420,6 +3554,7 @@ function TypeFields({
                 />
               </Field>
             )}
+            {str(props, 'pagination') === 'infinite' && <PropCheck label="One lot at a time, with “Loading” between" k="batchOnce" props={props} set={set} />}
           </div>
           <AddSeveral
             onAdd={(files) =>
@@ -3590,7 +3725,9 @@ function TypeFields({
             )}
           />
           )}
-          <OptLink label="Button below the projects" props={props} set={set} k="link" />
+          <OptLink label="Button below the projects" props={props} set={set} k="link" arrow />
+          {/* 3.28 */}
+          {props.link != null && <PropSelect label="That button’s size" k="linkSize" fallback="medium" options={[['small', 'Small'], ['medium', 'Medium (as before)'], ['large', 'Large']]} props={props} set={(next) => set(withOpt(next, 'linkSize', next.linkSize === 'medium' ? undefined : next.linkSize))} />}
         </>
       );
     }
@@ -4007,6 +4144,16 @@ function TypeFields({
           </label>
           <Text label="Space inside the card" k="cardPadding" props={props} set={set} placeholder="32px — or two values, e.g. 48px 56px" />
           <Text label="Space inside the card on phones" k="cardPaddingMobile" props={props} set={set} placeholder="22px 18px" />
+          {/* 3.28 */}
+          <div className="grid gap-3 sm:grid-cols-3">
+            <OptText label="Card past the column" hint="each side, e.g. 15px" placeholder="0" k="cardBleed" props={props} set={set} />
+            <OptText label="Fields past the padding" hint="each side, e.g. 20px" placeholder="0" k="fieldInset" props={props} set={set} />
+            <OptText label="Outline send button’s edge" hint="a colour" placeholder="the theme’s" k="submitBorder" props={props} set={set} />
+            <OptNumber label="Its edge width" hint="px; empty is 2" step="1" k="submitBorderWidth" props={props} set={set} />
+            <div className="flex items-end pb-3">
+              <PropCheck label="Edge to edge on phones" k="bleedMobile" props={props} set={set} />
+            </div>
+          </div>
           <ButtonPadFields label="Padding of the send button" value={props.submitPad as ButtonPad | undefined} onChange={(pad) => set(withOpt(props, 'submitPad', pad))} />
           <p className="m-0 text-[13px] text-smoke">Answers are listed under Enquiries → Form submissions. The email below needs sending switched on under Email.</p>
           <FormSettingsFields props={props} set={set} />
@@ -4146,6 +4293,48 @@ function TypeFields({
                   <option value="large">Large — 64px</option>
                 </Select>
               </Field>
+              {/* 3.28 — the photo's own size, the card's padding, and the text, name and role type. */}
+              {(
+                [
+                  ['padding', 'Card padding', 'e.g. 20px'],
+                  ['textSize', 'Review text size', 'e.g. 16px'],
+                  ['textLine', 'Review line height', 'e.g. 26px'],
+                  ['nameSize', 'Name size', 'e.g. 16px'],
+                  ['roleSize', 'Role size', 'e.g. 15px'],
+                  ['roleColor', 'Role colour', 'e.g. rgba(255,255,255,0.75)'],
+                ] as const
+              ).map(([key, label, hint]) => (
+                <Field key={key} label={label} hint={hint}>
+                  <Input value={(props.card as ReviewCard | undefined)?.[key] ?? ''} placeholder="as drawn" onChange={(e) => setReviewCard({ [key]: e.target.value.trim() || undefined })} />
+                </Field>
+              ))}
+              <Field label="Photo size, px" hint="over the choice above">
+                <Input
+                  type="number"
+                  min={24}
+                  max={120}
+                  value={(props.card as ReviewCard | undefined)?.avatarPx ?? ''}
+                  onChange={(e) => setReviewCard({ avatarPx: e.target.value === '' ? undefined : Math.min(120, Math.max(24, Math.round(Number(e.target.value) || 24))) })}
+                />
+              </Field>
+              <Field label="Name face">
+                <Select value={(props.card as ReviewCard | undefined)?.nameFont ?? ''} onChange={(e) => setReviewCard({ nameFont: (e.target.value || undefined) as ReviewCard['nameFont'] })}>
+                  <option value="">As drawn</option>
+                  <option value="body">The text’s</option>
+                  <option value="display">The headings’</option>
+                </Select>
+              </Field>
+              <Field label="Name weight">
+                <Select value={(props.card as ReviewCard | undefined)?.nameWeight ?? ''} onChange={(e) => setReviewCard({ nameWeight: e.target.value || undefined })}>
+                  <option value="">600 (as drawn)</option>
+                  {['400', '500', '600', '700', '800'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <OptNumber label="Columns on tablets" hint="769–1024px; empty is two" step="1" k="columnsTablet" props={props} set={set} />
               <label className="flex items-center gap-2 text-[13px] text-ash">
                 <input type="checkbox" className="h-4 w-4 accent-flare" checked={(props.card as ReviewCard | undefined)?.border !== false} onChange={(e) => setReviewCard({ border: e.target.checked ? undefined : false })} />
                 A border round each card
@@ -4509,7 +4698,12 @@ function TypeFields({
               set={set}
             />
             {(str(props, 'parallax') || 'none') !== 'none' && (
-              <PropSelect label="Drift strength" k="strength" fallback="medium" options={[['subtle', 'Subtle'], ['medium', 'Medium'], ['strong', 'Strong']]} props={props} set={set} />
+              <>
+                <PropSelect label="Drift strength" k="strength" fallback="medium" options={[['subtle', 'Subtle'], ['medium', 'Medium'], ['strong', 'Strong']]} props={props} set={set} />
+                {/* 3.28 */}
+                <OptNumber label="Or: picture size" hint="% of the band, e.g. 150" step="1" k="parallaxSize" props={props} set={set} />
+                <OptNumber label="Or: moves per pixel scrolled" hint="e.g. 0.2" step="0.05" k="parallaxSpeed" props={props} set={set} />
+              </>
             )}
           </div>
           <BandFadeFields props={props} set={set} />
@@ -4660,6 +4854,8 @@ function TypeFields({
               </Select>
             </Field>
             <PropSelect label="On hover" k="logoHover" fallback="reveal" options={[['reveal', 'Show in full colour'], ['none', 'Nothing'], ['grow', 'Grow a little']]} props={props} set={set} />
+            {/* 3.28 */}
+            <OptText label="Space between rows" hint="e.g. 40px" placeholder="the grid’s gap" k="rowGap" props={props} set={set} />
           </div>
           <Repeater
             label="Logos"
@@ -4980,6 +5176,8 @@ function TypeFields({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.measure === 'full'} onChange={(e) => set(withOpt(props, 'measure', e.target.checked ? 'full' : undefined))} />
             The paragraphs below run the full width (rather than about 62 characters)
           </label>
+          {/* 3.28 */}
+          <OptText label="Space between paragraphs" hint="e.g. 16px or 0 — over the theme’s" placeholder="as drawn" k="paragraphGap" props={props} set={set} />
           <StringListRepeater
             label="Paragraphs"
             hint="One box per paragraph. Enter starts a new line inside the same paragraph."
@@ -5035,6 +5233,8 @@ function TypeFields({
                 <option value="4">Four</option>
               </Select>
             </Field>
+            {/* 3.28 */}
+            <OptNumber label="Columns on tablets" hint="769–1024px; empty is two" step="1" k="columnsTablet" props={props} set={set} />
             {/* The distance between cards, which a card's own margin cannot
                 change — that shifts a card inside its cell instead. */}
             <LengthField
@@ -5161,6 +5361,8 @@ function TypeFields({
               )}
               <PropSelect label="A linked title, pointed at" k="titleHover" fallback="underline" options={[['underline', 'Underlined'], ['none', 'Stays as it is']]} props={props} set={set} />
               <PropSelect label="The card link’s mark" k="moreArrow" fallback="chevron" options={[['chevron', 'A chevron ›'], ['theme', 'The theme’s “Read more” arrow']]} props={props} set={set} />
+              {/* 3.28 */}
+              <PropSelect label="What is a link" k="linkArea" fallback="card" options={[['card', 'The whole card'], ['links', 'The title and the “Learn more” line, each on its own']]} props={props} set={(next) => set(withOpt(next, 'linkArea', next.linkArea === 'links' ? 'links' : undefined))} />
             </div>
           )}
           <Repeater
@@ -5353,11 +5555,11 @@ function TypeFields({
                 label="Style"
                 k="style"
                 fallback="lines"
-                options={[['lines', 'Lines between questions'], ['filled', 'Filled boxes'], ['contained', 'All in one panel'], ['outlined', 'Outlined boxes']]}
+                options={[['lines', 'Lines between questions'], ['filled', 'Filled boxes'], ['contained', 'All in one panel'], ['outlined', 'Outlined boxes'], ['plain', 'Plain — no fill, no lines']]}
                 props={props}
                 set={set}
               />
-              <PropSelect label="Marker" k="icon" fallback="plus" options={[['plus', 'Plus'], ['chevron', 'Chevron'], ['arrow', 'Arrow']]} props={props} set={set} />
+              <PropSelect label="Marker" k="icon" fallback="plus" options={[['plus', 'Plus'], ['chevron', 'Chevron'], ['arrow', 'Arrow'], ['plusMinus', 'Plus and minus in a circle']]} props={props} set={set} />
               <PropSelect label="Heading" k="layout" fallback="split" options={[['split', 'Beside the questions'], ['stacked', 'Above, questions full width']]} props={props} set={set} />
               <Field label="Box corners" hint="filled, outlined and one-panel styles; empty is 14px">
                 <Input value={str(props, 'rowRadius')} placeholder="14px" onChange={(e) => set(withOpt(props, 'rowRadius', e.target.value.trim() || undefined))} />
@@ -5383,6 +5585,61 @@ function TypeFields({
                   </label>
                 )}
               </div>
+              {/* 3.28 — opening, rows, the +/−, the answer. */}
+              <div className="flex flex-col justify-end gap-2 pb-2 sm:col-span-2">
+                <label className="flex items-center gap-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.defaultOpen === 'none'} onChange={(e) => set(withOpt(props, 'defaultOpen', e.target.checked ? 'none' : undefined))} />
+                  Every question closed to begin with
+                </label>
+                <label className="flex items-center gap-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.closedColor === 'same'} onChange={(e) => set(withOpt(props, 'closedColor', e.target.checked ? 'same' : undefined))} />
+                  A closed question in the open one’s colour
+                </label>
+                {str(props, 'style') && str(props, 'style') !== 'lines' && (
+                  <label className="flex items-center gap-2 text-[14px] text-ash">
+                    <input type="checkbox" className="h-4 w-4 accent-flare" checked={props.answerPlacement === 'below'} onChange={(e) => set(withOpt(props, 'answerPlacement', e.target.checked ? 'below' : undefined))} />
+                    The answer below the box, the full width
+                  </label>
+                )}
+              </div>
+              {str(props, 'style') && str(props, 'style') !== 'lines' && (
+                <>
+                  <Field label="Box fill" hint="a colour, e.g. rgba(255,255,255,0.06)">
+                    <Input value={str(props, 'rowBackground')} placeholder="the style’s" onChange={(e) => set(withOpt(props, 'rowBackground', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="Box padding" hint="one to four lengths, e.g. 8px 8px 8px 20px">
+                    <Input value={str(props, 'rowPadding')} placeholder="20px 24px" onChange={(e) => set(withOpt(props, 'rowPadding', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="Between boxes" hint="e.g. 8px">
+                    <Input value={str(props, 'rowGap')} placeholder="10px" onChange={(e) => set(withOpt(props, 'rowGap', e.target.value.trim() || undefined))} />
+                  </Field>
+                  {props.answerPlacement === 'below' && (
+                    <Field label="Answer indent" hint="e.g. 20px">
+                      <Input value={str(props, 'answerIndent')} placeholder="20px" onChange={(e) => set(withOpt(props, 'answerIndent', e.target.value.trim() || undefined))} />
+                    </Field>
+                  )}
+                </>
+              )}
+              {str(props, 'icon') === 'plusMinus' && (
+                <>
+                  <Field label="The circle" hint="px">
+                    <Input type="number" min={16} max={80} value={typeof props.iconBox === 'number' ? props.iconBox : ''} placeholder="48" onChange={(e) => set(withOpt(props, 'iconBox', e.target.value === '' ? undefined : Math.min(80, Math.max(16, Math.round(Number(e.target.value)) || 48))))} />
+                  </Field>
+                  <Field label="The + itself" hint="e.g. 14px">
+                    <Input value={str(props, 'iconSize')} placeholder="14px" onChange={(e) => set(withOpt(props, 'iconSize', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="Its colour" hint="e.g. rgba(255,255,255,0.75)">
+                    <Input value={str(props, 'iconColor')} placeholder="the text colour" onChange={(e) => set(withOpt(props, 'iconColor', e.target.value.trim() || undefined))} />
+                  </Field>
+                  <Field label="The circle’s fill" hint="a colour; empty is none">
+                    <Input value={str(props, 'iconBackground')} placeholder="none" onChange={(e) => set(withOpt(props, 'iconBackground', e.target.value.trim() || undefined))} />
+                  </Field>
+                </>
+              )}
+              <Field label="Opening speed" hint="ms; empty is 300">
+                <Input type="number" min={0} max={1500} value={typeof props.openSpeed === 'number' ? props.openSpeed : ''} placeholder="300" onChange={(e) => set(withOpt(props, 'openSpeed', e.target.value === '' ? undefined : Math.min(1500, Math.max(0, Math.round(Number(e.target.value)) || 0))))} />
+              </Field>
+              <PropSelect label="Opening movement" k="openEasing" fallback="ease" options={[['ease', 'Easing out (as before)'], ['smooth', 'Smooth in and out']]} props={props} set={(next) => set(withOpt(next, 'openEasing', next.openEasing === 'smooth' ? 'smooth' : undefined))} />
             </div>
           )}
           <ToneField props={props} set={set} />
@@ -5613,8 +5870,10 @@ function TypeFields({
               props={props}
               set={set}
             />
-            <PropSelect label="Width" k="size" fallback="full" options={[['full', 'Full width'], ['large', 'Large'], ['medium', 'Medium'], ['small', 'Small']]} props={props} set={set} />
-            <PropSelect label="Alignment" k="align" fallback="left" options={[['left', 'Left'], ['center', 'Centre']]} hint="for a narrower picture" props={props} set={set} />
+            <PropSelect label="Width" k="size" fallback="full" options={[['full', 'Full width'], ['large', 'Large'], ['medium', 'Medium'], ['small', 'Small'], ['natural', 'Its own size, never wider']]} props={props} set={set} />
+            <PropSelect label="Alignment" k="align" fallback="left" options={[['left', 'Left'], ['center', 'Centre'], ['right', 'Right']]} hint="for a narrower picture" props={props} set={set} />
+            {/* 3.28 */}
+            <OptText label="At most" hint="e.g. 250px — over the width" placeholder="—" k="maxWidth" props={props} set={set} />
           </div>
           {!lead && (str(props, 'mask') || 'none') === 'none' && <PropCheck label="Rounded corners" k="rounded" props={props} set={set} />}
           {/* 3.24 — the whole picture as a link. */}
@@ -5811,6 +6070,13 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
       )}
       {['list', 'minimal', 'overlay', 'compact', 'wide'].includes(str(props, 'variant')) && <PostCardFields props={props} set={set} />}
       {(str(props, 'variant') || 'cards') === 'cards' && <PostCoverFields props={props} set={set} />}
+      {/* 3.28 */}
+      {(str(props, 'variant') || 'cards') === 'cards' && (
+        <>
+          <PropCheck label="Drawn as the blog’s archive cards (Appearance → Blog → Details)" k="archiveCards" props={props} set={set} />
+          <PropCheckOn label="“All writing →” under the cards" k="allLink" props={props} set={(next) => set(withOpt(next, 'allLink', next.allLink === false ? false : undefined))} />
+        </>
+      )}
     </>
   );
 }
@@ -6006,6 +6272,7 @@ function ProjectsSourceFields({ props, set }: { props: Props; set: Setter }) {
               options={[
                 ['none', 'Stop there'],
                 ['loadMore', '“Load more” button'],
+                ['infinite', 'More load by themselves on scroll'],
                 ['pages', 'Real pages — /page/2'],
               ]}
               props={props}
@@ -6025,11 +6292,12 @@ function ProjectsSourceFields({ props, set }: { props: Props; set: Setter }) {
             options={[
               ['none', 'Show them all'],
               ['loadMore', 'A few, then “Load more”'],
+              ['infinite', 'A few, then more by themselves on scroll'],
             ]}
             props={props}
             set={set}
           />
-          {pagination === 'loadMore' && (
+          {(pagination === 'loadMore' || pagination === 'infinite') && (
             <Field label="Show first">
               <Input
                 type="number"

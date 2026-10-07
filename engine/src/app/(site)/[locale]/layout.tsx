@@ -3,7 +3,7 @@ import { type Theme, isColor } from '@/lib/theme';
 import { notFound, redirect } from 'next/navigation';
 import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
-import { localeConfig, localeDir, type Locale } from '@/lib/locales';
+import { localeConfig, htmlLang, localeDir, type Locale } from '@/lib/locales';
 import { themeToCss } from '@/lib/theme-css';
 import { Footer, type FooterLogo } from '@/components/site/Footer';
 import { Header } from '@/components/site/Header';
@@ -27,7 +27,7 @@ import { getSiteSchema } from '@/server/content/structuredData';
 import { CaptchaProvider } from '@/components/site/Captcha';
 import { CustomCursor } from '@/components/site/CustomCursor';
 import { FIRST_ENTER_SCRIPT, PageTransition, Preloader } from '@/components/site/PageTransition';
-import { RevealFooter, SideRails } from '@/components/site/SiteMotion';
+import { FooterActive, RevealFooter, SideRails } from '@/components/site/SiteMotion';
 import { SiteReveal } from '@/components/blocks/library/RevealObserver';
 import { responsiveImages } from '@/lib/responsive';
 import { isProfile } from '@/lib/navigation';
@@ -179,10 +179,13 @@ export default async function SiteLayout({
     /* `data-slash` tells client components the site's trailing-slash form, so
        a link rendered in the browser matches the one the server wrote. */
     <html
-      lang={locale}
+      lang={htmlLang(locale)}
       dir={localeDir(locale)}
       data-slash={permalinks.trailingSlash === 'always' ? 'always' : undefined}
       data-img={responsiveImages() ? 'responsive' : undefined}
+      // 3.28 — where the entrances start and whether they play again (RevealObserver reads both).
+      data-reveal-start={theme.entrance?.start}
+      data-reveal-replay={theme.entrance?.replay ? 'always' : undefined}
       /* 2.20 — motion off for everyone: the class every animation already
          answers to, written by the server rather than the visitor's switch. */
       className={chrome.reduceMotion ? 'he-reduce-motion' : undefined}
@@ -219,6 +222,7 @@ export default async function SiteLayout({
           data-video-controls={chrome.videoControls ? undefined : 'off'}
           data-transition={chrome.transition.style !== 'off' ? chrome.transition.style : undefined}
           data-leave={chrome.transition.style !== 'off' && chrome.transition.leave === 'fadeUp' ? 'up' : undefined}
+          data-header-fade={chrome.transition.headerFade ? '' : undefined}
           /* 2.22 — the space the first section leaves for the notch follows the header's own height setting. */
           style={chrome.header.variant === 'notch' ? notchSpace(chrome.header.height) : undefined}
         >
@@ -289,6 +293,7 @@ export default async function SiteLayout({
               socialInHead={chrome.footer.socialPlace === 'head'}
               openLists={!chrome.footer.accordionMobile}
               bottomCentred={chrome.footer.bottomAlignMobile === 'center'}
+              filledIcons={chrome.footer.iconSet === 'filled'}
               contactLinks={chrome.footer.contactLinks}
               variant={chrome.footer.variant}
               shareChip={chrome.footer.shareChip}
@@ -301,23 +306,36 @@ export default async function SiteLayout({
             )}
           </div>
           {/* 2.19 — motion and chrome extras, each only when switched on. */}
-          {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} />}
+          {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} minWidth={chrome.footer.revealMinWidth} />}
+          {chrome.footer.activeLink && <FooterActive />}
           {/* 3.5 — every section's entrance, when the site sets one. */}
           {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
-          {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor style={chrome.cursor.style} mediaLabel={chrome.cursor.mediaLabel} linkedMedia={chrome.cursor.linkedMedia} discSize={chrome.cursor.discSize} discColor={chrome.cursor.discColor} />}
+          {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor
+              style={chrome.cursor.style}
+              mediaLabel={chrome.cursor.mediaLabel}
+              linkedMedia={chrome.cursor.linkedMedia}
+              discSize={chrome.cursor.discSize}
+              discColor={chrome.cursor.discColor}
+              arrowStyle={chrome.cursor.arrowStyle}
+              arrowSize={chrome.cursor.arrowSize}
+              discBlur={chrome.cursor.discBlur}
+              lightbox={chrome.cursor.lightbox}
+              follow={chrome.cursor.follow}
+            />}
           {chrome.transition.style !== 'off' && !chrome.reduceMotion && chrome.transition.firstLoad && (
             // 3.22 — the first page arrives like the others: marked before paint, so it never shows and then vanishes.
             <script dangerouslySetInnerHTML={{ __html: FIRST_ENTER_SCRIPT }} />
           )}
           {chrome.transition.style !== 'off' && !chrome.reduceMotion && (
-            <PageTransition style={chrome.transition.style} leave={chrome.transition.leave} firstLoad={chrome.transition.firstLoad} />
+            <PageTransition style={chrome.transition.style} leave={chrome.transition.leave} firstLoad={chrome.transition.firstLoad} preloader={chrome.transition.preloaderEvery} />
           )}
           {chrome.transition.preloader && !chrome.reduceMotion && (
-            <Preloader>
-              {theme.brand?.logoUrl ? (
+            <Preloader background={chrome.transition.preloaderBackground} size={chrome.transition.preloaderSize} own={Boolean(chrome.transition.preloaderImage)}>
+              {chrome.transition.preloaderImage || theme.brand?.logoUrl ? (
+                // 3.28 — its own picture first, then the logo.
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={theme.brand.logoUrl} alt="" />
+                <img src={chrome.transition.preloaderImage || theme.brand?.logoUrl} alt="" />
               ) : (
                 <span>{settings.name}</span>
               )}

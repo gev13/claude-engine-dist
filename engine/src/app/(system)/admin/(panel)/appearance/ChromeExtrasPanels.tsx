@@ -149,6 +149,17 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
             ]}
             onChange={set(at('activeMatch'))}
           />
+          {/* 3.28 */}
+          <ChoiceField
+            label="A link with a submenu"
+            value={header?.parentLink}
+            inherited="button"
+            options={[
+              { value: 'button', label: 'Opens the submenu only' },
+              { value: 'link', label: 'Goes to its page; the submenu opens on hover and focus' },
+            ]}
+            onChange={set(at('parentLink'))}
+          />
         </div>
         <div>
           <p className="m-0 mb-2 font-mono text-[10px] uppercase tracking-[0.12em] text-smoke">The header button</p>

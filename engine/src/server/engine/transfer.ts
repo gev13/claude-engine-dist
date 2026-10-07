@@ -141,6 +141,8 @@ export const NEVER_EXPORTED_SETTING_KEYS = [
 export function isPortableSettingKey(key: string): boolean {
   if ((NEVER_EXPORTED_SETTING_KEYS as readonly string[]).includes(key)) return false;
   if ((PORTABLE_SETTING_KEYS as readonly string[]).includes(key)) return true;
+  // 3.28 — the engine's own words, the main language's (`messages`) and each translation's (`messages:hy`).
+  if (/^messages(?::[a-z]{2,3}(?:-[A-Za-z]{2,4})?)?$/.test(key)) return true;
   // 3.18 — titles, the default share picture, search consoles and the missing-page settings travel too.
   if ((PORTABLE_SEO_KEYS as readonly string[]).includes(key.split(':')[0]!)) return true;
   return key.startsWith(PORTABLE_SETTING_PREFIX);

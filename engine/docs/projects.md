@@ -107,3 +107,25 @@ every project is an ordinary page with a Projects block on it.
 Projects have their own sitemap (`/sitemaps/projects.xml`), `CreativeWork`
 structured data, a section in `llms.txt`, and travel with Export & import and
 with backups.
+
+## The last details (3.28)
+
+Projects → Page template → **Details**, each unset as drawn: the hero
+picture growing a little as the page scrolls; a round back button (it goes
+back in the visitor's history, or to the project's category) on project
+pages and their archives; the tags in a column beside the title (under it on
+phones); the title per tier; the space from the hero to the categories, the
+categories' weight and the spaces under them and the title; an archive's
+title size, the space above it and from it to the cards.
+
+**Cards** (the template's archives and the projects block): *Words on a
+panel* with its padding (and on phones), the space under the title, and the
+reveal link's own size. The projects block can **load the next lot by
+itself** as the button scrolls into view (*More load by themselves on
+scroll*).
+
+**Gallery**: masonry *Each column in turn* (picture *i* in column *i mod n*),
+a gap at every width, infinite loading *One lot at a time, with "Loading"
+between*, and the viewer's backdrop, close button side and fill, arrows at
+the bottom right or bare, no counter, a fade between pictures and the
+pictures either side at half size.

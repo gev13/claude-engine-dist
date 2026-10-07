@@ -12,14 +12,16 @@ import { MOTION_EVENT, motionReduced } from '@/lib/motion';
  * hides anything — so a thumbnail, a crawler, a print and a visitor who asked
  * for less motion all get the finished page. Returns what stops it.
  */
-export function armReveals(): () => void {
+export function armReveals(parts = false): () => void {
   const root = document.documentElement;
   const sections = [...document.querySelectorAll<HTMLElement>('.he-reveal')];
+  // 3.28 — a block whose parts enter one by one (armed by the blocks' own observer only).
+  const stopParts = parts ? armBlockParts() : () => {};
 
   if (motionReduced() || !('IntersectionObserver' in window)) {
     root.classList.remove('he-reveal-on');
     sections.forEach((el) => el.classList.add('is-in'));
-    return () => {};
+    return stopParts;
   }
 
   const fold = viewportHeight() * 0.95;
@@ -28,23 +30,52 @@ export function armReveals(): () => void {
   });
   root.classList.add('he-reveal-on');
 
+  const { margin, replay } = entranceSettings();
   const observer = new IntersectionObserver(
     (entries) => {
       for (const entry of entries) {
-        if (!entry.isIntersecting) continue;
-        // P3-C1 — a delay holds the entrance back a moment; anything already on screen never waits.
         const el = entry.target as HTMLElement;
+        if (!entry.isIntersecting) {
+          // 3.28 — plays again: gone below the screen, it waits to enter once more.
+          if (replay && entry.boundingClientRect.top > (entry.rootBounds?.bottom ?? viewportHeight())) el.classList.remove('is-in');
+          continue;
+        }
+        // P3-C1 — a delay holds the entrance back a moment; anything already on screen never waits.
         const delay = Number(el.dataset.revealDelay) || 0;
         if (delay > 0) window.setTimeout(() => el.classList.add('is-in'), delay);
         else el.classList.add('is-in');
-        observer.unobserve(entry.target);
+        if (!replay) observer.unobserve(entry.target);
       }
     },
     // Threshold 0: a section taller than the screen still reveals.
-    { rootMargin: '0px 0px -8% 0px', threshold: 0 },
+    { rootMargin: margin ?? '0px 0px -8% 0px', threshold: 0 },
   );
-  sections.filter((el) => !el.classList.contains('is-in')).forEach((el) => observer.observe(el));
-  return () => observer.disconnect();
+  (replay ? sections : sections.filter((el) => !el.classList.contains('is-in'))).forEach((el) => observer.observe(el));
+  return () => {
+    observer.disconnect();
+    stopParts();
+  };
+}
+
+/**
+ * 3.28 — Appearance → Motion: where on the screen an entrance starts (85 is
+ * when its top reaches 85% of the screen's height) and whether it plays again
+ * each time it comes back into view. Written on <html> only when set.
+ */
+function entranceSettings(): { margin?: string; replay: boolean } {
+  const data = document.documentElement.dataset;
+  const start = Number(data.revealStart);
+  return {
+    margin: start >= 50 && start <= 100 ? `0px 0px -${100 - start}% 0px` : undefined,
+    replay: data.revealReplay === 'always',
+  };
+}
+
+/** 3.28 — every block marked to bring its parts in one by one (`.he-reveal-items`). */
+function armBlockParts(): () => void {
+  const blocks = [...document.querySelectorAll<HTMLElement>('.he-reveal-items')];
+  if (blocks.length === 0) return () => {};
+  return armParts(() => blocks.map((block) => ({ section: block, effect: block.dataset.revealEffect || 'rise' })));
 }
 
 /** The window's height, or the document's where a hidden frame reports none. */
@@ -53,10 +84,10 @@ const viewportHeight = () => window.innerHeight || document.documentElement.clie
 /** Rendered once per page, and only when some block on it asks for an entrance. */
 export function RevealObserver() {
   useEffect(() => {
-    let stop = armReveals();
+    let stop = armReveals(true);
     const rearm = () => {
       stop();
-      stop = armReveals();
+      stop = armReveals(true);
     };
     window.addEventListener(MOTION_EVENT, rearm);
     return () => {
@@ -95,7 +126,7 @@ export function SiteReveal({ effect, items = false }: { effect: string; items?: 
       const fold = viewportHeight() * 0.95;
       for (const el of main.children) {
         if (!(el instanceof HTMLElement) || SKIP.has(el.tagName)) continue;
-        if (el.classList.contains('he-reveal') || el.classList.contains('he-noreveal')) continue;
+        if (el.classList.contains('he-reveal') || el.classList.contains('he-noreveal') || el.classList.contains('he-reveal-items')) continue;
         if (el.getBoundingClientRect().top < fold) el.classList.add('is-in');
         el.classList.add('he-reveal', cls, 'he-reveal-site');
       }
@@ -162,57 +193,89 @@ const STAGGER_MAX = 480;
  * `transform` and transitions (hover) are untouched.
  */
 function armItems(main: HTMLElement, effect: string): () => void {
+  const sections = () => {
+    const list: { section: HTMLElement; effect: string }[] = [];
+    for (const section of main.children) {
+      if (!(section instanceof HTMLElement) || SKIP.has(section.tagName)) continue;
+      if (section.classList.contains('he-reveal') || section.classList.contains('he-noreveal') || section.classList.contains('he-reveal-items')) continue;
+      list.push({ section, effect });
+    }
+    return list;
+  };
+  const stop = armParts(sections);
+  const added = new MutationObserver(() => {
+    stop.retag();
+  });
+  added.observe(main, { childList: true });
+  window.addEventListener(MOTION_EVENT, stop.retag);
+  return () => {
+    stop();
+    added.disconnect();
+    window.removeEventListener(MOTION_EVENT, stop.retag);
+  };
+}
+
+/**
+ * The parts of each given section, entering one by one as they scroll into
+ * view (3.16 for every section, 3.28 for one block). Returns what stops it,
+ * with `retag` to look again after the page changed.
+ */
+function armParts(sections: () => { section: HTMLElement; effect: string }[]): (() => void) & { retag: () => void } {
   let observer: IntersectionObserver | null = null;
   const root = document.documentElement;
 
   const tag = () => {
     observer?.disconnect();
-    const found: HTMLElement[] = [];
-    for (const section of main.children) {
-      if (!(section instanceof HTMLElement) || SKIP.has(section.tagName)) continue;
-      if (section.classList.contains('he-reveal') || section.classList.contains('he-noreveal')) continue;
+    const found: { el: HTMLElement; effect: string }[] = [];
+    for (const { section, effect } of sections()) {
       for (const el of section.querySelectorAll<HTMLElement>(ITEMS)) {
         // The outermost part only: a card's title enters with its card.
         if (el.parentElement?.closest(ITEMS) && section.contains(el.parentElement.closest(ITEMS))) continue;
         if (el.closest('.he-reveal')) continue;
-        found.push(el);
+        found.push({ el, effect });
       }
     }
     if (motionReduced() || !('IntersectionObserver' in window)) {
       root.classList.remove('he-reveal-on');
-      found.forEach((el) => el.classList.add('he-ri', 'is-in'));
+      found.forEach(({ el }) => el.classList.add('he-ri', 'is-in'));
       return;
     }
     const fold = viewportHeight() * 0.95;
-    for (const el of found) {
+    for (const { el, effect } of found) {
       el.classList.add('he-ri', `he-ri--${effect}`);
       if (el.getBoundingClientRect().top < fold) el.classList.add('is-in');
     }
     root.classList.add('he-reveal-on');
+    const { margin, replay } = entranceSettings();
     observer = new IntersectionObserver(
       (entries) => {
+        if (replay) {
+          for (const entry of entries) {
+            // 3.28 — gone below the screen, it waits to enter once more.
+            if (!entry.isIntersecting && entry.boundingClientRect.top > (entry.rootBounds?.bottom ?? viewportHeight())) entry.target.classList.remove('is-in', 'is-anim');
+          }
+        }
         const arriving = entries
-          .filter((entry) => entry.isIntersecting)
+          .filter((entry) => entry.isIntersecting && !entry.target.classList.contains('is-anim'))
           .map((entry) => entry.target as HTMLElement)
           .sort((a, b) => (a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1));
         arriving.forEach((el, i) => {
-          observer?.unobserve(el);
+          if (!replay) observer?.unobserve(el);
           window.setTimeout(() => el.classList.add('is-in', 'is-anim'), Math.min(i * STAGGER, STAGGER_MAX));
         });
       },
-      { rootMargin: '0px 0px -6% 0px', threshold: 0 },
+      { rootMargin: margin ?? '0px 0px -6% 0px', threshold: 0 },
     );
-    found.filter((el) => !el.classList.contains('is-in')).forEach((el) => observer!.observe(el));
+    found.filter(({ el }) => replay || !el.classList.contains('is-in')).forEach(({ el }) => observer!.observe(el));
   };
 
   tag();
-  const added = new MutationObserver(tag);
-  added.observe(main, { childList: true });
-  window.addEventListener(MOTION_EVENT, tag);
-  return () => {
-    observer?.disconnect();
-    added.disconnect();
-    window.removeEventListener(MOTION_EVENT, tag);
-    root.classList.remove('he-reveal-on');
-  };
+  const stop = Object.assign(
+    () => {
+      observer?.disconnect();
+      root.classList.remove('he-reveal-on');
+    },
+    { retag: tag },
+  );
+  return stop;
 }

@@ -18,7 +18,8 @@ import { parsePageSchema } from '@/lib/structuredData';
 import { getSiteSchema } from '@/server/content/structuredData';
 import { articleNode, breadcrumbs, customNodes, faqFromBlocks, graph, webPage, type Crumb } from '@/lib/seo/jsonld';
 import { site } from '@/lib/site';
-import { cn, formatDate, isoDate } from '@/lib/utils';
+import { cn, isoDate } from '@/lib/utils';
+import { cardDate } from '@/lib/dates';
 import { getMessages } from '@/server/content/messages';
 import { adjacentPosts, listPosts, postUrl, type PostDetail, type PostListItem } from '@/server/content/posts';
 import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from './PostExtras';
@@ -27,6 +28,8 @@ import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { withBodyImages } from '@/server/content/bodyImages';
 import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
+import { TocReveal } from './TocReveal';
+import { splitAtBlocks } from '@/lib/inlineBlocks';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One post, as the public sees it — and as its preview shows it
@@ -109,14 +112,25 @@ export async function PostArticle({
   ];
 
   const categoryLabel = post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article'));
-  const eyebrowValues = { date: post.publishedAt ? formatDate(post.publishedAt) : '', minutes: post.readingMinutes, minRead: t('blog.minRead') };
+  const eyebrowValues = { date: post.publishedAt ? cardDate(post.publishedAt) : '', minutes: post.readingMinutes, minRead: t('blog.minRead') };
   const eyebrowLine = blog.eyebrow
     ? fillEyebrow(blog.eyebrow, { ...eyebrowValues, category: categoryLabel })
-    : `${categoryLabel}${post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}`;
+    : `${categoryLabel}${post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}`;
   // 3.22 — the category as a chip linking to its archive, the rest of the line beside it.
   const around = blog.eyebrowStyle === 'chip' ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
   const categoryHref = post.categorySlug ? categoryPath(permalinks, post.categorySlug) : null;
-  const eyebrow = around ? (
+  const look = blog.look.post;
+  // 3.28 — the line with only the category in the accent, the rest in its own colour.
+  const split = look.categoryOnly && !around ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
+  const eyebrow = split ? (
+    <p className="he-post__eyebrow is-split type-eyebrow">
+      {split.before && <span>{split.before}</span>}
+      <span className="he-post__cat" style={{ color: 'var(--color-flare)' }}>
+        {categoryLabel}
+      </span>
+      {split.after && <span>{split.after}</span>}
+    </p>
+  ) : around ? (
     <div className="he-post__eyebrow is-chip type-eyebrow">
       {around.before && <span>{around.before}</span>}
       {categoryHref ? (
@@ -136,7 +150,7 @@ export async function PostArticle({
     <Eyebrow>
       {fillEyebrow(blog.eyebrow, {
         category: categoryLabel,
-        date: post.publishedAt ? formatDate(post.publishedAt) : '',
+        date: post.publishedAt ? cardDate(post.publishedAt) : '',
         minutes: post.readingMinutes,
         minRead: t('blog.minRead'),
       })}
@@ -144,7 +158,7 @@ export async function PostArticle({
   ) : (
     <Eyebrow>
       {categoryLabel}
-      {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
+      {post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}
     </Eyebrow>
   );
   const back = blog.backLink && <BackLink href={indexPath} t={t} />;
@@ -155,14 +169,33 @@ export async function PostArticle({
   /* 3.23 — "Cover, then the title in the article's column": the title and its
      details open the article's own column, beside the contents and share
      columns, instead of standing above them. */
+  /* 3.28 — blocks placed inside the article: a paragraph holding only [[block:2]] stands for the
+     post's second block, drawn there in the article's column; those blocks are not repeated after it. */
+  const flow = splitAtBlocks(bodyHtml, blocks.length);
+  const prose = (className: string) =>
+    flow.placed.size === 0 ? (
+      <Prose html={bodyHtml} className={className} />
+    ) : (
+      <div className={cn('he-post__flow', className)}>
+        {flow.parts.map((part, i) =>
+          typeof part === 'string' ? (
+            <Prose key={i} html={part} />
+          ) : (
+            <div key={i} className="he-nested he-post__inline">
+              <BlockRenderer blocks={[blocks[part]!]} trail={trail} locale={locale} />
+            </div>
+          ),
+        )}
+      </div>
+    );
   const article = (head?: React.ReactNode) =>
     head ? (
       <div className="he-post__col">
         {head}
-        <Prose html={bodyHtml} className="mt-10 max-w-[72ch]" />
+        {prose('mt-10 max-w-[72ch]')}
       </div>
     ) : (
-      <Prose html={bodyHtml} className="mt-12 max-w-[72ch]" />
+      prose('mt-12 max-w-[72ch]')
     );
   const bodyWith = (head?: React.ReactNode) =>
     showBody &&
@@ -223,7 +256,8 @@ export async function PostArticle({
       <SiteImg src={post.coverUrl} alt="" sizes="wide" priority />
     </div>
   );
-  const postBlocks = blocks.length > 0 && <BlockRenderer blocks={blocks} trail={trail} locale={locale} />;
+  const rest = flow.placed.size ? blocks.filter((_, i) => !flow.placed.has(i)) : blocks;
+  const postBlocks = rest.length > 0 && <BlockRenderer blocks={rest} trail={trail} locale={locale} />;
 
   const crumbs = breadcrumbs(trail);
   // 3.20 — the post's Schema panel, and the site's default article type.
@@ -233,6 +267,7 @@ export async function PostArticle({
   return (
     <>
       {blog.progress && !preview && <ReadingProgress targetId="he-article" />}
+      {look.tocReveal && tocSide && <TocReveal />}
       {blocksFirst && postBlocks}
       <article id="he-article" className="he-post">
         {layout === 'fullscreen' && (

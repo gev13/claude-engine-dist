@@ -207,6 +207,8 @@
   .he-cookie.is-pill .he-cookie__link { margin: 0; text-decoration: underline; text-underline-offset: 3px; }
   .he-cookie__close { display: grid; flex-shrink: 0; place-items: center; width: 32px; height: 32px; margin-left: auto; padding: 0; border: 0; border-radius: 999px; background: transparent; color: inherit; cursor: pointer; }
   .he-cookie__close:hover { background: color-mix(in srgb, currentColor 14%, transparent); }
+  /* 3.28 — an open menu covers the notice (the notice sits above the page, not above the menu). */
+  html:has(#he-menu:not([hidden])) .he-cookie, html:has(#he-menu:not([hidden])) .he-cookie__scrim { z-index: 50; }
   /* 3.24 — a plain ✕, a cookie before the words, the policy link's own weight. */
   .he-cookie__close.is-plain { width: auto; height: auto; padding: 4px; }
   .he-cookie__close.is-plain:hover { background: transparent; opacity: 0.75; }
@@ -254,6 +256,11 @@
   .he-cookie__cats strong { display: block; font-size: 15px; }
   .he-cookie__cats span > span { display: block; margin-top: 2px; font-size: 13px; line-height: 1.5; color: var(--color-ash); }
 
+  /* 3.28 — the text's size and weight, the space from the bottom, the padding, the phones' side insets. */
+  .he-cookie[style*='--he-cookie-size'] :is(.he-cookie__title, .he-cookie__body, .he-cookie__link) { font-size: var(--he-cookie-size); }
+  .he-cookie[style*='--he-cookie-weight'] :is(.he-cookie__title, .he-cookie__body) { font-weight: var(--he-cookie-weight); }
+  .he-cookie[style*='--he-cookie-bottom'] { bottom: var(--he-cookie-bottom); }
+  .he-cookie[style*='--he-cookie-pad'] { padding: var(--he-cookie-pad); }
   @media (width <= 48rem) {
     .he-cookie { padding: 18px 18px; gap: 14px; }
     .he-cookie.is-bottom-left,
@@ -263,5 +270,9 @@
     .he-cookie.is-pill { padding: 12px 12px 12px 16px; }
     .he-cookie__actions { width: 100%; }
     .he-cookie__actions > * { flex: 1 1 auto; justify-content: center; }
+  }
+
+  @media (width <= 48rem) {
+    .he-cookie[style*='--he-cookie-inset-m']:not(.is-bottom-bar) { right: var(--he-cookie-inset-m); left: var(--he-cookie-inset-m); bottom: var(--he-cookie-bottom, var(--he-cookie-inset-m)); }
   }
 }

@@ -42,7 +42,9 @@ import {
 } from '@/lib/chrome';
 import { isSafeHref } from '@/lib/navigation';
 import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
+import { BlogDetailsPanel } from './BlogDetailsPanel';
 import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel, PhoneMenuPanel } from './ChromeExtrasPanels';
+import { FooterDetailsPanel, HeaderDetailsPanel, MenuDetailsPanel, MotionDetailsPanel } from './ChromeDetailsPanels';
 import { ButtonExtrasPanel, EyebrowMarkerPanel, NavTypePanel, PanelSettingsPanel, ShapePanel } from './ShapePanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
 import { Wireframe } from '@/components/admin/Wireframe';
@@ -363,9 +365,32 @@ function AppearanceScreenInner() {
                     ]}
                     onChange={set(['links', 'hover'])}
                   />
-                  {theme.links?.hover && theme.links.hover !== 'color' && (
-                    <LengthField label="That line’s thickness" placeholder="e.g. 0.18em" emptyLabel="a hairline" value={get(['links', 'lineWidth'])} onChange={set(['links', 'lineWidth'])} />
-                  )}
+                  <LengthField label="That line’s thickness" placeholder="e.g. 0.18em" emptyLabel="a hairline" value={get(['links', 'lineWidth'])} onChange={set(['links', 'lineWidth'])} />
+                </div>
+                {/* 3.28 — each area its own; empty follows the choice above (the footer's contact links: no line). */}
+                <div className="mt-4 grid gap-4 sm:grid-cols-3">
+                  {(
+                    [
+                      ['header', 'Header links'],
+                      ['menu', 'Menu sub-links'],
+                      ['footer', 'Footer menus and legal links'],
+                      ['contacts', 'Footer contact links'],
+                      ['body', 'Card links (Learn more)'],
+                    ] as const
+                  ).map(([area, label]) => (
+                    <ChoiceField
+                      key={area}
+                      label={label}
+                      value={theme.links?.areas?.[area]}
+                      inherited={area === 'contacts' ? 'none' : undefined}
+                      options={[
+                        { value: 'none', label: 'Colour only' },
+                        { value: 'underline', label: 'An underline' },
+                        { value: 'sweep', label: 'A sweeping line' },
+                      ]}
+                      onChange={set(['links', 'areas', area])}
+                    />
+                  ))}
                 </div>
               </Panel>
 
@@ -440,7 +465,9 @@ function AppearanceScreenInner() {
                           ? 'The footer’s menu links, its contact links and its bottom row (copyright and legal links). Empty fields keep what each was drawn with — the bottom row follows Labels first.'
                           : role === 'footerSocial'
                             ? 'The footer’s social links when Menus shows them as names or short labels. Empty fields keep the drawn 14px.'
-                            : 'The “Learn more” / “Read more” line at the foot of a card. Empty fields follow Labels (for the mono links), then each card’s own style.'}
+                            : role === 'footerBottom'
+                              ? 'The footer’s bottom row only — copyright and legal links. Empty fields follow Footer text, then Labels.'
+                              : 'The “Learn more” / “Read more” line at the foot of a card. Empty fields follow Labels (for the mono links), then each card’s own style.'}
                   </p>
                 )}
                 <div className="grid gap-4 sm:grid-cols-2">
@@ -529,6 +556,9 @@ function AppearanceScreenInner() {
                   <LengthField label="Between paragraphs" placeholder="e.g. 1.35em" emptyLabel="1.1em" value={get(['richText', 'paragraphGap'])} onChange={set(['richText', 'paragraphGap'])} />
                   <LengthField label="Above an h2 or h3" placeholder="e.g. 48px" emptyLabel="2em / 1.7em" value={get(['richText', 'headingTop'])} onChange={set(['richText', 'headingTop'])} />
                   <LengthField label="Above an h4" placeholder="e.g. 40px" emptyLabel="1.5em" value={get(['richText', 'subheadingTop'])} onChange={set(['richText', 'subheadingTop'])} />
+                  {/* 3.28 */}
+                  <LengthField label="Above h2/h3 on phones" placeholder="e.g. 0" emptyLabel="as above" value={get(['richText', 'headingTopMobile'])} onChange={set(['richText', 'headingTopMobile'])} />
+                  <LengthField label="Above an h4 on phones" placeholder="e.g. 0" emptyLabel="as above" value={get(['richText', 'subheadingTopMobile'])} onChange={set(['richText', 'subheadingTopMobile'])} />
                   <LengthField label="After a heading" placeholder="e.g. 16px" emptyLabel="as between paragraphs" value={get(['richText', 'headingBottom'])} onChange={set(['richText', 'headingBottom'])} />
                   <ChoiceField
                     label="Before each bullet item"
@@ -641,6 +671,16 @@ function AppearanceScreenInner() {
                 />
                 Blocks inside a row’s columns without their own space above and below (and sliders start at the column’s edge)
               </label>
+              {/* 3.28 */}
+              <label className="flex items-center gap-2.5 text-[14px] text-ash">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 accent-flare"
+                  checked={theme.layout?.proseTop === 'heading'}
+                  onChange={(e) => set(['layout', 'proseTop'])(e.target.checked ? 'heading' : undefined)}
+                />
+                The Text block’s words start at the top when it has no heading (no space of its own above them)
+              </label>
             </Panel>
 
             {/* 3.15 — the phone layout; a section's own spacing in its Design tab still wins. */}
@@ -698,6 +738,7 @@ function AppearanceScreenInner() {
                     <option value="left">Slide in from the left</option>
                     <option value="right">Slide in from the right</option>
                     <option value="blur">Blur in</option>
+                    <option value="fadeSlow">Slow fade</option>
                   </Select>
                 </Field>
               </div>
@@ -712,6 +753,36 @@ function AppearanceScreenInner() {
                   Each part enters on its own — headings, text, cards, list items, pictures and buttons, one after another
                 </label>
               )}
+              {/* 3.28 — how every entrance moves, the site's and each section's. */}
+              <div className="mt-5 grid gap-4 sm:grid-cols-3">
+                <LengthField label="A rise travels" placeholder="e.g. 32px" emptyLabel="as drawn (28–36px)" value={get(['entrance', 'distance'])} onChange={set(['entrance', 'distance'])} />
+                <Field label="Takes" hint="ms — empty keeps 700–800">
+                  <Input type="number" min={0} max={3000} value={theme.entrance?.duration ?? ''} onChange={(e) => set(['entrance', 'duration'])(e.target.value === '' ? undefined : Math.min(3000, Math.max(0, Math.round(Number(e.target.value)) || 0)))} />
+                </Field>
+                <ChoiceField
+                  label="Easing"
+                  value={theme.entrance?.easing}
+                  inherited="soft"
+                  options={[
+                    { value: 'soft', label: 'Soft landing' },
+                    { value: 'ease', label: 'Ease' },
+                    { value: 'easeOut', label: 'Ease out' },
+                    { value: 'easeInOut', label: 'Ease in and out' },
+                    { value: 'linear', label: 'Even' },
+                  ]}
+                  onChange={set(['entrance', 'easing'])}
+                />
+                <Field label="Starts when it reaches" hint="% of the screen’s height — empty is about 92">
+                  <Input type="number" min={50} max={100} value={theme.entrance?.start ?? ''} onChange={(e) => set(['entrance', 'start'])(e.target.value === '' ? undefined : Math.min(100, Math.max(50, Math.round(Number(e.target.value)) || 50)))} />
+                </Field>
+                <Field label="Slow fade takes" hint="ms — empty is 1000">
+                  <Input type="number" min={0} max={5000} value={theme.entrance?.slowDuration ?? ''} onChange={(e) => set(['entrance', 'slowDuration'])(e.target.value === '' ? undefined : Math.min(5000, Math.max(0, Math.round(Number(e.target.value)) || 0)))} />
+                </Field>
+                <label className="flex items-center gap-2.5 self-end pb-2 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={theme.entrance?.replay === true} onChange={(e) => set(['entrance', 'replay'])(e.target.checked || undefined)} />
+                  Plays again each time it comes back into view
+                </label>
+              </div>
             </Panel>
             </>
           )}
@@ -828,6 +899,7 @@ function AppearanceScreenInner() {
               </Panel>
 
               <HeaderExtrasPanel chrome={theme.chrome} set={set} />
+              <HeaderDetailsPanel chrome={theme.chrome} set={set} />
 
               <NavTypePanel theme={theme} set={set} />
 
@@ -906,6 +978,7 @@ function AppearanceScreenInner() {
 
               <MenuExtrasPanel chrome={theme.chrome} set={set} />
               <PhoneMenuPanel chrome={theme.chrome} set={set} />
+              <MenuDetailsPanel chrome={theme.chrome} set={set} />
 
               <Panel title="Announcement ribbon">
                 <div className="space-y-4">
@@ -967,6 +1040,7 @@ function AppearanceScreenInner() {
               </div>
             </Panel>
             <FooterExtrasPanel chrome={theme.chrome} set={set} />
+            <FooterDetailsPanel chrome={theme.chrome} set={set} />
             </>
           )}
 
@@ -1119,10 +1193,16 @@ function AppearanceScreenInner() {
               </Panel>
               <PostFeaturesPanel blog={theme.blog} set={set} />
               <ArchiveFeaturesPanel blog={theme.blog} set={set} />
+              <BlogDetailsPanel blog={theme.blog} set={set} />
             </>
           )}
 
-          {tab === 'Motion' && <MotionExtrasPanel chrome={theme.chrome} set={set} />}
+          {tab === 'Motion' && (
+            <>
+              <MotionExtrasPanel chrome={theme.chrome} set={set} />
+              <MotionDetailsPanel chrome={theme.chrome} set={set} />
+            </>
+          )}
 
           {tab === 'Site-wide' && (
             <>

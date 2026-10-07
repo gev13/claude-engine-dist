@@ -79,4 +79,14 @@
     .he-fb__field.is-half { grid-column: 1 / -1; }
     .he-fb__actions > * { flex: 1 1 auto; }
   }
+
+  /* 3.28 — the card into the gutter, the fields past its padding, edge to edge on phones, the outline send button's edge. */
+  .he-fb.has-bleed .he-fb__box { margin-inline: calc(-1 * var(--he-fb-bleed)); max-width: calc(820px + 2 * var(--he-fb-bleed)); }
+  .he-fb.has-bleed.is-wide .he-fb__box { max-width: none; }
+  .he-fb.has-inset .he-fb__grid { margin-inline: calc(-1 * var(--he-fb-inset)); }
+  .he-fb.has-submit-edge .he-cbtn.is-outline[type='submit'] { border-color: var(--he-fb-submit-edge, var(--he-btn-outline-border)); border-width: var(--he-fb-submit-bw, 2px); }
+  @media (width <= 48rem) {
+    .he-fb.has-bleed .he-fb__box { margin-inline: 0; }
+    .he-fb.is-bleed-m .he-fb__box { margin-inline: calc(-1 * var(--he-gutter-m, 20px)); border-inline-width: 0; border-radius: 0; clip-path: none; }
+  }
 }

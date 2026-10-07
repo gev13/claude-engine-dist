@@ -37,6 +37,13 @@ export const projectCardSchema = z.object({
   textGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
   columnGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
   rowGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  /** 3.28 — the space between the title and the category line; the reveal link's size. */
+  titleGap: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  revealSize: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
+  /** 3.28 — the words on a panel of their own under the picture: its colour and padding (and on phones); the card's corners are `radius`. */
+  bodyBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  bodyPadding: z.string().trim().max(60).refine((v) => v.trim().split(/\s+/).length <= 4 && v.trim().split(/\s+/).every((part) => isLength(part)), 'One to four CSS lengths').optional(),
+  bodyPaddingMobile: z.string().trim().max(60).refine((v) => v.trim().split(/\s+/).length <= 4 && v.trim().split(/\s+/).every((part) => isLength(part)), 'One to four CSS lengths').optional(),
 });
 
 export type ProjectCardOptions = z.infer<typeof projectCardSchema>;
@@ -69,6 +76,8 @@ export function projectCardLook(card: ProjectCardOptions | undefined): { classNa
     ['textGap', 'has-text-gap', '--he-proj-text-gap'],
     ['columnGap', 'has-col-gap', '--he-proj-col-gap'],
     ['rowGap', 'has-row-gap', '--he-proj-row-gap'],
+    ['titleGap', 'has-title-gap', '--he-proj-title-gap'],
+    ['revealSize', 'has-reveal-size', '--he-proj-reveal-size'],
   ];
   for (const [key, cls, prop] of lengths) {
     const value = card[key];
@@ -80,6 +89,13 @@ export function projectCardLook(card: ProjectCardOptions | undefined): { classNa
   if (card.titleWeight) {
     className.push('has-title-weight');
     style['--he-proj-title-weight'] = card.titleWeight;
+  }
+  // 3.28 — the words on a panel of their own.
+  if (card.bodyBackground && isColor(card.bodyBackground)) {
+    className.push('has-body');
+    style['--he-proj-body'] = card.bodyBackground;
+    if (card.bodyPadding) style['--he-proj-body-pad'] = card.bodyPadding;
+    if (card.bodyPaddingMobile) style['--he-proj-body-pad-m'] = card.bodyPaddingMobile;
   }
   return { className, style };
 }

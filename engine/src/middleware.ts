@@ -3,7 +3,7 @@ import { jwtVerify } from 'jose';
 import { ACCESS_AUDIENCE, ACCESS_ISSUER } from '@/lib/accessToken';
 import { localeConfig, splitLocale } from '@/lib/locales';
 import { withSlash, feedTarget, pageNumberHop } from '@/lib/permalinks';
-import { pickRule } from '@/lib/redirectRules';
+import { normalisePath, pickRule } from '@/lib/redirectRules';
 import { routingConfig } from '@/server/routing/config';
 import { requestHost, wwwRedirectTarget } from '@/lib/host';
 import { countHit } from '@/server/routing/hits';
@@ -40,6 +40,12 @@ const RESERVED_FILES = ['/robots.txt', '/sitemap.xml', '/llms.txt', '/manifest.w
 
 /** 3.21 — what the public matcher leaves out (Next's assets, media, files): here only for the www redirect. */
 const OUTSIDE_SITE = /^\/(?:_next|media)\/|\.[A-Za-z0-9]+$/;
+/** 3.28 — old addresses with a file extension (WordPress's `.php`, Yoast's sitemaps, `.html` pages) that redirect rules can answer. */
+const OLD_FILE = /\.(?:php|xml|html?|aspx?)$/i;
+/** The engine's own files with those extensions, which no rule may take over. */
+const ENGINE_FILE = /^\/(?:sitemap\.xml|sitemaps\/)/;
+/** 3.28 — a path's ASCII capitals lowered, percent-escapes left as written. */
+const lowerPath = (path: string) => path.replace(/%[0-9A-Fa-f]{2}|[A-Z]/g, (m) => (m.startsWith('%') ? m : m.toLowerCase()));
 
 function isReserved(pathname: string): boolean {
   if (RESERVED_FILES.includes(pathname)) return true;
@@ -116,6 +122,18 @@ export async function middleware(request: NextRequest) {
        through Next's own URL handling, which rewrites a localhost address. */
     if (target) return new NextResponse(null, { status: request.method === 'GET' || request.method === 'HEAD' ? 301 : 308, headers: { Location: target } });
   }
+  /* 3.28 — an old address with a file extension reaches the redirect rules too, with the rule's own status;
+     with no rule for it, it is served untouched (a 404, or the engine's own sitemap). */
+  if (OLD_FILE.test(pathname) && !ENGINE_FILE.test(pathname) && !pathname.startsWith('/_next/') && !pathname.startsWith('/media/')) {
+    const routing = await routingConfig();
+    const found = routing.pathRules.length > 0 ? pickRule(routing.pathRules, normalisePath(pathname), request.nextUrl.searchParams) : null;
+    if (found) {
+      countHit(found.rule.id);
+      const target = /^https?:/i.test(found.to) ? found.to : new URL(withSlash(found.to, routing.permalinks.trailingSlash), request.url);
+      return NextResponse.redirect(target, found.rule.status);
+    }
+    return NextResponse.next();
+  }
   /* A file or Next's own asset only reaches this function through the www
      matchers; with nothing to redirect it is served untouched, exactly as a
      request the first matchers never see. */
@@ -158,6 +176,25 @@ export async function middleware(request: NextRequest) {
     const { locale, rest, prefixed } = splitLocale(pathname, config);
     const routing = await routingConfig();
     const mode = routing.permalinks.trailingSlash;
+
+    /* 3.28 — an address in capitals is a second spelling of a lowercase one: one 301, the slash put right in the same hop. */
+    if (routing.lowercaseUrls && /[A-Z]/.test(pathname.replace(/%[0-9A-Fa-f]{2}/g, ''))) {
+      const lowered = lowerPath(pathname);
+      const to = mode === 'always' ? withSlash(lowered, 'always') : lowered.replace(/(.)\/+$/, '$1');
+      return new NextResponse(null, { status: 301, headers: { Location: new URL(`${to}${search}`, request.url).toString() } });
+    }
+
+    /* 3.28 — with "Redirects answer before pages" on, path rules run here too, so each answers with its own
+       status (301/302) — a route can only answer 307/308. A rule then wins over live content at the same address,
+       and answers before the slash is put right, so `/old/` is one hop. */
+    if (routing.redirectsFirst && routing.pathRules.length > 0) {
+      const found = pickRule(routing.pathRules, normalisePath(rest), request.nextUrl.searchParams);
+      if (found) {
+        countHit(found.rule.id);
+        const target = /^https?:/i.test(found.to) ? found.to : new URL(withSlash(found.to, mode), request.url);
+        return NextResponse.redirect(target, found.rule.status);
+      }
+    }
 
     /* One public spelling per address. `next.config.ts` turns Next's own
        slash redirect off (`skipTrailingSlashRedirect`), because it is decided
@@ -243,6 +280,8 @@ export const config = {
        Next's internals, the API, uploaded media, and anything with a file
        extension (robots.txt, the sitemaps, images). */
     '/((?!_next/|api/|media/|.*\\.[A-Za-z0-9]+$).*)',
+    /* 3.28 — old addresses with a file extension (.php, .xml, .html), so redirect rules can answer them. */
+    '/((?!_next/|api/|media/).*\\.(?:php|xml|html|htm|asp|aspx))',
     /* 3.21 — and every request on a www host, files and media included, so
        the www redirect covers them. The API stays out even there (see
        above); a www host never reaches it once the redirect is on. */

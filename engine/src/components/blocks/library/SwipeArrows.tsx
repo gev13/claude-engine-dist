@@ -18,7 +18,7 @@ import { cn } from '@/lib/utils';
 
 const TRACK = '.he-swipe-track, [class*="grid-cols-"], :scope > .shell > [class^="he-r-"]';
 
-export function SwipeArrows({ placement }: { placement: 'belowRight' | 'sides' }) {
+export function SwipeArrows({ placement, look, box }: { placement: 'belowRight' | 'sides'; /** 3.28 — bare chevrons, a box of their own. */ look?: 'circle' | 'plain'; box?: number }) {
   const ref = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement | null>(null);
   const t = useMessages();
@@ -63,7 +63,7 @@ export function SwipeArrows({ placement }: { placement: 'belowRight' | 'sides' }
   return (
     <div
       ref={ref}
-      className={cn('he-swipe-nav', `is-${placement}`)}
+      className={cn('he-swipe-nav', `is-${placement}`, look === 'plain' && 'is-plain', box && 'has-box')}
       hidden={!state.can}
       style={
         {
@@ -71,6 +71,7 @@ export function SwipeArrows({ placement }: { placement: 'belowRight' | 'sides' }
           '--he-swipe-bottom': `${state.box.bottom}px`,
           '--he-swipe-left': `${state.box.left}px`,
           '--he-swipe-right': `${state.box.right}px`,
+          ...(box ? { '--he-swipe-btn': `${box}px` } : {}),
         } as React.CSSProperties
       }
     >

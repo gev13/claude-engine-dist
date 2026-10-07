@@ -60,6 +60,15 @@ const libraryLink = z.object({
   pad: buttonPadSchema,
 });
 const text = (max: number) => z.string().max(max).optional();
+/** 3.28 — one to four CSS lengths, as padding is written ("8px 8px 8px 20px"). */
+const boxLengths = z
+  .string()
+  .trim()
+  .max(80)
+  .refine((v) => {
+    const parts = v.split(/\s+/);
+    return parts.length >= 1 && parts.length <= 4 && parts.every((part) => isLength(part));
+  }, 'One to four CSS lengths');
 
 /** HR1 centred over media · HR2 bottom-left over media · HR3 split · HR4 statement + frame · HR8 shaped media. */
 /** P4-A5 adds `layered`: pictures at different depths that separate as the page scrolls. */
@@ -319,6 +328,8 @@ export const blockSchemas = {
     variant: z.enum(['default', 'footnotes']).default('default'),
     /** 3.26 — plain paragraphs at a reading measure of 62 characters (unset, as before) or the full width. */
     measure: z.enum(['text', 'full']).optional(),
+    /** 3.28 — the space between paragraphs in this block, over the theme's (e.g. 0 or 16px). */
+    paragraphGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   }),
 
   /** Heading on the left, a stack of labelled points on the right. */
@@ -340,6 +351,8 @@ export const blockSchemas = {
     titleAs: textTagSchema.optional(),
     intro: z.string().optional(),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
+    /** 3.28 — the columns on tablets (769–1024px); unset is two, as before. */
+    columnsTablet: z.number().int().min(1).max(4).optional(),
     /**
      * The space between the cards.
      *
@@ -386,6 +399,8 @@ export const blockSchemas = {
     mediaGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.24 — a linked card's title underlined under the pointer (unset, as before) or left as it is. */
     titleHover: z.enum(['underline', 'none']).optional(),
+    /** 3.28 — the whole card one link (unset, as before), or the title and the "Learn more" line each a link of their own, the line only as wide as its words. */
+    linkArea: z.enum(['card', 'links']).optional(),
     /** 3.24 — the card link's mark: the chevron (unset, as before) or the theme's "Read more" arrow. */
     moreArrow: z.enum(['chevron', 'theme']).optional(),
     /** 3.15 — picture rows: the picture's shape on phones (e.g. 326/154); unset keeps 50:33. */
@@ -465,6 +480,11 @@ export const blockSchemas = {
     ratio: mediaRatio.default('16/9'),
     handle: z.enum(['circle', 'arrows', 'line']).default('circle'),
     caption: text(200),
+    /** 3.28 — the frame's corners (px; 0 is square), the round handle's size (px) and colours; each unset as drawn. */
+    radius: z.number().int().min(0).max(48).optional(),
+    knobSize: z.number().int().min(20).max(96).optional(),
+    knobBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    knobColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
   }),
 
   /** EL10 — a video that plays in place or over the page. */
@@ -501,6 +521,8 @@ export const blockSchemas = {
       .max(12)
       .default([]),
     playlistPosition: z.enum(['side', 'below']).default('side'),
+    /** 3.28 — inline: the player loads with the page (it still waits for play), instead of a picture and a play button. Sends a request to the video's host on every view. */
+    loadNow: z.boolean().optional(),
   }),
 
   /** EL11 — pictures in a grid, masonry or metro layout, with an optional lightbox. */
@@ -512,9 +534,12 @@ export const blockSchemas = {
     columnsMobile: z.number().int().min(1).max(4).optional(),
     radius: z.number().int().min(0).max(48).optional(),
     /** 3.22 — masonry: filled column by column (unset, as before) or row by row, adding below without moving anything. */
-    masonryOrder: z.enum(['columns', 'rows']).optional(),
+    /** (3.28) `turn`: picture i in column i mod n, each column stacked in turn. */
+    masonryOrder: z.enum(['columns', 'rows', 'turn']).optional(),
     columns: z.number().int().min(2).max(5).default(3),
     gap: z.enum(['none', 'small', 'medium', 'large']).default('medium'),
+    /** 3.28 — a gap of its own at every width (e.g. 30px), over the one above. */
+    gapLength: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     ratio: z.enum(['square', 'landscape', 'portrait']).default('square'),
     hover: z.enum(['zoom', 'lift', 'greyscale', 'none']).default('zoom'),
     captions: z.enum(['none', 'below', 'overlay']).default('none'),
@@ -534,6 +559,22 @@ export const blockSchemas = {
      */
     pagination: z.enum(['none', 'loadMore', 'infinite']).default('none'),
     perPage: z.number().int().min(1).max(200).default(12),
+    /** 3.28 — infinite: one lot each time the end comes into view, with a "Loading" button between. */
+    batchOnce: z.boolean().optional(),
+    /** 3.28 — the picture viewer's own look; each unset as drawn. */
+    viewer: z
+      .object({
+        backdrop: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+        /** The previous and next pictures at half size either side. */
+        peek: z.boolean().optional(),
+        closeSide: z.enum(['right', 'left']).optional(),
+        closeBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+        arrows: z.enum(['sides', 'bottomRight']).optional(),
+        arrowStyle: z.enum(['circle', 'plain']).optional(),
+        counter: z.boolean().optional(),
+        speed: z.number().int().min(0).max(2000).optional(),
+      })
+      .optional(),
   }),
 
   /** EL12 — panels side by side; the open one widens. Stacks on phones. */
@@ -566,6 +607,8 @@ export const blockSchemas = {
     cardHover: cardHoverSchema.optional(),
     /** 3.24 — the card's picture shape and corners, plain categories, the "View project" line on hover, the zoom. */
     card: projectCardSchema.optional(),
+    /** 3.28 — the size of the button under the list (medium, unset, as before). */
+    linkSize: z.enum(['small', 'medium', 'large']).optional(),
     filter: z.boolean().default(true),
     allLabel: z.string().trim().max(30).default('All'),
     /**
@@ -589,7 +632,8 @@ export const blockSchemas = {
      * (manual lists reveal the rest). `pages` — real `/page/2` addresses,
      * rendered on the server (collection only).
      */
-    pagination: z.enum(['none', 'loadMore', 'pages']).default('none'),
+    /** 3.28 — `infinite`: the next lot loads by itself as the button scrolls into view. */
+    pagination: z.enum(['none', 'loadMore', 'pages', 'infinite']).default('none'),
     /** Manual lists that load more: how many show first. */
     perPage: z.number().int().min(1).max(100).default(12),
     items: z
@@ -665,8 +709,29 @@ export const blockSchemas = {
   faq: z.object({
     variant: z.enum(['list', 'media']).default('list'),
     /** V1 — how the questions are drawn in the `list` layout; `lines` is the original look. */
-    style: z.enum(['lines', 'filled', 'contained', 'outlined']).default('lines'),
-    icon: z.enum(['plus', 'chevron', 'arrow']).default('plus'),
+    /** (3.28) `plain`: boxed questions with no fill and no lines — for a band coloured in the Design tab. */
+    style: z.enum(['lines', 'filled', 'contained', 'outlined', 'plain']).default('lines'),
+    /** (3.28) `plusMinus`: a thin + in a circle that turns into −. */
+    icon: z.enum(['plus', 'chevron', 'arrow', 'plusMinus']).default('plus'),
+    /** 3.28 — the first question open (unset, as before) or none. */
+    defaultOpen: z.enum(['first', 'none']).optional(),
+    /** 3.28 — a closed question muted (unset, as before) or in the open one's colour. */
+    closedColor: z.enum(['muted', 'same']).optional(),
+    /** 3.28 — the +/−'s line length, its circle's size (px), its colour and the circle's fill. */
+    iconSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    iconBox: z.number().int().min(16).max(80).optional(),
+    iconColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    iconBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    /** 3.28 — the answer inside the question's box (unset) or below it on the page, the full width, indented. */
+    answerPlacement: z.enum(['inside', 'below']).optional(),
+    answerIndent: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.28 — the boxed questions' fill, padding (one to four lengths) and the space between them. */
+    rowBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    rowPadding: boxLengths.optional(),
+    rowGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.28 — how long an answer takes to open (ms) and how it moves. */
+    openSpeed: z.number().int().min(0).max(1500).optional(),
+    openEasing: z.enum(['ease', 'smooth']).optional(),
     /** 3.10 — the heading column's width beside the questions (e.g. 460px); unset shares the row two to three. */
     headWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.10 — the questions start level with the heading rather than the eyebrow above it. */
@@ -770,6 +835,9 @@ export const blockSchemas = {
         titleLines: z.union([z.literal(2), z.literal(3)]).optional(),
       })
       .optional(),
+    /** 3.28 — the plain cards drawn as the blog's archive cards (Appearance → Blog → Details), and the "All writing →" link under them (unset, shown). */
+    archiveCards: z.boolean().optional(),
+    allLink: z.boolean().optional(),
   }),
 
   /** The contact form; `split` (CF3) puts text and a picture beside a form card. */
@@ -810,8 +878,11 @@ export const blockSchemas = {
     /** P3-B2 — the shape the picture is cut to. */
     mask: z.enum(['none', 'circle', 'arch', 'blob', 'leaf', 'hexagon', 'diamond', 'cut']).default('none'),
     /** How wide the picture may grow, and where a narrower one sits. */
-    size: z.enum(['full', 'large', 'medium', 'small']).default('full'),
-    align: z.enum(['left', 'center']).default('left'),
+    /** 3.28 — `natural`: never wider than the file itself (its stored width). */
+    size: z.enum(['full', 'large', 'medium', 'small', 'natural']).default('full'),
+    /** 3.28 — or a cap of its own (e.g. 250px), over the size; and (3.28) a narrower picture at the right. */
+    maxWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    align: z.enum(['left', 'center', 'right']).default('left'),
     /** 3.24 — the whole picture as a link; an outside address, or `newTab`, opens in a new tab. */
     href: safeHref.optional(),
     newTab: z.boolean().optional(),
@@ -938,6 +1009,8 @@ export const blockSchemas = {
         pad: z.boolean().optional(),
         separator: z.enum(['slash', 'dash', 'line', 'of']).optional(),
         font: z.enum(['mono', 'body']).optional(),
+        /** 3.28 — the number rolls up to the next one. */
+        roll: z.boolean().optional(),
       })
       .optional(),
     arrows: z.enum(CAROUSEL_ARROWS).default('corner'),
@@ -980,6 +1053,17 @@ export const blockSchemas = {
     /** 3.26 — with autoplay and no loop: no pause button (unset, shown); it stops for good at the last slide or on any touch, arrow or focus. */
     autoplayButton: z.boolean().optional(),
     arrowSize: z.number().int().min(12).max(64).optional(),
+    /** 3.28 — the arrow buttons: their box (px), its fill, the glyph's colour, the space between them, how faint a disabled one is (%), and no change under the pointer. */
+    arrowBox: z.number().int().min(16).max(96).optional(),
+    arrowFill: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    arrowColor: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    arrowGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    arrowDisabled: z.number().int().min(0).max(100).optional(),
+    arrowHover: z.enum(['fill', 'none']).optional(),
+    /** 3.28 — card slides that are links: they lift and the picture zooms under the pointer (unset, as before), or neither. */
+    slideHover: z.enum(['lift', 'none']).optional(),
+    /** 3.28 — at exactly 1024px the desktop's slides per view (as most sites switch below 1024), not the tablet's. */
+    desktopAt1024: z.boolean().optional(),
   }),
 
   /** SL3 — an endless strip of logos, quotes or tags. */
@@ -1065,6 +1149,9 @@ export const blockSchemas = {
     overlay: z.enum(['none', 'light', 'medium', 'strong', 'gradient']).default('medium'),
     parallax: z.enum(['none', 'vertical', 'horizontal']).default('none'),
     strength: z.enum(['subtle', 'medium', 'strong']).default('medium'),
+    /** 3.28 — a strength of its own: the picture's size against the band (150 is half as big again) and how far it moves for each pixel scrolled (0.2). Both replace the strength above. */
+    parallaxSize: z.number().int().min(100).max(250).optional(),
+    parallaxSpeed: z.number().min(0).max(1).optional(),
     /**
      * 2.21 — a colour fading across the band from one side, over the picture:
      * solid up to `solid`% of the width, clear from `clear`%. The text can
@@ -1163,6 +1250,8 @@ export const blockSchemas = {
     /** 3.22 — logos per row on tablets and on phones; unset is up to four, then two or three. */
     columnsTablet: z.number().int().min(1).max(6).optional(),
     columnsMobile: z.number().int().min(1).max(6).optional(),
+    /** 3.28 — the space between rows of logos, at every width; unset is the grid's own gap. */
+    rowGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     logos: z
       .array(z.object({ name: z.string().trim().min(1).max(80), imageUrl: mediaUrl.optional(), href: safeHref.optional() }))
       .min(1)
@@ -1377,6 +1466,8 @@ export const blockSchemas = {
     align: z.enum(['left', 'center', 'right']).default('left'),
     size: sizeSml.default('medium'),
     fullWidth: z.boolean().default(false),
+    /** 3.28 — on phones each button keeps its own width instead of filling the row. */
+    keepWidthMobile: z.boolean().optional(),
     items: z
       .array(
         z
@@ -1689,6 +1780,8 @@ export const blockSchemas = {
     align: z.enum(['left', 'center', 'right']).default('left'),
     /** `floating` pins the buttons to the side of the screen on wide screens; `floatingLeft` (2.18) to the left side. */
     position: z.enum(['inline', 'floating', 'floatingLeft']).default('inline'),
+    /** 3.28 — the networks' marks drawn in lines (unset, as before) or solid. */
+    iconSet: z.enum(['line', 'filled']).optional(),
   }),
 
   /** P3-A7 — reviews with star ratings and where they came from, with a rating summary. */
@@ -1740,8 +1833,20 @@ export const blockSchemas = {
         quoteMark: z.boolean().optional(),
         /** 3.22 — the photo beside the name: small (40px, unset), medium or large. */
         avatarSize: z.enum(['small', 'medium', 'large']).optional(),
+        /** 3.28 — the photo's size in px, over the one above; the card's padding; the review's text, the name and the role, each kept as drawn until set. */
+        avatarPx: z.number().int().min(24).max(120).optional(),
+        padding: z.string().trim().max(80).refine((v) => v.split(/\s+/).length <= 4 && v.split(/\s+/).every((part) => isLength(part)), 'One to four CSS lengths').optional(),
+        textSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        textLine: z.string().trim().max(20).refine((v) => /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/.test(v), 'A line height').optional(),
+        nameFont: z.enum(['body', 'display']).optional(),
+        nameSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        nameWeight: z.enum(['400', '500', '600', '700', '800']).optional(),
+        roleSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        roleColor: z.string().trim().max(60).refine(isColor, 'Not a valid colour').optional(),
       })
       .optional(),
+    /** 3.28 — the columns on tablets (769–1024px); unset is two, as before. */
+    columnsTablet: z.number().int().min(1).max(4).optional(),
   }),
 
   /**
@@ -1775,6 +1880,8 @@ export const blockSchemas = {
     sticky: z.boolean().default(false),
     collapsible: z.boolean().default(false),
     highlight: z.boolean().default(true),
+    /** 3.28 — the questions of FAQ blocks in the same scope, listed with the headings. */
+    questions: z.boolean().optional(),
   }),
 
   /** P3-A9 — where this page sits: Home › Section › Page. */
@@ -1872,6 +1979,12 @@ export const blockSchemas = {
       .optional(),
     /** Choice chips sized to their text instead of the page's line height. */
     compactChoices: z.boolean().optional(),
+    /** 3.28 — the card wider than the column by this much each side (into the gutter), the fields past the card's padding by this much, the card edge to edge on phones, and the outline send button's edge. */
+    cardBleed: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    fieldInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    bleedMobile: z.boolean().optional(),
+    submitBorder: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+    submitBorderWidth: z.number().int().min(0).max(4).optional(),
     successTitle: text(120),
     successText: text(400),
     /* ── 2.16 (T12, T13) ────────────────────────────────────────────────── */

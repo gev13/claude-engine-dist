@@ -108,10 +108,14 @@ export function MediaBand(p: P<'mediaBand'>) {
         // 3.22 — a height of its own.
         p.heightCustom && 'has-h',
         p.heightCustomMobile && 'has-h-m',
+        // 3.28 — a parallax strength of its own.
+        p.parallax !== 'none' && p.parallaxSize && 'has-plx-size',
+        p.parallax !== 'none' && typeof p.parallaxSpeed === 'number' && 'has-plx-speed',
       )}
       style={
-        fade || p.heightCustom || p.heightCustomMobile
+        fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize)
           ? ({
+              ...(p.parallax !== 'none' && p.parallaxSize ? { '--he-plx-inset': `${-(p.parallaxSize - 100) / 2}%` } : {}),
               ...(fade
                 ? { ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` }
                 : {}),
@@ -121,7 +125,7 @@ export function MediaBand(p: P<'mediaBand'>) {
           : undefined
       }
     >
-      {p.parallax !== 'none' ? <ParallaxLayer>{media}</ParallaxLayer> : media}
+      {p.parallax !== 'none' ? <ParallaxLayer speed={p.parallaxSpeed} sideways={p.parallax === 'horizontal'}>{media}</ParallaxLayer> : media}
       {hasText && (
         <div className={cn('shell he-band__inner', p.textBox && 'has-text-box')} style={textBoxStyle(p.textBox)}>
           <div className="he-band__text">
@@ -170,6 +174,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   const gaps = gapTiers(p);
   const cols = {
     '--cols': p.columns,
+    // 3.28 — a column count of its own on tablets.
+    ...(p.columnsTablet ? { '--cols-t': p.columnsTablet } : {}),
     ...gaps.style,
     ...(p.mediaRatio ? { '--he-icard-ratio': p.mediaRatio.replace('/', ' / ') } : {}),
     // 3.22 — pictures that fit rather than fill, a cap on their height, and icons at a height of their own.
@@ -204,7 +210,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
       <section className={cn('he-tiles', toneClass(p.tone))}>
         {head && <div className="shell he-tiles__head">{head}</div>}
         <div
-          className={cn('he-tiles__grid he-swipe-track', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many', gaps.className)}
+          className={cn('he-tiles__grid he-swipe-track', mosaic ? 'is-mosaic' : p.columns > 2 && 'is-many', gaps.className, p.columnsTablet && 'has-cols-t')}
           style={cols}
         >
           {p.cards.map((c, i) => {
@@ -345,12 +351,13 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     p.mediaGapTablet && 'has-mg-t',
     p.mediaGapMobile && 'has-mg-m',
     p.titleHover === 'none' && 'no-title-line',
+    p.linkArea === 'links' && 'is-links-own',
   );
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
       <div className="shell">
         {head}
-        <ul className={cn('he-fgrid he-swipe-track', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className)} style={cols}>
+        <ul className={cn('he-fgrid he-swipe-track', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className, p.columnsTablet && 'has-cols-t')} style={cols}>
           {p.cards.map((c, i) => {
             // 3.6 — the words after the title, in their own colour.
             const after = c.titleAfter && (
@@ -397,10 +404,18 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 {c.eyebrow && <div className="he-fgrid__eyebrow">{c.eyebrow}</div>}
                 <h3 className="he-fgrid__title">{title}</h3>
                 {c.body && <p className="he-fgrid__body">{c.body}</p>}
-                {c.href && c.buttonLabel && (
-                  <span className={cn('he-fgrid__more', p.moreArrow === 'theme' && 'he-more')} aria-hidden="true">
+                {c.href && c.buttonLabel && p.linkArea === 'links' ? (
+                  // 3.28 — a link of its own, as wide as its words (the title's link no longer covers the card).
+                  <Link href={c.href} className={cn('he-fgrid__more', p.moreArrow === 'theme' && 'he-more')}>
                     {c.buttonLabel} {moreMark}
-                  </span>
+                  </Link>
+                ) : (
+                  c.href &&
+                  c.buttonLabel && (
+                    <span className={cn('he-fgrid__more', p.moreArrow === 'theme' && 'he-more')} aria-hidden="true">
+                      {c.buttonLabel} {moreMark}
+                    </span>
+                  )
                 )}
                 {/* 3.16 — a button of its own under the text (an outside address opens in a new tab). */}
                 {c.button && (
@@ -512,6 +527,8 @@ export function LogoWall(p: P<'logoWall'>) {
     ...(p.logoHeightMobile ? { '--he-logo-h-m': p.logoHeightMobile } : {}),
     ...(p.greyscale === false ? { '--he-logo-f': 'none' } : {}),
     ...(typeof p.opacity === 'number' ? { '--he-logo-o': p.opacity } : {}),
+    // 3.28 — the space between rows of logos.
+    ...(p.rowGap ? { rowGap: p.rowGap } : {}),
   } as React.CSSProperties;
 
   return (

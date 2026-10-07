@@ -22,6 +22,11 @@ export function CustomCursor({
   linkedMedia = 'off',
   discSize,
   discColor,
+  arrowStyle = 'stroke',
+  arrowSize,
+  discBlur = true,
+  lightbox = false,
+  follow,
 }: {
   style: Style;
   mediaLabel?: string;
@@ -29,6 +34,12 @@ export function CustomCursor({
   linkedMedia?: 'off' | 'word' | 'arrow';
   discSize?: number;
   discColor?: string;
+  /** 3.28 — the disc's arrow and its size, the disc's blur, the disc over pictures that open the lightbox, the ring's catch-up time (ms). */
+  arrowStyle?: 'stroke' | 'filled';
+  arrowSize?: number;
+  discBlur?: boolean;
+  lightbox?: boolean;
+  follow?: number;
 }) {
   const dot = useRef<HTMLDivElement>(null);
   const ring = useRef<HTMLDivElement>(null);
@@ -67,7 +78,8 @@ export function CustomCursor({
          twice as fast on a 120 Hz screen. */
       const dt = Math.min(100, Math.max(0, now - last));
       last = now;
-      const k = 1 - Math.pow(1 - 0.18, dt / (1000 / 60));
+      // 3.28 — or as quickly as asked: `follow` is the time to close 95% of the gap (0 keeps it on the dot).
+      const k = follow === undefined ? 1 - Math.pow(1 - 0.18, dt / (1000 / 60)) : follow <= 0 ? 1 : 1 - Math.pow(0.05, dt / follow);
       rx += (x - rx) * k;
       ry += (y - ry) * k;
       if (dot.current) dot.current.style.transform = `translate3d(${x}px, ${y}px, 0)`;
@@ -90,7 +102,8 @@ export function CustomCursor({
       const link = target?.closest('a, button, [role="button"], label, summary');
       const media = mediaLabel || linkedMedia !== 'off' ? target?.closest('img, video, picture, .he-fill') : null;
       // 3.24 — a picture inside a link: the word, or the disc with an arrow, when the site asks for one.
-      const linkedPicture = Boolean(media && link && link.tagName === 'A' && linkedMedia !== 'off');
+      // 3.28 — and, when asked, a picture that opens the lightbox.
+      const linkedPicture = Boolean(media && link && (link.tagName === 'A' || (lightbox && link.matches('.is-zoomable'))) && linkedMedia !== 'off');
       root.classList.toggle('he-cursor-text', Boolean(field));
       root.classList.toggle('he-cursor-link', Boolean(link) && !field && !(linkedPicture && linkedMedia === 'arrow'));
       root.classList.toggle('he-cursor-media', linkedPicture && linkedMedia === 'arrow');
@@ -117,7 +130,7 @@ export function CustomCursor({
       window.removeEventListener('pointerup', up);
       root.classList.remove('he-has-cursor', 'he-cursor-in', 'he-cursor-text', 'he-cursor-link', 'he-cursor-down', 'he-cursor-media');
     };
-  }, [active, mediaLabel, linkedMedia]);
+  }, [active, mediaLabel, linkedMedia, lightbox, follow]);
 
   if (!active) return null;
   const showDot = style === 'dotRing' || style === 'dot' || style === 'blend';
@@ -127,6 +140,7 @@ export function CustomCursor({
     discSize || discColor
       ? ({ ...(discSize ? { '--he-cursor-disc': `${discSize}px` } : {}), ...(discColor ? { '--he-cursor-disc-bg': discColor } : {}) } as React.CSSProperties)
       : undefined;
+  const glyph = arrowSize ?? 18;
   return (
     <div className={`he-cursor is-${style}`} aria-hidden="true" style={discVars}>
       {showRing && <div ref={ring} className="he-cursor__ring" />}
@@ -134,10 +148,17 @@ export function CustomCursor({
         <div ref={dot} className={showDot ? 'he-cursor__dot' : 'he-cursor__dot is-carrier'}>
           {label && <span className="he-cursor__label">{label}</span>}
           {disc && (
-            <span className="he-cursor__disc">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M7 17 17 7M8 7h9v9" />
-              </svg>
+            <span className={discBlur ? 'he-cursor__disc' : 'he-cursor__disc no-blur'}>
+              {arrowStyle === 'filled' ? (
+                // 3.28 — a solid arrow, up and to the right.
+                <svg width={glyph} height={glyph} viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M6.4 19.8 4.2 17.6 13.9 7.9H7.5V4.8h11.7v11.7h-3.1v-6.4z" />
+                </svg>
+              ) : (
+                <svg width={glyph} height={glyph} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M7 17 17 7M8 7h9v9" />
+                </svg>
+              )}
             </span>
           )}
         </div>

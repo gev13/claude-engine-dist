@@ -42,7 +42,9 @@ describe('blog layouts (BL1, BL2)', () => {
       meta: { show: true, author: true, readingTime: true, categories: true },
       excerpt: true,
       coverOverlap: undefined,
-      upNext: { phones: false, dismiss: 'visit' },
+      upNext: { phones: false, dismiss: 'visit', pick: 'nearest', from: 'third', hideOverRelated: false, close: true, arrows: true, width: undefined, background: undefined, radius: undefined, titleSize: undefined, titleWeight: undefined },
+      // 3.28 — the blog's details, all unset.
+      look: { card: {}, archive: {}, post: {} },
       searchOff: false,
       toolbar: false,
       browseLabel: true,

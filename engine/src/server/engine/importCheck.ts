@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { getTableColumns } from 'drizzle-orm';
 import { siteSchemaSchema } from '@/lib/structuredData';
 import { getTableConfig, type PgTable } from 'drizzle-orm/pg-core';
-import type { z } from 'zod';
+import { z } from 'zod';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import type { CheckReport, ImportStrategy, TableReport } from '@/lib/importReport';
 import { SAVED_BLOCK_TYPE, mapBlocks, savedBlockCycle, savedBlockRefs } from '@/lib/blockTree';
@@ -11,6 +11,7 @@ import { POST_LAYOUTS } from '@/lib/blog';
 import { cookieNoticeSchema } from '@/lib/cookies';
 import { safeCss } from '@/lib/customCode';
 import { integrationsSchema } from '@/lib/integrations';
+import { MESSAGES } from '@/lib/messages';
 import { navigationSchema } from '@/lib/navigation';
 import { pageAppearanceSchema } from '@/lib/pageAppearance';
 import { permalinksSchema } from '@/lib/permalinks';
@@ -291,6 +292,10 @@ const SETTING_SCHEMAS: Record<string, z.ZodType> = {
   integrations: integrationsSchema,
   // 3.20 — Admin → Structured data.
   schema: siteSchemaSchema,
+  // 3.28 — the engine's own words: known keys only, plain text, as Site translations saves them.
+  messages: z
+    .record(z.string(), z.string().max(500))
+    .transform((words) => Object.fromEntries(Object.entries(words).filter(([key, value]) => key in MESSAGES && value.trim() !== ''))),
 };
 
 /**

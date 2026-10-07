@@ -25,6 +25,8 @@ export type WpItem = {
   status: string;
   /** ISO, in UTC. */
   date: string | null;
+  /** 3.28 — when it was last changed (ISO, UTC), kept as the row's modified date for the sitemaps' lastmod. */
+  modified?: string | null;
   content: string;
   /** True when `content` is already rendered HTML (the REST API); false for WXR's raw post content. */
   rendered: boolean;

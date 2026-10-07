@@ -18,11 +18,16 @@ import { errorMessage } from '../_shared';
    box meaning "keep the original".
 
    The admin panel is not translated, by decision. It stays English.
+
+   3.28 — the main language is offered too, for its engine words only: they
+   replace the built-in wording ("Read more" → "Read More"), and an empty box
+   keeps it. Its details and menus are the originals, edited where they live.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 type Loaded = {
   locale: string;
   defaultLocale: string;
+  main?: boolean;
   site: { key: string; source: string; target: string }[];
   menus: { path: string; key: string; source: string; target: string }[];
   words: { key: string; source: string; target: string }[];
@@ -52,7 +57,8 @@ export function SiteTranslationsScreen({
 function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: string }) {
   const { toast } = useToast();
   const others = useMemo(() => locales.filter((code) => code !== defaultLocale), [locales, defaultLocale]);
-  const [locale, setLocale] = useState(others[0] ?? '');
+  const [locale, setLocale] = useState(others[0] ?? defaultLocale);
+  const main = locale === defaultLocale;
 
   const { data, isLoading, mutate } = useSWR<Loaded>(
     locale ? `/api/admin/site-translations?locale=${encodeURIComponent(locale)}` : null,
@@ -71,22 +77,10 @@ function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: s
     setWords(Object.fromEntries(data.words.map((row) => [row.key, row.target])));
   }, [data]);
 
-  if (others.length === 0) {
-    return (
-      <>
-        <PageHeader title="Site translations" description="Menus, the site's details, and the engine's own wording." />
-        <EmptyState
-          title="One language"
-          body="This site publishes in a single language, so there is nothing to translate. Add another in Languages."
-        />
-      </>
-    );
-  }
-
   /* Counted per section rather than over one merged list: the three are keyed
      differently — menus by path, the rest by key — and merging them was how the
      count went wrong. */
-  const remaining = data
+  const remaining = data && !data.main
     ? data.site.filter((row) => !(site[row.key] ?? '').trim()).length +
       data.menus.filter((row) => !(menus[row.path] ?? '').trim()).length +
       data.words.filter((row) => !(words[row.key] ?? '').trim()).length
@@ -118,6 +112,7 @@ function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: s
                   {localeName(code)}
                 </option>
               ))}
+              <option value={defaultLocale}>{localeName(defaultLocale)} — main language’s wording</option>
             </Select>
           </Field>
         }
@@ -127,12 +122,20 @@ function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: s
         <Spinner label="Loading" />
       ) : (
         <div className="flex flex-col gap-6">
-          <Alert>
-            {remaining === 0
-              ? `Everything here is translated into ${localeName(locale)}.`
-              : `${remaining} still to translate. Anything left empty keeps the ${localeName(defaultLocale)} wording.`}
-          </Alert>
+          {data.main ? (
+            <Alert>
+              {`The words the engine says in ${localeName(locale)}. Anything typed here replaces the built-in wording; an empty box keeps it. The site’s details and menus are edited in Settings and Menus.`}
+            </Alert>
+          ) : (
+            <Alert>
+              {remaining === 0
+                ? `Everything here is translated into ${localeName(locale)}.`
+                : `${remaining} still to translate. Anything left empty keeps the ${localeName(defaultLocale)} wording.`}
+            </Alert>
+          )}
 
+          {!data.main && (
+            <>
           <Panel title="The site’s details">
             <div className="flex flex-col gap-4">
               {data.site.map((row) => (
@@ -170,6 +173,8 @@ function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: s
               </>
             )}
           </Panel>
+            </>
+          )}
 
           <Panel title={`The engine’s own words (${data.words.length})`}>
             <p className="m-0 mb-4 text-[13px] leading-relaxed text-smoke">
@@ -193,9 +198,11 @@ function Inner({ locales, defaultLocale }: { locales: string[]; defaultLocale: s
             <AdminButton type="button" disabled={busy} onClick={() => void save()}>
               {busy ? 'Saving…' : `Save ${localeName(locale)}`}
             </AdminButton>
-            <span className="text-[13px] text-smoke">
-              {remaining === 0 ? 'Nothing left.' : `${remaining} left.`}
-            </span>
+            {!main && (
+              <span className="text-[13px] text-smoke">
+                {remaining === 0 ? 'Nothing left.' : `${remaining} left.`}
+              </span>
+            )}
           </div>
         </div>
       )}

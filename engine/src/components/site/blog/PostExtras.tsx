@@ -36,6 +36,8 @@ export function PostShare({ blog, t, side = false, beside = false }: { blog: Res
     size: 'small',
     align: 'left',
     position: side ? 'floatingLeft' : 'inline',
+    // 3.28 — solid marks, when the post page asks for them.
+    iconSet: blog.look.post.shareIcons === 'filled' ? 'filled' : undefined,
   });
   if (!props.success) return null;
   return (
@@ -57,6 +59,8 @@ export function PostToc({ blog, t }: { blog: ResolvedBlog; t: T }) {
     // On a phone the side column sits above the article, folded.
     collapsible: true,
     highlight: true,
+    // 3.28 — the questions of FAQ blocks inside the article too.
+    questions: blog.look.post.tocQuestions || undefined,
   });
   if (!props.success) return null;
   return (
@@ -100,6 +104,7 @@ export function PrevNext({
       <FloatingNext
         phones={blog.upNext.phones}
         dismissKey={blog.upNext.dismiss === 'post' ? postId : undefined}
+        look={blog.upNext}
         next={next ? { title: next.title, href: postUrl(permalinks, next) } : null}
         previous={previous ? { title: previous.title, href: postUrl(permalinks, previous) } : null}
         labels={{ upNext: t('blog.upNext'), previous: t('blog.previous'), next: t('blog.next'), dismiss: t('blog.dismiss') }}
@@ -136,14 +141,17 @@ export function RelatedPosts({ blog, posts, permalinks, t }: { blog: ResolvedBlo
 
   // 3.22 — the archive's own cards: its layout, pictures, date, reading time, "Read more" and hover.
   if (blog.related.layout === 'grid' && blog.related.cards === 'archive') {
+    // 3.28 — the related cards' own hover and gap, apart from the archive's.
+    const own = blog.look.post;
+    const related = own.relatedHover || own.relatedGap ? { ...blog, card: { ...blog.card, hover: own.relatedHover ?? blog.card.hover }, look: { ...blog.look, card: { ...blog.look.card, gap: own.relatedGap ?? blog.look.card.gap } } } : blog;
     return (
-      <Section tone="raised" size="lg">
+      <Section tone="raised" size="lg" className="he-related">
         <Heading level={2} className="mb-8">
           {title}
         </Heading>
         <BlogList
           posts={posts}
-          blog={blog}
+          blog={related}
           fallbackEyebrow={t('blog.article')}
           permalinks={permalinks}
           labels={{ research: t('blog.research'), article: t('blog.article'), minRead: t('blog.minRead'), readMore: t('blog.readMore') }}
@@ -163,7 +171,7 @@ export function RelatedPosts({ blog, posts, permalinks, t }: { blog: ResolvedBlo
   }
 
   return (
-    <Section tone="raised" size="lg">
+    <Section tone="raised" size="lg" className="he-related">
       <Heading level={2} className="mb-8">
         {title}
       </Heading>

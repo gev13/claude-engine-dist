@@ -112,6 +112,12 @@
   .he-upnext__back { rotate: 180deg; }
   .he-upnext__close { position: absolute; top: 10px; right: 10px; display: grid; place-items: center; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: var(--color-smoke); cursor: pointer; }
   .he-upnext__close:hover { color: var(--color-bone); }
+  /* 3.28 — a block placed inside the article ([[block:2]]): room around it. */
+  .he-post__inline { margin-block: 2em; }
+  /* 3.28 — no close button, and the title's own size and weight. */
+  .he-upnext.no-close { padding-right: 18px; }
+  .he-upnext.has-title-size .he-upnext__title { font-size: var(--he-upnext-title-size); }
+  .he-upnext.has-title-weight .he-upnext__title { font-weight: var(--he-upnext-title-weight); }
 
   @media (width <= 64rem) {
     /* The contents column goes above the article, folded (the block folds itself on phones). */

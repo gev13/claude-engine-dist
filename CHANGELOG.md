@@ -10,6 +10,92 @@ improvements.
 
 ---
 
+## 3.28.0 — 2026-10-06
+
+**The final round: the header, menus, footer, motion, buttons, sliders, the
+blog, projects, forms and the cookie notice.** Every option is off, or draws
+what it drew before, until it is set.
+
+Fixed:
+
+- **Card dates follow Settings → Date format** on the blog's archives, the
+  post list and related posts (they were always "24 Sept 2026").
+- **The post list's cards show the reading time** when asked.
+- **The Text block's top space** can go when it has no heading above it
+  (Appearance → Layout).
+- **The FAQ** can open with no question open.
+- **A menu item with a submenu can be a link** to its own page that opens
+  the submenu on hover and focus.
+- **The phone menu sits above the cookie notice.**
+- **The projects block's link** takes its arrow, padding and a size.
+- **A card grid's "Learn more"** can be a link of its own, as wide as its
+  words.
+- **Redirect rules answer with their own status** (301) — *Redirects answer
+  before pages* in Settings — in one hop, also for an address ending in a
+  slash; **addresses with a file extension** (`/index.php`,
+  `/post-sitemap.xml`) reach the rules; **addresses in capitals** can 301
+  to lowercase.
+- **Imported posts keep their modified date** (WordPress imports).
+- **A region for the language** (`en-US`): `<html lang>` and `og:locale`.
+- **The home page's canonical keeps its slash** when permalinks end in one.
+- **Project card pictures** carry the project's title as their alt text.
+- **The main language's own words** ("Read more" → "Read More") are edited
+  in Site translations, and travel in a content transfer.
+
+Added:
+
+- **Header and menus**: the desktop dropdown's alignment, glass, corners,
+  padding, item size and hover, and a fade in and out; the other top links
+  dim; a two-bar menu icon; side padding per tier; the header button's size,
+  padding, type and hover; no glass on phones; link colour on project pages;
+  link hover per area (header, menu, footer, footer contacts, cards). The
+  full-screen menu: sub-items in a column beside the list, a hover that
+  slides, a fade in and out, the list's place and the contact text. The
+  drawer: the current page's colour, an open item's tint, sub-item size and
+  indent, the backdrop.
+- **Footer**: filled icons, contact link type, equal columns, link rhythm,
+  title spacing, the current page's link, separator and divider colours, the
+  reveal from a width up, a bottom-row type role.
+- **Motion**: entrance distance, length, easing, start point and replay; a
+  slow fade; a block's parts entering one by one; the loading screen's own
+  picture and colour, between every two pages, the header fading with the
+  page; the pointer's arrow, disc blur, lightbox pictures and follow speed;
+  the rails' line place, colours and direction, and their inset; a parallax
+  band's own size and speed.
+- **Buttons**: the arrow's drawing, size, gap and a slide on hover; "Text"
+  buttons' hover; a true large size; a section's own button colours; buttons
+  keeping their width on phones.
+- **Sliders, cards and grids**: carousel arrow boxes, fill, colour, gap and
+  disabled faintness; no lift on linked slides; desktop slides per view at
+  1024px; a rolling counter; a block reaching into the gutter; swipe width
+  per tier from 20% and bare swipe arrows; tablet columns on card grids and
+  reviews; projects that load as you scroll, the title gap, the reveal size,
+  a card body panel; the logo wall's row gap; review padding, photo and type;
+  an image at its own size or a cap of its own; a Text block's paragraph gap.
+- **Blog** (Appearance → Blog → Details): the "contained" archive card and
+  its type, gap and tablet columns; the archive's title, label, breadcrumbs
+  (without the blog on categories), a select-like category menu naming the
+  current category, a "Filters" button on phones, the pager; a post's width,
+  title, category line, contents (shown once it sticks, the FAQ questions
+  too), solid share icons on a panel, tablets keeping the sidebar, phone
+  placement, links, tables, list markers, related posts; **blocks inside the
+  article** (`[[block:2]]` in a paragraph of its own); heading spacing on
+  phones; the post list drawn as the archive's cards, without "All writing".
+- **Projects**: the hero zooming on scroll, a round back button, a tags
+  column, title sizes per tier, head spacing; archive head spacing; compare
+  corners and handle; a video player that loads with the page; the gallery's
+  masonry in turn, its own gap, one batch at a time, and the viewer's look.
+- **Form card**: into the gutter, fields past its padding, edge to edge on
+  phones, the outline send button's edge. **Cookie notice**: text size and
+  weight, the place, padding and phone insets.
+
+Checked with a computed-style diff against 3.27.0 of 40 engine demo,
+library and template pages and of a live site's copy (15 addresses), at
+1440/1024/375: no change. The admin walk and the menus on that copy, and
+the smoke suite, pass.
+
+---
+
 ## 3.27.0 — 2026-10-06
 
 **Pictures, slides, forms and the footer.** Every option is off, or draws

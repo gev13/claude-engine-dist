@@ -76,6 +76,8 @@ const REVEAL_OPTIONS = [
   { value: 'left', label: 'Slide in from the left' },
   { value: 'right', label: 'Slide in from the right' },
   { value: 'blur', label: 'Blur in' },
+  // 3.28 — opacity alone, a second long.
+  { value: 'fadeSlow', label: 'Slow fade' },
   // 3.5 — stays still even when Appearance gives every section an entrance.
   { value: 'none', label: 'None — stays still' },
 ] as const;
@@ -525,6 +527,10 @@ export function BlockDesignPanel({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.panel === true} onChange={(e) => set(['panel'])(e.target.checked || undefined)} />
             Panel — inset from the page’s edges, in the panel colour and corners (Appearance → Shape)
           </label>
+          {/* 3.28 */}
+          <Field label="Reaches past its place by" hint="each side, from tablets up — e.g. 15px into the gutter">
+            <Input value={current.bleed ?? ''} placeholder="0" onChange={(e) => set(['bleed'])(e.target.value.trim() || undefined)} />
+          </Field>
           <CornerShapeFields
             label="Corners"
             value={current.corners}
@@ -667,6 +673,13 @@ export function BlockDesignPanel({
               ))}
             </Select>
           </Field>
+          {/* 3.28 */}
+          {current.reveal && current.reveal !== 'none' && (
+            <label className="flex items-center gap-2.5 self-end pb-2 text-[14px] text-ash">
+              <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.revealItems === true} onChange={(e) => set(['revealItems'])(e.target.checked || undefined)} />
+              Each part in turn (cards, logos, list items)
+            </label>
+          )}
           <ChoiceField label="On hover" value={current.hover} options={HOVER_OPTIONS} onChange={set(['hover'])} />
         </div>
 
@@ -771,13 +784,25 @@ export function BlockDesignPanel({
             <Field label="Card width while swiping" hint="% of the width; empty is 84, so the next card peeks in">
               <Input
                 type="number"
-                min={40}
+                min={20}
                 max={100}
                 value={current.swipeWidth === undefined ? '' : String(current.swipeWidth)}
                 placeholder="84"
-                onChange={(e) => set(['swipeWidth'])(e.target.value === '' ? undefined : Math.round(Math.min(100, Math.max(40, Number(e.target.value)))))}
+                onChange={(e) => set(['swipeWidth'])(e.target.value === '' ? undefined : Math.round(Math.min(100, Math.max(20, Number(e.target.value)))))}
               />
             </Field>
+            {/* 3.28 — a share of its own on tablets and phones. */}
+            {(['swipeWidthTablet', 'swipeWidthMobile'] as const).map((key) => (
+              <Field key={key} label={key === 'swipeWidthTablet' ? 'On tablets (≤1024)' : 'On phones (≤768)'} hint="% — empty follows the one above">
+                <Input
+                  type="number"
+                  min={20}
+                  max={100}
+                  value={current[key] === undefined ? '' : String(current[key])}
+                  onChange={(e) => set([key])(e.target.value === '' ? undefined : Math.round(Math.min(100, Math.max(20, Number(e.target.value)))))}
+                />
+              </Field>
+            ))}
             <Field label="Arrows" hint="shown only while the cards scroll">
               <Select value={current.swipeArrows ?? ''} onChange={(e) => set(['swipeArrows'])(e.target.value || undefined)}>
                 <option value="">None</option>
@@ -785,6 +810,19 @@ export function BlockDesignPanel({
                 <option value="sides">Either side of the cards</option>
               </Select>
             </Field>
+            {current.swipeArrows && current.swipeArrows !== 'none' && (
+              <>
+                <Field label="Arrows drawn">
+                  <Select value={current.swipeArrowLook ?? ''} onChange={(e) => set(['swipeArrowLook'])(e.target.value || undefined)}>
+                    <option value="">In circles</option>
+                    <option value="plain">Bare chevrons</option>
+                  </Select>
+                </Field>
+                <Field label="Arrow box" hint="px — empty is 44">
+                  <Input type="number" min={20} max={80} value={current.swipeArrowBox ?? ''} onChange={(e) => set(['swipeArrowBox'])(e.target.value === '' ? undefined : Math.round(Math.min(80, Math.max(20, Number(e.target.value)))))} />
+                </Field>
+              </>
+            )}
           </div>
         )}
 
@@ -827,6 +865,33 @@ export function BlockDesignPanel({
             <option value="full">Stacked, full width — label at the start, arrow at the end</option>
           </Select>
         </Field>
+
+        {/* 3.28 — this section's own button colours. */}
+        <details className="mt-4">
+          <summary className="cursor-pointer text-[13px] text-ash">Button colours in this section</summary>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            {(['primary', 'outline'] as const).flatMap((variant) =>
+              (
+                [
+                  ['background', 'fill'],
+                  ['text', 'text'],
+                  ['border', 'edge'],
+                  ['hoverBackground', 'fill, pointed at'],
+                  ['hoverText', 'text, pointed at'],
+                  ['hoverBorder', 'edge, pointed at'],
+                ] as const
+              ).map(([key, label]) => (
+                <Field key={`${variant}-${key}`} label={`${variant === 'primary' ? 'Main' : 'Outline'}: ${label}`}>
+                  <Input
+                    value={current.buttonColors?.[variant]?.[key] ?? ''}
+                    placeholder="the theme’s"
+                    onChange={(e) => set(['buttonColors', variant, key])(e.target.value.trim() || undefined)}
+                  />
+                </Field>
+              )),
+            )}
+          </div>
+        </details>
 
         <label className="mt-4 flex items-center gap-2 text-[13px] text-ash">
           <input

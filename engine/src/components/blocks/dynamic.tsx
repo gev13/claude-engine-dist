@@ -12,13 +12,14 @@ import { getPermalinks } from '@/server/routing/config';
 import { Pagination, resultRange } from '@/components/site/Pagination';
 import type { Paging } from '@/server/content/resolve';
 import { getServiceCatalogue } from '@/server/content/services';
-import { formatDate } from '@/lib/utils';
+import { cardDate } from '@/lib/dates';
 import { listPosts } from '@/server/content/posts';
 import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
-import { titleClamp, type PostCardOptions } from '@/lib/blog';
+import { resolveBlog, titleClamp, type PostCardOptions } from '@/lib/blog';
+import { getTheme } from '@/server/content/theme';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
 import { CardTilt } from '@/components/site/CardTilt';
 
@@ -128,7 +129,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                       <h3 className="he-news__title">{post.title}</h3>
                       {post.publishedAt && (
                         <time className="he-news__date" dateTime={post.publishedAt.toISOString()}>
-                          {formatDate(post.publishedAt)}
+                          {cardDate(post.publishedAt)}
                         </time>
                       )}
                       {post.excerpt && <p className="he-news__excerpt">{post.excerpt}</p>}
@@ -162,6 +163,8 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
     );
   }
   if (p.variant !== 'cards') return <PostLayouts p={view} posts={posts} ctx={ctx} listId={listId} pager={pager} count={count} />;
+  // 3.28 — the archive's own cards: its look (lib/blogCss), gap and reading-time weight.
+  const archive = p.archiveCards ? resolveBlog((await getTheme()).blog).look.card : null;
 
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
@@ -174,7 +177,8 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
           <CardGrid
             cols={p.columns}
             id={listId}
-            className={clamp.className}
+            className={cn(archive && 'he-pcards', clamp.className)}
+            gapSize={archive?.gap}
             style={
               p.card?.image && p.card.ratio
                 ? ({ '--he-ucard-ratio': p.card.ratio.replace('/', ' / '), ...clamp.style } as React.CSSProperties)
@@ -188,12 +192,20 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                 key={post.id}
                 eyebrow={
                   p.card?.categoryPlace === 'under' ? (
-                    // 3.23 — the category moved under the title: the line is the date alone.
-                    post.publishedAt ? formatDate(post.publishedAt) : undefined
+                    // 3.23 — the category moved under the title: the line is the date alone. (3.28) And the reading time, when the card asks — in a weight of its own with the archive's cards.
+                    archive?.readingWeight && post.publishedAt && p.card?.readingTime ? (
+                      <>
+                        {cardDate(post.publishedAt)}
+                        <span className="he-ucard__rt">{` · ${post.readingMinutes} ${t('blog.minRead')}`}</span>
+                      </>
+                    ) : (
+                      [post.publishedAt ? cardDate(post.publishedAt) : '', p.card?.readingTime ? `${post.readingMinutes} ${t('blog.minRead')}` : ''].filter(Boolean).join(' · ') || undefined
+                    )
                   ) : (
                     <>
                       {chipFor(post, t)}
-                      {post.publishedAt ? ` — ${formatDate(post.publishedAt)}` : ''}
+                      {post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}
+                      {p.card?.readingTime ? ` · ${post.readingMinutes} ${t('blog.minRead')}` : ''}
                     </>
                   )
                 }
@@ -219,7 +231,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
           {wantsTilt(p.card?.hover) && <CardTilt />}
         </>
       )}
-      {pager ?? (posts.length > 0 && <AllWriting href={indexHref} t={t} />)}
+      {pager ?? (posts.length > 0 && p.allLink !== false && <AllWriting href={indexHref} t={t} />)}
     </Section>
   );
 }
@@ -256,7 +268,7 @@ function postCarousel(p: P<'postList'>, posts: PostRow[], { permalinks, t }: Lis
     intro: p.intro?.slice(0, 400),
     link: { label: t('blog.allWriting'), href: blogIndexPath(permalinks) },
     slides: posts.slice(0, 24).map((post) => ({
-      eyebrow: [chipFor(post, t), post.publishedAt ? formatDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
+      eyebrow: [chipFor(post, t), post.publishedAt ? cardDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
       title: post.title.slice(0, 160),
       body: post.excerpt ? post.excerpt.slice(0, 600) : undefined,
       imageUrl: post.coverUrl ?? undefined,
@@ -275,7 +287,7 @@ function FeaturedPosts({ p, posts, ctx: { permalinks, t } }: { p: P<'postList'>;
   const date = (post: PostRow) =>
     post.publishedAt && (
       <time className="he-feat__date" dateTime={post.publishedAt.toISOString()}>
-        {formatDate(post.publishedAt)}
+        {cardDate(post.publishedAt)}
       </time>
     );
   const cover = (post: PostRow) =>
@@ -357,7 +369,7 @@ export function PostCollection({
     const chipText = post.kind === 'research' ? labels.research : (post.categoryName ?? labels.article);
     const date = card.date !== false && post.publishedAt && (
       <time className="he-plst__date" dateTime={post.publishedAt.toISOString()}>
-        {formatDate(post.publishedAt)}
+        {cardDate(post.publishedAt)}
       </time>
     );
     return (

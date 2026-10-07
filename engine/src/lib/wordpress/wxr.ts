@@ -69,6 +69,7 @@ export function parseWxr(xml: string): WpSite {
       slug: text(child(el, 'wp:post_name')),
       status: text(child(el, 'wp:status')) || 'draft',
       date: isoDate(text(child(el, 'wp:post_date_gmt')), text(child(el, 'pubDate'))),
+      modified: isoDate(text(child(el, 'wp:post_modified_gmt')), ''),
       content: text(child(el, 'content:encoded')),
       rendered: false,
       excerpt: text(child(el, 'excerpt:encoded')),

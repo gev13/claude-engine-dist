@@ -8,7 +8,7 @@ import { MOTION_EVENT, motionReduced } from '@/lib/motion';
  * into one custom property rather than React state, so scrolling never
  * re-renders anything; with reduced motion the picture stays still.
  */
-export function ParallaxLayer({ children }: { children: React.ReactNode }) {
+export function ParallaxLayer({ children, speed, sideways = false }: { children: React.ReactNode; /** 3.28 — pixels moved per pixel scrolled, instead of the strength's share. */ speed?: number; sideways?: boolean }) {
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -21,11 +21,18 @@ export function ParallaxLayer({ children }: { children: React.ReactNode }) {
       raf = 0;
       if (motionReduced()) {
         layer.style.setProperty('--shift', '0');
+        if (speed !== undefined) layer.style.setProperty('--shift-px', '0px');
         return;
       }
       const rect = band.getBoundingClientRect();
       const vh = window.innerHeight;
       if (rect.bottom < 0 || rect.top > vh) return;
+      // 3.28 — the band's centre against the screen's, times the speed: behind the scroll by that share.
+      if (speed !== undefined) {
+        const offset = -(rect.top + rect.height / 2 - vh / 2) * speed;
+        layer.style.setProperty('--shift-px', `${(sideways ? -offset : offset).toFixed(1)}px`);
+        return;
+      }
       // −1 as the band enters at the bottom of the screen, 1 as it leaves at the top.
       layer.style.setProperty('--shift', (((vh - rect.top) / (vh + rect.height)) * 2 - 1).toFixed(4));
     };
@@ -52,7 +59,7 @@ export function ParallaxLayer({ children }: { children: React.ReactNode }) {
       window.removeEventListener(MOTION_EVENT, schedule);
       document.removeEventListener('visibilitychange', schedule);
     };
-  }, []);
+  }, [speed, sideways]);
 
   return (
     <div ref={ref} className="he-band__layer">

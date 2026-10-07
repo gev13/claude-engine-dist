@@ -283,6 +283,29 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
                   ))}
                 </Select>
               </Field>
+              {/* 3.28 — the text, its place and padding, the phones' insets. */}
+              <Field label="Text size" hint="px" htmlFor="cookie-size">
+                <Input id="cookie-size" type="number" min={10} max={24} step={0.01} value={form.textSize ?? ''} disabled={!canWrite} onChange={(e) => set('textSize', e.target.value === '' ? undefined : Math.min(24, Math.max(10, Number(e.target.value) || 14)))} />
+              </Field>
+              <Field label="Text weight" htmlFor="cookie-weight">
+                <Select id="cookie-weight" value={form.textWeight ?? ''} disabled={!canWrite} onChange={(e) => set('textWeight', (e.target.value || undefined) as typeof form.textWeight)}>
+                  <option value="">As drawn</option>
+                  {['300', '400', '500', '600', '700'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="From the bottom" hint="px" htmlFor="cookie-bottom">
+                <Input id="cookie-bottom" type="number" min={0} max={120} value={form.bottom ?? ''} disabled={!canWrite} onChange={(e) => set('bottom', e.target.value === '' ? undefined : Math.min(120, Math.max(0, Math.round(Number(e.target.value) || 0))))} />
+              </Field>
+              <Field label="Padding" hint="e.g. 16px 20px" htmlFor="cookie-pad">
+                <Input id="cookie-pad" value={form.padding ?? ''} disabled={!canWrite} onChange={(e) => set('padding', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Side insets on phones" hint="px" htmlFor="cookie-inset">
+                <Input id="cookie-inset" type="number" min={0} max={48} value={form.insetMobile ?? ''} disabled={!canWrite} onChange={(e) => set('insetMobile', e.target.value === '' ? undefined : Math.min(48, Math.max(0, Math.round(Number(e.target.value) || 0))))} />
+              </Field>
             </div>
 
             <div>

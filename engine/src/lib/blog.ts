@@ -4,6 +4,148 @@ import { SHARE_NETWORKS, type ShareNetwork } from './share';
 
 /** 3.22 — a plain length (80px, 5rem, 0). Kept here rather than imported: theme.ts imports this file. */
 const isLength = (value: string) => /^(0|\d*\.?\d+(px|rem|em|vw|vh|%))$/.test(value.trim());
+/** 3.28 — a colour, as the theme writes them (hex, rgb/rgba, hsl/hsla); local, like `isLength`, to keep theme.ts out of this file's imports. */
+const isColorish = (value: string) => /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i.test(value.trim());
+
+/* 3.28 — the small fields of the blog's last details; each a checked value, each optional. */
+const BOX = /^(0|-?\d*\.?\d+(px|rem|em|%))(\s+(0|-?\d*\.?\d+(px|rem|em|%))){0,3}$/;
+const len = () => z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional();
+const colour = () => z.string().trim().max(60).refine(isColorish, 'Not a colour').optional();
+const box = () => z.string().trim().max(60).refine((v) => BOX.test(v.trim()), 'One to four sizes, such as 20px 24px').optional();
+const weight = () => z.enum(['300', '400', '500', '600', '700', '800']).optional();
+const lineHeight = () => z.string().trim().max(20).refine((v) => /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/.test(v.trim()), 'A line height').optional();
+const face = () => z.enum(['body', 'display']).optional();
+
+/** 3.28 — the archive cards (blog index, categories, a post list showing the archive's card, related posts). */
+const cardLookSchema = z.object({
+  /** `contained`: the picture flush at the top, the words on a panel of their own colour below it. */
+  style: z.enum(['tile', 'contained']).optional(),
+  panel: colour(),
+  padding: box(),
+  paddingMobile: box(),
+  radius: len(),
+  gap: len(),
+  columnsTablet: z.number().int().min(1).max(3).optional(),
+  /** No change of colour under the pointer. */
+  still: z.boolean().optional(),
+  dateSize: len(),
+  dateWeight: weight(),
+  dateColor: colour(),
+  /** The reading time after the date, in a weight of its own. */
+  readingWeight: weight(),
+  titleFont: face(),
+  titleSize: len(),
+  titleSizeMobile: len(),
+  titleWeight: weight(),
+  titleLine: lineHeight(),
+  titleTracking: len(),
+  chipStyle: z.enum(['outline', 'filled']).optional(),
+  chipBackground: colour(),
+  chipRadius: len(),
+  chipSize: len(),
+  chipWeight: weight(),
+  linkSize: len(),
+  linkWeight: weight(),
+  /** The space above "Read more", which then follows the words rather than sitting at the card's foot. */
+  linkGap: len(),
+});
+export type CardLook = z.infer<typeof cardLookSchema>;
+
+/** 3.28 — an archive's head, filter, pager and spacing. */
+const archiveLookSchema = z.object({
+  titleSize: len(),
+  titleSizeTablet: len(),
+  titleSizeMobile: len(),
+  /** The space above the title. */
+  top: len(),
+  topMobile: len(),
+  labelSize: len(),
+  labelWeight: weight(),
+  labelColor: colour(),
+  labelGap: len(),
+  crumbSize: len(),
+  crumbHomeWeight: weight(),
+  /** A category's trail without the blog: Home › Category. */
+  crumbsWithoutBlog: z.boolean().optional(),
+  /** The category menu drawn as a select, showing the current category. */
+  filterLook: z.enum(['menu', 'select']).optional(),
+  filterBackground: colour(),
+  filterRadius: len(),
+  filterColor: colour(),
+  filterSize: len(),
+  filterHeight: len(),
+  /** Phones: the filter and the count behind a "Filters" button. */
+  phoneFilters: z.boolean().optional(),
+  pagerAlign: z.enum(['center', 'left']).optional(),
+  pagerSize: len(),
+  pagerGap: len(),
+  pagerFont: face(),
+  pagerTextSize: len(),
+  pagerWeight: weight(),
+  pagerHideDisabled: z.boolean().optional(),
+  pagerGlyph: z.enum(['chevron', 'arrow']).optional(),
+  /** The space from the toolbar to the first cards, and under the grid. */
+  gridTop: len(),
+  gridBottom: len(),
+});
+export type ArchiveLook = z.infer<typeof archiveLookSchema>;
+
+/** 3.28 — a post page's last details. */
+const postLookSchema = z.object({
+  /** The post's container width (e.g. 1120px); the space under the cover; the contents column's and the text's widths. */
+  width: len(),
+  coverGap: len(),
+  sidebarWidth: len(),
+  textWidth: len(),
+  titleSize: len(),
+  titleSizeTablet: len(),
+  titleSizeMobile: len(),
+  /** The title's width: as drawn (20 characters) or none. */
+  titleWidth: z.enum(['measure', 'none']).optional(),
+  /** In the line above the title, only the category takes the accent; the rest in its own colour. */
+  categoryOnly: z.boolean().optional(),
+  lineColor: colour(),
+  lineSize: len(),
+  lineFont: face(),
+  /** Contents: shown once it sticks; on a panel; title and item type; the active item's colour; the questions of FAQ blocks inside the article too. */
+  tocReveal: z.boolean().optional(),
+  tocPanel: colour(),
+  tocTitleSize: len(),
+  tocTitleWeight: weight(),
+  tocItemSize: len(),
+  tocItemColor: colour(),
+  tocActiveColor: colour(),
+  tocQuestions: z.boolean().optional(),
+  /** Share: solid icons, on one panel, at a size. */
+  shareIcons: z.enum(['line', 'filled']).optional(),
+  sharePanel: colour(),
+  shareSize: len(),
+  /** Tablets keep the columns beside the article. */
+  sidebarTablet: z.boolean().optional(),
+  /** Phones: the share row at the end (not above the title); no contents list. */
+  phoneShare: z.enum(['top', 'end']).optional(),
+  phoneToc: z.enum(['top', 'none']).optional(),
+  /** Links in the article: underlined (as drawn) or not. */
+  linkUnderline: z.boolean().optional(),
+  /** Tables: text size, cell padding, lines between rows only, the line colour. */
+  tableSize: len(),
+  tablePadding: box(),
+  tableLines: z.enum(['grid', 'rows']).optional(),
+  tableLineColor: colour(),
+  /** Numbered and bulleted lists: the markers' colour. */
+  markerColor: colour(),
+  /** The space around blocks placed inside the article ([[block:2]]). */
+  inlineSpace: len(),
+  /** Related posts: the heading's size, weight and the space under it; the cards' gap; the section's width. */
+  relatedTitleSize: len(),
+  relatedTitleWeight: weight(),
+  relatedTitleGap: len(),
+  relatedGap: len(),
+  relatedWidth: len(),
+  /** Their own hover, apart from the archive cards'. */
+  relatedHover: cardHoverSchema.optional(),
+});
+export type PostLook = z.infer<typeof postLookSchema>;
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Blog layouts (BL1, BL2)
@@ -140,7 +282,25 @@ export const blogSchema = z.object({
   coverHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   coverHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   /** 3.22 — the card in the corner: also on phones, and closed for this post only rather than for the visit. */
-  upNext: z.object({ phones: z.boolean().optional(), dismiss: z.enum(['visit', 'post']).optional() }).optional(),
+  upNext: z
+    .object({
+      phones: z.boolean().optional(),
+      dismiss: z.enum(['visit', 'post']).optional(),
+      /** 3.28 — the newer post, else the older (unset, as before), or the newer one only — none on the newest post. */
+      pick: z.enum(['nearest', 'newer']).optional(),
+      /** 3.28 — shown once a third of the post is read (unset) or from the start; hidden while the related posts are on screen; the close button and the arrows (each unset, shown). */
+      from: z.enum(['third', 'start']).optional(),
+      hideOverRelated: z.boolean().optional(),
+      close: z.boolean().optional(),
+      arrows: z.boolean().optional(),
+      /** 3.28 — the card's width (px), colour, corners (px), and its title's size and weight. */
+      width: z.number().int().min(200).max(480).optional(),
+      background: z.string().trim().max(60).refine(isColorish, 'Not a colour').optional(),
+      radius: z.number().int().min(0).max(32).optional(),
+      titleSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+      titleWeight: z.enum(['400', '500', '600', '700', '800']).optional(),
+    })
+    .optional(),
 
   /* ── The blog's archives (T20, 2.18) ─────────────────────────────────── */
   /** The "All" chip. */
@@ -193,6 +353,8 @@ export const blogSchema = z.object({
     .optional(),
   /** 3.23 — a category's page: the "Blog" eyebrow above its title (unset, as before), a label under it, or neither. */
   categoryLabel: z.enum(['eyebrow', 'subtitle', 'none']).optional(),
+  /** 3.28 — the archive cards', the archives' and the post page's last details. Written by `blogCss`; each unset keeps the drawn look. */
+  look: z.object({ card: cardLookSchema.optional(), archive: archiveLookSchema.optional(), post: postLookSchema.optional() }).optional(),
 });
 
 export type BlogSettings = z.infer<typeof blogSchema>;
@@ -224,7 +386,20 @@ export type ResolvedBlog = {
   coverOverlap?: string;
   coverHeight?: string;
   coverHeightMobile?: string;
-  upNext: { phones: boolean; dismiss: 'visit' | 'post' };
+  upNext: {
+    phones: boolean;
+    dismiss: 'visit' | 'post';
+    pick: 'nearest' | 'newer';
+    from: 'third' | 'start';
+    hideOverRelated: boolean;
+    close: boolean;
+    arrows: boolean;
+    width?: number;
+    background?: string;
+    radius?: number;
+    titleSize?: string;
+    titleWeight?: string;
+  };
   authorBox: boolean;
   backLink: boolean;
   eyebrow?: string;
@@ -244,6 +419,7 @@ export type ResolvedBlog = {
   browseLabel: boolean;
   indexSeo: { title?: string; description?: string; exactTitle?: boolean };
   categoryLabel: 'eyebrow' | 'subtitle' | 'none';
+  look: { card: CardLook; archive: ArchiveLook; post: PostLook };
 };
 
 export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
@@ -272,7 +448,20 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     coverOverlap: blog?.coverOverlap && isLength(blog.coverOverlap) ? blog.coverOverlap : undefined,
     coverHeight: blog?.coverHeight && isLength(blog.coverHeight) ? blog.coverHeight : undefined,
     coverHeightMobile: blog?.coverHeightMobile && isLength(blog.coverHeightMobile) ? blog.coverHeightMobile : undefined,
-    upNext: { phones: blog?.upNext?.phones === true, dismiss: blog?.upNext?.dismiss ?? 'visit' },
+    upNext: {
+      phones: blog?.upNext?.phones === true,
+      dismiss: blog?.upNext?.dismiss ?? 'visit',
+      pick: blog?.upNext?.pick ?? 'nearest',
+      from: blog?.upNext?.from ?? 'third',
+      hideOverRelated: blog?.upNext?.hideOverRelated === true,
+      close: blog?.upNext?.close !== false,
+      arrows: blog?.upNext?.arrows !== false,
+      width: blog?.upNext?.width,
+      background: blog?.upNext?.background && isColorish(blog.upNext.background) ? blog.upNext.background : undefined,
+      radius: blog?.upNext?.radius,
+      titleSize: blog?.upNext?.titleSize && isLength(blog.upNext.titleSize) ? blog.upNext.titleSize : undefined,
+      titleWeight: blog?.upNext?.titleWeight,
+    },
     authorBox: blog?.authorBox ?? false,
     off: blog?.off ?? false,
     backLink: blog?.backLink ?? false,
@@ -292,6 +481,7 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     browseLabel: blog?.browseLabel !== false,
     indexSeo: blog?.indexSeo ?? {},
     categoryLabel: blog?.categoryLabel ?? 'eyebrow',
+    look: { card: blog?.look?.card ?? {}, archive: blog?.look?.archive ?? {}, post: blog?.look?.post ?? {} },
   };
 }
 

@@ -2,7 +2,8 @@ import { PostCollection } from '@/components/blocks/dynamic';
 import { Card, CardGrid } from '@/components/ui/Card';
 import { titleClamp, type ResolvedBlog } from '@/lib/blog';
 import { wantsTilt } from '@/lib/cardHover';
-import { formatDate } from '@/lib/utils';
+import { cardDate } from '@/lib/dates';
+import { cn } from '@/lib/utils';
 import { CardTilt } from './CardTilt';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { postPath, type Permalinks } from '@/lib/permalinks';
@@ -39,19 +40,29 @@ export function BlogList({
     // 3.24 — titles cut to two or three lines.
     const clamp = titleClamp(card);
     const category = (p: PostRow) => (p.kind === 'research' ? labels?.research : (p.categoryName ?? labels?.article));
+    const look = blog.look.card;
     const eyebrow = (p: PostRow) => {
-      const parts = [
-        card.category && card.categoryPlace !== 'under' ? category(p) : null,
-        card.date !== false && p.publishedAt ? formatDate(p.publishedAt) : null,
-        card.readingTime && labels?.minRead ? `${p.readingMinutes} ${labels.minRead}` : null,
-      ].filter(Boolean);
-      return parts.length ? parts.join(' · ') : fallbackEyebrow;
+      const reading = card.readingTime && labels?.minRead ? `${p.readingMinutes} ${labels.minRead}` : null;
+      const parts = [card.category && card.categoryPlace !== 'under' ? category(p) : null, card.date !== false && p.publishedAt ? cardDate(p.publishedAt) : null, reading].filter(Boolean);
+      if (!parts.length) return fallbackEyebrow;
+      // 3.28 — the reading time in a weight of its own: the line in two parts.
+      if (look.readingWeight && reading && parts.length > 1) {
+        return (
+          <>
+            {parts.slice(0, -1).join(' · ')}
+            <span className="he-ucard__rt">{` · ${reading}`}</span>
+          </>
+        );
+      }
+      return parts.join(' · ');
     };
     return (
       <CardGrid
         cols={3}
         id={listId}
-        className={clamp.className}
+        // 3.28 — the hook for Appearance → Blog → Details (lib/blogCss), and its gap between cards.
+        className={cn('he-pcards', clamp.className)}
+        gapSize={look.gap}
         style={
           card.image && card.ratio
             ? ({ '--he-ucard-ratio': card.ratio.replace('/', ' / '), ...clamp.style } as React.CSSProperties)

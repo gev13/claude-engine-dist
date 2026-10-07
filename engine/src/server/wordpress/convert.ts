@@ -185,6 +185,9 @@ export function convertSite(site: WpSite, mapping: WpMapping, ctx: ConvertContex
       title,
       status: PUBLISHED.has(item.status) ? 'published' : 'draft',
       publishedAt: item.date,
+      // 3.28 — the item's own dates, so the sitemaps' lastmod is when it last changed, not when it was imported.
+      ...(item.date ? { createdAt: item.date } : {}),
+      ...(item.modified || item.date ? { updatedAt: item.modified || item.date } : {}),
       seo,
       locale: ctx.locale,
     };

@@ -19,6 +19,8 @@
   .he-reveal--blur { transition: opacity calc(700ms * var(--he-motion, 1)) ease-out, filter calc(900ms * var(--he-motion, 1)) ease-out, transform calc(800ms * var(--he-motion, 1)) cubic-bezier(0.2, 0.7, 0.2, 1); }
   .he-reveal-on .he-reveal--zoom:not(.is-in) { transform: scale(0.94); }
   .he-reveal-on .he-reveal--blur:not(.is-in) { filter: blur(14px); }
+  /* 3.28 — the slow fade: opacity only, a second long (Appearance → Motion sets its length). */
+  .he-reveal--fadeSlow { transition: opacity calc(var(--he-rv-slow, 1000ms) * var(--he-motion, 1)) ease; }
   /* A sideways entrance moves the content, never the block: the block stays
      put and clips sideways, so a section waiting to slide in cannot widen the
      page. (Clipping <body> does not work — its overflow is handed to the

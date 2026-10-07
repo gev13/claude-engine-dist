@@ -511,6 +511,9 @@
   /* 3.22 — a larger photo beside the name. */
   .he-rev__list.is-avatar-medium .he-rev__avatar { width: 52px; height: 52px; }
   .he-rev__list.is-avatar-large .he-rev__avatar { width: 64px; height: 64px; }
+  /* 3.28 — the photo at a size of its own, the card's own padding. */
+  .he-rev__list.has-avatar-px .he-rev__avatar { width: var(--he-rev-avatar); height: var(--he-rev-avatar); }
+  .he-rev__list.has-pad:not(.is-list) .he-rev__card { padding: var(--he-rev-pad); }
   .he-rev__avatar.is-initial { display: grid; place-items: center; background: color-mix(in srgb, var(--color-flare) 24%, var(--color-surface)); color: var(--color-bone); font-weight: 700; }
   .he-rev__name { display: block; font-size: 15px; font-weight: 600; color: var(--color-bone); }
   .he-rev__meta { display: block; font-size: 13px; color: var(--color-smoke); }
@@ -670,4 +673,11 @@
     .he-tp .he-tp__svg { animation: none; }
   }
   .he-reduce-motion .he-tp .he-tp__svg { animation: none; }
+
+  /* 3.28 — a column count of its own on tablets. */
+  @media (48rem < width <= 64rem) {
+    .he-rev__list.has-cols-t:not(.is-list, .is-masonry) { grid-template-columns: repeat(var(--cols-t), minmax(0, 1fr)); }
+    .he-rev__list.has-cols-t.is-masonry:not(.is-rows) { columns: var(--cols-t); }
+    .he-rev__list.has-cols-t.is-masonry.is-rows { grid-template-columns: repeat(var(--cols-t), minmax(0, 1fr)); }
+  }
 }

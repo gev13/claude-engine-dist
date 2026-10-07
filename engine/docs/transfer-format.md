@@ -111,3 +111,10 @@ A file whose bytes match one already on this site is kept at its own address
 when the archive carries it — a page imported in a later batch still names
 that address. Only when the archive does not carry the file are its
 references pointed at the matching file here.
+
+## The engine's own words (3.28)
+
+`messages` (the main language's words, edited in Site translations) and
+`messages:<locale>` travel with the portable settings. Only known message
+keys with text are kept on import.
+

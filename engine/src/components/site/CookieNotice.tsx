@@ -68,6 +68,12 @@ function lookStyle(notice: Notice): React.CSSProperties | undefined {
   if (typeof notice.radius === 'number') style['--he-cookie-radius'] = `${notice.radius}px`;
   if (typeof notice.width === 'number') style['--he-cookie-w'] = `${notice.width}px`;
   if (notice.linkWeight) style['--he-cookie-link-w'] = notice.linkWeight;
+  // 3.28 — the text, the place and the padding.
+  if (typeof notice.textSize === 'number') style['--he-cookie-size'] = `${notice.textSize}px`;
+  if (notice.textWeight) style['--he-cookie-weight'] = notice.textWeight;
+  if (typeof notice.bottom === 'number') style['--he-cookie-bottom'] = `${notice.bottom}px`;
+  if (notice.padding && /^(\d{1,3}px)(\s+\d{1,3}px){0,3}$/.test(notice.padding)) style['--he-cookie-pad'] = notice.padding;
+  if (typeof notice.insetMobile === 'number') style['--he-cookie-inset-m'] = `${notice.insetMobile}px`;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
 
