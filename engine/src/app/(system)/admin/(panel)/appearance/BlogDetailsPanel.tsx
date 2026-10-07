@@ -82,6 +82,7 @@ const ARCHIVE: FieldDef[] = [
   { key: 'pagerWeight', label: 'Pager weight', kind: 'select', options: WEIGHTS },
   { key: 'pagerHideDisabled', label: 'No “previous” on the first page (nor “next” on the last)', kind: 'check' },
   { key: 'pagerGlyph', label: 'Previous and next', kind: 'select', options: [['chevron', '‹ ›'], ['arrow', '← →']] },
+  { key: 'barPadding', label: 'The row’s own space', kind: 'text', hint: 'above and below, e.g. 16px or 16px 24px' },
   { key: 'gridTop', label: 'Row to first cards', kind: 'text', hint: 'e.g. 40px' },
   { key: 'gridBottom', label: 'Under the cards', kind: 'text', hint: 'e.g. 55px' },
 ];

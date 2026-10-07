@@ -324,3 +324,8 @@ Every option below is off, or draws what it drew before, until it is set.
 - **Up next** (the corner card): the newer post only, shown from the start,
   hidden over related posts, without a close button or arrows, its width,
   colour, corners and title type.
+
+**3.28.1**: the archive's and the post's spacing options are the whole
+space (they used to add to the section's own padding); *The row's own space*
+for the archive row; *Which post* in Up next can be the older one only; a
+card title's letter spacing can be negative.

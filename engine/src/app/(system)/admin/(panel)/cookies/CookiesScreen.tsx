@@ -284,6 +284,12 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
                 </Select>
               </Field>
               {/* 3.28 — the text, its place and padding, the phones' insets. */}
+              <Field label="The policy link" htmlFor="cookie-link-place">
+                <Select id="cookie-link-place" value={form.linkPlace ?? ''} disabled={!canWrite} onChange={(e) => set('linkPlace', (e.target.value || undefined) as typeof form.linkPlace)}>
+                  <option value="">On a line of its own</option>
+                  <option value="inline">After the sentence, in its line</option>
+                </Select>
+              </Field>
               <Field label="Text size" hint="px" htmlFor="cookie-size">
                 <Input id="cookie-size" type="number" min={10} max={24} step={0.01} value={form.textSize ?? ''} disabled={!canWrite} onChange={(e) => set('textSize', e.target.value === '' ? undefined : Math.min(24, Math.max(10, Number(e.target.value) || 14)))} />
               </Field>

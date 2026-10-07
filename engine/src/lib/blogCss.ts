@@ -93,8 +93,10 @@ function archiveCss(a: ArchiveLook): string[] {
   out.push(rule(`${head} h1`, [['font-size', len(a.titleSize)], ['max-width', len(a.titleSize) ? 'none' : undefined]]));
   out.push(media(TABLET, rule(`${head} h1`, [['font-size', len(a.titleSizeTablet)]])));
   out.push(media(PHONE, rule(`${head} h1`, [['font-size', len(a.titleSizeMobile)]])));
-  out.push(rule(head, [['padding-top', len(a.top)]]));
-  out.push(media(PHONE, rule(head, [['padding-top', len(a.topMobile)]])));
+  /* (3.28.1) The space is the section's inner column's (Section pads `.shell`): each value is the whole
+     space, replacing the drawn one, never added to it. */
+  out.push(rule(`${head}>.shell`, [['padding-top', len(a.top)]]));
+  out.push(media(PHONE, rule(`${head}>.shell`, [['padding-top', len(a.topMobile)]])));
   out.push(rule(`${head} .he-arch-sub`, [['font-size', len(a.labelSize)], ['font-weight', weight(a.labelWeight)], ['color', col(a.labelColor)], ['margin-top', len(a.labelGap)], ['text-transform', len(a.labelSize) ? 'none' : undefined], ['letter-spacing', len(a.labelSize) ? '0' : undefined], ['font-family', len(a.labelSize) ? 'inherit' : undefined]]));
   out.push(rule('.he-arch-crumbs .he-crumbs ol', [['font-size', len(a.crumbSize)]]));
   out.push(rule('.he-arch-crumbs .he-crumbs li:first-child a', [['font-weight', weight(a.crumbHomeWeight)]]));
@@ -124,8 +126,12 @@ function archiveCss(a: ArchiveLook): string[] {
   );
   if (a.pagerHideDisabled) out.push(`${pager} .he-pager__btn[data-disabled]{display:none}`);
   const top = len(a.gridTop);
-  if (top) out.push(`.he-arch-bar:has(+.he-arch-list),.he-arch-head:has(+.he-arch-list){padding-bottom:0}.he-arch-list{padding-top:${top}}`);
-  out.push(rule('.he-arch-list', [['padding-bottom', len(a.gridBottom)]]));
+  if (top) out.push(`.he-arch-bar:has(~.he-arch-list)>.shell,.he-arch-head:has(+.he-arch-list)>.shell{padding-bottom:0}.he-arch-list>.shell{padding-top:${top}}`);
+  out.push(rule('.he-arch-list>.shell', [['padding-bottom', len(a.gridBottom)]]));
+  // 3.28.1 — the bar's own space above and below (one or two lengths).
+  const bar = typeof a.barPadding === 'string' && /^(0|\d*\.?\d+(px|rem|em))(\s+(0|\d*\.?\d+(px|rem|em)))?$/.test(a.barPadding.trim()) ? a.barPadding.trim() : undefined;
+  out.push(rule('.he-arch-bar>.shell', [['padding-block', bar]]));
+  if (bar && top) out.push(`.he-arch-bar:has(~.he-arch-list)>.shell{padding-bottom:0}`);
   if (a.phoneFilters) {
     out.push(
       '.he-blogbar__filters{display:none}',
@@ -143,7 +149,9 @@ function postCss(p: PostLook): string[] {
   const out: string[] = [];
   const post = '.he-post';
   out.push(rule(post, [['--container-shell', len(p.width)]]));
-  out.push(rule(`${post} .he-post__col`, [['margin-top', len(p.coverGap)]]));
+  // (3.28.1) The whole space under the cover: the section's own top padding goes.
+  const coverGap = len(p.coverGap);
+  if (coverGap) out.push(`${post} .he-post-ctt+section>.shell{padding-top:0}${post} .he-post__col{margin-top:${coverGap}}`);
   const side = len(p.sidebarWidth);
   if (side) {
     out.push(

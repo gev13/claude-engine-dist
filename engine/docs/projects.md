@@ -129,3 +129,8 @@ a gap at every width, infinite loading *One lot at a time, with "Loading"
 between*, and the viewer's backdrop, close button side and fill, arrows at
 the bottom right or bare, no counter, a fade between pictures and the
 pictures either side at half size.
+
+**3.28.1**: *Hero to categories* and the archive spacings are the whole
+space (they used to add to the section's own padding); *Tags column starts
+at* places the tags column (7 is halfway).
+

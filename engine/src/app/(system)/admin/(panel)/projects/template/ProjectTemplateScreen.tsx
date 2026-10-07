@@ -176,6 +176,15 @@ export function ProjectTemplateScreen() {
                 <Input value={(form.look?.[key] as string | undefined) ?? ''} placeholder="as drawn" onChange={(e) => set('look', { ...form.look, [key]: e.target.value.trim() || undefined })} />
               </Field>
             ))}
+            <Field label="Tags column starts at" hint="twelfths — 7 is halfway; empty is 8">
+              <Input
+                type="number"
+                min={2}
+                max={11}
+                value={form.look?.tagsStart ?? ''}
+                onChange={(e) => set('look', { ...form.look, tagsStart: e.target.value === '' ? undefined : Math.min(11, Math.max(2, Math.round(Number(e.target.value)) || 8)) })}
+              />
+            </Field>
             {(
               [
                 ['categoryWeight', 'Categories’ weight'],

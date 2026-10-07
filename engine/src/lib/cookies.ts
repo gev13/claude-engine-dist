@@ -105,6 +105,8 @@ export const cookieNoticeSchema = z.object({
   bottom: z.number().int().min(0).max(120).optional(),
   padding: z.string().trim().max(40).regex(/^(\d{1,3}px)(\s+\d{1,3}px){0,3}$/, 'Up to four px sizes, e.g. 16px 20px').optional(),
   insetMobile: z.number().int().min(0).max(48).optional(),
+  /** 3.28.1 — the policy link on a line of its own (unset, as before) or inline, after the sentence. */
+  linkPlace: z.enum(['own', 'inline']).optional(),
 
   /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
      `notice` is the banner as it always was: a recorded answer and nothing

@@ -136,6 +136,8 @@ function NoticeBanner({ notice }: { notice: Notice }) {
 
   if (!notice.enabled || !ready || !open) return null;
 
+  // 3.28.1 — the policy link inside the sentence, when the notice asks for it.
+  const inline = notice.linkPlace === 'inline' && Boolean(notice.body && notice.policyHref);
   const modal = notice.position === 'centre';
 
   return (
@@ -158,13 +160,25 @@ function NoticeBanner({ notice }: { notice: Notice }) {
             <circle cx="9" cy="16" r="1" fill="currentColor" />
           </svg>
         )}
-        <div className="he-cookie__text">
+        <div className={cn('he-cookie__text', inline && 'is-inline')}>
           {notice.title && <p className="he-cookie__title">{notice.title}</p>}
-          {notice.body && <p className="he-cookie__body">{notice.body}</p>}
-          {notice.policyHref && (
-            <Link href={notice.policyHref} className={cn('he-cookie__link', notice.linkWeight && 'has-weight')}>
-              {notice.policyLabel || 'Cookie policy'}
-            </Link>
+          {inline ? (
+            // 3.28.1 — the policy link in the sentence's own line, after it.
+            <p className="he-cookie__body">
+              {notice.body}{' '}
+              <Link href={notice.policyHref!} className={cn('he-cookie__link', notice.linkWeight && 'has-weight')}>
+                {notice.policyLabel || 'Cookie policy'}
+              </Link>
+            </p>
+          ) : (
+            <>
+              {notice.body && <p className="he-cookie__body">{notice.body}</p>}
+              {notice.policyHref && (
+                <Link href={notice.policyHref} className={cn('he-cookie__link', notice.linkWeight && 'has-weight')}>
+                  {notice.policyLabel || 'Cookie policy'}
+                </Link>
+              )}
+            </>
           )}
         </div>
 

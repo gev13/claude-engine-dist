@@ -1000,6 +1000,7 @@ function MobileMenu({
   const hidesHeader = config.hideHeader && fullscreen;
   // 3.28 — sub-items as a second column beside the list (wide screens, the full-screen menus).
   const beside = fullscreen && !phone && config.submenuLayout === 'beside';
+  const besideItem = beside ? items.find((item) => expanded.has(item.id) && hasChildren(item)) : undefined;
   // 3.28 — the current page's link marked, when the drawer gives it a colour.
   const current = (href: string) => (config.drawer?.activeColor && isActive?.(href) ? ('page' as const) : undefined);
 
@@ -1281,15 +1282,17 @@ function MobileMenu({
                   </Link>
                 </li>
               )}
+              {/* (3.28.1) In a column menu the sub-items open to the right of the column, from the list's top,
+                  so the list keeps the column's width and its place. */}
+              {beside && column && besideItem && (
+                <li className="he-menu__beside" role="presentation">
+                  {childList(besideItem)}
+                </li>
+              )}
             </ul>
           )}
 
-          {!drilled &&
-            beside &&
-            (() => {
-              const shown = items.find((item) => expanded.has(item.id) && hasChildren(item));
-              return shown ? <div className="he-menu__beside">{childList(shown)}</div> : null;
-            })()}
+          {!drilled && beside && !column && besideItem && <div className="he-menu__beside">{childList(besideItem)}</div>}
 
           {!drilled &&
             services.map((group) => (

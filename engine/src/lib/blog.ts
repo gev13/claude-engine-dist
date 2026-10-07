@@ -15,6 +15,14 @@ const box = () => z.string().trim().max(60).refine((v) => BOX.test(v.trim()), 'O
 const weight = () => z.enum(['300', '400', '500', '600', '700', '800']).optional();
 const lineHeight = () => z.string().trim().max(20).refine((v) => /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/.test(v.trim()), 'A line height').optional();
 const face = () => z.enum(['body', 'display']).optional();
+/** 3.28.1 — a letter spacing, which is often negative (-0.6px, -0.02em). */
+const tracking = () =>
+  z
+    .string()
+    .trim()
+    .max(20)
+    .refine((v) => /^(0|-?\d*\.?\d+(px|rem|em))$/.test(v.trim()), 'A spacing such as -0.5px or -0.02em')
+    .optional();
 
 /** 3.28 — the archive cards (blog index, categories, a post list showing the archive's card, related posts). */
 const cardLookSchema = z.object({
@@ -38,7 +46,7 @@ const cardLookSchema = z.object({
   titleSizeMobile: len(),
   titleWeight: weight(),
   titleLine: lineHeight(),
-  titleTracking: len(),
+  titleTracking: tracking(),
   chipStyle: z.enum(['outline', 'filled']).optional(),
   chipBackground: colour(),
   chipRadius: len(),
@@ -84,9 +92,16 @@ const archiveLookSchema = z.object({
   pagerWeight: weight(),
   pagerHideDisabled: z.boolean().optional(),
   pagerGlyph: z.enum(['chevron', 'arrow']).optional(),
-  /** The space from the toolbar to the first cards, and under the grid. */
+  /** The space from the toolbar to the first cards, and under the grid (each the whole space). */
   gridTop: len(),
   gridBottom: len(),
+  /** 3.28.1 — the toolbar row's own space above and below: one length, or two (above, below). */
+  barPadding: z
+    .string()
+    .trim()
+    .max(40)
+    .refine((v) => /^(0|\d*\.?\d+(px|rem|em))(\s+(0|\d*\.?\d+(px|rem|em)))?$/.test(v.trim()), 'One or two lengths, such as 16px or 16px 24px')
+    .optional(),
 });
 export type ArchiveLook = z.infer<typeof archiveLookSchema>;
 
@@ -286,8 +301,8 @@ export const blogSchema = z.object({
     .object({
       phones: z.boolean().optional(),
       dismiss: z.enum(['visit', 'post']).optional(),
-      /** 3.28 — the newer post, else the older (unset, as before), or the newer one only — none on the newest post. */
-      pick: z.enum(['nearest', 'newer']).optional(),
+      /** 3.28 — the newer post, else the older (unset, as before), or the newer one only — none on the newest post; (3.28.1) or the older one only — none on the oldest. */
+      pick: z.enum(['nearest', 'newer', 'older']).optional(),
       /** 3.28 — shown once a third of the post is read (unset) or from the start; hidden while the related posts are on screen; the close button and the arrows (each unset, shown). */
       from: z.enum(['third', 'start']).optional(),
       hideOverRelated: z.boolean().optional(),
@@ -389,7 +404,7 @@ export type ResolvedBlog = {
   upNext: {
     phones: boolean;
     dismiss: 'visit' | 'post';
-    pick: 'nearest' | 'newer';
+    pick: 'nearest' | 'newer' | 'older';
     from: 'third' | 'start';
     hideOverRelated: boolean;
     close: boolean;

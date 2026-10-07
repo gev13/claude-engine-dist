@@ -10,6 +10,39 @@ improvements.
 
 ---
 
+## 3.28.1 — 2026-10-07
+
+**Fixes to 3.28's options, and a security update.** Nothing changes on a
+site that has not set these options, except a pill cookie notice with
+buttons on phones (below).
+
+Fixed:
+
+- **Spacing options are the whole space.** An archive's *Space above the
+  title*, *Row to first cards* and *Under the cards*, a post's *Space under
+  the cover*, and a project's *Hero to categories*, archive *Space above the
+  title* and *Archive title to cards* used to add to the section's own
+  padding; each now replaces it. **A value set to make up for that is now
+  too small or too large — check it again.** The archive row has its own
+  space too (*The row's own space*).
+- **Full-screen menu, sub-items beside the list**: in a column menu the list
+  keeps the column's width and its vertical place, and the sub-items open to
+  the right of the column. A full-width menu stays centred up and down.
+- **Blog card titles take a negative letter spacing** (it refused the theme).
+- **A pill cookie notice with buttons on phones** gives its words the whole
+  line and puts the buttons under them (the words were squeezed to a few
+  letters per line).
+- **Security: sharp 0.35.5.** sharp's bundled SVG renderer (librsvg) had a
+  high-severity flaw (CVE-2026-96889, GHSA-wq5f-xc86-pv6w).
+
+Added:
+
+- **Up next → Which post**: the older one only (none on the oldest post).
+- **Cookie notice → The policy link**: after the sentence, in its line.
+- **Projects → Page template → Tags column starts at** (twelfths).
+
+---
+
 ## 3.28.0 — 2026-10-06
 
 **The final round: the header, menus, footer, motion, buttons, sliders, the

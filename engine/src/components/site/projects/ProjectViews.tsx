@@ -160,7 +160,10 @@ export async function ProjectArticle({
   // 3.28 — the tags in a column of their own beside the heading.
   const head =
     look.tagsColumn && project.tags.length > 0 ? (
-      <div className="he-prj-headgrid">
+      <div
+        className="he-prj-headgrid"
+        style={look.tagsStart ? ({ '--he-prj-tags-cols': `minmax(0, ${look.tagsStart - 1}fr) minmax(0, ${13 - look.tagsStart}fr)` } as React.CSSProperties) : undefined}
+      >
         <div>{heading}</div>
         <aside className="he-prj-tags" aria-label={t('project.tags')}>
           <p className="he-prj-tags__title">{t('project.tags')}</p>

@@ -192,7 +192,13 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
                 onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, dismiss: v ? 'post' : undefined }))}
               />
               {/* 3.28 — which post, when it shows, its controls and its look. */}
-              <Check label="The newer post only (none on the newest post)" checked={blog?.upNext?.pick === 'newer'} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, pick: v ? 'newer' : undefined }))} />
+              <Field label="Which post">
+                <Select value={blog?.upNext?.pick ?? ''} onChange={(e) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, pick: (e.target.value || undefined) as 'newer' | 'older' | undefined }))}>
+                  <option value="">The newer one, else the older (as before)</option>
+                  <option value="newer">The newer one only (none on the newest post)</option>
+                  <option value="older">The older one only (none on the oldest post)</option>
+                </Select>
+              </Field>
               <Check label="Shown from the start, not after a third of the post" checked={blog?.upNext?.from === 'start'} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, from: v ? 'start' : undefined }))} />
               <Check label="Hidden while the related posts are on screen" checked={blog?.upNext?.hideOverRelated === true} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, hideOverRelated: v || undefined }))} />
               <Check label="A close button" checked={blog?.upNext?.close !== false} onChange={(v) => set(['blog', 'upNext'])(tidy({ ...blog?.upNext, close: v ? undefined : false }))} />

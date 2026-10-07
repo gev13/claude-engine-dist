@@ -74,7 +74,8 @@ the notice appears — a cookie can stand before the text, and the policy link
 can have its own weight.
 
 **3.28** — the notice's text size and weight, its distance from the bottom
-of the screen, its padding and its side insets on phones.
+of the screen, its padding and its side insets on phones. (3.28.1) *The policy link* can sit after the
+sentence, in its line.
 
 ## Bot protection — Security → Bot protection
 

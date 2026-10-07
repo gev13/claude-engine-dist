@@ -261,6 +261,9 @@
   .he-cookie[style*='--he-cookie-weight'] :is(.he-cookie__title, .he-cookie__body) { font-weight: var(--he-cookie-weight); }
   .he-cookie[style*='--he-cookie-bottom'] { bottom: var(--he-cookie-bottom); }
   .he-cookie[style*='--he-cookie-pad'] { padding: var(--he-cookie-pad); }
+  /* 3.28.1 — the link inline in the sentence: the words wrap as one paragraph. */
+  .he-cookie__text.is-inline .he-cookie__link { display: inline; margin: 0; font-size: inherit; }
+  .he-cookie.is-pill .he-cookie__text.is-inline { display: block; }
   @media (width <= 48rem) {
     .he-cookie { padding: 18px 18px; gap: 14px; }
     .he-cookie.is-bottom-left,
@@ -268,6 +271,8 @@
     .he-cookie.is-centre { inset: auto 12px 12px 12px; translate: none; max-width: none; }
     .he-cookie.is-bottom-center { inset: auto 12px 12px 12px; translate: none; width: auto; }
     .he-cookie.is-pill { padding: 12px 12px 12px 16px; }
+    /* 3.28.1 — a pill with buttons gives the words the whole line and puts the buttons under them. */
+    .he-cookie.is-pill:has(> .he-cookie__actions) { flex-wrap: wrap; }
     .he-cookie__actions { width: 100%; }
     .he-cookie__actions > * { flex: 1 1 auto; justify-content: center; }
   }

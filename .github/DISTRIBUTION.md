@@ -1,6 +1,6 @@
 # This repository is generated
 
-Built from the engine repository at `abd87ae` for version `3.28.0`.
+Built from the engine repository at `17a7f3b` for version `3.28.1`.
 
 Do not commit here by hand: the next publish overwrites it. Changes belong
 in the engine repository, which then publishes them.

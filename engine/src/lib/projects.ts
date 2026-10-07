@@ -101,6 +101,8 @@ export const projectTemplateSchema = z.object({
       backLink: z.boolean().optional(),
       /** The tags in a column of their own beside the title and intro (under them on phones). */
       tagsColumn: z.boolean().optional(),
+      /** 3.28.1 — the twelfth the tags column starts at (7 is halfway); unset is 8, after a 7/12 heading. */
+      tagsStart: z.number().int().min(2).max(11).optional(),
       tagsTitleSize: lookLength,
       tagsTitleWeight: lookWeight,
       tagsColor: lookColour,
@@ -146,16 +148,17 @@ export function projectLookCss(look: ProjectLook | undefined): string {
     at('(max-width:1440px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeLaptop)]])),
     at('(max-width:1024px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeTablet)]])),
     at('(max-width:768px)', rule('.he-prj-head h1', [['font-size', len(look.titleSizeMobile)]])),
-    rule('.he-prj-head', [['padding-top', len(look.heroGap)]]),
+    // (3.28.1) Each the whole space: the section's inner column carries the padding.
+    rule('.he-prj-head>.shell', [['padding-top', len(look.heroGap)]]),
     rule('.he-prj-head .he-prj-chips', [['margin-bottom', len(look.categoryGap)]]),
     rule('.he-prj-head .he-prj-chips a', [['font-weight', wgt(look.categoryWeight)]]),
     rule('.he-prj-head .he-prj-intro', [['margin-top', len(look.introGap)]]),
     rule('.he-prj-tags__title', [['font-size', len(look.tagsTitleSize)], ['font-weight', wgt(look.tagsTitleWeight)]]),
     rule('.he-prj-tags a', [['color', col(look.tagsColor)]]),
     rule('.he-prja-head h1', [['font-size', len(look.archiveTitleSize)], ['max-width', len(look.archiveTitleSize) ? 'none' : undefined]]),
-    rule('.he-prja-head', [['padding-top', len(look.archiveTop)]]),
-    at('(max-width:768px)', rule('.he-prja-head', [['padding-top', len(look.archiveTopMobile)]])),
-    len(look.archiveGap) ? `.he-prja-head{padding-bottom:0}.he-prja-head+.he-proj-sec{padding-top:${len(look.archiveGap)}}` : '',
+    rule('.he-prja-head>.shell', [['padding-top', len(look.archiveTop)]]),
+    at('(max-width:768px)', rule('.he-prja-head>.shell', [['padding-top', len(look.archiveTopMobile)]])),
+    len(look.archiveGap) ? `.he-prja-head>.shell{padding-bottom:0}.he-prja-head+.he-proj-sec{padding-top:${len(look.archiveGap)}}` : '',
     at('(max-width:768px)', len(look.archiveGapMobile) ? `.he-prja-head+.he-proj-sec{padding-top:${len(look.archiveGapMobile)}}` : ''),
   ];
   return out.filter(Boolean).join('');

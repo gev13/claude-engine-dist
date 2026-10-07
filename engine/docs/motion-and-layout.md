@@ -609,3 +609,7 @@ written on the elements so a block's body type does not override them.
 Image: *Its own size, never wider*, *At most* and a right alignment. Text:
 *Space between paragraphs*. Compare: corners, the handle's size and colours.
 Video: *load the player with the page* (inline).
+
+**3.28.1**: with sub-items beside the list, a column menu keeps the list's
+width and place and opens the sub-items to the right of the column.
+

@@ -610,7 +610,7 @@
   .he-prj-back__label { opacity: 0; translate: -8px 0; transition: opacity calc(350ms * var(--he-motion, 1)) ease, translate calc(350ms * var(--he-motion, 1)) ease; }
   .he-prj-back:is(:hover, :focus-visible) .he-prj-back__label { opacity: 1; translate: 0 0; }
   @media (width <= 48rem) { .he-prj-back { top: 16px; left: 16px; } }
-  .he-prj-headgrid { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: var(--he-gap, 40px); align-items: start; }
+  .he-prj-headgrid { display: grid; grid-template-columns: var(--he-prj-tags-cols, minmax(0, 7fr) minmax(0, 5fr)); gap: var(--he-gap, 40px); align-items: start; }
   .he-prj-tags__title { margin: 0 0 12px; font-weight: 600; color: color-mix(in srgb, var(--color-bone) 75%, transparent); }
   .he-prj-tags ul { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; }
   .he-prj-tags a { color: color-mix(in srgb, var(--color-bone) 75%, transparent); text-decoration: none; }

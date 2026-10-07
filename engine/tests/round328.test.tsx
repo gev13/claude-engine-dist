@@ -214,3 +214,28 @@ describe('§1 — the main language’s words travel', () => {
     expect(isPortableSettingKey('messages;drop')).toBe(false);
   });
 });
+
+describe('3.28.1 — the follow-up', () => {
+  it('makes each spacing the whole space, on the section’s inner column', () => {
+    const out = blogCss(blogSchema.parse({ look: { archive: { gridTop: '40px', barPadding: '16px', top: '120px' }, post: { coverGap: '27px' } } }));
+    expect(out).toContain('.he-arch-list>.shell{padding-top:40px}');
+    expect(out).toContain('.he-arch-bar>.shell{padding-block:16px}');
+    expect(out).toContain('.he-arch-head>.shell{padding-top:120px}');
+    expect(out).toContain('.he-post-ctt+section>.shell{padding-top:0}');
+    expect(projectLookCss(projectTemplateSchema.parse({ look: { heroGap: '43px' } }).look)).toContain('.he-prj-head>.shell{padding-top:43px}');
+  });
+  it('takes the older post, a negative tracking, the inline link and the tags’ start', () => {
+    expect(blogSchema.safeParse({ upNext: { pick: 'older' } }).success).toBe(true);
+    expect(blogSchema.safeParse({ look: { card: { titleTracking: '-0.6px' } } }).success).toBe(true);
+    expect(blogSchema.safeParse({ look: { archive: { barPadding: '16px 24px 8px' } } }).success).toBe(false);
+    expect(cookieNoticeSchema.safeParse({ linkPlace: 'inline' }).success).toBe(true);
+    expect(projectTemplateSchema.safeParse({ look: { tagsStart: 7 } }).success).toBe(true);
+    expect(projectTemplateSchema.safeParse({ look: { tagsStart: 12 } }).success).toBe(false);
+  });
+  it('keeps a column menu’s list as it is when the sub-items open beside it', () => {
+    const out = chromeCss({ mobileMenu: { submenuLayout: 'beside' } });
+    expect(out).toContain('.is-sub-beside:not(.has-column) .he-menu__body{display:grid');
+    expect(out).toContain('.is-sub-beside.has-column .he-menu__beside{position:absolute');
+  });
+});
+

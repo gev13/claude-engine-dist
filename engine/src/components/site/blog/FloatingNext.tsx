@@ -59,7 +59,8 @@ export function FloatingNext({
   }, [storageKey, look?.from, look?.hideOverRelated]);
 
   // 3.28 — `newer`: the newer post only, so the newest post shows none.
-  const target = look?.pick === 'newer' ? next : (next ?? previous);
+  // (3.28.1) `older`: the previous post only — none on the oldest.
+  const target = look?.pick === 'newer' ? next : look?.pick === 'older' ? previous : (next ?? previous);
   if (!target || dismissed) return null;
 
   const dismiss = () => {

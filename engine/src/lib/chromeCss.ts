@@ -168,11 +168,18 @@ function menuCss(m: NonNullable<Chrome['mobileMenu']>): string[] {
   if (m.submenuLayout === 'beside') {
     const by = len(m.shiftBy) ?? '16px';
     out.push(
-      `@media (min-width:769px){${fs}.is-sub-beside .he-menu__body{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:clamp(40px,8vw,140px);align-items:start}` +
-        `${fs}.is-sub-beside .he-menu__body>:not(.he-menu__list,.he-menu__beside){grid-column:1/-1}` +
+      `@media (min-width:769px){` +
+        // A full-width menu: the list and the sub-items as two columns (centred up and down when the menu is).
+        `${fs}.is-sub-beside:not(.has-column) .he-menu__body{display:grid;grid-template-columns:minmax(0,max-content) minmax(0,1fr);column-gap:clamp(40px,8vw,140px);align-items:start}` +
+        `${fs}.is-sub-beside.is-v-center:not(.has-column) .he-menu__body{align-content:center}` +
+        `${fs}.is-sub-beside:not(.has-column) .he-menu__body>:not(.he-menu__list,.he-menu__beside){grid-column:1/-1}` +
+        // (3.28.1) A column menu keeps its list as it is; the sub-items open to the right of the column.
+        `${fs}.is-sub-beside.has-column{overflow:visible}` +
+        `${fs}.is-sub-beside.has-column .he-menu__list{position:relative}` +
+        `${fs}.is-sub-beside.has-column .he-menu__beside{position:absolute;top:0;left:calc(100% + var(--he-menu-col-pad,clamp(20px,5vw,72px)) + clamp(40px,6vw,96px));width:max-content;max-width:40vw}` +
         `${fs}.is-sub-beside .he-menu__beside .he-menu__sub{padding:10px 0 0}` +
         `${fs}.is-sub-beside .he-menu__beside .he-menu__sub a{font:inherit;font-family:var(--font-display);font-size:var(--he-menu-size,clamp(32px,6vw,72px));font-weight:var(--he-menu-weight,700);line-height:var(--he-menu-line,1.05);letter-spacing:var(--he-menu-tracking,-0.03em);padding:var(--he-menu-pad,10px) 0;color:inherit}` +
-        `${fs}.is-sub-beside .he-menu__list:has(.he-menu__row[aria-expanded=true])>li:not(:has(>.he-menu__row[aria-expanded=true])){opacity:0.5}` +
+        `${fs}.is-sub-beside .he-menu__list:has(.he-menu__row[aria-expanded=true])>li:not(.he-menu__beside,:has(>.he-menu__row[aria-expanded=true])){opacity:0.5}` +
         `${fs}.is-sub-beside .he-menu__list>li{transition:opacity ${time(m.duration ?? 350)} ease}` +
         `${fs}.is-sub-beside .he-menu__row[aria-expanded=true]{translate:${by} 0}}`,
     );
