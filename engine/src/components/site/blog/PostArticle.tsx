@@ -20,6 +20,7 @@ import { articleNode, breadcrumbs, customNodes, faqFromBlocks, graph, webPage, t
 import { site } from '@/lib/site';
 import { cn, isoDate } from '@/lib/utils';
 import { cardDate } from '@/lib/dates';
+import { isColor } from '@/lib/theme';
 import { getMessages } from '@/server/content/messages';
 import { adjacentPosts, listPosts, postUrl, type PostDetail, type PostListItem } from '@/server/content/posts';
 import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from './PostExtras';
@@ -92,7 +93,7 @@ export async function PostArticle({
 
   // A layout built around the cover falls back to the standard one when there is no cover.
   const layout = post.coverUrl ? blog.post : 'standard';
-  const onCover = layout === 'fullscreen';
+  const onCover = layout === 'fullscreen' || layout === 'coverAside';
 
   const blocks = (post.layout === 'body' ? [] : post.blocks) as AnyBlock[];
   const showBody = post.layout !== 'blocks';
@@ -298,6 +299,34 @@ export async function PostArticle({
             <SiteImg src={post.coverUrl!} alt="" className="he-post-ctt__img" priority />
           </div>
         )}
+        {layout === 'coverAside' ? (
+          // 3.29 — the cover as a card beside the article, the title and details over it.
+          <Section size="lg">
+            <div className="he-post-aside" style={blog.coverTint && isColor(blog.coverTint) ? ({ '--he-aside-tint': blog.coverTint } as React.CSSProperties) : undefined}>
+              <header className="he-post-aside__card">
+                <SiteImg src={post.coverUrl!} alt="" className="he-post-aside__img" sizes="half" priority />
+                <div className="he-post-aside__text">
+                  {back}
+                  {blog.eyebrow && eyebrow}
+                  {title}
+                  {excerpt}
+                  {(post.publishedAt || blog.meta.readingTime) && (
+                    <p className="he-post-aside__meta">
+                      {post.publishedAt && <time dateTime={post.publishedAt.toISOString()}>{cardDate(post.publishedAt)}</time>}
+                      {post.publishedAt && blog.meta.readingTime && <span aria-hidden="true">•</span>}
+                      {blog.meta.readingTime && <span>{`${post.readingMinutes} ${t('blog.minRead')}`}</span>}
+                    </p>
+                  )}
+                </div>
+              </header>
+              <div className="he-post-aside__body">
+                {shareTop}
+                {bodyWith()}
+                {shareBottom}
+              </div>
+            </div>
+          </Section>
+        ) : (
         <Section size="lg">
           {layout === 'split' ? (
             <div className="he-post-split">
@@ -360,6 +389,7 @@ export async function PostArticle({
           )}
           {shareBottom}
         </Section>
+        )}
         {!blocksFirst && postBlocks}
       </article>
 

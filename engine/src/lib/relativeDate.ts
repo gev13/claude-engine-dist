@@ -77,6 +77,24 @@ function relativeFormatter(locale: string): Intl.RelativeTimeFormat {
   return made;
 }
 
+/**
+ * 3.29 — the time between now and a future date as a bare amount, "12 days",
+ * in the reader's language — for "12 days left", whose wording around the
+ * amount is a message. Empty once the date has passed.
+ */
+export function formatAmount(target: Date, locale: string, now: Date = new Date()): string {
+  const found = relativeParts(target, now);
+  if (!found || found.value <= 0) return '';
+  // A countdown is read in days: "12 days left", not "2 weeks left", up to two months.
+  const days = Math.ceil((target.getTime() - now.getTime()) / DAY);
+  const parts: RelativeParts = days >= 1 && days <= 60 ? { value: days, unit: 'day' } : found;
+  try {
+    return new Intl.NumberFormat(locale, { style: 'unit', unit: parts.unit, unitDisplay: 'long' }).format(parts.value);
+  } catch {
+    return new Intl.NumberFormat('en', { style: 'unit', unit: parts.unit, unitDisplay: 'long' }).format(parts.value);
+  }
+}
+
 /** "25 March 2026", in the reader's language. */
 export function formatAbsolute(target: Date, locale: string): string {
   if (Number.isNaN(target.getTime())) return '';

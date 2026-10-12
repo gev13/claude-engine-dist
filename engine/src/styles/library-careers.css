@@ -281,3 +281,83 @@
     .he-cookie[style*='--he-cookie-inset-m']:not(.is-bottom-bar) { right: var(--he-cookie-inset-m); left: var(--he-cookie-inset-m); bottom: var(--he-cookie-bottom, var(--he-cookie-inset-m)); }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3.29 — Appearance → Careers: cards on the listing, the advert beside its
+   cover, the details with icons, the dates in full, the form with its words
+   inside the fields.
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  .he-jobcards { display: grid; grid-template-columns: repeat(var(--cols, 3), minmax(0, 1fr)); gap: var(--he-gap, 10px); margin: 0; padding: 0; list-style: none; }
+  .he-jobc {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 40px;
+    border-radius: var(--he-card-radius, 16px);
+    clip-path: var(--he-card-clip, none);
+    background: var(--color-surface);
+    transition: background-color calc(200ms * var(--he-motion, 1));
+  }
+  .he-jobc.is-closed { opacity: 0.6; }
+  .he-jobc__kicker { margin: 0; font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--color-flare); }
+  .he-jobc__title { margin: 0; font-size: clamp(22px, 2vw, 28px); font-weight: 400; line-height: 1.2; color: var(--color-bone); }
+  .he-jobc__title a { color: inherit; }
+  /* The whole card answers the title's link. */
+  .he-jobc__title a::after { content: ''; position: absolute; inset: 0; }
+  .he-jobc__title a:focus-visible { outline: none; }
+  .he-jobc:has(.he-jobc__title a:focus-visible) { outline: 3px solid var(--color-flare); outline-offset: 3px; }
+  .he-jobc__excerpt { margin: 0; font-size: 16px; line-height: 1.15; color: var(--color-ash); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; line-clamp: 3; overflow: hidden; }
+  .he-jobc__foot { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: auto; padding-top: 22px; }
+  .he-jobc__when { font-size: 16px; color: var(--color-smoke); }
+  .he-jobc__btn { flex: none; gap: 8px; }
+  .he-jobc:hover .he-jobc__title { color: var(--color-flare); }
+  .he-jobc:hover .he-jobc__btn { background: var(--he-btn-primary-bg, var(--color-bone)); color: var(--he-btn-primary-text, var(--color-ink)); border-color: transparent; }
+  @media (width <= 1024px) { .he-jobcards { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (width <= 768px) {
+    .he-jobcards { grid-template-columns: minmax(0, 1fr); }
+    .he-jobc { padding: 30px 32px; }
+  }
+
+  /* The advert beside its cover: the title and the picture on the left, a panel with everything else on the right. */
+  .he-job-aside { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; gap: var(--he-gap, 40px); }
+  .he-job-aside__title { margin: 0 0 20px; }
+  .he-job-aside__cover { position: relative; aspect-ratio: 542 / 542; overflow: hidden; border-radius: var(--he-card-radius, 16px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
+  .he-job-aside__cover .he-fill { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .he-job-aside__panel { padding: 40px; border-radius: var(--he-card-radius, 16px); clip-path: var(--he-card-clip, none); background: var(--color-surface); }
+  .he-job-aside__panel .he-job__meta { margin-top: 0; }
+  .he-job-aside__apply { margin-top: 48px; padding: 56px 60px 48px; border-radius: var(--he-card-radius, 16px); clip-path: var(--he-card-clip, none); background: var(--color-ink); }
+  .he-job-aside__applytitle { margin: 0 0 28px; }
+  @media (width <= 1024px) {
+    .he-job-aside { grid-template-columns: minmax(0, 1fr); }
+  }
+  @media (width <= 768px) {
+    .he-job-aside__panel { padding: 24px 20px; }
+    .he-job-aside__apply { margin-inline: -10px; padding: 32px 30px; }
+  }
+
+  /* The details with an icon each, the label left to screen readers. */
+  .he-job__meta.has-icons > div { display: flex; align-items: center; gap: 10px; }
+  .he-job__meta.has-icons dd { font-size: 16px; }
+  .he-job__icon { flex: none; color: var(--color-ash); }
+
+  /* Posted and deadline: the label, then the date with how long ago or how long is left. */
+  .he-job__dates { display: flex; flex-wrap: wrap; gap: 16px 24px; margin: 40px 0 0; }
+  .he-job__dates dt { margin: 0 0 6px; font-size: 14px; text-transform: uppercase; color: var(--color-bone); }
+  .he-job__dates dd { margin: 0; font-size: 16px; color: var(--color-ash); }
+
+  /* The form with its words inside the fields: three short fields to a row, the button at the right. */
+  .he-apply__group { margin: 0 0 12px; }
+  .he-fb__form.is-placeholders .he-apply__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .he-fb__form.is-placeholders .he-apply__grid > .he-fb__field:not(.is-half) { grid-column: 1 / -1; }
+  .he-fb__form.is-placeholders .he-apply__cv { margin-top: 26px; }
+  .he-apply__actions { justify-content: flex-end; }
+  @media (width <= 768px) {
+    .he-fb__form.is-placeholders .he-apply__grid { grid-template-columns: minmax(0, 1fr); }
+  }
+}
+@layer components {
+  .he-job-aside__panel .he-job__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px 28px; padding: 0; border: 0; }
+  @media (width <= 768px) { .he-job-aside__panel .he-job__meta { gap: 14px 16px; } }
+}

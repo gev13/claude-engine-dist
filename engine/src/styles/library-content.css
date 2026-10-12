@@ -365,6 +365,14 @@
   }
   .he-figs__value sup { margin-left: 3px; font-size: 0.38em; font-weight: 600; letter-spacing: 0; }
   .he-figs__label { max-width: 24ch; margin: 12px auto 0; font-size: 14px; color: var(--color-ash); }
+  /* 3.29 — the label above the number, the figures as cards, every second one lower, the words from the left. */
+  .he-figs.is-label-first .he-figs__item { display: flex; flex-direction: column-reverse; justify-content: flex-end; }
+  .he-figs.is-label-first .he-figs__label { margin: 0 0 22px; text-transform: uppercase; letter-spacing: 0.04em; font-size: 14px; }
+  .he-figs.is-cards .he-figs__item { min-height: 180px; padding: 40px 40px 32px; border-radius: var(--he-card-radius, 16px); clip-path: var(--he-card-clip, none); background: var(--he-figs-card, var(--color-surface)); }
+  .he-figs.is-stagger .he-figs__grid { align-items: start; padding-bottom: var(--he-figs-stagger); }
+  .he-figs.is-stagger .he-figs__item:nth-child(even) { transform: translateY(var(--he-figs-stagger)); }
+  .he-figs.is-left .he-figs__grid { text-align: left; }
+  .he-figs.is-left .he-figs__label { margin-inline: 0; }
   .he-figs__foot { margin: 32px 0 0; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-align: center; text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── CT9: logo wall ──────────────────────────────────────────────────── */
@@ -814,5 +822,34 @@
   /* 3.28 — a card grid's own column count on tablets (phones keep one). */
   @media (48rem < width <= 64rem) {
     :is(.he-tiles__grid, .he-fgrid).has-cols-t { grid-template-columns: repeat(var(--cols-t), minmax(0, 1fr)); }
+  }
+}
+
+/* 3.29 — a media band's text in a panel of its own (frosted or solid), and split across the band. */
+@layer components {
+  .he-band.has-panel .he-band__text {
+    padding: 32px 30px;
+    border-radius: var(--he-card-radius, 16px);
+    clip-path: var(--he-card-clip, none);
+    background: var(--he-band-panel, rgb(255 255 255 / 0.18));
+  }
+  .he-band.is-panel-glass .he-band__text { backdrop-filter: blur(var(--he-band-blur, 18px)) saturate(1.1); }
+  .he-band.is-panel-solid .he-band__text { background: var(--he-band-panel, var(--color-surface)); }
+  /* A panel draws its own dark: the band's overlay steps back. */
+  .he-band.has-panel::after { background: transparent; }
+  .he-band.is-split .he-band__text.is-split {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    align-items: end;
+    gap: 24px 48px;
+    width: 100%;
+    max-width: none;
+  }
+  .he-band.is-split .he-band__side .he-lbody { margin-top: 0; }
+  /* A split panel runs nearly the band's width, a small inset from its edges. */
+  .he-band.is-split.has-panel .he-band__inner { max-width: none; padding: var(--he-band-panel-inset, 8px); }
+  @media (width <= 768px) {
+    .he-band.is-split .he-band__text.is-split { grid-template-columns: minmax(0, 1fr); }
+    .he-band.has-panel .he-band__text { padding: 24px 20px; }
   }
 }

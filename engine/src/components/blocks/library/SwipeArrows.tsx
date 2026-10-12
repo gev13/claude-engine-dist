@@ -18,7 +18,21 @@ import { cn } from '@/lib/utils';
 
 const TRACK = '.he-swipe-track, [class*="grid-cols-"], :scope > .shell > [class^="he-r-"]';
 
-export function SwipeArrows({ placement, look, box }: { placement: 'belowRight' | 'sides'; /** 3.28 — bare chevrons, a box of their own. */ look?: 'circle' | 'plain'; box?: number }) {
+export function SwipeArrows({
+  placement,
+  look,
+  box,
+  ends,
+  fill,
+}: {
+  placement: 'belowRight' | 'sides';
+  /** 3.28 — bare chevrons, a box of their own. */
+  look?: 'circle' | 'plain';
+  box?: number;
+  /** 3.29 — an arrow at its end hidden rather than dimmed; the arrows in the main button's colours. */
+  ends?: 'dim' | 'hide';
+  fill?: 'surface' | 'primary';
+}) {
   const ref = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement | null>(null);
   const t = useMessages();
@@ -63,7 +77,7 @@ export function SwipeArrows({ placement, look, box }: { placement: 'belowRight' 
   return (
     <div
       ref={ref}
-      className={cn('he-swipe-nav', `is-${placement}`, look === 'plain' && 'is-plain', box && 'has-box')}
+      className={cn('he-swipe-nav', `is-${placement}`, look === 'plain' && 'is-plain', box && 'has-box', ends === 'hide' && 'is-hide-ends', fill === 'primary' && 'is-fill-primary')}
       hidden={!state.can}
       style={
         {

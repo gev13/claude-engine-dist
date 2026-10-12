@@ -117,7 +117,7 @@ export function ItemStylePanel({
             <LengthField label="Corner radius" value={style.radius} emptyLabel="none" onChange={set('radius')} />
           </div>
 
-          <CornerShapeFields label="Corners" value={style.corners} fallbackSize={20} roundedLabel="As the site’s cards are" onChange={set('corners')} />
+          <CornerShapeFields label="Corners" value={style.corners} fallbackSize={20} leafSize={40} roundedLabel="As the site’s cards are" onChange={set('corners')} />
 
           <div className="grid gap-3 sm:grid-cols-2">
             <ChoiceField

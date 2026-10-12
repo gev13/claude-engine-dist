@@ -64,6 +64,32 @@
   .he-fb__done { padding-left: 20px; border-left: 2px solid var(--color-flare); }
   .he-fb__donetitle { margin: 0; font-family: var(--font-display); font-size: clamp(22px, 2.6vw, 30px); font-weight: 700; }
   .he-fb__donetext { margin: 10px 0 0; font-size: 16px; color: var(--color-ash); }
+  /* 3.29 — the thanks without its rule, with buttons under it; a question's own error; a file question as a drop zone. */
+  .he-fb__done.is-plain { padding-left: 0; border-left: 0; }
+  .he-fb__donebtns { display: flex; flex-wrap: wrap; gap: var(--he-gap, 12px); margin-top: 32px; }
+  .he-fb__donebtns.is-center { justify-content: center; }
+  .he-fb__field.is-invalid .he-fb__input { border-color: var(--he-status-danger, var(--color-flare)); }
+  .he-fb__fielderror { margin: 6px 0 0; font-size: 13px; color: var(--he-status-danger, var(--color-flare-soft)); }
+  .he-fdrop {
+    position: relative;
+    display: grid;
+    justify-items: center;
+    gap: 12px;
+    padding: 34px 20px 28px;
+    border: 1px dashed var(--he-fdrop-line, var(--color-flare));
+    border-radius: var(--he-fdrop-radius, 16px);
+    background: color-mix(in srgb, var(--color-bone) 3%, transparent);
+    text-align: center;
+    transition: background-color calc(150ms * var(--he-motion, 1));
+  }
+  .he-fdrop.is-over { background: color-mix(in srgb, var(--color-flare) 8%, transparent); }
+  .he-fdrop.has-file { border-style: solid; border-color: var(--color-hairline); }
+  .he-fdrop:has(.he-fdrop__input:focus-visible) { outline: 3px solid var(--color-flare); outline-offset: 3px; }
+  .he-fdrop__input { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .he-fdrop__lead { display: inline-flex; align-items: center; gap: 8px; font-size: 16px; color: var(--color-flare); }
+  .he-fdrop__name { font-size: 16px; color: var(--color-flare); }
+  .he-fdrop__small { font-size: 14px; color: var(--color-smoke); }
+  .he-fdrop__hint { font-size: 12px; color: var(--color-smoke); }
 
   /* 2.16 — the CAPTCHA widget, on every public form. The provider draws the
      box in its own frame; this only gives it room and keeps it from

@@ -37,7 +37,7 @@ type ServiceLink = Pick<ServiceRef, 'slug' | 'title' | 'path'>;
 export type HeaderProps = {
   siteName: string;
   brand?: Theme['brand'];
-  chrome: Pick<ResolvedChrome, 'header' | 'megaMenu' | 'mobileMenu' | 'announcement' | 'themeToggle'>;
+  chrome: Pick<ResolvedChrome, 'header' | 'megaMenu' | 'mobileMenu' | 'announcement' | 'themeToggle'> & Partial<Pick<ResolvedChrome, 'languages'>>;
   nav: NavItem[];
   cta: Cta;
   secondaryCta: Cta;
@@ -55,6 +55,8 @@ export type HeaderProps = {
   defaultLocale?: string;
   /** The blog index, where the search icon goes — a setting since 2.13. */
   searchHref?: string;
+  /** 3.29 — the open menu marks the current page's link (Appearance → Navigation → underline). */
+  markCurrent?: boolean;
 };
 
 export type HeaderContact = {
@@ -366,6 +368,8 @@ export function Header(props: HeaderProps) {
           locales={props.locales}
           current={props.locale ?? props.locales[0]!}
           defaultLocale={props.defaultLocale ?? props.locales[0]!}
+          look={chrome.languages}
+          keep={!chrome.languages?.inMenu}
         />
       )}
       {secondaryCta && h.variant !== 'pill' && (
@@ -637,6 +641,19 @@ export function Header(props: HeaderProps) {
         siteName={siteName}
         brand={brand}
         contact={props.contact ?? { social: [] }}
+        markCurrent={props.markCurrent}
+        languages={
+          chrome.languages?.inMenu && props.locales && props.locales.length > 1 ? (
+            <LanguageSwitcher
+              locales={props.locales}
+              current={props.locale ?? props.locales[0]!}
+              defaultLocale={props.defaultLocale ?? props.locales[0]!}
+              look={chrome.languages}
+              keep={false}
+              className="he-menu__langs"
+            />
+          ) : undefined
+        }
       />
     </div>
     </>
@@ -893,7 +910,13 @@ function MobileMenu({
   contact,
   toggleRef,
   isActive,
+  languages,
+  markCurrent = false,
 }: {
+  /** 3.29 — the language switcher under the links. */
+  languages?: React.ReactNode;
+  /** 3.29 — mark the current page's link (the site underlines it). */
+  markCurrent?: boolean;
   open: boolean;
   /** 3.28 — whether a link is the current page's, to mark it when the drawer colours it. */
   isActive?: (href: string) => boolean;
@@ -1002,7 +1025,8 @@ function MobileMenu({
   const beside = fullscreen && !phone && config.submenuLayout === 'beside';
   const besideItem = beside ? items.find((item) => expanded.has(item.id) && hasChildren(item)) : undefined;
   // 3.28 — the current page's link marked, when the drawer gives it a colour.
-  const current = (href: string) => (config.drawer?.activeColor && isActive?.(href) ? ('page' as const) : undefined);
+  // 3.29 — or when the site underlines the current link.
+  const current = (href: string) => ((config.drawer?.activeColor || markCurrent) && isActive?.(href) ? ('page' as const) : undefined);
 
   /* 3.28 — with a duration, the full-screen menu fades out too: it stays on screen while it leaves. */
   const [leaving, setLeaving] = useState(false);
@@ -1357,6 +1381,7 @@ function MobileMenu({
           </aside>
         )}
 
+        {languages}
         {config.ctaPosition === 'bottom' && ctas}
       </div>
     </>

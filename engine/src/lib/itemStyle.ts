@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cornerShapeSchema, cutLegs, cutPolygon } from './shape';
+import { cornerShapeSchema, cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
 import { BORDER_STYLES, box, color, length, type SpacingBox } from './blockStyle';
 import { isColor, isLength } from './theme';
 
@@ -98,7 +98,10 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
   /* 3.3.1 — through the card variable as well as on the item, because the
      card drawn inside the item reads `--he-card-clip` itself: "rounded" on
      one card has to undo the site's cut, and a cut of its own has to reach it. */
+  const leaf = leafRadii(style.corners, 40);
   if (legs) decls.push(['clip-path', cutPolygon(legs)], ['--he-card-clip', cutPolygon(legs)]);
+  // 3.29 — a leaf of its own: the radius for the item's border, the clip for the card drawn inside it.
+  else if (leaf) decls.push(['border-radius', leaf], ['--he-card-radius', leaf], ['clip-path', leafClip(leaf)], ['--he-card-clip', leafClip(leaf)]);
   else if (style.corners?.style === 'rounded') decls.push(['clip-path', 'none'], ['--he-card-clip', 'none']);
   if (style.align) decls.push(['text-align', style.align]);
   if (style.textInset && isLength(style.textInset)) decls.push(['--he-item-text-inset', style.textInset]);

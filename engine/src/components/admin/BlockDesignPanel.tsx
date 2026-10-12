@@ -535,10 +535,11 @@ export function BlockDesignPanel({
             label="Corners"
             value={current.corners}
             fallbackSize={28}
+            leafSize={64}
             roundedLabel={current.panel ? 'As the panels are' : 'Square, or the radius above'}
             onChange={(corners) => set(['corners'])(corners)}
           />
-          {current.corners?.style !== 'cut' && (
+          {current.corners?.style !== 'cut' && current.corners?.style !== 'leaf' && (
             <label className="flex items-center gap-2 text-[13px] text-ash">
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.clip === true} onChange={(e) => set(['clip'])(e.target.checked || undefined)} />
               Clip pictures and films inside to the rounded corners
@@ -760,7 +761,7 @@ export function BlockDesignPanel({
         {/* Not "carousel": there are no arrows and no dots, and calling it one
             would have people looking for controls that are not there. */}
         <Field
-          label="Swipe sideways on small screens"
+          label="Swipe sideways"
           hint="three or four across on a desktop, one at a time under a thumb"
         >
           <Select
@@ -773,6 +774,8 @@ export function BlockDesignPanel({
                 {TIER_LABELS[bp]} and below (≤{TIER_WIDTH[bp]}px)
               </option>
             ))}
+            {/* 3.29 */}
+            <option value="always">At every width — a sliding row on desktops too</option>
           </Select>
           <p className="m-0 mt-2 text-[12px] leading-relaxed text-smoke">
             Works on any section with a grid in it, and on a row&rsquo;s columns. Nothing is hidden — every card
@@ -820,6 +823,19 @@ export function BlockDesignPanel({
                 </Field>
                 <Field label="Arrow box" hint="px — empty is 44">
                   <Input type="number" min={20} max={80} value={current.swipeArrowBox ?? ''} onChange={(e) => set(['swipeArrowBox'])(e.target.value === '' ? undefined : Math.round(Math.min(80, Math.max(20, Number(e.target.value)))))} />
+                </Field>
+                {/* 3.29 */}
+                <Field label="An arrow at its end">
+                  <Select value={current.swipeArrowEnds ?? ''} onChange={(e) => set(['swipeArrowEnds'])(e.target.value || undefined)}>
+                    <option value="">Dimmed</option>
+                    <option value="hide">Out of sight</option>
+                  </Select>
+                </Field>
+                <Field label="Arrows filled">
+                  <Select value={current.swipeArrowFill ?? ''} onChange={(e) => set(['swipeArrowFill'])(e.target.value || undefined)}>
+                    <option value="">In the surface colour</option>
+                    <option value="primary">In the main button’s colours</option>
+                  </Select>
                 </Field>
               </>
             )}

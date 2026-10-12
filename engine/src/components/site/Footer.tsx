@@ -5,6 +5,7 @@ import type { FooterVariant } from '@/lib/chrome';
 import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { SocialIcon } from './icons';
+import { FooterNewsletter } from './FooterNewsletter';
 import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -14,6 +15,19 @@ import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras
    The same data feeds all four: the Menus footer columns, the Settings
    identity, and the social links — so switching variant loses nothing.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/** 3.29 — the huge wordmark along the footer's bottom edge. */
+export type FooterWordmark = {
+  /** A picture (with its stored size, when known), or a name set in the display face. */
+  image?: { url: string; width?: number; height?: number };
+  name?: string;
+  width?: string;
+  widthMobile?: string;
+  /** How much of it the page's end cuts off, 0–90 (%). */
+  crop: number;
+  align: 'center' | 'left';
+  color?: string;
+};
 
 /** 3.1 — what heads the footer. */
 export type FooterLogo = { kind: 'mark' } | { kind: 'image'; url: string; height?: number; heightMobile?: number } | { kind: 'none' };
@@ -52,7 +66,43 @@ export type FooterProps = {
   bottomCentred?: boolean;
   /** 3.28 — the social and contact icons filled rather than drawn in lines. */
   filledIcons?: boolean;
+  /* ── 3.29 ── */
+  /** An email sign-up in the head column. */
+  newsletter?: boolean;
+  /** The social links as a column of their own between the head column and the menus. */
+  socialMiddle?: boolean;
+  /** The language switcher, and whether it shows on phones only. */
+  languages?: React.ReactNode;
+  languagesPhonesOnly?: boolean;
+  wordmark?: FooterWordmark;
+  /** false leaves out the copyright and legal row. */
+  bottomRow?: boolean;
+  /** On phones: the menus first; the menus side by side in one row. */
+  linksFirstMobile?: boolean;
+  linksRowMobile?: boolean;
 };
+
+/** 3.29 — the wordmark, cropped by the bottom edge: a box as tall as the part that shows, the rest hanging out of it. */
+function Wordmark({ mark, siteName }: { mark: FooterWordmark; siteName: string }) {
+  const crop = Math.max(0, Math.min(90, Math.round(mark.crop))) / 100;
+  const vars: Record<string, string> = { '--he-wm-show': String(1 - crop) };
+  if (mark.width) vars['--he-wm-w'] = mark.width;
+  if (mark.widthMobile) vars['--he-wm-w-m'] = mark.widthMobile;
+  if (mark.color) vars['--he-wm-color'] = mark.color;
+  const img = mark.image;
+  // Without the picture's size, the box keeps the whole picture: nothing is cut that cannot be measured.
+  const ratio = img?.width && img.height ? img.width / img.height : null;
+  if (img && ratio) vars['--he-wm-ratio'] = String(ratio);
+  // A name is sized to fill its box: the box's width shared out between its letters.
+  if (!img) vars['--he-wm-chars'] = String(Math.max(1, Array.from(mark.name || siteName).length));
+  return (
+    <div className={cn('he-ftr__wm', mark.align === 'left' && 'is-left', img ? (ratio ? 'is-image' : 'is-image is-whole') : 'is-name')} style={vars as React.CSSProperties} aria-hidden="true">
+      <div className="he-ftr__wmbox">
+        {img ? <SiteImg src={img.url} alt="" className="he-ftr__wmimg" sizes="full" /> : <span className="he-ftr__wmname">{mark.name || siteName}</span>}
+      </div>
+    </div>
+  );
+}
 
 function Socials({
   social,
@@ -207,8 +257,10 @@ export function Footer(props: FooterProps) {
             </ul>
           )}
           <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
+          {props.newsletter && <FooterNewsletter />}
+          {props.languages && <div className={cn('he-ftr__langs', props.languagesPhonesOnly && 'is-phones')}>{props.languages}</div>}
           {toggles}
-          <div className="he-ftr__fine">
+          {props.bottomRow !== false && <div className="he-ftr__fine">
             <span className={props.copyrightAsWritten ? 'he-ftr__copy is-as-written' : 'he-ftr__copy'}>{copyright}</span>
             {legal.length > 0 && (
               <ul className={cn('he-ftr__legal', props.legalSeparator && props.legalSeparator !== 'none' && `has-sep is-sep-${props.legalSeparator}`)}>
@@ -221,8 +273,9 @@ export function Footer(props: FooterProps) {
                 ))}
               </ul>
             )}
-          </div>
+          </div>}
         </div>
+        {props.wordmark && <Wordmark mark={props.wordmark} siteName={siteName} />}
       </footer>
     );
   }
@@ -245,27 +298,45 @@ export function Footer(props: FooterProps) {
                 </a>
               )}
               <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
+              {props.newsletter && <FooterNewsletter />}
+              {props.languages && <div className={cn('he-ftr__langs', props.languagesPhonesOnly && 'is-phones')}>{props.languages}</div>}
               <Mark siteName={siteName} logo={props.logo} />
             </div>
             <div className="he-ftr__cols">{cols}</div>
           </div>
-          {bottom}
+          {props.bottomRow !== false && bottom}
         </div>
+        {props.wordmark && <Wordmark mark={props.wordmark} siteName={siteName} />}
       </footer>
     );
   }
 
   const brandBlock = variant === 'brand';
+  // 3.29 — a column of their own between the head column and the menus.
+  const socialMiddle = !brandBlock && props.socialMiddle === true;
   // 3.27 — the social and contact links in the head column, where the brand footer already has them.
-  const socialHead = brandBlock || props.socialInHead === true;
+  const socialHead = brandBlock || (!socialMiddle && props.socialInHead === true);
+  const languages = props.languages ? <div className={cn('he-ftr__langs', props.languagesPhonesOnly && 'is-phones')}>{props.languages}</div> : null;
 
   return (
-    <footer className={cn('he-ftr', `he-ftr--${variant}`, props.panel && 'is-panel', looks)}>
+    <footer
+      className={cn(
+        'he-ftr',
+        `he-ftr--${variant}`,
+        props.panel && 'is-panel',
+        looks,
+        socialMiddle && 'has-middle',
+        props.linksFirstMobile && 'is-links-first',
+        props.linksRowMobile && 'is-links-row',
+        props.wordmark && 'has-wordmark',
+      )}
+    >
       <div className="shell">
         <div className="he-ftr__grid" style={{ '--he-footer-cols': groups.length || 1 } as React.CSSProperties}>
           <div className="he-ftr__lead">
             <Mark siteName={siteName} logo={props.logo} />
             {tagline && <p className="he-ftr__tagline">{tagline}</p>}
+            {props.newsletter && <FooterNewsletter />}
             {brandBlock && address && <address className="he-ftr__address">{address}</address>}
             {email && (
               <a href={`mailto:${email}`} className="he-ftr__email">
@@ -273,16 +344,24 @@ export function Footer(props: FooterProps) {
               </a>
             )}
             {socialHead && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />}
+            {!socialMiddle && languages}
           </div>
+          {socialMiddle && (
+            <div className="he-ftr__middle">
+              <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
+              {languages}
+            </div>
+          )}
           {cols}
         </div>
-        {!socialHead && social.length > 0 && (
+        {!socialHead && !socialMiddle && social.length > 0 && (
           <div className="he-ftr__socialrow">
             <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
           </div>
         )}
-        {bottom}
+        {props.bottomRow !== false && bottom}
       </div>
+      {props.wordmark && <Wordmark mark={props.wordmark} siteName={siteName} />}
     </footer>
   );
 }

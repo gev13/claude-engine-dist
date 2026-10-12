@@ -1,12 +1,17 @@
 import { z } from 'zod';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Corners: rounded, or cut on the diagonal (2.21)
+   Corners: rounded, cut on the diagonal (2.21), or rounded on chosen
+   corners only (3.29 — `leaf`)
    ───────────────────────────────────────────────────────────────────────────
    A cut corner is a clip-path polygon with the legs written in — cards,
    inputs, chips, images and sections clip. Buttons are *painted* instead
    (`CUT_BUTTON_FILL` and `CUT_BUTTON_RING`, legs as `--he-cut-*` on the button), because a
    clip-path also clips the glow a button may carry.
+
+   A leaf rounds the chosen corners and leaves the others square: a
+   four-value radius where a border has to follow the curve, and
+   `inset(0 round …)` wherever the shape is a clip.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 export const CORNERS = ['tl', 'tr', 'br', 'bl'] as const;
@@ -14,12 +19,15 @@ export type Corner = (typeof CORNERS)[number];
 
 export const CORNER_LABELS: Record<Corner, string> = { tl: 'Top left', tr: 'Top right', br: 'Bottom right', bl: 'Bottom left' };
 
+/** The largest leaf radius; a cut's legs stop at 96. */
+export const LEAF_MAX = 200;
+
 export const cornerShapeSchema = z.object({
-  /** `rounded` is the radius as before; `cut` clips the chosen corners on the diagonal. */
-  style: z.enum(['rounded', 'cut']).optional(),
-  /** The length of each cut's legs, in px. */
-  size: z.number().int().min(0).max(96).optional(),
-  /** Which corners are cut; unset is top right and bottom left. */
+  /** `rounded` is the radius as before; `cut` clips the chosen corners on the diagonal; `leaf` rounds only the chosen corners. */
+  style: z.enum(['rounded', 'cut', 'leaf']).optional(),
+  /** The length of each cut's legs, or a leaf's radius, in px (a cut stops at 96). */
+  size: z.number().int().min(0).max(LEAF_MAX).optional(),
+  /** Which corners are cut or rounded; unset is top right and bottom left. */
   corners: z.array(z.enum(CORNERS)).min(1).max(4).optional(),
 });
 
@@ -35,6 +43,24 @@ export function cutLegs(shape: CornerShape | undefined, fallbackSize: number): C
   const size = typeof shape.size === 'number' && Number.isInteger(shape.size) && shape.size >= 0 && shape.size <= 96 ? shape.size : fallbackSize;
   const chosen = new Set(shape.corners?.length ? shape.corners : DEFAULT_CUT_CORNERS);
   return { tl: chosen.has('tl') ? size : 0, tr: chosen.has('tr') ? size : 0, br: chosen.has('br') ? size : 0, bl: chosen.has('bl') ? size : 0 };
+}
+
+/**
+ * 3.29 — a leaf's four radii in border-radius order (top left, top right,
+ * bottom right, bottom left), e.g. `0px 64px 0px 64px`; null for anything
+ * that is not a leaf. Bounded here, as `cutLegs` bounds a cut.
+ */
+export function leafRadii(shape: CornerShape | undefined, fallbackSize: number): string | null {
+  if (shape?.style !== 'leaf') return null;
+  const size = typeof shape.size === 'number' && Number.isInteger(shape.size) && shape.size >= 0 && shape.size <= LEAF_MAX ? shape.size : fallbackSize;
+  const px = Math.max(0, Math.min(LEAF_MAX, Math.round(size)));
+  const chosen = new Set(shape.corners?.length ? shape.corners : DEFAULT_CUT_CORNERS);
+  return CORNERS.map((corner) => (chosen.has(corner) ? `${px}px` : '0px')).join(' ');
+}
+
+/** The clip for a leaf: the box itself, with those corners rounded. */
+export function leafClip(radii: string): string {
+  return `inset(0 round ${radii})`;
 }
 
 /**

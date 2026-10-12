@@ -1,5 +1,5 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
-import { cutLegs, cutPolygon } from './shape';
+import { cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
 import { type BlockStyle, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -309,8 +309,10 @@ export function blockStyleToCss(
       ]
     : [];
   const legs = cutLegs(style.corners, 28);
-  const shape: Decl[] = legs ? [['clip-path', cutPolygon(legs)]] : [];
-  if (style.clip && !legs) shape.push(['overflow', 'hidden']);
+  // 3.29 — a leaf clips the band to its rounded corners, as a cut does.
+  const leaf = leafRadii(style.corners, 64);
+  const shape: Decl[] = legs ? [['clip-path', cutPolygon(legs)]] : leaf ? [['clip-path', leafClip(leaf)]] : [];
+  if (style.clip && !legs && !leaf) shape.push(['overflow', 'hidden']);
 
   parts.push(block(root, [...panel, ...boxDecls(style.spacing?.base), ...own, ...background, ...border, ...shape]));
   // 3.28 — reaching into the gutter by the bleed, on each side, from tablets up.
@@ -411,6 +413,8 @@ export function blockStyleToCss(
        block would mean emitting the wider one's declarations for both. */
     if (style.swipeOn === key) parts.push(swipeCss(root, isRow, maxWidth, style.swipeWidth, style.swipeArrows === 'belowRight', style.swipeArrowBox));
   }
+  // 3.29 — a sliding row at every width.
+  if (style.swipeOn === 'always') parts.push(swipeCss(root, isRow, 100000, style.swipeWidth, style.swipeArrows === 'belowRight', style.swipeArrowBox));
   // 3.28 — the cards' share on tablets and phones (a grid that is not swiping there ignores it).
   if (style.swipeOn) {
     const target = swipeTarget(root, isRow);

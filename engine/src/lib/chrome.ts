@@ -377,7 +377,8 @@ export const chromeSchema = z.object({
       legalSeparator: z.enum(['none', 'bar', 'slash', 'dot']).optional(),
       /** 3.27 — the site's tagline under the logo (unset, shown) or not; the social and contact links in the head column, in its place, or below the columns (unset, as before). */
       tagline: z.boolean().optional(),
-      socialPlace: z.enum(['head', 'below']).optional(),
+      /** 3.29 — `middle`: the social links as a column of their own between the head column and the menus. */
+      socialPlace: z.enum(['head', 'below', 'middle']).optional(),
       /** 3.27 — on phones: each menu a list that opens (unset, as before) or open lists; the bottom row from the left (unset) or centred. */
       accordionMobile: z.boolean().optional(),
       bottomAlignMobile: z.enum(['left', 'center']).optional(),
@@ -405,6 +406,49 @@ export const chromeSchema = z.object({
       dividerColor: colour(),
       /** The reveal from this width up, px; unset follows the phone switch. */
       revealMinWidth: z.number().int().min(320).max(2560).optional(),
+
+      /* ── 3.29 ── */
+      /** An email sign-up in the head column: a heading, a line, the field with a round arrow (words in Site translations). */
+      newsletter: z.boolean().optional(),
+      /** A huge wordmark along the bottom edge — the uploaded logo, a picture of its own or the site name — cropped by the page's end. */
+      wordmark: z.enum(['off', 'logo', 'image', 'name']).optional(),
+      /** The wordmark's own picture, a /media/… address. */
+      wordmarkImage: imageUrl.optional(),
+      /** Its width, e.g. 34% or 460px (unset 34%); on phones its own (unset 80%). */
+      wordmarkWidth: len('A size such as 34% or 460px'),
+      wordmarkWidthMobile: len('A size such as 80%'),
+      /** How much of it the page's end cuts off, % of its height (unset 45). */
+      wordmarkCrop: z.number().int().min(0).max(90).optional(),
+      /** Centred (unset) or from the left. */
+      wordmarkAlign: z.enum(['center', 'left']).optional(),
+      /** The name's colour (the logo keeps its own). */
+      wordmarkColor: colour(),
+      /** The bottom row — copyright and legal links (unset, shown). */
+      bottomRow: z.boolean().optional(),
+      /** On phones: the menus before the head column (unset, after it). */
+      linksFirstMobile: z.boolean().optional(),
+      /** On phones: the menus side by side in one row, open (unset, one under another). */
+      linksRowMobile: z.boolean().optional(),
+    })
+    .optional(),
+
+  /** 3.29 — the language switcher, on a site with more than one language. */
+  languages: z
+    .object({
+      /** A menu (the code and a chevron, opening the languages' names — as before) or the codes in a row, the current one marked. */
+      look: z.enum(['menu', 'inline']).optional(),
+      /** What each language is called in the row, e.g. { "ru": "РУ" }; unset is its code in capitals. */
+      labels: z.record(z.string().regex(/^[a-z]{2,3}$/), z.string().trim().min(1).max(12)).optional(),
+      /** The row's order, as language codes; unset follows the site's languages. */
+      order: z.array(z.string().regex(/^[a-z]{2,3}$/)).max(20).optional(),
+      /** The current language in the row: underlined (unset) or only in the active colour. */
+      mark: z.enum(['underline', 'colour']).optional(),
+      /** The space between the codes, e.g. 16px. */
+      gap: len(),
+      /** Also in the open menu, under the links; the header bar's copy then folds away with the links. */
+      inMenu: z.boolean().optional(),
+      /** In the footer: never (unset), always, or on phones only. */
+      inFooter: z.enum(['off', 'always', 'phones']).optional(),
     })
     .optional(),
 
@@ -646,7 +690,7 @@ export type ResolvedChrome = {
     socialSeparator: 'none' | 'slash' | 'dot';
     legalSeparator: 'none' | 'bar' | 'slash' | 'dot';
     tagline: boolean;
-    socialPlace: 'head' | 'below';
+    socialPlace: 'head' | 'below' | 'middle';
     accordionMobile: boolean;
     bottomAlignMobile: 'left' | 'center';
     contactLinks: SocialNetwork[];
@@ -655,6 +699,26 @@ export type ResolvedChrome = {
     /** 3.28 — the current page's link is marked only when it is styled. */
     activeLink: boolean;
     revealMinWidth?: number;
+    newsletter: boolean;
+    wordmark: 'off' | 'logo' | 'image' | 'name';
+    wordmarkImage?: string;
+    wordmarkWidth?: string;
+    wordmarkWidthMobile?: string;
+    wordmarkCrop: number;
+    wordmarkAlign: 'center' | 'left';
+    wordmarkColor?: string;
+    bottomRow: boolean;
+    linksFirstMobile: boolean;
+    linksRowMobile: boolean;
+  };
+  languages: {
+    look: 'menu' | 'inline';
+    labels: Record<string, string>;
+    order?: string[];
+    mark: 'underline' | 'colour';
+    gap?: string;
+    inMenu: boolean;
+    inFooter: 'off' | 'always' | 'phones';
   };
   cursor: {
     style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend';
@@ -853,6 +917,17 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       columns: c.footer?.columns ?? 'auto',
       activeLink: Boolean(c.footer?.activeWeight || c.footer?.activeColor),
       revealMinWidth: c.footer?.revealMinWidth,
+      newsletter: c.footer?.newsletter ?? false,
+      wordmark: c.footer?.wordmark ?? 'off',
+      wordmarkImage: c.footer?.wordmarkImage || undefined,
+      wordmarkWidth: c.footer?.wordmarkWidth && LENGTH.test(c.footer.wordmarkWidth) ? c.footer.wordmarkWidth : undefined,
+      wordmarkWidthMobile: c.footer?.wordmarkWidthMobile && LENGTH.test(c.footer.wordmarkWidthMobile) ? c.footer.wordmarkWidthMobile : undefined,
+      wordmarkCrop: c.footer?.wordmarkCrop ?? 45,
+      wordmarkAlign: c.footer?.wordmarkAlign ?? 'center',
+      wordmarkColor: c.footer?.wordmarkColor && COLOR.test(c.footer.wordmarkColor) ? c.footer.wordmarkColor : undefined,
+      bottomRow: c.footer?.bottomRow !== false,
+      linksFirstMobile: c.footer?.linksFirstMobile ?? false,
+      linksRowMobile: c.footer?.linksRowMobile ?? false,
     },
     cursor: {
       style: c.cursor?.style ?? 'off',
@@ -917,6 +992,15 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
           options: region.options ?? [],
         }
       : null,
+    languages: {
+      look: c.languages?.look ?? 'menu',
+      labels: c.languages?.labels ?? {},
+      order: c.languages?.order?.length ? c.languages.order : undefined,
+      mark: c.languages?.mark ?? 'underline',
+      gap: c.languages?.gap && LENGTH.test(c.languages.gap) ? c.languages.gap : undefined,
+      inMenu: c.languages?.inMenu ?? false,
+      inFooter: c.languages?.inFooter ?? 'off',
+    },
     backToTop: c.backToTop ?? false,
     videoControls: c.videoControls !== false,
     // With motion off for everyone, a switch to turn it off is a switch that does nothing.

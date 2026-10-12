@@ -44,7 +44,7 @@ describe('checking answers', () => {
   });
 
   it('refuses a missing required answer, a bad email, a made-up option and an unticked consent', () => {
-    expect(validateAnswers(fields, { ...good, name: '  ' })).toEqual({ ok: false, error: 'Name is required.' });
+    expect(validateAnswers(fields, { ...good, name: '  ' })).toEqual({ ok: false, field: 'name', error: 'Name is required.' });
     expect(validateAnswers(fields, { ...good, email: 'nope' }).ok).toBe(false);
     expect(validateAnswers(fields, { ...good, kind: 'Z' }).ok).toBe(false);
     expect(validateAnswers(fields, { ...good, areas: ['X', 'Q'] }).ok).toBe(false);

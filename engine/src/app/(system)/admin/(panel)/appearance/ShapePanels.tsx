@@ -7,7 +7,7 @@ import { Field, Input, Panel } from '@/components/admin/ui';
 import { FONT_GROUPS } from '@/lib/fonts';
 import type { CornerShape } from '@/lib/shape';
 import type { Theme } from '@/lib/theme';
-import { CUT_SIZES } from '@/lib/theme-css';
+import { CUT_SIZES, LEAF_SIZES } from '@/lib/theme-css';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Appearance: corners, panels, button extras, the eyebrow marker and the
@@ -39,13 +39,14 @@ export function ShapePanel({ theme, set }: Props) {
               label={kind.label}
               value={theme.shape?.[kind.key] as CornerShape | undefined}
               fallbackSize={CUT_SIZES[kind.key]}
+              leafSize={LEAF_SIZES[kind.key]}
               onChange={set(['shape', kind.key])}
             />
             <p className="m-0 mt-2 text-[12px] text-smoke">{kind.hint}</p>
           </div>
         ))}
         <p className="m-0 text-[12px] text-smoke">
-          A section’s own corners are set in its Design tab. A cut button keeps its glow; a cut card clips its picture.
+          A section’s own corners are set in its Design tab. A cut button keeps its glow; a cut card clips its picture. Rounded on chosen corners rounds only the ticked corners and leaves the rest square.
         </p>
       </div>
     </Panel>
@@ -63,7 +64,7 @@ export function PanelSettingsPanel({ theme, set }: Props) {
           <LengthField label="Space between panels" value={panel.gap} placeholder="24px" onChange={set(['panel', 'gap'])} />
           <ColorField label="Panel colour" value={panel.background} placeholder="the surface colour" onChange={set(['panel', 'background'])} />
         </div>
-        <CornerShapeFields label="Panel corners" value={panel.shape} fallbackSize={CUT_SIZES.panel} onChange={set(['panel', 'shape'])} roundedLabel="Square" />
+        <CornerShapeFields label="Panel corners" value={panel.shape} fallbackSize={CUT_SIZES.panel} leafSize={LEAF_SIZES.panel} onChange={set(['panel', 'shape'])} roundedLabel="Square" />
         <label className="flex items-center gap-2.5 text-[14px] text-ash">
           <input
             type="checkbox"
@@ -256,6 +257,12 @@ export function NavTypePanel({ theme, set }: Props) {
         <LengthField label="Space between links" value={nav.gap} placeholder="2px" onChange={set(['nav', 'gap'])} />
         <ColorField label="Link colour" value={nav.color} placeholder="the header’s text" onChange={set(['nav', 'color'])} />
         <ColorField label="Current and hovered" value={nav.activeColor} placeholder="the soft accent" onChange={set(['nav', 'activeColor'])} />
+        {/* 3.29 */}
+        <label className="flex items-center gap-2.5 text-[14px] text-ash">
+          <input type="checkbox" className="h-4 w-4 accent-flare" checked={nav.activeUnderline === true} onChange={(e) => set(['nav', 'activeUnderline'])(e.target.checked || undefined)} />
+          Underline the current page’s link (header and open menu)
+        </label>
+        {nav.activeUnderline === true && <LengthField label="The line below the words by" value={nav.underlineOffset} placeholder="6px" onChange={set(['nav', 'underlineOffset'])} />}
       </div>
     </Panel>
   );

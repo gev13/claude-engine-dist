@@ -1,6 +1,14 @@
 {
-  "latest": "3.28.1",
+  "latest": "3.29.0",
   "releases": [
+    {
+      "version": "3.29.0",
+      "date": "2026-10-12",
+      "summary": "Corners rounded on chosen corners; languages in a row (menu, footer); underlined current link; footer sign-up and wordmark; frosted band panel; sliding rows at every width; posts revealed on hover; cover-card post layout; card bento spans; figure cards; portrait team; info icons; form drop zone and inline errors; careers looks, translated. Fixed: application button fill. Off until chosen.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.28.1",
       "date": "2026-10-07",

@@ -47,6 +47,30 @@
   .he-plst.is-overlay .he-plst__chip { color: rgb(255 255 255 / 0.8); }
   .he-plst.is-overlay .he-plst__date { color: rgb(255 255 255 / 0.7); }
   .he-plst.is-overlay .he-plst__excerpt { color: rgb(255 255 255 / 0.86); }
+  /* 3.29 — a height of their own; the overlay in a colour; only the picture until the pointer is on the card. */
+  .he-plst.is-overlay .he-plst__link { min-height: var(--he-plst-h, 380px); }
+  .he-plst.is-overlay.has-tint .he-plst__link::after { background: linear-gradient(to top, color-mix(in srgb, var(--he-plst-tint) 94%, transparent), color-mix(in srgb, var(--he-plst-tint) 0%, transparent) 62%); }
+  .he-plst__go {
+    position: absolute;
+    top: 30%;
+    left: 50%;
+    display: grid;
+    place-items: center;
+    width: 46px;
+    height: 46px;
+    border-radius: 999px;
+    background: var(--he-btn-primary-bg, var(--color-flare));
+    color: var(--he-btn-primary-text, #fff);
+    transform: translate(-50%, -50%);
+  }
+  @media (hover: hover) {
+    .he-plst.is-reveal .he-plst__link::after,
+    .he-plst.is-reveal .he-plst__go { opacity: 0; transition: opacity calc(300ms * var(--he-motion, 1)); }
+    .he-plst.is-reveal .he-plst__text { opacity: 0; transform: translateY(24px); transition: opacity calc(300ms * var(--he-motion, 1)), transform calc(300ms * var(--he-motion, 1)); }
+    .he-plst.is-reveal .he-plst__link:is(:hover, :focus-visible)::after,
+    .he-plst.is-reveal .he-plst__link:is(:hover, :focus-visible) .he-plst__go { opacity: 1; }
+    .he-plst.is-reveal .he-plst__link:is(:hover, :focus-visible) .he-plst__text { opacity: 1; transform: none; }
+  }
 
   .he-plst.is-compact .he-plst__link { flex-direction: row; align-items: center; gap: 16px; }
   .he-plst.is-compact .he-plst__media { flex-shrink: 0; width: 88px; aspect-ratio: 1; border-radius: 12px; }

@@ -13,7 +13,7 @@ import {
   isLineHeight,
   roleVar,
 } from './theme';
-import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars } from './shape';
+import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars, leafClip, leafRadii } from './shape';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme → CSS
@@ -297,6 +297,9 @@ function localeFontCss(theme: Theme, selector: string): string {
 /** The fallback cut, per kind of element, when a size is not given — the pattern book's sizes. */
 export const CUT_SIZES = { cards: 20, buttons: 10, inputs: 8, chips: 6, images: 24, panel: 28 } as const;
 
+/** 3.29 — a leaf's radius when none is given, per kind. */
+export const LEAF_SIZES = { cards: 48, buttons: 16, inputs: 20, chips: 12, images: 40, panel: 72 } as const;
+
 /** Classes that wear the input shape: every text field the site draws. */
 const INPUT_SELECTOR = ':is(input.he-fb__input:not([type=file]),textarea.he-fb__input,.he-nl__input,.he-srch__input,.he-field)';
 /** …and the chip shape: choices, filters and category chips. */
@@ -351,7 +354,16 @@ function shapeCss(theme: Theme, scope: string): string {
   // 3.17 — a bordered box cut like a card (the contained FAQ) keeps its border along the cuts.
   if (card) parts.push(block(at('.he-faq.is-contained'), [['--he-cut-line', 'var(--color-hairline)'], ...lineDecls(cutLines(card, 0.67))]));
 
+  /* 3.29 — a leaf: the radius goes through the variable every card rule
+     reads, so a bordered card's edge follows the curve, and the clip as
+     well, for the one rule that composes the radius with a value of its own
+     (where a four-value variable is invalid and falls back to square). */
+  const cardLeaf = leafRadii(shape.cards, LEAF_SIZES.cards);
+  if (cardLeaf) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', cardLeaf], ['--he-box-radius', cardLeaf], ['--he-card-clip', leafClip(cardLeaf)]]));
+
   const image = cutLegs(shape.images, CUT_SIZES.images);
+  const imageLeaf = leafRadii(shape.images, LEAF_SIZES.images);
+  if (imageLeaf) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', leafClip(imageLeaf)]]));
   if (image) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', cutPolygon(image)]]));
 
   const input = cutLegs(shape.inputs, CUT_SIZES.inputs);
@@ -360,6 +372,12 @@ function shapeCss(theme: Theme, scope: string): string {
     parts.push(block(at(INPUT_SELECTOR), [['clip-path', cutPolygon(input)], ['border-radius', '0'], ['--he-cut-line', 'color-mix(in srgb,currentColor 30%,transparent)'], ...lineDecls(lines)]));
   }
 
+  const inputLeaf = leafRadii(shape.inputs, LEAF_SIZES.inputs);
+  if (inputLeaf) parts.push(block(at(INPUT_SELECTOR), [['border-radius', inputLeaf]]));
+
+  const chipLeaf = leafRadii(shape.chips, LEAF_SIZES.chips);
+  if (chipLeaf) parts.push(block(at(CHIP_SELECTOR), [['border-radius', chipLeaf]]));
+
   const chip = cutLegs(shape.chips, CUT_SIZES.chips);
   if (chip) {
     const lines = cutLines(chip);
@@ -367,6 +385,10 @@ function shapeCss(theme: Theme, scope: string): string {
     // The focus ring sat outside the chip, where the clip now cuts it off: draw it inside.
     parts.push(block(at('.he-fb__choice input:focus-visible+span'), [['outline-offset', '-4px']]));
   }
+
+  // A leaf button is an ordinary radius, so its border and glow follow it.
+  const buttonLeaf = leafRadii(shape.buttons, LEAF_SIZES.buttons);
+  if (buttonLeaf) parts.push(block(at(BUTTON_SELECTOR), [['border-radius', buttonLeaf]]));
 
   // Buttons are painted, so the glow below follows the cut instead of being clipped by it.
   const button = cutLegs(shape.buttons, CUT_SIZES.buttons);
@@ -551,6 +573,8 @@ function shapeCss(theme: Theme, scope: string): string {
   push(panelDecls, '--he-panel-bg', panel.background, isColor);
   const panelCut = cutLegs(panel.shape, CUT_SIZES.panel);
   if (panelCut) panelDecls.push(['--he-panel-clip', cutPolygon(panelCut)]);
+  const panelLeaf = leafRadii(panel.shape, LEAF_SIZES.panel);
+  if (panelLeaf) panelDecls.push(['--he-panel-clip', leafClip(panelLeaf)]);
   if (panelDecls.length) parts.push(block(scope ? scope.trim() : ':root', panelDecls));
 
   const nav = theme.nav ?? {};
@@ -565,6 +589,13 @@ function shapeCss(theme: Theme, scope: string): string {
   push(navDecls, '--he-nav-active', nav.activeColor, isColor);
   // Unlayered, after the stylesheet's own defaults, which live in the components layer.
   if (navDecls.length) parts.push(block(scope ? scope.trim() : ':root', navDecls));
+  // 3.29 — the current page's link underlined: the header's, and the open menu's (which marks it while this is on).
+  if (nav.activeUnderline === true) {
+    const offset = nav.underlineOffset && isLength(nav.underlineOffset) ? nav.underlineOffset : '6px';
+    const line: Decl[] = [['text-decoration-line', 'underline'], ['text-decoration-thickness', '1px'], ['text-underline-offset', offset]];
+    parts.push(block(at('.he-hdr__link.is-active'), line));
+    parts.push(block(at(':is(.he-menu__row,.he-menu__sub a,.he-menu a)[aria-current=page]'), [['color', 'var(--he-nav-active,var(--color-flare-soft))'], ...line]));
+  }
 
   return parts.join('');
 }

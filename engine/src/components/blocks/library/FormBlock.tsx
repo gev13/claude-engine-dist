@@ -11,6 +11,8 @@ import { type FormField, formSteps, validateAnswers, visibleFields } from '@/lib
 import { cn } from '@/lib/utils';
 import { buttonPadProps } from '@/lib/buttonPad';
 import { ArrowRight } from '@/components/ui/Button';
+import { FileDrop } from '@/components/site/FileDrop';
+import Link from '@/components/ui/SiteLink';
 import { BlockHead } from '../parts';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -35,7 +37,6 @@ const TONES = { base: '', raised: 'is-raised', flare: 'is-flare' } as const;
 /* Mirrors ATTACHMENT_KINDS in server/applications/storage.ts. The server
    checks the bytes; this only spares somebody the upload. */
 const FILE_ACCEPT = '.pdf,.docx,.jpg,.jpeg,.png';
-const FILE_HINT = 'PDF, Word, JPG or PNG, up to 8 MB.';
 
 function Field({
   field,
@@ -44,6 +45,8 @@ function Field({
   onChange,
   mark,
   hideLabel = false,
+  drop = false,
+  invalid,
 }: {
   field: FormField;
   uid: string;
@@ -52,21 +55,31 @@ function Field({
   mark: boolean;
   /** 3.27 — the label kept for screen readers only. */
   hideLabel?: boolean;
+  /** 3.29 — a file question as a drop zone. */
+  drop?: boolean;
+  /** 3.29 — this question's own error, shown under it. */
+  invalid?: string;
 }) {
   const t = useMessages();
   // One text node, as the markup always was.
   const optional = mark && <span className="he-fb__opt">{` (${t('form.optional')})`}</span>;
   const id = `${uid}-${field.id}`;
-  const hint = field.help ? `${id}-help` : undefined;
+  const errorId = invalid ? `${id}-error` : undefined;
+  const hint = [field.help ? `${id}-help` : undefined, errorId].filter(Boolean).join(' ') || undefined;
+  const fieldError = invalid && (
+    <p id={errorId} className="he-fb__fielderror">
+      {invalid}
+    </p>
+  );
   const label = (
     <label className={hideLabel ? 'he-fb__label sr-only' : 'he-fb__label'} htmlFor={id}>
       {field.label}
       {!field.required && optional}
     </label>
   );
-  const common = { id, name: field.id, required: field.required, 'aria-describedby': hint, className: 'he-fb__input' };
+  const common = { id, name: field.id, required: field.required, 'aria-describedby': hint, 'aria-invalid': invalid ? true : undefined, className: 'he-fb__input' };
   const help = field.help && (
-    <p id={hint} className="he-fb__help">
+    <p id={`${id}-help`} className="he-fb__help">
       {field.help}
     </p>
   );
@@ -85,6 +98,7 @@ function Field({
           onChange={onChange}
         />
         {help}
+        {fieldError}
       </div>
     );
   }
@@ -112,6 +126,7 @@ function Field({
           ))}
         </div>
         {help}
+        {fieldError}
       </fieldset>
     );
   }
@@ -124,14 +139,30 @@ function Field({
           <span>{field.label}</span>
         </label>
         {help}
+        {fieldError}
       </div>
     );
   }
 
   if (field.type === 'file') {
     const chosen = value instanceof File ? value : null;
+    // 3.29 — a drop zone around the same input.
+    if (drop) {
+      return (
+        <div className={cn('he-fb__field', `is-${field.width}`, invalid && 'is-invalid')}>
+          {label}
+          <FileDrop id={id} name={field.id} required={field.required} accept={FILE_ACCEPT} describedBy={hint} dropText={field.placeholder} hint={t('form.fileTypes')} onFile={(file) => onChange(file ?? '')} />
+          {field.help && (
+            <p id={`${id}-help`} className="he-fb__help">
+              {field.help}
+            </p>
+          )}
+          {fieldError}
+        </div>
+      );
+    }
     return (
-      <div className={cn('he-fb__field', `is-${field.width}`)}>
+      <div className={cn('he-fb__field', `is-${field.width}`, invalid && 'is-invalid')}>
         {label}
         <input
           {...common}
@@ -140,14 +171,15 @@ function Field({
           className="he-fb__input he-apply__file"
           onChange={(e) => onChange(e.target.files?.[0] ?? '')}
         />
-        <p className="he-fb__help">{chosen ? `Attached: ${chosen.name}` : FILE_HINT}</p>
+        <p className="he-fb__help">{chosen ? t('form.attached', { name: chosen.name }) : t('form.fileTypes')}</p>
         {field.help && <p className="he-fb__help">{field.help}</p>}
+        {fieldError}
       </div>
     );
   }
 
   return (
-    <div className={cn('he-fb__field', `is-${field.width}`)}>
+    <div className={cn('he-fb__field', `is-${field.width}`, invalid && 'is-invalid')}>
       {label}
       {field.type === 'textarea' ? (
         <textarea {...common} rows={5} placeholder={field.placeholder} value={typeof value === 'string' ? value : ''} onChange={(e) => onChange(e.target.value)} />
@@ -172,6 +204,7 @@ function Field({
         />
       )}
       {help}
+      {fieldError}
     </div>
   );
 }
@@ -262,6 +295,8 @@ export function FormBlock(p: P) {
   const [values, setValues] = useState<Values>({});
   const [state, setState] = useState<'idle' | 'sending' | 'sent'>('idle');
   const [error, setError] = useState('');
+  // 3.29 — the question the last check stopped at, when errors are shown at their fields.
+  const [badField, setBadField] = useState<{ id: string; message: string } | null>(null);
   const [trap, setTrap] = useState('');
   const submitPad = buttonPadProps(p.submitPad);
   const challenge = useChallenge('form', p.captcha);
@@ -286,7 +321,11 @@ export function FormBlock(p: P) {
   const at = Math.min(step, steps.length - 1);
   const current = steps[at] ?? { fields: [] };
   const last = at >= steps.length - 1;
-  const set = (id: string) => (value: Values[string]) => setValues((v) => ({ ...v, [id]: value }));
+  const set = (id: string) => (value: Values[string]) => {
+    setValues((v) => ({ ...v, [id]: value }));
+    // 3.29 — an answer being corrected stops being marked.
+    setBadField((bad) => (bad?.id === id ? null : bad));
+  };
 
   async function next(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -294,7 +333,17 @@ export function FormBlock(p: P) {
        when one has been chosen — the server does exactly the same with the
        multipart body, so both sides ask the same question. */
     const check = validateAnswers(current.fields, answers, p.fields);
-    if (!check.ok) return setError(check.error);
+    if (!check.ok) {
+      setBadField(p.inlineErrors && check.field ? { id: check.field, message: check.error } : null);
+      // With the message at its field, the form-level line stays empty; focus goes to the question.
+      if (p.inlineErrors && check.field) {
+        setError('');
+        document.getElementById(`${uid}-${check.field}`)?.focus();
+        return;
+      }
+      return setError(check.error);
+    }
+    setBadField(null);
     setError('');
     if (!last) return setStep(at + 1);
 
@@ -344,9 +393,32 @@ export function FormBlock(p: P) {
   const center = p.align === 'center';
   const body =
     state === 'sent' ? (
-      <div className="he-fb__done" role="status">
+      <div className={cn('he-fb__done', p.successPlain && 'is-plain')} role="status">
         <p className="he-fb__donetitle">{p.successTitle || t('form.thanks')}</p>
         {p.successText && <p className="he-fb__donetext">{p.successText}</p>}
+        {/* 3.29 — buttons under the thanks; `#again` opens a fresh form. */}
+        {p.successButtons && p.successButtons.length > 0 && (
+          <div className={cn('he-fb__donebtns', center && 'is-center')}>
+            {p.successButtons.map((button, i) => {
+              const look = cn('he-cbtn is-medium', button.style === 'outline' ? 'is-outline' : 'is-primary');
+              const inner = (
+                <>
+                  <span>{button.label}</span>
+                  {button.arrow && <ArrowRight />}
+                </>
+              );
+              return button.href === '#again' ? (
+                <button key={i} type="button" className={look} onClick={() => (setValues({}), setStep(0), setState('idle'))}>
+                  {inner}
+                </button>
+              ) : (
+                <Link key={i} href={button.href} className={look}>
+                  {inner}
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </div>
     ) : (
       <form onSubmit={next} noValidate className="he-fb__form" aria-label={p.title || p.formName}>
@@ -363,7 +435,17 @@ export function FormBlock(p: P) {
         )}
         <div className="he-fb__grid">
           {current.fields.map((field) => (
-            <Field key={field.id} field={field} uid={uid} value={values[field.id]} onChange={set(field.id)} mark={p.optionalMark !== false} hideLabel={p.labels === 'hidden'} />
+            <Field
+              key={field.id}
+              field={field}
+              uid={uid}
+              value={values[field.id]}
+              onChange={set(field.id)}
+              mark={p.optionalMark !== false}
+              hideLabel={p.labels === 'hidden'}
+              drop={p.fileLook === 'drop'}
+              invalid={badField?.id === field.id ? badField.message : undefined}
+            />
           ))}
         </div>
         {/* A trap for bots: people never see it, so anything typed here is not from a person. */}

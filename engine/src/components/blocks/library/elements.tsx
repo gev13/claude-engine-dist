@@ -4,9 +4,10 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
 import { SOCIAL_LABELS, type SocialNetwork } from '@/lib/navigation';
 import { buttonPadProps } from '@/lib/buttonPad';
+import { isColor } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { BlockHead, BlockTitle } from '../parts';
-import { RotatingWords, TeamSplit, TypingWords } from './elements-client';
+import { RotatingWords, ShowAll, TeamSplit, TypingWords } from './elements-client';
 import { KineticText } from './KineticText';
 import { MediaFill } from './media';
 import { SmartLink } from './SmartLink';
@@ -146,13 +147,44 @@ export function TeamBlock(p: P<'team'>) {
     );
   }
 
+  // 3.29 — the first so many, the rest behind a button.
+  const initial = p.initial && p.initial < p.members.length ? p.initial : undefined;
+
+  if (p.variant === 'portrait') {
+    return (
+      <section className={cn('he-lsec he-team', toneClass(p.tone), initial && 'has-more')}>
+        <div className="shell">
+          {head}
+          <ul className={cn('he-team__grid he-swipe-track is-portrait', `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as React.CSSProperties}>
+            {p.members.map((m, i) => (
+              <li
+                key={m.name + i}
+                className={cn('he-team__member', initial !== undefined && i >= initial && 'is-later')}
+                style={m.color && isColor(m.color) ? ({ '--he-team-card': m.color } as React.CSSProperties) : undefined}
+              >
+                <h3 className="he-team__name">{m.name}</h3>
+                {m.role && <p className="he-team__role">{m.role}</p>}
+                {m.imageUrl && (
+                  <div className="he-team__figure">
+                    <MediaFill imageUrl={m.imageUrl} alt={m.name} className="he-fill" />
+                  </div>
+                )}
+              </li>
+            ))}
+          </ul>
+          {initial && <ShowAll label={p.moreLabel} />}
+        </div>
+      </section>
+    );
+  }
+
   return (
-    <section className={cn('he-lsec he-team', toneClass(p.tone))}>
+    <section className={cn('he-lsec he-team', toneClass(p.tone), initial && 'has-more')}>
       <div className="shell">
         {head}
         <ul className={cn('he-team__grid he-swipe-track', `is-${p.variant}`, `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as React.CSSProperties}>
           {p.members.map((m, i) => (
-            <li key={m.name + i} className="he-team__member">
+            <li key={m.name + i} className={cn('he-team__member', initial !== undefined && i >= initial && 'is-later')}>
               <div className="he-team__photo">
                 <MediaFill imageUrl={m.imageUrl} alt={m.name} className="he-fill" />
                 {p.variant === 'overlay' && (m.bio || m.links.length > 0) && (
@@ -180,6 +212,7 @@ export function TeamBlock(p: P<'team'>) {
             </li>
           ))}
         </ul>
+        {initial && <ShowAll label={p.moreLabel} />}
       </div>
     </section>
   );

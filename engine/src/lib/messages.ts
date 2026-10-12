@@ -37,6 +37,8 @@ export const MESSAGES = {
   'blog.featured': 'Featured',
   'block.readMore': 'Read more',
   'block.learnMore': 'Learn more',
+  /** 3.29 — a list showing its first few, then the rest in place (the team block). */
+  'block.showAll': 'Show all',
   'blog.keepReading': 'Keep reading',
   'blog.backToBlog': 'Back to the blog',
   'blog.aboutAuthor': 'About the author',
@@ -107,6 +109,15 @@ export const MESSAGES = {
   'form.next': 'Next',
   'form.back': 'Back',
   'form.step': 'Step {n} of {total}',
+  /** 3.29 — a file field drawn as a drop zone, and the words it always had. */
+  'form.dropFile': 'Drop your file here',
+  'form.or': 'or',
+  'form.browse': 'Browse files',
+  'form.uploaded': 'Uploaded',
+  'form.change': 'Change',
+  'form.fileTypes': 'PDF, Word, JPG or PNG, up to 8 MB.',
+  'form.attached': 'Attached: {name}',
+  'form.invalid': 'That does not look right.',
 
   /* ── Bot protection (2.16) ─────────────────────────────────────────────── */
   'media.pauseBackground': 'Pause background video',
@@ -121,6 +132,9 @@ export const MESSAGES = {
   'newsletter.subscribe': 'Subscribe',
   'newsletter.placeholder': 'Your email address',
   'newsletter.thanks': 'Thank you — you are on the list.',
+  /** 3.29 — the sign-up in the footer (Appearance → Footer → Newsletter). */
+  'footer.newsletterTitle': 'Hear from us first.',
+  'footer.newsletterText': 'Leave your email and we will tell you when something new happens.',
 
   /* ── Media that loads only when asked ────────────────────────────────── */
   'media.showMap': 'Show the map',
@@ -198,6 +212,58 @@ export const MESSAGES = {
   'block.dismiss': 'Dismiss this message',
   'block.filterProjects': 'Filter projects',
   'block.searchTheBlog': 'Search the blog',
+
+  /* ── Careers (3.29) ──────────────────────────────────────────────────
+     The careers pages and the application form were written in English in
+     the components; every word they show is here now. */
+  'careers.title': 'Careers',
+  'careers.openRoles': 'Open roles',
+  'careers.open': 'Open',
+  'careers.closed': 'Closed',
+  'careers.posted': 'Posted {when}',
+  'careers.closes': 'Closes {when}',
+  'careers.closedWhen': 'Closed {when}',
+  'careers.postedLabel': 'Posted',
+  'careers.deadlineLabel': 'Deadline',
+  'careers.left': '{time} left',
+  'careers.explore': 'Explore',
+  'careers.none': 'There are no open roles just now. It is worth looking again — or writing to us anyway.',
+  'careers.allFilled': 'Every role above has been filled. They are left here so the pages people have bookmarked still work.',
+  'careers.about': 'About the role',
+  'careers.responsibilities': 'Responsibilities',
+  'careers.offer': 'What we offer',
+  'careers.apply': 'Apply for this role',
+  'careers.applyFor': 'Apply for {title}',
+  'careers.filled': 'This role has been filled',
+  'careers.filledText': '{title} is no longer taking applications.',
+  'careers.deadlineWas': 'The deadline was {date}.',
+  'careers.seeOpen': 'See the roles that are open',
+  'careers.others': 'Other open roles',
+  'careers.meta.location': 'Location',
+  'careers.meta.department': 'Department',
+  'careers.meta.contractType': 'Contract',
+  'careers.meta.workingTime': 'Working time',
+  'careers.meta.seniority': 'Seniority',
+  'careers.meta.workweek': 'Workweek',
+  'careers.contact': 'Contact information',
+  'careers.name': 'Your name',
+  'careers.email': 'Email',
+  'careers.phone': 'Phone',
+  'careers.cv': 'Your CV',
+  'careers.dropCv': 'Drop your CV here',
+  'careers.cvHint': 'PDF or Word (.docx), up to 8 MB.',
+  'careers.letter': 'Anything you would like to add',
+  'careers.letterPlaceholder': 'Why this role, and what you would bring to it.',
+  'careers.send': 'Send application',
+  'careers.cvNeeded': 'A CV is needed to apply.',
+  'careers.cvType': 'Please attach a PDF or a Word document (.docx).',
+  'careers.cvSize': 'That file is larger than 8 MB. Try exporting it again at a smaller size.',
+  'careers.stored': 'Your CV is stored on this site’s own server and shared only with the people hiring for this role.',
+  'careers.privacy': 'How we handle your data',
+  'careers.thanksTitle': 'Thank you — your application is with us.',
+  'careers.thanksText': 'We have your CV and details for the {title} role. If it looks like a fit, somebody will be in touch by email.',
+  'careers.backHome': 'Back to the homepage',
+  'careers.otherJobs': 'Explore other jobs',
 } as const;
 
 export type MessageKey = keyof typeof MESSAGES;

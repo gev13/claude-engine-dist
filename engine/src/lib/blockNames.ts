@@ -206,8 +206,8 @@ const VARIANTS: Partial<Record<BlockType, VariantInfo>> = {
   team: {
     prop: 'variant',
     fallback: 'cards',
-    labels: { cards: 'Cards', overlay: 'Details on hover', split: 'Profile beside the portraits' },
-    patterns: same('EL8', ['cards', 'overlay', 'split']),
+    labels: { cards: 'Cards', overlay: 'Details on hover', split: 'Profile beside the portraits', portrait: 'Name above, portrait at the foot' },
+    patterns: same('EL8', ['cards', 'overlay', 'split', 'portrait']),
   },
   numberedList: {
     prop: 'variant',

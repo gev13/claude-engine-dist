@@ -388,7 +388,8 @@ export const blockStyleSchema = z.object({
    */
   motion: z.number().min(0).max(5).optional(),
 
-  swipeOn: z.enum(STYLE_BREAKPOINTS).optional(),
+  /** 3.29 — `always`: a sliding row at every width, the desktop too. */
+  swipeOn: z.enum([...STYLE_BREAKPOINTS, 'always']).optional(),
   /** 3.22 — how much of the width each card takes while swiping, in %; unset is 84, so the next card peeks in. */
   swipeWidth: z.number().int().min(20).max(100).optional(),
   /** 3.28 — each card's share on tablets and on phones, over the one above. */
@@ -399,6 +400,9 @@ export const blockStyleSchema = z.object({
   /** 3.28 — those buttons in circles (unset, as before) or as bare chevrons, and their box in px. */
   swipeArrowLook: z.enum(['circle', 'plain']).optional(),
   swipeArrowBox: z.number().int().min(20).max(80).optional(),
+  /** 3.29 — an arrow out of sight at its end (unset, dimmed, as before); the arrows filled in the main button's colours. */
+  swipeArrowEnds: z.enum(['dim', 'hide']).optional(),
+  swipeArrowFill: z.enum(['surface', 'primary']).optional(),
 
   /** Hidden at these widths and below — how visibility was stored before 2.19; still read. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),

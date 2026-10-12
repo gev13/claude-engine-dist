@@ -271,6 +271,31 @@
   .he-team__overlay .he-team__links a { border-color: rgb(255 255 255 / 0.4); color: #fff; }
   .he-team__member:hover .he-team__overlay, .he-team__member:focus-within .he-team__overlay { opacity: 1; }
   .he-team__touch { display: none; }
+  /* 3.29 — the portrait cards: the name and role at the top of a coloured card, the portrait standing at its foot. */
+  .he-team__grid.is-portrait { gap: var(--he-gap, 10px); }
+  .he-team__grid.is-portrait .he-team__member {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 0;
+    aspect-ratio: 435 / 475;
+    padding: 76px 24px 0;
+    overflow: hidden;
+    border-radius: var(--he-card-radius, 16px);
+    clip-path: var(--he-card-clip, none);
+    background: var(--he-team-card, var(--color-surface));
+    text-align: center;
+  }
+  .he-team__grid.is-portrait .he-team__name { margin: 0; font-family: inherit; font-size: clamp(20px, 1.9vw, 26px); font-weight: 400; }
+  .he-team__grid.is-portrait .he-team__role { margin: 10px 0 0; font-size: 14px; letter-spacing: 0.3em; text-transform: uppercase; }
+  .he-team__figure { position: relative; flex: 1; width: 100%; margin-top: 32px; }
+  .he-team__figure .he-fill { object-fit: contain; object-position: center bottom; }
+  @media (width <= 768px) {
+    .he-team__grid.is-portrait .he-team__member { padding-top: 40px; }
+    .he-team__figure { margin-top: 18px; }
+  }
+  /* 3.29 — the later members wait behind "All members". */
+  .he-team.has-more:not(.is-all) .he-team__member.is-later { display: none; }
   @media (hover: none) {
     .he-team__overlay { display: none; }
     .he-team__touch { display: block; }

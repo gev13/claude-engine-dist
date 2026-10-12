@@ -56,6 +56,10 @@
   /* 3.28 — bare chevrons, and a box of their own. */
   .he-swipe-nav.is-plain .he-swipe-nav__btn { border: 0; border-radius: 0; background: none; }
   .he-swipe-nav.has-box .he-swipe-nav__btn { width: var(--he-swipe-btn); height: var(--he-swipe-btn); }
+  /* 3.29 — an arrow at its end out of sight; the arrows in the main button's colours. */
+  .he-swipe-nav.is-hide-ends .he-swipe-nav__btn:disabled { visibility: hidden; }
+  .he-swipe-nav.is-fill-primary .he-swipe-nav__btn { border-color: transparent; background: var(--he-btn-primary-bg, var(--color-flare)); color: var(--he-btn-primary-text, #fff); }
+  .he-swipe-nav.is-fill-primary .he-swipe-nav__btn:hover:not(:disabled) { border-color: transparent; background: var(--he-btn-primary-hover-bg, var(--he-btn-primary-bg, var(--color-flare))); }
 
   /* The shell's side padding, as a value other rules can compute with. */
   :root { --he-shell-pad: 20px; }
@@ -977,4 +981,16 @@
     .he-car.is-desk-1024 .he-car__track { --pv: var(--pv-laptop, var(--pv-base, 3)); --gap: 20px; }
     .he-car.is-desk-1024.has-slide-gap .he-car__track { --gap: var(--he-car-gap); }
   }
+}
+
+/* 3.29 — the details as rows: an icon in a tile, the label, the value (several values on one line, as written). */
+@layer components {
+  .he-info { display: grid; gap: 40px; margin: 0; }
+  .he-info__row { display: flex; align-items: flex-start; gap: 14px; }
+  .he-info__icon { display: grid; flex: none; place-items: center; width: 44px; height: 44px; border-radius: var(--he-chip-radius, 10px); background: color-mix(in srgb, currentColor 8%, transparent); color: var(--color-ash); }
+  .he-info__label { margin: 0; font-size: var(--he-block-text, 16px); font-weight: 500; color: var(--color-bone); }
+  .he-info__value { margin: 8px 0 0; font-size: var(--he-block-text, 16px); color: var(--color-ash); }
+  .he-info__value a { color: inherit; }
+  .he-info__value a:hover { color: var(--color-flare-soft); }
+  @media (width <= 768px) { .he-info { gap: 28px; } }
 }

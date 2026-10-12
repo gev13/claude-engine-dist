@@ -434,3 +434,35 @@ export function TeamSplit({ members, hover }: { members: Member[]; hover: string
     </div>
   );
 }
+
+/**
+ * 3.29 — "All members": the list's later items are in the page already,
+ * hidden by `is-later`; the button marks its section `is-all` and steps
+ * away, and the keyboard lands on the first of them.
+ */
+export function ShowAll({ label }: { label?: string }) {
+  const t = useMessages();
+  const ref = useRef<HTMLDivElement>(null);
+  const [done, setDone] = useState(false);
+  if (done) return null;
+  return (
+    <div className="he-show__more" ref={ref}>
+      <button
+        type="button"
+        className="he-cbtn is-outline is-medium"
+        onClick={() => {
+          const section = ref.current?.closest('section');
+          section?.classList.add('is-all');
+          const first = section?.querySelector<HTMLElement>('.is-later');
+          if (first) {
+            first.tabIndex = -1;
+            first.focus({ preventScroll: true });
+          }
+          setDone(true);
+        }}
+      >
+        {label || t('block.showAll')}
+      </button>
+    </div>
+  );
+}

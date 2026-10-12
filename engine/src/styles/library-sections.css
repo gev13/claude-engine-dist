@@ -24,6 +24,16 @@
     background: var(--color-surface);
   }
   .is-raised .he-mrows__item { background: var(--color-surface-2); }
+  /* 3.29 — the picture on the right in every second row; rows without a card, the words centred beside the picture, which keeps the cards' corners. */
+  @media (width >= 769px) {
+    .he-mrows.is-alternate .he-mrows__item:nth-child(even) { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); padding-right: 0; padding-left: clamp(20px, 4vw, 48px); }
+    .he-mrows.is-alternate.has-media-width .he-mrows__item:nth-child(even) { grid-template-columns: minmax(0, 1fr) minmax(0, var(--he-mrows-media)); }
+    .he-mrows.is-alternate .he-mrows__item:nth-child(even) .he-mrows__media { order: 2; }
+  }
+  .he-mrows.is-plain .he-mrows__item { overflow: visible; border-radius: 0; clip-path: none; background: transparent; }
+  .he-mrows.is-plain .he-mrows__media { overflow: hidden; border-radius: var(--he-card-radius); clip-path: var(--he-card-clip, none); }
+  .he-mrows.is-plain .he-mrows__body { text-align: center; }
+  .he-mrows.is-plain .he-mrows__text { margin-inline: auto; }
   /* 3.8 — a picture column of a chosen width, and the text free to fill the rest. */
   .he-mrows.has-media-width .he-mrows__item { grid-template-columns: minmax(0, var(--he-mrows-media)) minmax(0, 1fr); }
   .he-mrows.has-media-width .he-mrows__text { max-width: none; }

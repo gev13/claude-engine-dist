@@ -20,6 +20,7 @@ import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { resolveBlog, titleClamp, type PostCardOptions } from '@/lib/blog';
 import { getTheme } from '@/server/content/theme';
+import { isColor, isLength } from '@/lib/theme';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
 import { CardTilt } from '@/components/site/CardTilt';
 
@@ -396,6 +397,14 @@ export function PostCollection({
             {(card.excerpt ?? withExcerpt) && post.excerpt && <p className="he-plst__excerpt">{post.excerpt}</p>}
             {card.readMore && labels.readMore && <span className="he-plst__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </div>
+          {/* 3.29 — the round arrow over an overlay card. */}
+          {variant === 'overlay' && card.arrow && (
+            <span className="he-plst__go" aria-hidden="true">
+              <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l6-6M4 3h5v5" />
+              </svg>
+            </span>
+          )}
           {minimal && (
             <span className="he-plst__arrow" aria-hidden="true">
               →
@@ -407,8 +416,18 @@ export function PostCollection({
   });
 
   const clamp = titleClamp(card);
-  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio', clamp.className);
-  const style = { '--cols': columns, ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}), ...clamp.style } as React.CSSProperties;
+  // 3.29 — the overlay cards' reveal, tint and height; checked again, as they land in a style attribute.
+  const overlay = variant === 'overlay';
+  const tint = overlay && card.tint && isColor(card.tint) ? card.tint : undefined;
+  const height = overlay && card.height && isLength(card.height) ? card.height : undefined;
+  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio', clamp.className, overlay && card.reveal && 'is-reveal', tint && 'has-tint');
+  const style = {
+    '--cols': columns,
+    ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}),
+    ...clamp.style,
+    ...(tint ? { '--he-plst-tint': tint } : {}),
+    ...(height ? { '--he-plst-h': height } : {}),
+  } as React.CSSProperties;
 
   const tilt = wantsTilt(card.hover) && <CardTilt />;
   if (pagination === 'none') {

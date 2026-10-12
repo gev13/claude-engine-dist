@@ -27,6 +27,16 @@ export const FONT_CATALOGUE: readonly CatalogueEntry[] = [
     "licence": "OFL-1.1"
   },
   {
+    "key": "alice",
+    "family": "Alice",
+    "role": "serif",
+    "scripts": [
+      "cyrillic",
+      "latin"
+    ],
+    "licence": "OFL-1.1"
+  },
+  {
     "key": "arimo",
     "family": "Arimo",
     "role": "sans",
@@ -145,6 +155,18 @@ export const FONT_CATALOGUE: readonly CatalogueEntry[] = [
     "family": "Fira Sans",
     "role": "sans",
     "scripts": [
+      "cyrillic",
+      "greek",
+      "latin"
+    ],
+    "licence": "OFL-1.1"
+  },
+  {
+    "key": "googleSans",
+    "family": "Google Sans",
+    "role": "sans",
+    "scripts": [
+      "armenian",
       "cyrillic",
       "greek",
       "latin"

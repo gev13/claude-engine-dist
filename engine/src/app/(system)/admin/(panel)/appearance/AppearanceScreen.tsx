@@ -43,7 +43,8 @@ import {
 import { isSafeHref } from '@/lib/navigation';
 import { ArchiveFeaturesPanel, PostFeaturesPanel } from './BlogFeaturePanels';
 import { BlogDetailsPanel } from './BlogDetailsPanel';
-import { FooterExtrasPanel, HeaderExtrasPanel, MenuExtrasPanel, MotionExtrasPanel, PhoneMenuPanel } from './ChromeExtrasPanels';
+import { CareersPanel } from './CareersPanel';
+import { FooterExtrasPanel, HeaderExtrasPanel, LanguagesPanel, MenuExtrasPanel, MotionExtrasPanel, PhoneMenuPanel } from './ChromeExtrasPanels';
 import { FooterDetailsPanel, HeaderDetailsPanel, MenuDetailsPanel, MotionDetailsPanel } from './ChromeDetailsPanels';
 import { ButtonExtrasPanel, EyebrowMarkerPanel, NavTypePanel, PanelSettingsPanel, ShapePanel } from './ShapePanels';
 import { BLOG_INDEX_LABELS, BLOG_POST_LABELS, type BlogIndexLayout, type BlogPostLayout, ARCHIVE_PAGERS, ARCHIVE_PAGER_LABELS, LEGACY_ARCHIVE_PER_PAGE, LEGACY_INDEX_PER_PAGE, MAX_ARCHIVE_PER_PAGE } from '@/lib/blog';
@@ -60,7 +61,7 @@ import {
 
 type ThemeResponse = { theme: Theme };
 
-const TABS = ['Colours', 'Typography', 'Buttons', 'Shape', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Motion', 'Site-wide'] as const;
+const TABS = ['Colours', 'Typography', 'Buttons', 'Shape', 'Layout', 'Brand', 'Header & menus', 'Footer', 'Blog', 'Careers', 'Motion', 'Site-wide'] as const;
 
 /** A row of choice cards: the variant pickers for header, menus and footer. */
 function VariantPicker<T extends string>({
@@ -902,6 +903,7 @@ function AppearanceScreenInner() {
               <HeaderDetailsPanel chrome={theme.chrome} set={set} />
 
               <NavTypePanel theme={theme} set={set} />
+              <LanguagesPanel chrome={theme.chrome} set={set} />
 
               <Panel title="Desktop dropdowns">
                 <VariantPicker<MegaVariant>
@@ -1196,6 +1198,9 @@ function AppearanceScreenInner() {
               <BlogDetailsPanel blog={theme.blog} set={set} />
             </>
           )}
+
+          {/* 3.29 */}
+          {tab === 'Careers' && <CareersPanel careers={theme.careers} set={set} />}
 
           {tab === 'Motion' && (
             <>

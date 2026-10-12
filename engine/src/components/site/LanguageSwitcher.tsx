@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { localeName } from '@/lib/locales';
+import { cn } from '@/lib/utils';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Language switcher
@@ -18,14 +19,30 @@ import { localeName } from '@/lib/locales';
    would be a lie about what they clicked.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/** 3.29 — how the switcher is drawn, from `chrome.languages`. */
+export type LanguageLook = {
+  look?: 'menu' | 'inline';
+  labels?: Record<string, string>;
+  order?: string[];
+  mark?: 'underline' | 'colour';
+  gap?: string;
+};
+
 export function LanguageSwitcher({
   locales,
   current,
   defaultLocale,
+  look,
+  keep = true,
+  className,
 }: {
   locales: string[];
   current: string;
   defaultLocale: string;
+  look?: LanguageLook;
+  /** Survives the breakpoint that folds the header's actions (as before); off when the open menu carries its own copy. */
+  keep?: boolean;
+  className?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [alternates, setAlternates] = useState<Record<string, string>>({});
@@ -61,9 +78,29 @@ export function LanguageSwitcher({
   /** This page in that language if it exists; that language's home if not. */
   const hrefFor = (code: string) => alternates[code] ?? (code === defaultLocale ? '/' : `/${code}`);
 
+  /* 3.29 — the codes in a row (РУ  ՀՅ  EN), the current one marked; each
+     reads as its own language to a screen reader. */
+  if (look?.look === 'inline') {
+    const ordered = look.order?.length ? [...look.order.filter((code) => locales.includes(code)), ...locales.filter((code) => !look.order!.includes(code))] : locales;
+    return (
+      <ul
+        className={cn('he-langs', keep && 'he-keep', look.mark === 'colour' && 'is-mark-colour', className)}
+        style={look.gap ? ({ '--he-langs-gap': look.gap } as React.CSSProperties) : undefined}
+      >
+        {ordered.map((code) => (
+          <li key={code}>
+            <a href={hrefFor(code)} className="he-langs__item" lang={code} hrefLang={code} aria-label={localeName(code)} aria-current={code === current ? 'true' : undefined}>
+              {look.labels?.[code] || code.toUpperCase()}
+            </a>
+          </li>
+        ))}
+      </ul>
+    );
+  }
+
   return (
     // `he-keep` survives the breakpoint that collapses the header's actions.
-    <div className="he-lang he-keep" ref={box}>
+    <div className={cn('he-lang', keep && 'he-keep', className)} ref={box}>
       <button
         type="button"
         className="he-lang__button"

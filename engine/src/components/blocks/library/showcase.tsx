@@ -379,7 +379,7 @@ export function GalleryBlock(p: P<'gallery'>) {
         <div className="he-cq">
           {rowOrder && <MasonryRows turn={p.masonryOrder === 'turn'} />}
           <ul
-            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows', p.gapLength && 'has-gap')}
+            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows', p.gapLength && 'has-gap', p.cardCorners && 'is-card-corners')}
             style={
               {
                 '--cols': p.columns,
@@ -422,6 +422,14 @@ export function GalleryBlock(p: P<'gallery'>) {
                       }}
                     >
                       {media}
+                      {p.zoomIcon && (
+                        <span className="he-gal__zoom" aria-hidden="true">
+                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                            <circle cx="11" cy="11" r="7" />
+                            <path d="M16.5 16.5L21 21M11 8v6M8 11h6" />
+                          </svg>
+                        </span>
+                      )}
                     </button>
                   ) : (
                     <div className="he-gal__media">{media}</div>

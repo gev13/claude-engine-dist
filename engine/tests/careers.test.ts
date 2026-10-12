@@ -95,7 +95,7 @@ describe('the JobPosting node', () => {
       location: 'Yerevan',
       contractType: 'Full time',
       department: 'Engineering',
-      organisationName: 'Wellar Group',
+      organisationName: 'Northwind Group',
       ...over,
     }) as Record<string, unknown>;
 
@@ -113,7 +113,7 @@ describe('the JobPosting node', () => {
      bare @id reference, so the name is written out as well. */
   it('names the hiring organisation rather than only referencing it', () => {
     const hiring = node().hiringOrganization as Record<string, unknown>;
-    expect(hiring.name).toBe('Wellar Group');
+    expect(hiring.name).toBe('Northwind Group');
     expect(hiring['@type']).toBe('Organization');
   });
 

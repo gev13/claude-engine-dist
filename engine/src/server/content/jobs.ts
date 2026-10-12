@@ -26,6 +26,8 @@ export type JobCard = {
   location: string;
   contractType: string;
   department: string;
+  /** 3.29 — on the card too, for the "LOCATION · FULL-TIME" line. */
+  workingTime: string;
   postedAt: Date | null;
   deadline: Date | null;
   isOpen: boolean;
@@ -34,7 +36,6 @@ export type JobCard = {
 export type JobDetail = JobCard & {
   locale: Locale;
   translationGroupId: string;
-  workingTime: string;
   seniority: string;
   workweek: string;
   description: string;
@@ -59,6 +60,7 @@ const cardColumns = {
   location: jobs.location,
   contractType: jobs.contractType,
   department: jobs.department,
+  workingTime: jobs.workingTime,
   postedAt: jobs.postedAt,
   deadline: jobs.deadline,
   isOpen: jobs.isOpen,

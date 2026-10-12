@@ -80,6 +80,10 @@ export function PostFeaturesPanel({ blog, set }: { blog: BlogSettings | undefine
           <Field label="Cover, then a title card: overlap" hint="how far the card rides up over the cover; 0 starts it right under; empty is 48–120px">
             <Input value={blog?.coverOverlap ?? ''} placeholder="e.g. 80px or 0" maxLength={40} onChange={(e) => set(['blog', 'coverOverlap'])(e.target.value.trim() || undefined)} />
           </Field>
+          {/* 3.29 */}
+          <Field label="Cover card beside the article: tint" hint="the colour fading up under the words; empty is black">
+            <Input value={blog?.coverTint ?? ''} placeholder="#3b2f6b" maxLength={60} onChange={(e) => set(['blog', 'coverTint'])(e.target.value.trim() || undefined)} />
+          </Field>
         </div>
         <Check label="“Back to the blog” above the title" checked={blog?.backLink === true} onChange={(v) => set(['blog', 'backLink'])(v || undefined)} />
         <Check label="The excerpt under the title" checked={blog?.excerpt !== false} onChange={(v) => set(['blog', 'excerpt'])(v ? undefined : false)} />
@@ -414,6 +418,20 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
               options={[['', 'Every line'], ['2', 'Two lines at most, then …'], ['3', 'Three lines at most, then …']]}
               onChange={(value) => setCard('titleLines', value === '2' ? 2 : value === '3' ? 3 : undefined)}
             />
+          </div>
+          {/* 3.29 — the Overlay index's cards. */}
+          <p className="m-0 mt-4 mb-2 text-[12px] text-smoke">Text over the picture (the Overlay index):</p>
+          <div className="grid max-w-[600px] gap-2 sm:grid-cols-2">
+            <Check label="Only the picture until the pointer is on it" checked={card.reveal === true} onChange={(v) => setCard('reveal', v || undefined)} />
+            <Check label="A round arrow with the words" checked={card.arrow === true} onChange={(v) => setCard('arrow', v || undefined)} />
+          </div>
+          <div className="mt-3 grid max-w-[600px] gap-4 sm:grid-cols-2">
+            <Field label="The overlay’s colour" hint="fades up from the bottom; empty is black">
+              <Input value={card.tint ?? ''} placeholder="#3b2f6b" onChange={(e) => setCard('tint', e.target.value.trim() || undefined)} />
+            </Field>
+            <Field label="Card height" hint="e.g. 520px; empty is 380px">
+              <Input value={card.height ?? ''} placeholder="380px" onChange={(e) => setCard('height', e.target.value.trim() || undefined)} />
+            </Field>
           </div>
           <div className="mt-4 max-w-[600px]">
             <CardHoverFields value={card.hover} onChange={(hover) => setCard('hover', hover)} />

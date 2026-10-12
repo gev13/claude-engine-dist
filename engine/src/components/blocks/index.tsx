@@ -1,3 +1,4 @@
+import { InfoIcon } from '@/components/site/InfoIcon';
 import Link from '@/components/ui/SiteLink';
 import type { z } from 'zod';
 import { Accordion } from '@/components/ui/Accordion';
@@ -627,6 +628,41 @@ export function TableBlock(p: P<'table'>) {
 
 /* ── infoPanel ────────────────────────────────────────────────────────────── */
 export function InfoPanelBlock(p: P<'infoPanel'>) {
+  // 3.29 — one row a detail, an icon in a tile beside the label and the value.
+  if (p.layout === 'list') {
+    return (
+      <Section tone={p.tone ?? 'raised'} size="md">
+        {p.title && (
+          <BlockTitle as={p.titleAs ?? 'h3'} className="mb-6">
+            {p.title}
+          </BlockTitle>
+        )}
+        <dl className="he-info">
+          {p.items.map((item, i) => (
+            <div key={item.label + i} className="he-info__row">
+              {item.icon && (
+                <span className="he-info__icon">
+                  <InfoIcon name={item.icon} />
+                </span>
+              )}
+              <div>
+                <dt className="he-info__label">{item.label}</dt>
+                <dd className="he-info__value">
+                  {item.href ? (
+                    <a href={item.href} {...(/^https?:/.test(item.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}>
+                      {item.value}
+                    </a>
+                  ) : (
+                    item.value
+                  )}
+                </dd>
+              </div>
+            </div>
+          ))}
+        </dl>
+      </Section>
+    );
+  }
   return (
     <Section tone={p.tone ?? 'raised'} size="md">
       {p.title && (

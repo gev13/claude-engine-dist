@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { INFO_ICONS } from './infoIcons';
 import { cardHoverSchema } from './cardHover';
 
 /** Ids become part of a CSS selector, so they are constrained to what is safe there. */
@@ -136,7 +137,8 @@ export const NOTICE_KINDS = ['info', 'success', 'warning', 'danger'] as const;
 export const COUNTDOWN_UNITS = ['months', 'days', 'hours', 'minutes', 'seconds'] as const;
 /** `short` (2.18) — "Fb. / Ig. / Lk.". */
 export const SOCIAL_STYLES = ['plain', 'outlined', 'filled', 'text', 'boxed', 'short'] as const;
-export const TEAM_VARIANTS = ['cards', 'overlay', 'split'] as const;
+/** 3.29 adds `portrait`: the name and role at the top of a coloured card, the portrait standing at its foot. */
+export const TEAM_VARIANTS = ['cards', 'overlay', 'split', 'portrait'] as const;
 
 const sizeSml = z.enum(['small', 'medium', 'large']);
 const socialItem = z.object({ network: z.enum(SOCIAL_NETWORKS), href: safeHref, short: z.string().trim().max(8).optional() });
@@ -306,6 +308,12 @@ export const blockSchemas = {
     dividers: z.boolean().optional(),
     /** 3.15 — with the rules: on phones, two by two with a cross between them (unset drops the rules there, as before). */
     dividersMobile: z.enum(['cross']).optional(),
+    /** 3.29 — the figures row: the label above the number; each figure a card (the cards' corners, in this colour or the surface); every second one lower by this much (e.g. 40px); the words from the left. */
+    labelFirst: z.boolean().optional(),
+    cards: z.boolean().optional(),
+    cardColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
+    stagger: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    alignLeft: z.boolean().optional(),
   }),
 
   /**
@@ -405,15 +413,33 @@ export const blockSchemas = {
     moreArrow: z.enum(['chevron', 'theme']).optional(),
     /** 3.15 — picture rows: the picture's shape on phones (e.g. 326/154); unset keeps 50:33. */
     mediaRatioMobile: phoneRatio,
+    /** 3.29 — picture rows: the picture on the right in every second row; the rows drawn without a card behind them (the words centred beside the picture). */
+    alternate: z.boolean().optional(),
+    plainRows: z.boolean().optional(),
     /**
      * 2.22 — cards: how many cards each row holds, in turn — "2-3" is two,
      * then three, then two… A bento of mixed widths; unset is the even grid.
      */
     pattern: z.string().regex(/^[1-4](-[1-4]){1,5}$/, 'Counts of 1 to 4, separated by hyphens, e.g. 2-3').optional(),
+    /**
+     * 3.29 — pictures with text over them: the shade between them (dark from
+     * the bottom, as before; none, for words on a quiet part of the picture;
+     * or a colour fading up), the words light or dark, and the cards' height.
+     */
+    shade: z.enum(['dark', 'none', 'tint']).optional(),
+    shadeColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
+    textTone: z.enum(['light', 'dark']).optional(),
+    cardHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    cardHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     cards: z.array(
       z.object({
         /** This card's own colour, spacing and edge — see `lib/itemStyle.ts`. */
         style: itemStyleSchema.optional(),
+        /** 3.29 — pictures with text over them: where the words sit, where the picture is anchored, and the twelfths and rows the card takes (a bento of its own, from tablets up). */
+        textPlace: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
+        imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right']).optional(),
+        span: z.number().int().min(1).max(12).optional(),
+        rowSpan: z.number().int().min(1).max(3).optional(),
         eyebrow: z.string().optional(),
         title: z.string(),
         /** 3.6 — words after the title in a colour of their own ("Northwind / the security side"). */
@@ -544,6 +570,10 @@ export const blockSchemas = {
     hover: z.enum(['zoom', 'lift', 'greyscale', 'none']).default('zoom'),
     captions: z.enum(['none', 'below', 'overlay']).default('none'),
     lightbox: z.boolean().default(true),
+    /** 3.29 — a round magnifier over a picture under the pointer, saying it opens larger. */
+    zoomIcon: z.boolean().optional(),
+    /** 3.29 — the pictures' corners as the site's cards are (Appearance → Shape), instead of the radius above. */
+    cardCorners: z.boolean().optional(),
     images: z
       /* 2.17 — `videoUrl` makes the tile a moving picture (an uploaded film,
          muted and looped while on screen); `url` is its poster. */
@@ -833,6 +863,14 @@ export const blockSchemas = {
         categoryPlace: z.enum(['line', 'under']).optional(),
         /** 3.24 — the title cut to two or three lines, with an ellipsis; unset is every line. */
         titleLines: z.union([z.literal(2), z.literal(3)]).optional(),
+        /** 3.29 — the overlay cards: only the picture until the pointer is on it, then the words rise over a tint (always shown on touch screens). */
+        reveal: z.boolean().optional(),
+        /** 3.29 — the overlay's colour, fading up from the bottom (unset, black). */
+        tint: z.string().trim().max(60).refine(isColor, 'Not a valid colour').optional(),
+        /** 3.29 — a round arrow over the card, with the words. */
+        arrow: z.boolean().optional(),
+        /** 3.29 — the overlay cards' height, e.g. 520px (unset 380px). */
+        height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
       })
       .optional(),
     /** 3.28 — the plain cards drawn as the blog's archive cards (Appearance → Blog → Details), and the "All writing →" link under them (unset, shown). */
@@ -860,7 +898,17 @@ export const blockSchemas = {
     tone,
     title: z.string().optional(),
     titleAs: textTagSchema.optional(),
-    items: z.array(z.object({ label: z.string(), value: z.string() })),
+    /** 3.29 — `list`: one row a detail, an icon in a tile beside the label and the value. */
+    layout: z.enum(['grid', 'list']).optional(),
+    items: z.array(
+      z.object({
+        label: z.string(),
+        value: z.string(),
+        /** 3.29 — the row's icon, and an address the value opens (tel:, mailto:, a page). */
+        icon: z.enum(INFO_ICONS).optional(),
+        href: safeHref.optional(),
+      }),
+    ),
   }),
 
   /** Editorial image with caption. */
@@ -1186,6 +1234,13 @@ export const blockSchemas = {
         accentArrow: z.boolean().optional(),
       })
       .optional(),
+    /** 3.29 — the text in a panel of its own over the picture: frosted glass or a solid colour; its colour, blur (px) and distance from the band's edges. */
+    textPanel: z.enum(['none', 'glass', 'solid']).optional(),
+    panelColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
+    panelBlur: z.number().int().min(0).max(40).optional(),
+    panelInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.29 — the eyebrow and heading on the left, the text and buttons on the right, across the band's width. */
+    split: z.boolean().optional(),
     eyebrow: text(80),
     title: z.string().max(200).default(''),
     titleAs: textTagSchema.optional(),
@@ -1598,6 +1653,9 @@ export const blockSchemas = {
     variant: z.enum(TEAM_VARIANTS).default('cards'),
     columns: z.union([z.literal(2), z.literal(3), z.literal(4)]).default(3),
     hover: z.enum(['none', 'scale', 'greyscale']).default('none'),
+    /** 3.29 — the first so many, then a button that shows the rest in place ("All members"). */
+    initial: z.number().int().min(1).max(48).optional(),
+    moreLabel: text(40),
     members: z
       .array(
         z.object({
@@ -1606,10 +1664,12 @@ export const blockSchemas = {
           bio: text(300),
           imageUrl: mediaUrl.optional(),
           links: z.array(socialItem).max(4).default([]),
+          /** 3.29 — the portrait card's own colour. */
+          color: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
         }),
       )
       .min(1)
-      .max(16),
+      .max(48),
   }),
 
   /** HR7 — full-screen panels that slide over one another as the page scrolls. */
@@ -1987,6 +2047,15 @@ export const blockSchemas = {
     submitBorderWidth: z.number().int().min(0).max(4).optional(),
     successTitle: text(120),
     successText: text(400),
+    /** 3.29 — up to two buttons under the thanks ("Back to home", "Send another"); `#again` opens the form again. And the thanks plain, without the rule beside it. */
+    successButtons: z
+      .array(z.object({ label: z.string().trim().min(1).max(60), href: z.string().trim().min(1).max(500).refine((v) => v === '#again' || isSafeHref(v), 'A page, an address, or #again'), style: z.enum(['primary', 'outline']).optional(), arrow: z.boolean().optional() }))
+      .max(2)
+      .optional(),
+    successPlain: z.boolean().optional(),
+    /** 3.29 — a file question drawn as a drop zone ("Drop your file here · Browse files"); a wrong answer marked at its own field, with the message under it. */
+    fileLook: z.enum(['native', 'drop']).optional(),
+    inlineErrors: z.boolean().optional(),
     /* ── 2.16 (T12, T13) ────────────────────────────────────────────────── */
     /** Bot protection for this form: the site's setting, or on or off regardless. */
     captcha: z.enum(['inherit', 'on', 'off']).default('inherit'),

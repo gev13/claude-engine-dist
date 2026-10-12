@@ -75,6 +75,9 @@ const FAMILIES = [
   ['IBM Plex Mono', 'mono'], ['Inconsolata', 'mono'],
 
   ['Noto Sans Armenian', 'sans'], ['Noto Serif Armenian', 'serif'],
+  // 3.29 — a soft serif for display type, with Cyrillic; Google's own sans, Armenian included.
+  ['Alice', 'serif'],
+  ['Google Sans', 'sans'],
 ];
 
 const ROOT = path.resolve(import.meta.dirname, '..');

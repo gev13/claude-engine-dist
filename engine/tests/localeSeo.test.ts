@@ -3,7 +3,7 @@ import { buildMetadata } from '@/lib/seo/metadata';
 import { urlSet } from '@/lib/seo/sitemap';
 import { parseLocales } from '@/lib/locales';
 
-/** The three the Wellar site is configured for. */
+/** Three languages, as a multilingual site might configure them. */
 const LANGS = parseLocales('en,hy,ru');
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -26,7 +26,7 @@ const THREE = [
   { locale: 'ru' as const, path: '/o-nas' },
 ];
 
-const base = { title: 'About', description: 'About us', siteName: 'Wellar', config: LANGS };
+const base = { title: 'About', description: 'About us', siteName: 'Northwind', config: LANGS };
 
 describe('canonical', () => {
   it('is the page’s own URL in its own language, never the English one', () => {

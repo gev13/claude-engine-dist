@@ -2,7 +2,9 @@
 
 import { useId, useRef, useState } from 'react';
 import { useChallenge } from '@/components/site/Captcha';
+import { FileDrop } from '@/components/site/FileDrop';
 import { useMessages } from '@/components/site/Messages';
+import Link from '@/components/ui/SiteLink';
 import { cn } from '@/lib/utils';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -12,11 +14,15 @@ import { cn } from '@/lib/utils';
    set: this should look like every other form on the site, and a careers page
    that styles its inputs differently reads as a bolted-on third-party widget.
 
-   It posts `multipart/form-data`, because it carries a file — the only form
-   in the engine that does. The size and type are checked here so somebody who
-   picks a 40 MB scan is told instantly rather than after uploading it, and
-   checked again on the server by the file's actual bytes, because a check in
-   the browser is a courtesy and never a control.
+   It posts `multipart/form-data`, because it carries a file. The size and
+   type are checked here so somebody who picks a 40 MB scan is told instantly
+   rather than after uploading it, and checked again on the server by the
+   file's actual bytes, because a check in the browser is a courtesy and never
+   a control.
+
+   3.29 — every word is a `careers.*` message, so the form reads in the page's
+   language; and Appearance → Careers can put the words inside the fields, the
+   CV in a drop zone and two buttons under the thanks.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /** Mirrors `CV_MAX_BYTES` and `ALLOWED_CV_EXTENSIONS` in server/applications/storage.ts. */
@@ -30,11 +36,20 @@ export function ApplicationForm({
   jobId,
   jobTitle,
   privacyPath,
+  placeholders = false,
+  dropZone = false,
+  doneLinks,
 }: {
   jobId: string;
   jobTitle: string;
   /** A link to the privacy notice, when the site has one. */
   privacyPath?: string | null;
+  /** 3.29 — the words inside the fields rather than above them. */
+  placeholders?: boolean;
+  /** 3.29 — the CV as a drop zone. */
+  dropZone?: boolean;
+  /** 3.29 — "Back to the homepage" and "Explore other jobs" under the thanks. */
+  doneLinks?: { home: string; careers: string };
 }) {
   const uid = useId();
   const [state, setState] = useState<State>('idle');
@@ -44,29 +59,30 @@ export function ApplicationForm({
   const challenge = useChallenge('careers');
   const formRef = useRef<HTMLFormElement>(null);
 
-  function onFile(event: React.ChangeEvent<HTMLInputElement>) {
-    const file = event.target.files?.[0];
+  /** The CV's type and size, checked as it is chosen; false refuses it. */
+  function checkCv(file: File | null): boolean {
     setError('');
     if (!file) {
       setCvName('');
-      return;
+      return true;
     }
-
     const extension = (file.name.split('.').pop() ?? '').toLowerCase();
     if (!(EXTENSIONS as readonly string[]).includes(extension)) {
-      setError('Please attach a PDF or a Word document (.docx).');
-      event.target.value = '';
+      setError(t('careers.cvType'));
       setCvName('');
-      return;
+      return false;
     }
     if (file.size > MAX_BYTES) {
-      setError('That file is larger than 8 MB. Try exporting it again at a smaller size.');
-      event.target.value = '';
+      setError(t('careers.cvSize'));
       setCvName('');
-      return;
+      return false;
     }
-
     setCvName(file.name);
+    return true;
+  }
+
+  function onFile(event: React.ChangeEvent<HTMLInputElement>) {
+    if (!checkCv(event.target.files?.[0] ?? null)) event.target.value = '';
   }
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
@@ -79,7 +95,7 @@ export function ApplicationForm({
 
     const cv = data.get('cv');
     if (!(cv instanceof File) || cv.size === 0) {
-      setError('A CV is needed to apply.');
+      setError(t('careers.cvNeeded'));
       return;
     }
 
@@ -99,98 +115,102 @@ export function ApplicationForm({
       const response = await fetch('/api/applications', { method: 'POST', body: data });
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as { error?: string };
-        throw new Error(body.error ?? 'Something went wrong. Please try again.');
+        throw new Error(body.error ?? t('form.error'));
       }
       setState('sent');
     } catch (caught) {
       challenge.reset();
       setState('idle');
-      setError(caught instanceof Error ? caught.message : 'Something went wrong. Please try again.');
+      setError(caught instanceof Error ? caught.message : t('form.error'));
     }
   }
 
   if (state === 'sent') {
     return (
-      <div className="he-fb__done" role="status">
-        <p className="he-fb__donetitle">Thank you — your application is with us.</p>
-        <p className="he-fb__donetext">
-          We have your CV and details for the {jobTitle} role. If it looks like a fit, somebody will be in touch by
-          email.
-        </p>
+      <div className={cn('he-fb__done', doneLinks && 'is-plain')} role="status">
+        <p className="he-fb__donetitle">{t('careers.thanksTitle')}</p>
+        <p className="he-fb__donetext">{t('careers.thanksText', { title: jobTitle })}</p>
+        {doneLinks && (
+          <div className="he-fb__donebtns">
+            <Link href={doneLinks.home} className="he-cbtn is-medium is-outline">
+              {t('careers.backHome')}
+            </Link>
+            <Link href={doneLinks.careers} className="he-cbtn is-medium is-primary">
+              <span>{t('careers.otherJobs')}</span>
+            </Link>
+          </div>
+        )}
       </div>
     );
   }
+
+  /** A field's label: above it (as before), or for screen readers only when its words are inside it. */
+  const label = (id: string, text: string, optional = false) => (
+    <label className={placeholders ? 'he-fb__label sr-only' : 'he-fb__label'} htmlFor={`${uid}-${id}`}>
+      {text}
+      {optional && <span className="he-fb__opt">{` (${t('form.optional')})`}</span>}
+    </label>
+  );
+  const hint = (text: string) => (placeholders ? text : undefined);
 
   return (
     <form
       ref={formRef}
       onSubmit={submit}
       noValidate
-      className="he-fb__form"
-      aria-label={`Apply for ${jobTitle}`}
+      className={cn('he-fb__form', placeholders && 'is-placeholders')}
+      aria-label={t('careers.applyFor', { title: jobTitle })}
       encType="multipart/form-data"
     >
-      <div className="he-fb__grid">
+      {placeholders && <p className="he-fb__label he-apply__group">{t('careers.contact')}</p>}
+      <div className={cn('he-fb__grid', placeholders && 'he-apply__grid')}>
         <div className="he-fb__field is-half">
-          <label className="he-fb__label" htmlFor={`${uid}-name`}>
-            Your name
-          </label>
-          <input id={`${uid}-name`} name="name" required autoComplete="name" className="he-fb__input" />
+          {label('name', t('careers.name'))}
+          <input id={`${uid}-name`} name="name" required autoComplete="name" className="he-fb__input" placeholder={hint(t('careers.name'))} />
         </div>
 
         <div className="he-fb__field is-half">
-          <label className="he-fb__label" htmlFor={`${uid}-email`}>
-            Email
-          </label>
-          <input
-            id={`${uid}-email`}
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-            className="he-fb__input"
-          />
+          {label('email', t('careers.email'))}
+          <input id={`${uid}-email`} name="email" type="email" required autoComplete="email" className="he-fb__input" placeholder={hint(t('careers.email'))} />
         </div>
 
         <div className="he-fb__field is-half">
-          <label className="he-fb__label" htmlFor={`${uid}-phone`}>
-            Phone <span className="he-fb__opt">(optional)</span>
-          </label>
-          <input id={`${uid}-phone`} name="phone" type="tel" autoComplete="tel" className="he-fb__input" />
+          {label('phone', t('careers.phone'), true)}
+          <input id={`${uid}-phone`} name="phone" type="tel" autoComplete="tel" className="he-fb__input" placeholder={hint(t('careers.phone'))} />
         </div>
 
-        <div className="he-fb__field is-half">
-          <label className="he-fb__label" htmlFor={`${uid}-cv`}>
-            Your CV
-          </label>
-          <input
-            id={`${uid}-cv`}
-            name="cv"
-            type="file"
-            required
-            accept={ACCEPT}
-            onChange={onFile}
-            className="he-fb__input he-apply__file"
-            aria-describedby={`${uid}-cv-help`}
-          />
-          <p id={`${uid}-cv-help`} className="he-fb__help">
-            {cvName ? `Attached: ${cvName}` : 'PDF or Word (.docx), up to 8 MB.'}
-          </p>
-        </div>
+        {!dropZone && (
+          <div className="he-fb__field is-half">
+            <label className="he-fb__label" htmlFor={`${uid}-cv`}>
+              {t('careers.cv')}
+            </label>
+            <input id={`${uid}-cv`} name="cv" type="file" required accept={ACCEPT} onChange={onFile} className="he-fb__input he-apply__file" aria-describedby={`${uid}-cv-help`} />
+            <p id={`${uid}-cv-help`} className="he-fb__help">
+              {cvName ? t('form.attached', { name: cvName }) : t('careers.cvHint')}
+            </p>
+          </div>
+        )}
 
         <div className="he-fb__field">
-          <label className="he-fb__label" htmlFor={`${uid}-letter`}>
-            Anything you would like to add <span className="he-fb__opt">(optional)</span>
-          </label>
+          {label('letter', t('careers.letter'), true)}
           <textarea
             id={`${uid}-letter`}
             name="coverLetter"
-            rows={6}
+            rows={placeholders ? 4 : 6}
             maxLength={8000}
             className="he-fb__input"
-            placeholder="Why this role, and what you would bring to it."
+            placeholder={placeholders ? t('careers.letter') : t('careers.letterPlaceholder')}
           />
         </div>
+
+        {dropZone && (
+          <div className="he-fb__field he-apply__cv">
+            <label className="he-fb__label" htmlFor={`${uid}-cv`}>
+              {t('careers.cv')}
+            </label>
+            <FileDrop id={`${uid}-cv`} name="cv" required accept={ACCEPT} dropText={t('careers.dropCv')} hint={t('careers.cvHint')} onFile={checkCv} />
+          </div>
+        )}
       </div>
 
       {/* The honeypot. Hidden from people and from screen readers; anything
@@ -209,19 +229,19 @@ export function ApplicationForm({
         </p>
       )}
 
-      <div className="he-fb__actions">
-        <button type="submit" className={cn('he-btn', 'he-btn--primary')} disabled={state === 'sending'}>
-          {state === 'sending' ? 'Sending…' : 'Send application'}
+      <div className={cn('he-fb__actions', placeholders && 'he-apply__actions')}>
+        <button type="submit" className="he-btn he-btn-primary" disabled={state === 'sending'}>
+          {state === 'sending' ? t('form.sending') : t('careers.send')}
         </button>
       </div>
 
       <p className="he-fb__help he-apply__note">
-        Your CV is stored on this site&rsquo;s own server and shared only with the people hiring for this role.
+        {t('careers.stored')}
         {privacyPath ? (
           <>
             {' '}
             <a href={privacyPath} className="he-link">
-              How we handle your data
+              {t('careers.privacy')}
             </a>
             .
           </>

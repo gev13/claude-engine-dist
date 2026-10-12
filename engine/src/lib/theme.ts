@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { blogSchema } from './blog';
+import { careersLookSchema } from './careersLook';
 import { chromeSchema } from './chrome';
 import { cornerShapeSchema } from './shape';
 import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
@@ -381,6 +382,8 @@ export const themeSchema = z.object({
 
   /** The blog's list and post layouts — see src/lib/blog.ts. */
   blog: blogSchema.optional(),
+  /** 3.29 — the careers pages' look (lib/careersLook.ts). */
+  careers: careersLookSchema.optional(),
 
   /**
    * The text sizes inside blocks.
@@ -570,6 +573,9 @@ export const themeSchema = z.object({
       gap: length.optional(),
       color: color.optional(),
       activeColor: color.optional(),
+      /** 3.29 — the current page's link underlined, in the header and in the open menu; the line's distance below the words. */
+      activeUnderline: z.boolean().optional(),
+      underlineOffset: length.optional(),
     })
     .optional(),
 

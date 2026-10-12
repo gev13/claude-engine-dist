@@ -179,7 +179,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
 /** 3.22 — ‹ › for a grid that swipes, when the Design tab asks for them. */
 function swipeArrows(style: BlockStyle) {
   if (!style.swipeOn || !style.swipeArrows || style.swipeArrows === 'none') return null;
-  return <SwipeArrows placement={style.swipeArrows} look={style.swipeArrowLook} box={style.swipeArrowBox} />;
+  return <SwipeArrows placement={style.swipeArrows} look={style.swipeArrowLook} box={style.swipeArrowBox} ends={style.swipeArrowEnds} fill={style.swipeArrowFill} />;
 }
 
 /** Width, entrance, hover, sticky, snap and shape classes a styled block or row carries (P3-C). */

@@ -209,7 +209,27 @@
     font: inherit;
   }
   .he-gal__media.is-zoomable { cursor: zoom-in; }
+  /* 3.29 — the round magnifier, over the picture under the pointer or the keyboard's focus. */
+  .he-gal__zoom {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    width: 60px;
+    height: 60px;
+    border-radius: 999px;
+    background: var(--he-btn-primary-bg, var(--color-flare));
+    color: var(--he-btn-primary-text, #fff);
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.85);
+    transition: opacity calc(200ms * var(--he-motion, 1)), transform calc(200ms * var(--he-motion, 1));
+    pointer-events: none;
+  }
+  .he-gal__media.is-zoomable:is(:hover, :focus-visible) .he-gal__zoom { opacity: 1; transform: translate(-50%, -50%); }
   .he-gal.is-gap-none .he-gal__media { border-radius: 0; }
+  .he-gal.is-card-corners .he-gal__media { border-radius: var(--he-card-radius, 16px); clip-path: var(--he-card-clip, none); }
   .he-gal__media:focus-visible { outline: 3px solid var(--color-flare); outline-offset: 3px; }
   .he-gal.is-grid .he-gal__media { aspect-ratio: 1; }
   .he-gal.is-grid.is-landscape .he-gal__media { aspect-ratio: 4 / 3; }

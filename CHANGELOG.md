@@ -10,6 +10,71 @@ improvements.
 
 ---
 
+## 3.29.0 — 2026-10-12
+
+**Rounded corners on two sides, languages in a row, a careers section to
+design with, and the cards, sliders and forms a brand site asks for.** Every
+option is off, or draws what it drew before, until it is set.
+
+Fixed:
+
+- **The application form's send button is filled** in the main button's
+  colours. It used a class no stylesheet defines, so it was drawn without a
+  background.
+- **Every word on the careers pages and in the application form can be
+  translated** (Site translations → careers). They were written in English
+  in the components, so a Russian or Armenian page showed English.
+
+Added:
+
+- **Appearance → Shape → Rounded on chosen corners only**, for cards,
+  buttons, fields, chips, pictures, panels, a section's own corners and a
+  card's own: the ticked corners rounded (top right and bottom left unless
+  chosen), the others square.
+- **Header & menus → Language switcher**: the codes in a row (РУ ՀՅ EN) with
+  labels and an order of their own, the current one underlined or coloured;
+  in the open menu under the links; in the footer, always or on phones only.
+- **Navigation → Underline the current page's link**, in the header and in
+  the open menu.
+- **Footer**: an email sign-up in the head column (words in Site
+  translations), the social links as a column of their own, a huge wordmark
+  along the bottom edge (the logo, a picture or the site name) cropped by the
+  page's end, the bottom row left out, and on phones the menus first and side
+  by side.
+- **Media band**: the text in a frosted or solid panel; the heading on the
+  left, the text and buttons on the right.
+- **Design → Swipe sideways → At every width**, so a grid is a sliding row
+  on desktops too; the arrows can hide at their ends and take the main
+  button's colours.
+- **Gallery**: a round magnifier over the picture under the pointer, and the
+  pictures in the cards' corners.
+- **Post cards over their cover**: only the picture until the pointer is on
+  the card, the overlay in a colour, a round arrow, a height of their own —
+  in the post list and on the blog's Overlay index.
+- **Blog → Cover card beside the article**: the title, excerpt, date and
+  reading time over the cover in a card on the left, tinted from the bottom.
+- **Card grid, pictures with text over them**: each card's width (twelfths)
+  and rows, where its words sit and where its picture is held; the shade
+  gone or in a colour, dark words, running numbers, a height of their own.
+  **Picture rows** alternate sides and can drop the card behind them.
+- **Figures** as cards with the label above the number, staggered, from the
+  left.
+- **Team → Name above, portrait at the foot**, a colour per card, and the
+  first so many members with a button that shows the rest.
+- **Info panel → One row each**, with an icon in a tile and a link
+  (tel:, mailto:).
+- **Form**: a file question as a drop zone, a wrong answer marked at its
+  own question, buttons under the thanks (`#again` shows the form again).
+- **Appearance → Careers**: the roles as cards (location and working time
+  above the title, an Explore button), the advert with its cover beside a
+  panel, icons beside the details, the posted date and deadline in full
+  ("May 25, 2026 (12 days left)"), the form's words inside its fields, the
+  CV as a drop zone, two buttons after applying, and a saved block after
+  every advert.
+- **Fonts**: Alice and Google Sans in the self-hosted catalogue.
+
+---
+
 ## 3.28.1 — 2026-10-07
 
 **Fixes to 3.28's options, and a security update.** Nothing changes on a

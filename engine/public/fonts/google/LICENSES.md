@@ -13,6 +13,7 @@ Sources and full texts: https://github.com/google/fonts
 | Family | Licence |
 | --- | --- |
 | Alegreya | OFL-1.1 |
+| Alice | OFL-1.1 |
 | Arimo | OFL-1.1 |
 | Asap | OFL-1.1 |
 | Assistant | OFL-1.1 |
@@ -26,6 +27,7 @@ Sources and full texts: https://github.com/google/fonts
 | Exo 2 | OFL-1.1 |
 | Figtree | OFL-1.1 |
 | Fira Sans | OFL-1.1 |
+| Google Sans | OFL-1.1 |
 | Heebo | OFL-1.1 |
 | Hind | OFL-1.1 |
 | IBM Plex Mono | OFL-1.1 |

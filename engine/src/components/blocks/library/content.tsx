@@ -5,7 +5,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import { MoreIcon } from '@/components/ui/More';
 import { MessageText } from '@/components/site/MessageText';
 import type { blockSchemas } from '@/lib/blocks';
-import { isColor } from '@/lib/theme';
+import { isColor, isLength } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { itemClass } from '@/lib/itemStyle';
 import { BlockHead, BlockTitle } from '../parts';
@@ -111,6 +111,9 @@ export function MediaBand(p: P<'mediaBand'>) {
         // 3.28 — a parallax strength of its own.
         p.parallax !== 'none' && p.parallaxSize && 'has-plx-size',
         p.parallax !== 'none' && typeof p.parallaxSpeed === 'number' && 'has-plx-speed',
+        // 3.29 — the text in a panel; split across the band.
+        p.textPanel && p.textPanel !== 'none' && `has-panel is-panel-${p.textPanel}`,
+        p.split && 'is-split',
       )}
       style={
         fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize)
@@ -127,17 +130,41 @@ export function MediaBand(p: P<'mediaBand'>) {
     >
       {p.parallax !== 'none' ? <ParallaxLayer speed={p.parallaxSpeed} sideways={p.parallax === 'horizontal'}>{media}</ParallaxLayer> : media}
       {hasText && (
-        <div className={cn('shell he-band__inner', p.textBox && 'has-text-box')} style={textBoxStyle(p.textBox)}>
-          <div className="he-band__text">
-            {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
-            {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
-            {p.body && <p className="he-lbody">{p.body}</p>}
-            <Actions links={p.links} />
-          </div>
+        <div className={cn('shell he-band__inner', p.textBox && 'has-text-box')} style={{ ...textBoxStyle(p.textBox), ...panelStyle(p) }}>
+          {/* 3.29 — split: the heading on one side, the text and buttons on the other. */}
+          {p.split ? (
+            <div className="he-band__text is-split">
+              <div className="he-band__head">
+                {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
+                {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
+              </div>
+              <div className="he-band__side">
+                {p.body && <p className="he-lbody">{p.body}</p>}
+                <Actions links={p.links} />
+              </div>
+            </div>
+          ) : (
+            <div className="he-band__text">
+              {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
+              {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
+              {p.body && <p className="he-lbody">{p.body}</p>}
+              <Actions links={p.links} />
+            </div>
+          )}
         </div>
       )}
     </section>
   );
+}
+
+/** 3.29 — a media band's text panel as custom properties; checked again, as they land in a style attribute. */
+function panelStyle(p: P<'mediaBand'>): React.CSSProperties {
+  if (!p.textPanel || p.textPanel === 'none') return {};
+  const style: Record<string, string> = {};
+  if (p.panelColor && isColor(p.panelColor)) style['--he-band-panel'] = p.panelColor;
+  if (typeof p.panelBlur === 'number') style['--he-band-blur'] = `${Math.max(0, Math.min(40, p.panelBlur))}px`;
+  if (p.panelInset && isLength(p.panelInset)) style['--he-band-panel-inset'] = p.panelInset;
+  return style as React.CSSProperties;
 }
 
 /** 3.11 — a media band's text box as custom properties; only what was set. */
@@ -190,6 +217,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     ...(p.mediaGap ? { '--he-fgrid-mg': p.mediaGap } : {}),
     ...(p.mediaGapTablet ? { '--he-fgrid-mg-t': p.mediaGapTablet } : {}),
     ...(p.mediaGapMobile ? { '--he-fgrid-mg-m': p.mediaGapMobile } : {}),
+    // 3.29 — the overlay cards' shade colour and height.
+    ...(p.variant === 'overlay' && p.shade === 'tint' && p.shadeColor && isColor(p.shadeColor) ? { '--he-ocard-tint': p.shadeColor } : {}),
+    ...(p.variant === 'overlay' && p.cardHeight ? { '--he-ocard-h': p.cardHeight } : {}),
+    ...(p.variant === 'overlay' && p.cardHeightMobile ? { '--he-ocard-h-m': p.cardHeightMobile } : {}),
   } as React.CSSProperties;
   // 3.24 — the card link's mark: the chevron as before, or the theme's "Read more" arrow (which Appearance → Buttons styles).
   const moreMark =
@@ -249,7 +280,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
         <div className="shell">
           {head}
           <ul
-            className={cn('he-mrows he-swipe-track', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className)}
+            className={cn('he-mrows he-swipe-track', head && 'has-head', `is-hover-${p.hover}`, p.mediaWidth && 'has-media-width', gapTiers(p).className, p.alternate && 'is-alternate', p.plainRows && 'is-plain')}
             style={
               p.gap || p.gapTablet || p.gapMobile || p.mediaWidth || p.mediaRatioMobile
                 ? ({
@@ -337,6 +368,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
 
   const icons = p.variant === 'icons';
   const overlay = p.variant === 'overlay';
+  // 3.29 — pictures with text over them laid out as a bento of the cards' own spans.
+  const bento = overlay && p.cards.some((c) => c.span || c.rowSpan);
   const mods = cn(
     `is-hover-${p.hover}`,
     p.shadow && 'has-shadow',
@@ -352,6 +385,12 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     p.mediaGapMobile && 'has-mg-m',
     p.titleHover === 'none' && 'no-title-line',
     p.linkArea === 'links' && 'is-links-own',
+    // 3.29
+    bento && 'is-bento',
+    overlay && p.shade && p.shade !== 'dark' && `is-shade-${p.shade}`,
+    overlay && p.textTone === 'dark' && 'is-text-dark',
+    overlay && p.cardHeight && 'has-card-h',
+    overlay && p.cardHeightMobile && 'has-card-h-m',
   );
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
@@ -378,11 +417,19 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
             );
             // V3 — the text sits on the picture, over a shade.
             if (overlay) {
+              // 3.29 — where the words sit, where the picture is anchored, and the card's own span in a bento.
+              const place = c.textPlace && c.textPlace !== 'bottom' ? `is-text-${c.textPlace}` : undefined;
+              const spans =
+                bento && (c.span || c.rowSpan)
+                  ? ({ ...(c.span ? { '--he-span': c.span } : {}), ...(c.rowSpan ? { '--he-rows': c.rowSpan } : {}) } as React.CSSProperties)
+                  : undefined;
+              const number = p.numbered ? `${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}` : null;
               return (
-                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', itemClass(p.blockId, i, c.style))}>
-                  <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-fill he-ocard__bg" sizes="third" />
+                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', place, itemClass(p.blockId, i, c.style))} style={spans}>
+                  <MediaFill imageUrl={c.imageUrl} alt={c.alt} className={cn('he-fill he-ocard__bg', c.imagePosition && `is-at-${c.imagePosition.replace(' ', '-')}`)} sizes={c.span && c.span > 6 ? 'half' : 'third'} />
                   {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
+                    {number && <div className="he-ocard__num">{number}</div>}
                     {c.eyebrow && <div className="he-ocard__eyebrow">{c.eyebrow}</div>}
                     <h3 className="he-ocard__title">{title}</h3>
                     {c.body && <p className="he-ocard__body">{c.body}</p>}
@@ -456,11 +503,26 @@ export function StatsFigures(p: P<'stats'>) {
   if (p.variant === 'counters') return <StatsCounters {...p} />;
   return (
     <section
-      className={cn('he-lsec he-figs', toneClass(p.tone), p.glow && 'has-glow', p.dividers && 'has-dividers', p.dividers && p.dividersMobile === 'cross' && 'is-cross-sm')}
-      style={figureSizes(p)}
+      className={cn(
+        'he-lsec he-figs',
+        toneClass(p.tone),
+        p.glow && 'has-glow',
+        p.dividers && 'has-dividers',
+        p.dividers && p.dividersMobile === 'cross' && 'is-cross-sm',
+        // 3.29
+        p.labelFirst && 'is-label-first',
+        p.cards && 'is-cards',
+        p.stagger && isLength(p.stagger) && 'is-stagger',
+        p.alignLeft && 'is-left',
+      )}
+      style={{
+        ...figureSizes(p),
+        ...(p.cardColor && isColor(p.cardColor) ? { '--he-figs-card': p.cardColor } : {}),
+        ...(p.stagger && isLength(p.stagger) ? { '--he-figs-stagger': p.stagger } : {}),
+      } as React.CSSProperties}
     >
       <div className="shell">
-        <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers ? 'left' : 'center'} />
+        <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} align={p.dividers || p.alignLeft ? 'left' : 'center'} />
         {p.imageUrl && (
           <div className="he-figs__media">
             <MediaFill imageUrl={p.imageUrl} alt={p.alt} className="he-fill" />

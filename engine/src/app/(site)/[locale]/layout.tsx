@@ -5,7 +5,9 @@ import { PLATFORM_META } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, htmlLang, localeDir, type Locale } from '@/lib/locales';
 import { themeToCss } from '@/lib/theme-css';
-import { Footer, type FooterLogo } from '@/components/site/Footer';
+import { Footer, type FooterLogo, type FooterWordmark } from '@/components/site/Footer';
+import { LanguageSwitcher } from '@/components/site/LanguageSwitcher';
+import { mediaShape } from '@/server/media/lookup';
 import { Header } from '@/components/site/Header';
 import { JsonLd } from '@/components/site/JsonLd';
 import { BackToTop, RegionBar } from '@/components/site/SiteExtras';
@@ -162,6 +164,8 @@ export default async function SiteLayout({
   const gtmNoscript = integrations.gtm.enabled && integrations.gtm.noscript && PRESETS.gtm.id.test(integrations.gtm.id);
   const css = themeToCss(theme);
   const chrome = resolveChrome(theme.chrome);
+  // 3.29 — the footer's wordmark, with its picture's stored size so the crop can be measured.
+  const wordmark = await footerWordmark(chrome.footer, theme.brand);
 
   const navLinks = [
     ...navigation.header
@@ -275,6 +279,7 @@ export default async function SiteLayout({
             locales={config.locales}
             locale={locale}
             defaultLocale={config.defaultLocale}
+            markCurrent={theme.nav?.activeUnderline === true}
           />
           <div className="he-shift">
             <main id="main">{children}</main>
@@ -302,6 +307,18 @@ export default async function SiteLayout({
               copyrightAsWritten={chrome.footer.copyrightCase === 'asWritten'}
               motionToggle={chrome.motionToggle}
               themeToggle={chrome.themeToggle}
+              newsletter={chrome.footer.newsletter}
+              socialMiddle={chrome.footer.socialPlace === 'middle'}
+              languages={
+                chrome.languages.inFooter !== 'off' && config.locales.length > 1 ? (
+                  <LanguageSwitcher locales={config.locales} current={locale} defaultLocale={config.defaultLocale} look={chrome.languages} keep={false} />
+                ) : undefined
+              }
+              languagesPhonesOnly={chrome.languages.inFooter === 'phones'}
+              wordmark={wordmark}
+              bottomRow={chrome.footer.bottomRow}
+              linksFirstMobile={chrome.footer.linksFirstMobile}
+              linksRowMobile={chrome.footer.linksRowMobile}
             />,
             )}
           </div>
@@ -389,6 +406,16 @@ function notchSpace(height: { base?: number; laptop?: number; tablet?: number; m
 }
 
 /** 3.1 — the footer's head: the uploaded logo when chosen and there is one, nothing, or (unset) the mark as before. */
+/** 3.29 — the wordmark asked for, or none: a picture with no address falls back to nothing rather than a broken image. */
+async function footerWordmark(footer: ReturnType<typeof resolveChrome>['footer'], brand: Theme['brand']): Promise<FooterWordmark | undefined> {
+  const common = { width: footer.wordmarkWidth, widthMobile: footer.wordmarkWidthMobile, crop: footer.wordmarkCrop, align: footer.wordmarkAlign, color: footer.wordmarkColor };
+  if (footer.wordmark === 'name') return { ...common };
+  const url = footer.wordmark === 'image' ? footer.wordmarkImage : footer.wordmark === 'logo' && brand?.logoType === 'image' ? brand.logoUrl : undefined;
+  if (!url) return undefined;
+  const shape = await mediaShape(url);
+  return { ...common, image: { url, width: shape?.width, height: shape?.height } };
+}
+
 function footerLogo(footer: { logo: 'mark' | 'image' | 'none'; logoHeight?: number; logoHeightMobile?: number }, brand: Theme['brand']): FooterLogo {
   if (footer.logo === 'none') return { kind: 'none' };
   if (footer.logo === 'image' && brand?.logoType === 'image' && brand.logoUrl) {

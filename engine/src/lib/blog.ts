@@ -176,7 +176,8 @@ export type BlogIndexLayout = (typeof BLOG_INDEX_LAYOUTS)[number];
 
 /** `coverThenTitle` (2.18): the cover full-width at its own shape, then a card with the title and details. */
 /** `coverThenColumn` (3.23): the cover, then the title and details opening the article's own column — no card. */
-export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split', 'coverThenTitle', 'coverThenColumn'] as const;
+/** `coverAside` (3.29): a card of the cover beside the article, holding the title, excerpt, date and reading time. */
+export const BLOG_POST_LAYOUTS = ['standard', 'cover', 'fullscreen', 'split', 'coverThenTitle', 'coverThenColumn', 'coverAside'] as const;
 export type BlogPostLayout = (typeof BLOG_POST_LAYOUTS)[number];
 
 /* ── What a post shows (T3, 2.13) ────────────────────────────────────────
@@ -296,6 +297,8 @@ export const blogSchema = z.object({
   /** 3.23 — the full-width cover's height (e.g. 600px), and on phones; unset is the picture's own shape. */
   coverHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   coverHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+  /** 3.29 — Cover card beside the article: the colour fading up over the cover under the words (unset, black). */
+  coverTint: z.string().trim().max(60).refine(isColorish, 'Not a colour').optional(),
   /** 3.22 — the card in the corner: also on phones, and closed for this post only rather than for the visit. */
   upNext: z
     .object({
@@ -344,6 +347,14 @@ export const blogSchema = z.object({
       categoryPlace: z.enum(['line', 'under']).optional(),
       /** 3.24 — the title cut to two or three lines, with an ellipsis; unset is every line. */
       titleLines: z.union([z.literal(2), z.literal(3)]).optional(),
+      /** 3.29 — the overlay cards: only the picture until the pointer is on it, then the words rise over a tint (always shown on touch screens). */
+      reveal: z.boolean().optional(),
+      /** 3.29 — the overlay's colour, fading up from the bottom (unset, black). */
+      tint: z.string().trim().max(60).refine(isColorish, 'Not a colour').optional(),
+      /** 3.29 — a round arrow over the card, with the words. */
+      arrow: z.boolean().optional(),
+      /** 3.29 — the overlay cards' height, e.g. 520px (unset 380px). */
+      height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -379,7 +390,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3 }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3; reveal: boolean; tint: string; arrow: boolean; height: string }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';
@@ -401,6 +412,7 @@ export type ResolvedBlog = {
   coverOverlap?: string;
   coverHeight?: string;
   coverHeightMobile?: string;
+  coverTint?: string;
   upNext: {
     phones: boolean;
     dismiss: 'visit' | 'post';
@@ -463,6 +475,7 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     coverOverlap: blog?.coverOverlap && isLength(blog.coverOverlap) ? blog.coverOverlap : undefined,
     coverHeight: blog?.coverHeight && isLength(blog.coverHeight) ? blog.coverHeight : undefined,
     coverHeightMobile: blog?.coverHeightMobile && isLength(blog.coverHeightMobile) ? blog.coverHeightMobile : undefined,
+    coverTint: blog?.coverTint && isColorish(blog.coverTint) ? blog.coverTint : undefined,
     upNext: {
       phones: blog?.upNext?.phones === true,
       dismiss: blog?.upNext?.dismiss ?? 'visit',
@@ -549,6 +562,7 @@ export const BLOG_POST_LABELS: Record<BlogPostLayout, { label: string; hint: str
   cover: { label: 'Cover image', hint: 'A wide cover image under the title' },
   fullscreen: { label: 'Full-screen cover', hint: 'The title over a full-width cover image' },
   split: { label: 'Title beside the cover', hint: 'Title and details on the left, cover on the right' },
+  coverAside: { label: 'Cover card beside the article', hint: 'A card of the cover on the left with the title, excerpt, date and reading time over it; the article on the right' },
 };
 
 /* ── Category pages (T20, 2.18) ───────────────────────────────────────────

@@ -1,6 +1,6 @@
 'use client';
 
-import { useId } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
 import { MOBILE_MENU_LABELS, MOBILE_MENU_VARIANTS, type Chrome } from '@/lib/chrome';
@@ -671,6 +671,7 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
             options={[
               { value: 'below', label: 'Below the columns' },
               { value: 'head', label: 'In the head column, under the logo' },
+              { value: 'middle', label: 'A column of their own, before the menus' },
             ]}
             onChange={set(['chrome', 'footer', 'socialPlace'])}
           />
@@ -688,6 +689,148 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
         <p className="m-0 text-[12px] text-smoke">
           A footer column can sit under the one before it (Menus → Footer menu → Stack under the column before). The links’ and the bottom row’s type is Typography → Footer links.
         </p>
+        {/* 3.29 */}
+        <div className="flex flex-wrap gap-x-6 gap-y-2">
+          <Check label="An email sign-up in the head column (its words: Site translations → footer)" value={footer?.newsletter} onChange={set(['chrome', 'footer', 'newsletter'])} />
+          <Check label="The bottom row — copyright and legal links" value={footer?.bottomRow} fallback onChange={set(['chrome', 'footer', 'bottomRow'])} />
+          <Check label="On phones, the menus first" value={footer?.linksFirstMobile} onChange={set(['chrome', 'footer', 'linksFirstMobile'])} />
+          <Check label="On phones, the menus side by side, open" value={footer?.linksRowMobile} onChange={set(['chrome', 'footer', 'linksRowMobile'])} />
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ChoiceField
+            label="A huge wordmark along the bottom edge"
+            value={footer?.wordmark}
+            inherited="off"
+            options={[
+              { value: 'off', label: 'None' },
+              { value: 'logo', label: 'The uploaded logo' },
+              { value: 'image', label: 'A picture of its own' },
+              { value: 'name', label: 'The site name, in the display face' },
+            ]}
+            onChange={set(['chrome', 'footer', 'wordmark'])}
+          />
+          {footer?.wordmark === 'image' && (
+            <TextField label="Wordmark picture" hint="a /media/… address" value={footer?.wordmarkImage} maxLength={500} onChange={set(['chrome', 'footer', 'wordmarkImage'])} />
+          )}
+          {footer?.wordmark && footer.wordmark !== 'off' && (
+            <>
+              <TextField label="Its width" hint="a picture's — e.g. 34% or 460px" value={footer?.wordmarkWidth} maxLength={40} placeholder="34%" onChange={set(['chrome', 'footer', 'wordmarkWidth'])} />
+              <TextField label="Its width on phones" value={footer?.wordmarkWidthMobile} maxLength={40} placeholder="80%" onChange={set(['chrome', 'footer', 'wordmarkWidthMobile'])} />
+              <Field label="Cut off by the page's end" hint="% of its height">
+                <Input
+                  type="number"
+                  min={0}
+                  max={90}
+                  placeholder="45"
+                  value={footer?.wordmarkCrop ?? ''}
+                  onChange={(e) => set(['chrome', 'footer', 'wordmarkCrop'])(e.target.value === '' ? undefined : Math.min(90, Math.max(0, Math.round(Number(e.target.value) || 0))))}
+                />
+              </Field>
+              <ChoiceField
+                label="Its place"
+                value={footer?.wordmarkAlign}
+                inherited="center"
+                options={[
+                  { value: 'center', label: 'Centred' },
+                  { value: 'left', label: 'From the left' },
+                ]}
+                onChange={set(['chrome', 'footer', 'wordmarkAlign'])}
+              />
+              {footer?.wordmark === 'name' && <ColorField label="The name's colour" value={footer?.wordmarkColor} placeholder="the footer's text" onChange={set(['chrome', 'footer', 'wordmarkColor'])} />}
+            </>
+          )}
+        </div>
+      </div>
+    </Panel>
+  );
+}
+
+/**
+ * 3.29 — a line parsed into something else (pairs, a list): it keeps what is
+ * typed and saves when the field is left, so a half-typed `ru=` or a
+ * trailing comma is not parsed away under the cursor.
+ */
+function ParsedField({ label, hint, shown, maxLength, onCommit }: { label: string; hint?: string; shown: string; maxLength: number; onCommit: (text: string) => void }) {
+  const id = useId();
+  const [text, setText] = useState(shown);
+  useEffect(() => setText(shown), [shown]);
+  return (
+    <Field label={label} hint={hint} htmlFor={id}>
+      <Input id={id} value={text} maxLength={maxLength} onChange={(e) => setText(e.target.value)} onBlur={() => onCommit(text)} />
+    </Field>
+  );
+}
+
+/** 3.29 — Appearance → Header: the language switcher, on a site with more than one language. */
+export function LanguagesPanel({ chrome, set }: Props) {
+  const languages = chrome?.languages;
+  const at = (key: string) => ['chrome', 'languages', key] as const;
+  const labels = languages?.labels ?? {};
+  return (
+    <Panel title="Language switcher">
+      <div className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <ChoiceField
+            label="Look"
+            value={languages?.look}
+            inherited="menu"
+            options={[
+              { value: 'menu', label: 'A menu — the code, opening the languages' },
+              { value: 'inline', label: 'The codes in a row — РУ  ՀՅ  EN' },
+            ]}
+            onChange={set(at('look'))}
+          />
+          <ChoiceField
+            label="The current language in the row"
+            value={languages?.mark}
+            inherited="underline"
+            options={[
+              { value: 'underline', label: 'Underlined, in the active colour' },
+              { value: 'colour', label: 'Only in the active colour' },
+            ]}
+            onChange={set(at('mark'))}
+          />
+          <ParsedField
+            label="What each is called in the row"
+            hint="code=label, comma between — e.g. ru=РУ, hy=ՀՅ, en=EN"
+            shown={Object.entries(labels).map(([code, label]) => `${code}=${label}`).join(', ')}
+            maxLength={300}
+            onCommit={(text) => {
+              const next: Record<string, string> = {};
+              for (const pair of (text ?? '').split(',')) {
+                const [code, ...rest] = pair.split('=');
+                const key = code?.trim().toLowerCase();
+                const label = rest.join('=').trim().slice(0, 12);
+                if (key && /^[a-z]{2,3}$/.test(key) && label) next[key] = label;
+              }
+              set(at('labels'))(Object.keys(next).length ? next : undefined);
+            }}
+          />
+          <ParsedField
+            label="The row's order"
+            hint="language codes, comma between — e.g. ru, hy, en"
+            shown={languages?.order?.join(', ') ?? ''}
+            maxLength={100}
+            onCommit={(text) => {
+              const list = (text ?? '').split(',').map((code) => code.trim().toLowerCase()).filter((code) => /^[a-z]{2,3}$/.test(code));
+              set(at('order'))(list.length ? list : undefined);
+            }}
+          />
+          <TextField label="Space between the codes" value={languages?.gap} maxLength={40} placeholder="14px" onChange={set(at('gap'))} />
+          <ChoiceField
+            label="In the footer"
+            value={languages?.inFooter}
+            inherited="off"
+            options={[
+              { value: 'off', label: 'No' },
+              { value: 'always', label: 'Yes' },
+              { value: 'phones', label: 'On phones only' },
+            ]}
+            onChange={set(at('inFooter'))}
+          />
+        </div>
+        <Check label="In the open menu, under the links (the header bar's copy then folds away with the links)" value={languages?.inMenu} onChange={set(at('inMenu'))} />
+        <p className="m-0 text-[12px] text-smoke">The languages themselves are set in Settings. A site with one language shows no switcher.</p>
       </div>
     </Panel>
   );

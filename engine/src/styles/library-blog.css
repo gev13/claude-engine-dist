@@ -200,3 +200,39 @@
 /* 3.24 — a card list whose titles stop at two or three lines, with an ellipsis. Outside the layer: a card's
    title is drawn with utilities. */
 .has-title-lines :is(h2, h3) { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--he-card-lines); line-clamp: var(--he-card-lines); overflow: hidden; }
+
+/* 3.29 — Cover card beside the article: the card holds the title over the cover, tinted from the bottom; it stays in view on wide screens while the article scrolls. */
+@layer components {
+  .he-post-aside { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); align-items: start; gap: var(--he-gap, 40px); }
+  .he-post-aside__card {
+    position: sticky;
+    top: calc(var(--he-header-h, 72px) + 24px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-height: min(625px, 80svh);
+    padding: 40px;
+    overflow: hidden;
+    border-radius: var(--he-card-radius, 16px);
+    clip-path: var(--he-card-clip, none);
+    color: #fff;
+    isolation: isolate;
+  }
+  .he-post-aside__img { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+  .he-post-aside__card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(to top, color-mix(in srgb, var(--he-aside-tint, #000) 92%, transparent), color-mix(in srgb, var(--he-aside-tint, #000) 0%, transparent) 70%);
+  }
+  .he-post-aside__text { display: grid; gap: 4px; }
+  .he-post-aside__text :is(h1, h2) { max-width: none; }
+  .he-post-aside__text p { margin-top: 12px; }
+  .he-post-aside__meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 0; font-size: 14px; letter-spacing: 0.02em; text-transform: uppercase; color: rgb(255 255 255 / 0.85); }
+  .he-post-aside__body > :first-child { margin-top: 0; }
+  @media (width <= 1024px) {
+    .he-post-aside { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 32px); }
+    .he-post-aside__card { position: relative; top: auto; min-height: 420px; padding: 32px 24px; }
+  }
+}

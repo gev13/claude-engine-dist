@@ -12,6 +12,10 @@ import { CAREERS_PATH, JOB_META } from '@/lib/careers';
 import { formatRelative, hasPassed } from '@/lib/relativeDate';
 import { localeConfig, otherLocales, type Locale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
+import { resolveCareersLook, type ResolvedCareersLook } from '@/lib/careersLook';
+import { messageReader } from '@/lib/messages';
+import { getMessages } from '@/server/content/messages';
+import { getTheme } from '@/server/content/theme';
 import { getPageByPath } from '@/server/content/pages';
 import { listJobs, type JobCard } from '@/server/content/jobs';
 import { getSiteSettings } from '@/server/content/siteSettings';
@@ -61,7 +65,37 @@ function cardMeta(job: JobCard): string[] {
   return JOB_META.map(([key]) => values[key] ?? '').filter(Boolean);
 }
 
-function JobRow({ job, locale }: { job: JobCard; locale: string }) {
+type T = ReturnType<typeof messageReader>;
+
+/** 3.29 — a card in the grid: "LOCATION · WORKING TIME", the title, the excerpt, when it was posted and a button. */
+function JobCardItem({ job, locale, t, look }: { job: JobCard; locale: string; t: T; look: ResolvedCareersLook }) {
+  const kicker = [job.location, job.workingTime].filter((v) => v && v.trim()).join(' · ');
+  const href = `${CAREERS_PATH}/${job.slug}`;
+  return (
+    <li className={cn('he-jobc', !job.isOpen && 'is-closed')}>
+      {look.kicker && kicker && <p className="he-jobc__kicker">{kicker}</p>}
+      <h2 className="he-jobc__title">
+        <Link href={href}>{job.title}</Link>
+      </h2>
+      {job.excerpt && <p className="he-jobc__excerpt">{job.excerpt}</p>}
+      <div className="he-jobc__foot">
+        <span className="he-jobc__when">
+          {!job.isOpen ? t('careers.closed') : job.postedAt ? t('careers.posted', { when: formatRelative(new Date(job.postedAt), locale) }) : ''}
+        </span>
+        {look.button && (
+          <span className="he-cbtn is-small is-outline he-jobc__btn" aria-hidden="true">
+            {t('careers.explore')}
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 9l6-6M4 3h5v5" />
+            </svg>
+          </span>
+        )}
+      </div>
+    </li>
+  );
+}
+
+function JobRow({ job, locale, t }: { job: JobCard; locale: string; t: T }) {
   const meta = cardMeta(job);
   const closing = job.deadline && !hasPassed(new Date(job.deadline));
 
@@ -82,13 +116,9 @@ function JobRow({ job, locale }: { job: JobCard; locale: string }) {
       </div>
 
       <div className="he-job-card__side">
-        <span className={cn('he-job-tag', job.isOpen && 'is-open')}>{job.isOpen ? 'Open' : 'Closed'}</span>
-        {job.isOpen && closing && (
-          <span className="he-job-card__when">Closes {formatRelative(new Date(job.deadline!), locale)}</span>
-        )}
-        {job.isOpen && !closing && job.postedAt && (
-          <span className="he-job-card__when">Posted {formatRelative(new Date(job.postedAt), locale)}</span>
-        )}
+        <span className={cn('he-job-tag', job.isOpen && 'is-open')}>{job.isOpen ? t('careers.open') : t('careers.closed')}</span>
+        {job.isOpen && closing && <span className="he-job-card__when">{t('careers.closes', { when: formatRelative(new Date(job.deadline!), locale) })}</span>}
+        {job.isOpen && !closing && job.postedAt && <span className="he-job-card__when">{t('careers.posted', { when: formatRelative(new Date(job.postedAt), locale) })}</span>}
       </div>
     </li>
   );
@@ -98,18 +128,22 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
   // The trailing-slash form every URL below is written in is a setting; load it first.
   await getPermalinks();
   const { locale } = await params;
-  const [page, jobs, settings] = await Promise.all([
+  const [page, jobs, settings, messages, theme] = await Promise.all([
     getPageByPath(CAREERS_PATH, locale),
     listJobs({ locale: locale as Locale, limit: 96 }),
     getSiteSettings(),
+    getMessages(locale as Locale),
+    getTheme(),
   ]);
+  const t = messageReader(messages);
+  const look = resolveCareersLook(theme.careers);
 
   const description = page?.excerpt || fallbackDescription(settings.name);
   const open = jobs.filter((job) => job.isOpen);
 
   const crumbs = breadcrumbs([
-    { name: 'Home', path: '/' },
-    { name: page?.title ?? 'Careers', path: CAREERS_PATH },
+    { name: t('chrome.home'), path: '/' },
+    { name: page?.title ?? t('careers.title'), path: CAREERS_PATH },
   ]);
 
   /* A `/careers` page in the admin owns the top of this screen — its own
@@ -122,9 +156,9 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
         <BlockRenderer blocks={page.blocks} locale={locale} />
       ) : (
         <Section size="lg">
-          <Eyebrow>Careers</Eyebrow>
+          <Eyebrow>{t('careers.title')}</Eyebrow>
           <Heading level={1} className="max-w-[18ch]">
-            Open roles
+            {t('careers.openRoles')}
           </Heading>
           <p className="mt-6 max-w-[62ch] text-[19px] text-ash">{description}</p>
         </Section>
@@ -133,28 +167,31 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
       <Section tone={page ? 'raised' : 'base'} size="lg">
         {/* The page's own blocks may already have used h1, so this is h2 when
             one exists and the listing's own heading otherwise. */}
-        {page && (
+        {/* 3.29 — with cards, the page's own blocks carry the heading (the design's "Join our team"). */}
+        {page && look.list === 'rows' && (
           <Heading level={2} className="mb-8">
-            Open roles
+            {t('careers.openRoles')}
           </Heading>
         )}
 
         {jobs.length === 0 ? (
-          <p className="m-0 max-w-[62ch] text-[17px] text-ash">
-            There are no open roles just now. It is worth looking again — or writing to us anyway.
-          </p>
+          <p className="m-0 max-w-[62ch] text-[17px] text-ash">{t('careers.none')}</p>
         ) : (
           <>
-            <ul className="he-jobs">
-              {jobs.map((job) => (
-                <JobRow key={job.id} job={job} locale={locale} />
-              ))}
-            </ul>
-            {open.length === 0 && (
-              <p className="mt-8 max-w-[62ch] text-[15px] text-smoke">
-                Every role above has been filled. They are left here so the pages people have bookmarked still work.
-              </p>
+            {look.list === 'cards' ? (
+              <ul className="he-jobcards he-swipe-track" style={{ '--cols': look.columns } as React.CSSProperties}>
+                {jobs.map((job) => (
+                  <JobCardItem key={job.id} job={job} locale={locale} t={t} look={look} />
+                ))}
+              </ul>
+            ) : (
+              <ul className="he-jobs">
+                {jobs.map((job) => (
+                  <JobRow key={job.id} job={job} locale={locale} t={t} />
+                ))}
+              </ul>
             )}
+            {open.length === 0 && <p className="mt-8 max-w-[62ch] text-[15px] text-smoke">{t('careers.allFilled')}</p>}
           </>
         )}
       </Section>
@@ -163,7 +200,7 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
         data={graph([
           webPage({
             path: CAREERS_PATH,
-            name: page?.title ?? 'Careers',
+            name: page?.title ?? t('careers.title'),
             description,
             breadcrumbId: crumbs['@id'] as string,
           }),
@@ -172,7 +209,7 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
              them here would have two URLs claiming the same vacancy. */
           itemList({
             path: CAREERS_PATH,
-            name: 'Open roles',
+            name: t('careers.openRoles'),
             items: open.map((job) => ({ name: job.title, path: `${CAREERS_PATH}/${job.slug}` })),
           }),
           crumbs,

@@ -246,7 +246,7 @@ export function validateAnswers(
   input: unknown,
   /** The whole form, when `fields` is one step of it: a condition can point at an earlier step. */
   form: FormField[] = fields,
-): { ok: true; answers: Answer[] } | { ok: false; error: string } {
+): { ok: true; answers: Answer[] } | { ok: false; error: string; /** 3.29 — the question that failed, so a form can mark it. */ field?: string } {
   const raw = input && typeof input === 'object' && !Array.isArray(input) ? (input as Record<string, unknown>) : {};
   const answers: Answer[] = [];
 
@@ -260,8 +260,8 @@ export function validateAnswers(
     // 3.7 — a multi-select drop-down answers exactly as the tick boxes do.
     if (field.type === 'checkboxes' || field.type === 'multiselect') {
       const list = Array.isArray(value) ? value.filter((v): v is string => typeof v === 'string') : [];
-      if (list.some((v) => !field.options.includes(v))) return { ok: false, error: `${field.label}: pick from the options.` };
-      if (field.required && list.length === 0) return { ok: false, error: `${field.label}: pick at least one.` };
+      if (list.some((v) => !field.options.includes(v))) return { ok: false, field: field.id, error: `${field.label}: pick from the options.` };
+      if (field.required && list.length === 0) return { ok: false, field: field.id, error: `${field.label}: pick at least one.` };
       answers.push({ id: field.id, label: field.label, value: [...new Set(list)] });
       continue;
     }
@@ -272,27 +272,27 @@ export function validateAnswers(
        afterwards with the stored name — it is the only side with the bytes. */
     if (field.type === 'file') {
       const attached = value === true;
-      if (field.required && !attached) return { ok: false, error: `${field.label}: attach a file.` };
+      if (field.required && !attached) return { ok: false, field: field.id, error: `${field.label}: attach a file.` };
       answers.push({ id: field.id, label: field.label, value: '' });
       continue;
     }
 
     if (field.type === 'consent') {
       const checked = value === true;
-      if (field.required && !checked) return { ok: false, error: `Tick the box to continue: ${field.label}` };
+      if (field.required && !checked) return { ok: false, field: field.id, error: `Tick the box to continue: ${field.label}` };
       answers.push({ id: field.id, label: field.label, value: checked });
       continue;
     }
 
     const text = typeof value === 'string' ? value.trim() : '';
     if (!text) {
-      if (field.required) return { ok: false, error: `${field.label} is required.` };
+      if (field.required) return { ok: false, field: field.id, error: `${field.label} is required.` };
       answers.push({ id: field.id, label: field.label, value: '' });
       continue;
     }
-    if (text.length > (LIMIT[field.type] ?? 500)) return { ok: false, error: `${field.label} is too long.` };
+    if (text.length > (LIMIT[field.type] ?? 500)) return { ok: false, field: field.id, error: `${field.label} is too long.` };
     const problem = CHECK[field.type]?.(text, field);
-    if (problem) return { ok: false, error: problem };
+    if (problem) return { ok: false, field: field.id, error: problem };
     answers.push({ id: field.id, label: field.label, value: text });
   }
 
