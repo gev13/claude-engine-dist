@@ -1,5 +1,6 @@
 'use client';
 
+import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { localeName } from '@/lib/locales';
 import { cn } from '@/lib/utils';
@@ -18,6 +19,36 @@ import { cn } from '@/lib/utils';
    nothing to press; sending them to an Armenian page they did not ask for
    would be a lie about what they clicked.
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/**
+ * 3.30.3 — each language's address of the page in `doc`, from its hreflang
+ * tags. An address on this site (the page's origin or its canonical's) is
+ * given as a path, so a site reached at another host name stays on it.
+ */
+export function readAlternates(doc: Document): Record<string, string> {
+  const found: Record<string, string> = {};
+  let siteOrigin: string | undefined;
+  try {
+    const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href');
+    if (canonical) siteOrigin = new URL(canonical, doc.baseURI).origin;
+  } catch {
+    // No usable canonical: only the page's own origin counts as this site.
+  }
+  for (const link of doc.querySelectorAll<HTMLLinkElement>('link[rel="alternate"][hreflang]')) {
+    const code = link.getAttribute('hreflang');
+    const raw = link.getAttribute('href');
+    if (!code || code === 'x-default' || !raw) continue;
+    let url: URL;
+    try {
+      url = new URL(raw, doc.baseURI);
+    } catch {
+      continue;
+    }
+    const own = url.origin === doc.location?.origin || url.origin === siteOrigin;
+    found[code] = own ? `${url.pathname}${url.search}${url.hash}` : url.href;
+  }
+  return found;
+}
 
 /** 3.29 — how the switcher is drawn, from `chrome.languages`. */
 export type LanguageLook = {
@@ -48,14 +79,19 @@ export function LanguageSwitcher({
   const [alternates, setAlternates] = useState<Record<string, string>>({});
   const box = useRef<HTMLDivElement>(null);
 
+  const pathname = usePathname();
+
+  /* Read again on every page: the header is not remounted by an in-app
+     navigation, so reading once kept the first page's addresses and sent a
+     reader to the home page (3.30.3). Next swaps the head's tags in after the
+     route changes, sometimes a tick later, so the head is watched too. */
   useEffect(() => {
-    const found: Record<string, string> = {};
-    for (const link of document.querySelectorAll<HTMLLinkElement>('link[rel="alternate"][hreflang]')) {
-      const code = link.getAttribute('hreflang');
-      if (code && code !== 'x-default' && link.href) found[code] = link.href;
-    }
-    setAlternates(found);
-  }, []);
+    const read = () => setAlternates(readAlternates(document));
+    read();
+    const observer = new MutationObserver(read);
+    observer.observe(document.head, { childList: true, subtree: true, attributes: true, attributeFilter: ['href', 'hreflang'] });
+    return () => observer.disconnect();
+  }, [pathname]);
 
   useEffect(() => {
     if (!open) return;

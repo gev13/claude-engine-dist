@@ -10,6 +10,26 @@ improvements.
 
 ---
 
+## 3.30.3 — 2026-10-13
+
+**The language switcher follows the page you are on.** Nothing changes on
+a site with one language.
+
+Fixed:
+
+- **The language switcher goes to the same page in the other language**
+  after moving around the site. It read the page's languages once, so after
+  following a link inside the site it kept the first page's and sent readers
+  to the home page. Its links are now paths on the site, not full addresses.
+- **The blog index and the research archive in another language say which
+  language they are in.** Their canonical address was the main language's,
+  which tells search engines the page is a copy; they also listed no other
+  languages, so the switcher sent readers to the home page from them.
+- **The careers listing names its own language** in its list of languages, as
+  search engines require.
+
+---
+
 ## 3.30.2 — 2026-10-13
 
 **The careers listing keeps its roles after a build.**

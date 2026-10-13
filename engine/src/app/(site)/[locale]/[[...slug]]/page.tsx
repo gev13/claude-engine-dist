@@ -133,6 +133,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     paging && paging.number > 1 ? `${title} — ${t('archive.page', { n: paging.number })}` : title;
   const own = (paging: Paging | undefined, base: string) => (paging ? pagedPath(paging.base, paging.number, permalinks) : base);
   /** The share picture (2.18): the page's own choice, then `fallback`, then the site's default. */
+  /** 3.30.3 — a view every language has at the same address (the blog index, research). */
+  const everyLanguage = (path: string) => localeConfig().locales.map((code) => ({ locale: code, path }));
   const image = (seo: SeoFields | undefined | null, fallback?: string | null) =>
     shareImage({ ogImageId: seo?.ogImageId, fallbackUrl: fallback, siteDefault: settings.ogImageUrl || undefined });
 
@@ -204,6 +206,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         title: paged(t('blog.research'), resolved.paging),
         description: t('blog.researchIntro'),
         path: own(resolved.paging, researchPath(permalinks)),
+        // 3.30.3 — its language and the other languages' (the same address in each).
+        locale,
+        translations: everyLanguage(researchPath(permalinks)),
         image: await image(undefined),
         siteName: settings.name,
       });
@@ -217,6 +222,9 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         title: paged(page?.title ?? indexSeo?.title ?? site.blogLabel, paging),
         description: page?.excerpt || indexSeo?.description || t('blog.indexIntro', { site: settings.name }),
         path: own(paging, blogIndexPath(permalinks)),
+        // 3.30.3 — its language (the canonical was the main language's) and the other languages' index.
+        locale,
+        translations: everyLanguage(blogIndexPath(permalinks)),
         image: await image(page?.seo, page ? heroImage(page.blocks) : undefined),
         siteName: settings.name,
       });

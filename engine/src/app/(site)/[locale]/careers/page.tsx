@@ -10,7 +10,7 @@ import { breadcrumbs, graph, itemList, webPage } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { CAREERS_PATH, JOB_META } from '@/lib/careers';
 import { formatRelative, hasPassed } from '@/lib/relativeDate';
-import { localeConfig, otherLocales, type Locale } from '@/lib/locales';
+import { localeConfig, type Locale } from '@/lib/locales';
 import { cn } from '@/lib/utils';
 import { resolveCareersLook, type ResolvedCareersLook } from '@/lib/careersLook';
 import { messageReader } from '@/lib/messages';
@@ -43,9 +43,10 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     locale,
     /* The listing exists in every language the site has, at the same path —
        unlike an advert, whose slug is translated. So the alternates are the
-       configured languages, not a lookup. */
-    translations: otherLocales(locale as Locale, config).map((other) => ({
-      locale: other,
+       configured languages, not a lookup — this one included (3.30.3): an
+       hreflang set must name the page itself, or it is discarded. */
+    translations: config.locales.map((code) => ({
+      locale: code,
       path: CAREERS_PATH,
     })),
     siteName: settings.name,
