@@ -139,6 +139,19 @@ export function HeaderExtrasPanel({ chrome, set }: Props) {
         </div>
         {/* 3.26 */}
         <div className="max-w-[420px]">
+          {/* 3.30 */}
+          {(header?.variant ?? 'classic') === 'classic' && (
+            <ChoiceField
+              label="The links"
+              value={header?.navPlace}
+              inherited="center"
+              options={[
+                { value: 'center', label: 'Centred in the bar' },
+                { value: 'end', label: 'At the right, beside the buttons' },
+              ]}
+              onChange={set(at('navPlace'))}
+            />
+          )}
           <ChoiceField
             label="A menu link is lit"
             value={header?.activeMatch}

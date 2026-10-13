@@ -261,6 +261,12 @@
   .he-cookie[style*='--he-cookie-weight'] :is(.he-cookie__title, .he-cookie__body) { font-weight: var(--he-cookie-weight); }
   .he-cookie[style*='--he-cookie-bottom'] { bottom: var(--he-cookie-bottom); }
   .he-cookie[style*='--he-cookie-pad'] { padding: var(--he-cookie-pad); }
+  /* 3.30 — the filled buttons in colours of their own; the button utility draws neither fill nor text colour, so these hold. */
+  .he-cookie[style*='--he-cookie-btn-bg'] .he-btn--primary { background-color: var(--he-cookie-btn-bg); }
+  .he-cookie[style*='--he-cookie-btn-text'] .he-btn--primary { color: var(--he-cookie-btn-text); }
+  .he-cookie[style*='--he-cookie-btn-border'] .he-btn--primary { border-width: 1px; border-color: var(--he-cookie-btn-border); }
+  .he-cookie[style*='--he-cookie-btn-hover-bg'] .he-btn--primary:hover { background-color: var(--he-cookie-btn-hover-bg); }
+  .he-cookie[style*='--he-cookie-btn-hover-text'] .he-btn--primary:hover { color: var(--he-cookie-btn-hover-text); }
   /* 3.28.1 — the link inline in the sentence: the words wrap as one paragraph. */
   .he-cookie__text.is-inline .he-cookie__link { display: inline; margin: 0; font-size: inherit; }
   .he-cookie.is-pill .he-cookie__text.is-inline { display: block; }

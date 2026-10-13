@@ -1,4 +1,5 @@
 import { blogCss } from './blogCss';
+import { careersCss } from './careersLook';
 import { chromeCss } from './chromeCss';
 import {
   BREAKPOINTS,
@@ -745,6 +746,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     if (blog) parts.push(blog);
   }
 
+  // 3.30 — the careers pages' own type.
+  if (safeSelector === ':root') {
+    const careers = careersCss(theme.careers);
+    if (careers) parts.push(careers);
+  }
+
   // 3.28 — the header's, menus' and footer's details.
   if (safeSelector === ':root') {
     const chrome = chromeCss(theme.chrome);
@@ -915,6 +922,17 @@ export function richTextCss(rich: Theme['richText']): string {
   if (typeof scale === 'number' && scale >= 0.5 && scale <= 1.5) {
     out.push(`.prose-edge h2{font-size:calc(var(--he-h2-size) * ${scale})}.prose-edge h3{font-size:calc(var(--he-h3-size) * ${scale})}`);
   }
+  // 3.30 — the headings' own type, after the scale so a size of their own wins.
+  const headingFace = rich.headingFont === 'body' ? 'var(--he-body-family)' : rich.headingFont === 'display' ? 'var(--font-display)' : undefined;
+  const heading = [
+    ['font-family', headingFace],
+    ['font-size', len(rich.headingSize)],
+    ['font-weight', rich.headingWeight && /^[3-8]00$/.test(rich.headingWeight) ? rich.headingWeight : undefined],
+    ['line-height', rich.headingLine && isLineHeight(rich.headingLine) ? rich.headingLine : undefined],
+    ['letter-spacing', len(rich.headingTracking)],
+    ['color', rich.headingColor && isColor(rich.headingColor) ? rich.headingColor : undefined],
+  ].filter(([, v]) => v !== undefined);
+  if (heading.length) out.push(`.prose-edge :is(h2,h3){${heading.map(([p, v]) => `${p}:${v}`).join(';')}}`);
   const gap = len(rich.paragraphGap);
   if (gap) out.push(`.prose-edge>*+*{margin-top:${gap}}`);
   const after = len(rich.headingBottom);

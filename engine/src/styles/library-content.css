@@ -355,7 +355,7 @@
 
   .he-figs__media { margin-top: 44px; aspect-ratio: 21 / 9; overflow: hidden; border-radius: 24px; background: var(--color-surface); }
   .he-figs__grid { display: grid; grid-template-columns: repeat(var(--n, 4), minmax(0, 1fr)); gap: var(--he-gap, 32px); margin-top: 52px; text-align: center; }
-  .he-figs__value { font-family: var(--font-display); font-size: var(--he-figs-size, clamp(40px, 5vw, 72px)); font-weight: 700; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
+  .he-figs__value { font-family: var(--font-display); font-size: var(--he-figs-size, clamp(40px, 5vw, 72px)); font-weight: var(--he-figs-weight, 700); line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
   /* 3.13 — a size of their own on tablets and phones, falling back to the wider screen's. */
   @media (width <= 1024px) {
     .he-figs__value { font-size: var(--he-figs-size-tablet, var(--he-figs-size, clamp(40px, 5vw, 72px))); }
@@ -373,6 +373,8 @@
   .he-figs.is-stagger .he-figs__item:nth-child(even) { transform: translateY(var(--he-figs-stagger)); }
   .he-figs.is-left .he-figs__grid { text-align: left; }
   .he-figs.is-left .he-figs__label { margin-inline: 0; }
+  /* 3.30 — the numbers in a colour of their own (over the glow's, which is drawn first). */
+  .he-figs.has-value-color .he-figs__value { color: var(--he-figs-color); }
   .he-figs__foot { margin: 32px 0 0; font-family: var(--he-label-family, var(--font-mono)); font-size: var(--he-label-size, 10px); letter-spacing: var(--he-label-tracking, 0.14em); text-align: center; text-transform: var(--he-label-transform, uppercase); color: var(--he-label-color, var(--color-smoke)); font-weight: var(--he-label-weight, revert-layer); line-height: var(--he-label-line, revert-layer); }
 
   /* ── CT9: logo wall ──────────────────────────────────────────────────── */
@@ -851,5 +853,16 @@
   @media (width <= 768px) {
     .he-band.is-split .he-band__text.is-split { grid-template-columns: minmax(0, 1fr); }
     .he-band.has-panel .he-band__text { padding: 24px 20px; }
+  }
+}
+
+/* 3.30 — a media band's text centred on phones, at the bottom or in the
+   middle, over the bottom-left place every band takes there. */
+@layer components {
+  @media (width <= 768px) {
+    .he-band.is-m-bottomCenter .he-band__inner { align-items: flex-end; justify-content: center; text-align: center; }
+    .he-band.is-m-center .he-band__inner { align-items: center; justify-content: center; text-align: center; }
+    .he-band:is(.is-m-bottomCenter, .is-m-center) .he-lbody { margin-inline: auto; }
+    .he-band:is(.is-m-bottomCenter, .is-m-center) .he-actions { justify-content: center; }
   }
 }

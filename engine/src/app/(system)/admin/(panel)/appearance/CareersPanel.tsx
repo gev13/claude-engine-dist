@@ -1,9 +1,9 @@
 'use client';
 
 import { Panel } from '@/components/admin/ui';
-import { ChoiceField } from '@/components/admin/styleFields';
+import { ChoiceField, ColorField, LengthField } from '@/components/admin/styleFields';
 import { useSavedBlocks } from '@/components/admin/SavedBlocksTools';
-import type { CareersLook } from '@/lib/careersLook';
+import type { CareersLook, CareersType } from '@/lib/careersLook';
 
 /**
  * 3.29 — Appearance → Careers: how the listing, the advert and the
@@ -19,6 +19,34 @@ function Check({ label, value, onChange }: { label: string; value: boolean | und
       <input type="checkbox" className="h-4 w-4 accent-flare" checked={value === true} onChange={(e) => onChange(e.target.checked || undefined)} />
       {label}
     </label>
+  );
+}
+
+/** 3.30 — a run of words' own face, size, weight, spacing and colour; each empty keeps the drawn one. */
+function TypeFields({ type, set }: { type: CareersType | undefined; set: (key: keyof CareersType) => (value: unknown) => void }) {
+  return (
+    <div className="grid gap-4 sm:grid-cols-3">
+      <ChoiceField
+        label="Face"
+        value={type?.font}
+        options={[
+          { value: 'body', label: 'The text’s' },
+          { value: 'display', label: 'The headings’' },
+        ]}
+        onChange={set('font')}
+      />
+      <LengthField label="Size" value={type?.size} placeholder="e.g. 24px" onChange={set('size')} />
+      <LengthField label="Size on phones" value={type?.sizeMobile} placeholder="e.g. 22px" onChange={set('sizeMobile')} />
+      <ChoiceField
+        label="Weight"
+        value={type?.weight}
+        options={(['300', '400', '500', '600', '700', '800'] as const).map((w) => ({ value: w, label: w }))}
+        onChange={set('weight')}
+      />
+      <LengthField label="Line height" kind="lineHeight" value={type?.line} placeholder="e.g. 1.1" onChange={set('line')} />
+      <LengthField label="Letter spacing" value={type?.tracking} placeholder="e.g. -0.2px" onChange={set('tracking')} />
+      <ColorField label="Colour" value={type?.color} onChange={set('color')} />
+    </div>
   );
 }
 
@@ -94,6 +122,19 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
           </label>
         </div>
       </Panel>
+      <Panel title="Type">
+        <div className="space-y-5">
+          <div className="space-y-2">
+            <p className="m-0 text-[13px] text-bone">A role’s title in the listing</p>
+            <TypeFields type={careers?.cardTitle} set={(key) => set(['careers', 'cardTitle', key])} />
+          </div>
+          <div className="space-y-2">
+            <p className="m-0 text-[13px] text-bone">The advert’s headings — about the role, responsibilities, what we offer</p>
+            <TypeFields type={careers?.headings} set={(key) => set(['careers', 'headings', key])} />
+          </div>
+          <p className="m-0 text-[12px] text-smoke">Each field left empty keeps the drawn look.</p>
+        </div>
+      </Panel>
       <Panel title="The application form">
         <div className="space-y-3">
           <ChoiceField
@@ -106,6 +147,9 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
             ]}
             onChange={set(at('form'))}
           />
+          <div className="max-w-[260px]">
+            <LengthField label="Space under the form’s heading" value={careers?.applyGap} placeholder="e.g. 32px" onChange={set(at('applyGap'))} />
+          </div>
           <Check label="The CV as a drop zone" value={careers?.dropZone} onChange={set(at('dropZone'))} />
           <Check label="“Back to the homepage” and “Explore other jobs” under the thanks" value={careers?.doneButtons} onChange={set(at('doneButtons'))} />
           <p className="m-0 text-[12px] text-smoke">Every word on the careers pages is in Site translations, under careers.</p>

@@ -171,6 +171,8 @@ export const chromeSchema = z.object({
       ctaStyle: z.enum(['primary', 'outline']).optional(),
       /** 3.23 — the header button's edge, px; unset is its button style's. */
       ctaBorderWidth: z.number().int().min(0).max(4).optional(),
+      /** 3.30 — the classic header: its links centred (unset, as before) or at the right, beside the buttons and the language switcher. */
+      navPlace: z.enum(['center', 'end']).optional(),
       /** 3.26 — which link is lit: the page's section, so a parent stays lit on its children (unset, as before), or only the page itself. */
       activeMatch: z.enum(['section', 'exact']).optional(),
       /** 3.28 — a menu item with a submenu: a button that opens it (unset, as before) or a link to its own page that opens it on hover and focus. */

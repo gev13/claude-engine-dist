@@ -283,6 +283,22 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
                   ))}
                 </Select>
               </Field>
+              {/* 3.30 — the filled buttons' own colours (Accept; Reject all in consent mode). */}
+              <Field label="Button fill" htmlFor="cookie-btn-bg" hint="a colour; empty is none">
+                <Input id="cookie-btn-bg" value={form.buttonBackground ?? ''} disabled={!canWrite} onChange={(e) => set('buttonBackground', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Button text" htmlFor="cookie-btn-text" hint="empty is the notice's text">
+                <Input id="cookie-btn-text" value={form.buttonText ?? ''} disabled={!canWrite} onChange={(e) => set('buttonText', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Button edge" htmlFor="cookie-btn-border" hint="a colour; empty is none">
+                <Input id="cookie-btn-border" value={form.buttonBorder ?? ''} disabled={!canWrite} onChange={(e) => set('buttonBorder', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Button fill under the pointer" htmlFor="cookie-btn-hover-bg" hint="empty keeps the fill">
+                <Input id="cookie-btn-hover-bg" value={form.buttonHoverBackground ?? ''} disabled={!canWrite} onChange={(e) => set('buttonHoverBackground', e.target.value.trim() || undefined)} />
+              </Field>
+              <Field label="Button text under the pointer" htmlFor="cookie-btn-hover-text" hint="empty keeps the text colour">
+                <Input id="cookie-btn-hover-text" value={form.buttonHoverText ?? ''} disabled={!canWrite} onChange={(e) => set('buttonHoverText', e.target.value.trim() || undefined)} />
+              </Field>
               {/* 3.28 — the text, its place and padding, the phones' insets. */}
               <Field label="The policy link" htmlFor="cookie-link-place">
                 <Select id="cookie-link-place" value={form.linkPlace ?? ''} disabled={!canWrite} onChange={(e) => set('linkPlace', (e.target.value || undefined) as typeof form.linkPlace)}>

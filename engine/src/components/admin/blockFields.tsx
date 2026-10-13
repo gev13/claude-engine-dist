@@ -993,7 +993,7 @@ type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
 type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean; fill?: string };
 type InfoRow = { label: string; value: string; icon?: InfoIconName; href?: string };
-type GridCard = { button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
+type GridCard = { button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceTablet?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceMobile?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -4722,10 +4722,18 @@ function TypeFields({
               k="position"
               fallback="bottomLeft"
               options={[['center', 'Centre'], ['bottomLeft', 'Bottom left'], ['topLeft', 'Top left'], ['left', 'Left, middle'], ['right', 'Right']]}
-              hint="phones use bottom left"
+              hint="phones: the setting beside"
               props={props}
               set={set}
             />
+            {/* 3.30 */}
+            <Field label="Text on phones" hint="768px and below">
+              <Select value={str(props, 'positionMobile')} onChange={(e) => set(withOpt(props, 'positionMobile', e.target.value || undefined))}>
+                <option value="">Bottom left</option>
+                <option value="bottomCenter">At the bottom, centred</option>
+                <option value="center">In the middle, centred</option>
+              </Select>
+            </Field>
             <PropSelect
               label="Height"
               k="height"
@@ -5202,6 +5210,18 @@ function TypeFields({
               </label>
               {props.cards === true && <OptText label="Card colour" k="cardColor" placeholder="the surface colour" props={props} set={set} />}
               <OptText label="Every second figure lower by" hint="e.g. 40px" k="stagger" placeholder="0" props={props} set={set} />
+              {/* 3.30 */}
+              <Field label="Number weight">
+                <Select value={str(props, 'valueWeight')} onChange={(e) => set(withOpt(props, 'valueWeight', e.target.value || undefined))}>
+                  <option value="">Default — 700</option>
+                  {['300', '400', '500', '600', '700', '800'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <OptText label="Number colour" hint="e.g. #1f2a44" k="valueColor" placeholder="the text colour" props={props} set={set} />
             </div>
           )}
           {variant === 'figures' && (
@@ -5532,6 +5552,19 @@ function TypeFields({
                         <option value="center">In the middle</option>
                       </Select>
                     </Field>
+                    {/* 3.30 — and on tablets and phones. */}
+                    {(['textPlaceTablet', 'textPlaceMobile'] as const).map((key) => (
+                      <Field key={key} label={key === 'textPlaceTablet' ? 'On tablets' : 'On phones'} hint={key === 'textPlaceTablet' ? '1024px and below' : '768px and below'}>
+                        <Select value={item[key] ?? ''} onChange={(e) => update({ [key]: (e.target.value || undefined) as GridCard['textPlace'] })}>
+                          <option value="">{key === 'textPlaceTablet' ? 'As on wider screens' : 'As on tablets'}</option>
+                          <option value="bottom">At the bottom</option>
+                          <option value="top">At the top</option>
+                          <option value="left">On the left half</option>
+                          <option value="right">On the right half</option>
+                          <option value="center">In the middle</option>
+                        </Select>
+                      </Field>
+                    ))}
                     <Field label="The picture held at">
                       <Select value={item.imagePosition ?? ''} onChange={(e) => update({ imagePosition: (e.target.value || undefined) as GridCard['imagePosition'] })}>
                         <option value="">The centre</option>

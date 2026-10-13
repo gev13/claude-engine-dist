@@ -114,6 +114,8 @@ export function MediaBand(p: P<'mediaBand'>) {
         // 3.29 — the text in a panel; split across the band.
         p.textPanel && p.textPanel !== 'none' && `has-panel is-panel-${p.textPanel}`,
         p.split && 'is-split',
+        // 3.30 — the text's place on phones.
+        p.positionMobile && p.positionMobile !== 'bottomLeft' && `is-m-${p.positionMobile}`,
       )}
       style={
         fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize)
@@ -419,13 +421,16 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
             if (overlay) {
               // 3.29 — where the words sit, where the picture is anchored, and the card's own span in a bento.
               const place = c.textPlace && c.textPlace !== 'bottom' ? `is-text-${c.textPlace}` : undefined;
+              // 3.30 — and a place of their own on tablets and phones.
+              const placeTablet = c.textPlaceTablet ? `is-text-t-${c.textPlaceTablet}` : undefined;
+              const placeMobile = c.textPlaceMobile ? `is-text-m-${c.textPlaceMobile}` : undefined;
               const spans =
                 bento && (c.span || c.rowSpan)
                   ? ({ ...(c.span ? { '--he-span': c.span } : {}), ...(c.rowSpan ? { '--he-rows': c.rowSpan } : {}) } as React.CSSProperties)
                   : undefined;
               const number = p.numbered ? `${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}` : null;
               return (
-                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', place, itemClass(p.blockId, i, c.style))} style={spans}>
+                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, itemClass(p.blockId, i, c.style))} style={spans}>
                   <MediaFill imageUrl={c.imageUrl} alt={c.alt} className={cn('he-fill he-ocard__bg', c.imagePosition && `is-at-${c.imagePosition.replace(' ', '-')}`)} sizes={c.span && c.span > 6 ? 'half' : 'third'} />
                   {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
@@ -514,11 +519,15 @@ export function StatsFigures(p: P<'stats'>) {
         p.cards && 'is-cards',
         p.stagger && isLength(p.stagger) && 'is-stagger',
         p.alignLeft && 'is-left',
+        p.valueColor && isColor(p.valueColor) && 'has-value-color',
       )}
       style={{
         ...figureSizes(p),
         ...(p.cardColor && isColor(p.cardColor) ? { '--he-figs-card': p.cardColor } : {}),
         ...(p.stagger && isLength(p.stagger) ? { '--he-figs-stagger': p.stagger } : {}),
+        // 3.30 — the numbers' own weight and colour.
+        ...(p.valueWeight && /^[3-8]00$/.test(p.valueWeight) ? { '--he-figs-weight': p.valueWeight } : {}),
+        ...(p.valueColor && isColor(p.valueColor) ? { '--he-figs-color': p.valueColor } : {}),
       } as React.CSSProperties}
     >
       <div className="shell">

@@ -151,6 +151,9 @@ function headerCss(h: NonNullable<Chrome['header']>): string[] {
   ]);
   if (cta) out.push(cta);
 
+  /* 3.30 — the classic header's links at the right, beside the buttons. */
+  if (h.navPlace === 'end' && (h.variant ?? 'classic') === 'classic') out.push('.he-hdr--classic .he-hdr__nav{justify-self:end}');
+
   /* 2.2e — no glass on phones. */
   if (h.glassPhones === false) out.push('@media (max-width:768px){.he-hdr .he-hdr__bar{backdrop-filter:none}}');
 

@@ -290,3 +290,32 @@
   }
   .he-reduce-motion .he-band__layer { transform: none; }
 }
+
+/* 3.30 — pictures with text over them: where the words sit on tablets and on
+   phones, over the wider screen's place. Each tier says everything a place
+   sets, so it replaces whatever the wider screen chose (each rule weighs as
+   much as the one it replaces and comes after it); phones come last. */
+@layer components {
+  @media (width <= 64rem) {
+    .he-ocard[class*='is-text-t-'] { text-align: start; }
+    .he-ocard[class*='is-text-t-'] .he-ocard__text { width: auto; margin-left: 0; }
+    .he-ocard.is-text-t-bottom { justify-content: flex-end; }
+    .he-ocard.is-text-t-top { justify-content: flex-start; }
+    .he-ocard:is(.is-text-t-left, .is-text-t-right) { justify-content: center; }
+    .he-ocard.is-text-t-center { justify-content: center; text-align: center; }
+    .he-ocard:is(.is-text-t-left, .is-text-t-right) .he-ocard__text { width: min(100%, 52%); }
+    .he-ocard.is-text-t-right .he-ocard__text { margin-left: auto; }
+  }
+  @media (width <= 48rem) {
+    /* A tablet place at the side is as wide on phones as one from the wider screens. */
+    .he-ocard:is(.is-text-t-left, .is-text-t-right) .he-ocard__text { width: min(100%, 64%); }
+    .he-ocard[class*='is-text-m-'] { text-align: start; }
+    .he-ocard[class*='is-text-m-'] .he-ocard__text { width: auto; margin-left: 0; }
+    .he-ocard.is-text-m-bottom { justify-content: flex-end; }
+    .he-ocard.is-text-m-top { justify-content: flex-start; }
+    .he-ocard:is(.is-text-m-left, .is-text-m-right) { justify-content: center; }
+    .he-ocard.is-text-m-center { justify-content: center; text-align: center; }
+    .he-ocard:is(.is-text-m-left, .is-text-m-right) .he-ocard__text { width: min(100%, 64%); }
+    .he-ocard.is-text-m-right .he-ocard__text { margin-left: auto; }
+  }
+}

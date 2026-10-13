@@ -641,6 +641,13 @@ export const themeSchema = z.object({
       /** 3.28 — the space above headings on phones (≤768px), over the two above. */
       headingTopMobile: length.optional(),
       subheadingTopMobile: length.optional(),
+      /** 3.30 — h2 and h3 in a type of their own rather than the theme's h2/h3: the text's face or the headings', a size (over the scale), weight, line height, spacing and colour. */
+      headingFont: z.enum(['body', 'display']).optional(),
+      headingSize: length.optional(),
+      headingWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
+      headingLine: lineHeight.optional(),
+      headingTracking: length.optional(),
+      headingColor: color.optional(),
       /** Bullet lists: a short dash (unset), a disc, or nothing; their indent and the space between items. */
       listMarker: z.enum(['dash', 'disc', 'none']).optional(),
       listIndent: length.optional(),

@@ -77,6 +77,10 @@ can have its own weight.
 of the screen, its padding and its side insets on phones. (3.28.1) *The policy link* can sit after the
 sentence, in its line.
 
+**3.30** — the filled buttons (*Accept*, and *Reject all* in consent mode)
+can take their own fill, text and edge colours, and a fill and text colour
+under the pointer. Empty, they are drawn as before.
+
 ## Bot protection — Security → Bot protection
 
 Every public form already has a hidden trap for bots and a rate limit. A

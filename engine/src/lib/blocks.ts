@@ -314,6 +314,9 @@ export const blockSchemas = {
     cardColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
     stagger: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     alignLeft: z.boolean().optional(),
+    /** 3.30 — the figures row: the numbers' weight (unset 700) and colour (unset the text's). */
+    valueWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
+    valueColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
   }),
 
   /**
@@ -437,6 +440,9 @@ export const blockSchemas = {
         style: itemStyleSchema.optional(),
         /** 3.29 — pictures with text over them: where the words sit, where the picture is anchored, and the twelfths and rows the card takes (a bento of its own, from tablets up). */
         textPlace: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
+        /** 3.30 — where the words sit on tablets (≤1024px) and on phones (≤768px); each unset keeps the wider screen's. */
+        textPlaceTablet: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
+        textPlaceMobile: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
         imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right']).optional(),
         span: z.number().int().min(1).max(12).optional(),
         rowSpan: z.number().int().min(1).max(3).optional(),
@@ -1190,6 +1196,8 @@ export const blockSchemas = {
     videoUrl: mediaUrl.optional(),
     alt: text(200),
     position: z.enum(MEDIA_BAND_POSITIONS).default('bottomLeft'),
+    /** 3.30 — where the text sits on phones (≤768px): bottom left (unset, as before), at the bottom centred, or in the middle centred. */
+    positionMobile: z.enum(['bottomLeft', 'bottomCenter', 'center']).optional(),
     height: z.enum(['short', 'medium', 'tall', 'screen']).default('tall'),
     /** 3.22 — a height of its own (e.g. 900px or 80vh), and on phones; each unset keeps the chosen height. */
     heightCustom: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),

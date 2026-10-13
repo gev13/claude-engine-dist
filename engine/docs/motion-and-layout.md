@@ -613,3 +613,29 @@ Video: *load the player with the page* (inline).
 **3.28.1**: with sub-items beside the list, a column menu keeps the list's
 width and place and opens the sub-items to the right of the column.
 
+## Type and places for a brand's details (3.30)
+
+Every option is off, or draws what it drew before, until it is set.
+
+- **Appearance → Careers → Type**: a role's title in the listing and the
+  advert's section headings (about the role, responsibilities, the offer)
+  each take a face (the text's or the headings'), a size and a size on
+  phones, a weight, a line height, a letter spacing and a colour. A card
+  title in a colour of its own still lights up under the pointer.
+  *The application form → Space under the form's heading* keeps the heading
+  off the first field.
+- **Appearance → Typography → Rich text**: the h2 and h3 in posts and
+  rich-text fields can take a face, size (over the scale), weight, line
+  height, letter spacing and colour of their own, apart from the theme's h2
+  and h3.
+- **Appearance → Header & menus**: on the classic header, *The links* can sit
+  at the right, beside the buttons and the language switcher, instead of in
+  the middle of the bar.
+- **Stats band, figures**: *Number weight* (700 until set) and *Number
+  colour*.
+- **Card grid, pictures with text over them**: each card's *The words sit*
+  can be chosen again *On tablets* (1024px and below) and *On phones* (768px
+  and below); each left empty keeps the wider screen's.
+- **Media band**: *Text on phones* — bottom left as before, at the bottom
+  centred, or in the middle centred.
+

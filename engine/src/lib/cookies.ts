@@ -107,6 +107,12 @@ export const cookieNoticeSchema = z.object({
   insetMobile: z.number().int().min(0).max(48).optional(),
   /** 3.28.1 — the policy link on a line of its own (unset, as before) or inline, after the sentence. */
   linkPlace: z.enum(['own', 'inline']).optional(),
+  /** 3.30 — the filled buttons' (Accept, Reject all) own colours and edge, and under the pointer; each unset as drawn. */
+  buttonBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  buttonText: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  buttonBorder: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  buttonHoverBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  buttonHoverText: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
 
   /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
      `notice` is the banner as it always was: a recorded answer and nothing

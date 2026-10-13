@@ -10,6 +10,33 @@ improvements.
 
 ---
 
+## 3.30.0 — 2026-10-13
+
+**The type, colours and places a brand site's last details asked for.**
+Every option is off, or draws what it drew before, until it is set.
+
+Added:
+
+- **Appearance → Careers → Type**: a role's title in the listing and the
+  advert's section headings each take a face (the text's or the headings'),
+  a size and a size on phones, a weight, a line height, a letter spacing and
+  a colour. **Space under the form's heading** keeps "Apply for this role"
+  off the first field.
+- **Appearance → Typography → Rich text**: the headings in posts and
+  rich-text fields can take a face, size, weight, line height, spacing and
+  colour of their own, apart from the theme's h2 and h3.
+- **Appearance → Header & menus → The links** at the right of the classic
+  header, beside the buttons and the language switcher.
+- **Cookies**: the filled button's own fill, text and edge colours, and
+  under the pointer.
+- **Stats band, figures**: the numbers' weight and colour.
+- **Card grid, pictures with text over them**: where each card's words sit
+  on tablets and on phones, apart from wider screens.
+- **Media band → Text on phones**: at the bottom centred, or in the middle
+  centred, instead of bottom left.
+
+---
+
 ## 3.29.0 — 2026-10-12
 
 **Rounded corners on two sides, languages in a row, a careers section to

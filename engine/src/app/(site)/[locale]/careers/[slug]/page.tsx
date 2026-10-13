@@ -244,7 +244,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
                   ))}
                 {dates}
                 <div className="he-job-aside__apply">
-                  <Heading level={2} className="he-job-aside__applytitle">
+                  <Heading level={2} className="he-job-aside__applytitle he-job__applytitle">
                     {job.isOpen ? t('careers.apply') : t('careers.filled')}
                   </Heading>
                   {job.isOpen ? applyForm : closedNote}
@@ -307,7 +307,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
         </Section>
 
         <Section tone="raised" size="lg">
-          <Heading level={2} className="mb-8">
+          <Heading level={2} className="he-job__applytitle mb-8">
             {job.isOpen ? t('careers.apply') : t('careers.filled')}
           </Heading>
 

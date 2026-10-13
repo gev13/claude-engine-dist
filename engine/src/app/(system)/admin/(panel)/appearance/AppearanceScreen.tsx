@@ -554,6 +554,28 @@ function AppearanceScreenInner() {
                       }}
                     />
                   </Field>
+                  {/* 3.30 — the headings in a type of their own. */}
+                  <ChoiceField
+                    label="Headings’ face"
+                    value={theme.richText?.headingFont}
+                    inherited="h2 and h3 roles’"
+                    options={[
+                      { value: 'body', label: 'The text’s' },
+                      { value: 'display', label: 'The headings’' },
+                    ]}
+                    onChange={set(['richText', 'headingFont'])}
+                  />
+                  <LengthField label="Headings’ size" placeholder="e.g. 24px — over the scale" emptyLabel="by the scale" value={get(['richText', 'headingSize'])} onChange={set(['richText', 'headingSize'])} />
+                  <ChoiceField
+                    label="Headings’ weight"
+                    value={theme.richText?.headingWeight}
+                    inherited="h2 and h3 roles’"
+                    options={(['300', '400', '500', '600', '700', '800'] as const).map((value) => ({ value, label: value }))}
+                    onChange={set(['richText', 'headingWeight'])}
+                  />
+                  <LengthField label="Headings’ line height" kind="lineHeight" placeholder="e.g. 1.1" emptyLabel="the roles’" value={get(['richText', 'headingLine'])} onChange={set(['richText', 'headingLine'])} />
+                  <LengthField label="Headings’ letter spacing" placeholder="e.g. -0.2px" emptyLabel="the roles’" value={get(['richText', 'headingTracking'])} onChange={set(['richText', 'headingTracking'])} />
+                  <ColorField label="Headings’ colour" placeholder="the roles’" value={get(['richText', 'headingColor'])} onChange={set(['richText', 'headingColor'])} />
                   <LengthField label="Between paragraphs" placeholder="e.g. 1.35em" emptyLabel="1.1em" value={get(['richText', 'paragraphGap'])} onChange={set(['richText', 'paragraphGap'])} />
                   <LengthField label="Above an h2 or h3" placeholder="e.g. 48px" emptyLabel="2em / 1.7em" value={get(['richText', 'headingTop'])} onChange={set(['richText', 'headingTop'])} />
                   <LengthField label="Above an h4" placeholder="e.g. 40px" emptyLabel="1.5em" value={get(['richText', 'subheadingTop'])} onChange={set(['richText', 'subheadingTop'])} />

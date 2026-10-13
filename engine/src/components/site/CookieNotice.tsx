@@ -74,6 +74,18 @@ function lookStyle(notice: Notice): React.CSSProperties | undefined {
   if (typeof notice.bottom === 'number') style['--he-cookie-bottom'] = `${notice.bottom}px`;
   if (notice.padding && /^(\d{1,3}px)(\s+\d{1,3}px){0,3}$/.test(notice.padding)) style['--he-cookie-pad'] = notice.padding;
   if (typeof notice.insetMobile === 'number') style['--he-cookie-inset-m'] = `${notice.insetMobile}px`;
+  // 3.30 — the filled buttons' own colours.
+  const buttons = [
+    ['buttonBackground', '--he-cookie-btn-bg'],
+    ['buttonText', '--he-cookie-btn-text'],
+    ['buttonBorder', '--he-cookie-btn-border'],
+    ['buttonHoverBackground', '--he-cookie-btn-hover-bg'],
+    ['buttonHoverText', '--he-cookie-btn-hover-text'],
+  ] as const;
+  for (const [key, name] of buttons) {
+    const value = notice[key];
+    if (value && isColor(value)) style[name] = value;
+  }
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
 
