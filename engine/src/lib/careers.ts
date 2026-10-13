@@ -12,6 +12,11 @@ import { localeConfig, localePath, type Locale } from './locales';
 /** The listing, in the site's own language. Prefixed forms come from `jobPath`. */
 export const CAREERS_PATH = '/careers';
 
+/** 3.30.2 — a path the careers routes answer, which the catch-all must not prerender as a page. */
+export function ownedByCareers(path: string): boolean {
+  return path === CAREERS_PATH || path.startsWith(`${CAREERS_PATH}/`);
+}
+
 /** The URL of one advert, prefixed for every language but the site's main one. */
 export function jobPath(slug: string, locale?: Locale): string {
   const config = localeConfig();

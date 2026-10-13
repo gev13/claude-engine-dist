@@ -42,6 +42,7 @@ import { getMessages } from '@/server/content/messages';
 import { getPermalinks } from '@/server/routing/config';
 import { expandSavedBlocks } from '@/server/content/savedBlocks';
 import { localeConfig } from '@/lib/locales';
+import { ownedByCareers } from '@/lib/careers';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import { getSiteSchema } from '@/server/content/structuredData';
 import { parsePageSchema, resolveService } from '@/lib/structuredData';
@@ -106,7 +107,11 @@ export async function generateStaticParams({
     ...projects.filter((p) => p.locale === locale).map((p) => projectPath(permalinks, p.slug)),
     ...terms.filter((t) => t.locale === locale).map((t) => projectTermPath(permalinks, t.taxonomy, t.slug)),
   ]);
-  return [...paths].map(toParams);
+  /* 3.30.2 — the careers routes own their addresses. A page at /careers (the
+     listing's heading) prerendered here too, to the same file, and whichever
+     build worker finished last won — so a build could serve the heading
+     without the roles. */
+  return [...paths].filter((path) => !ownedByCareers(path)).map(toParams);
 }
 
 async function localeOf(raw: string) {

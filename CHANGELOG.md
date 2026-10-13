@@ -10,6 +10,20 @@ improvements.
 
 ---
 
+## 3.30.2 — 2026-10-13
+
+**The careers listing keeps its roles after a build.**
+
+Fixed:
+
+- **A page at /careers no longer hides the roles.** A site with a page at
+  /careers (for the listing's heading) had that address built twice, to the
+  same file — once as the page alone, once as the listing — and whichever
+  finished last was served. A build could show the heading with no roles
+  under it, in every language. The careers routes now own their addresses.
+
+---
+
 ## 3.30.1 — 2026-10-13
 
 **Links stay in the visitor's language.** Nothing changes on a site with
