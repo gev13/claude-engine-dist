@@ -37,6 +37,7 @@ import { titleTemplate } from '@/lib/siteSettings';
 import { TagsNavigation } from '@/components/site/TagsNavigation';
 import { getMessages } from '@/server/content/messages';
 import { MessagesProvider } from '@/components/site/Messages';
+import { LocaleLinksProvider } from '@/components/ui/LocaleLinks';
 import { Popups } from '@/components/site/Popups';
 import { CookieNotice } from '@/components/site/CookieNotice';
 import { getPermalinks } from '@/server/routing/config';
@@ -214,6 +215,8 @@ export default async function SiteLayout({
             />
           </noscript>
         )}
+        {/* 3.30.1 — the links the engine writes, in the page's language. */}
+        <LocaleLinksProvider value={{ locale, defaultLocale: config.defaultLocale, locales: config.locales }}>
         {/* Client components — carousels, forms, the share button — read the
             engine's own words from here; server components call getMessages. */}
         <MessagesProvider value={messages}>
@@ -390,6 +393,7 @@ export default async function SiteLayout({
         </div>
         </CaptchaProvider>
         </MessagesProvider>
+        </LocaleLinksProvider>
       </body>
     </html>
   );

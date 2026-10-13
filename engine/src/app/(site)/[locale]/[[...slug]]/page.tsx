@@ -243,7 +243,11 @@ export default async function CmsPage({ params }: { params: Promise<Params> }) {
   const locale = await localeOf(raw);
   const path = pathFromParams(slug);
   const resolved = await resolvePath(path, locale);
-  if (!resolved) return handleMiss(path);
+  if (!resolved) {
+    // 3.30.1 — untranslated: the main language's page, when there is one.
+    const main = localeConfig().defaultLocale;
+    return handleMiss(path, async () => (locale !== main && (await resolvePath(path, main)) ? path : null));
+  }
 
   const permalinks = await getPermalinks();
 

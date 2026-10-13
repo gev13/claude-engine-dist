@@ -18,13 +18,19 @@ import { findRedirect, recordNotFound } from './redirects';
  * static rendering entirely, and losing ISR on every page is a far worse trade
  * than losing one field on a 404 log entry.
  */
-export async function handleMiss(path: string): Promise<never> {
+export async function handleMiss(path: string, mainLanguage?: () => Promise<string | null>): Promise<never> {
   const target = await findRedirect(path);
   if (target) {
     const to = withSlash(target.to);
     if (target.status === 301) permanentRedirect(to);
     redirect(to);
   }
+  /* 3.30.1 — a page in another language with no translation goes to the main
+     language's page, temporarily (the translation may come), rather than a
+     404: the links on a page in that language carry its prefix now, and a
+     site translated in part must not turn them into dead ends. */
+  const fallback = mainLanguage ? await mainLanguage() : null;
+  if (fallback) redirect(withSlash(fallback));
   await recordNotFound(path);
   notFound();
 }

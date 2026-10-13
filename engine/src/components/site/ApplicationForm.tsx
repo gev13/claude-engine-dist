@@ -4,6 +4,7 @@ import { useId, useRef, useState } from 'react';
 import { useChallenge } from '@/components/site/Captcha';
 import { FileDrop } from '@/components/site/FileDrop';
 import { useMessages } from '@/components/site/Messages';
+import { useLocaleHref } from '@/components/ui/LocaleLinks';
 import Link from '@/components/ui/SiteLink';
 import { cn } from '@/lib/utils';
 
@@ -56,6 +57,7 @@ export function ApplicationForm({
   const [error, setError] = useState('');
   const [cvName, setCvName] = useState('');
   const t = useMessages();
+  const inLanguage = useLocaleHref();
   const challenge = useChallenge('careers');
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -240,7 +242,7 @@ export function ApplicationForm({
         {privacyPath ? (
           <>
             {' '}
-            <a href={privacyPath} className="he-link">
+            <a href={inLanguage(privacyPath)} className="he-link">
               {t('careers.privacy')}
             </a>
             .

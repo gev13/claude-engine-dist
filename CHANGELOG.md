@@ -10,6 +10,24 @@ improvements.
 
 ---
 
+## 3.30.1 — 2026-10-13
+
+**Links stay in the visitor's language.** Nothing changes on a site with
+one language, or on the main language's pages.
+
+Fixed:
+
+- **On a page in another language, the links the engine writes keep its
+  prefix**: the logo, post and job cards, back links, breadcrumbs, buttons
+  and menu links go to `/ru/…` from a Russian page, not to the main
+  language's page. A link already written with a language (`/ru/…`, the
+  language switcher's) is left as it is.
+- **A page with no translation goes to the main language's page** (a
+  temporary redirect) instead of "page not found", so a site translated in
+  part has no dead links. Redirects set in the admin still come first.
+
+---
+
 ## 3.30.0 — 2026-10-13
 
 **The type, colours and places a brand site's last details asked for.**

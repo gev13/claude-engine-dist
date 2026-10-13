@@ -192,6 +192,32 @@ export function localePath(locale: Locale, path: string, config: LocaleConfig): 
   return clean === '/' ? `/${locale}` : `/${locale}${clean}`;
 }
 
+/** 3.30.1 — the first path segments that are never a page in a language: files, the app's own routes. */
+const UNLOCALISED = new Set(['media', '_next', 'api', 'admin', 'fonts', 'preview', 'sitemaps', '_feed', '_search', 'install']);
+
+/**
+ * 3.30.1 — a link the engine writes, in the visitor's language: `/blog/x`
+ * on a Russian page becomes `/ru/blog/x`, by the same rule as `localePath`.
+ *
+ * Left exactly as given: the default language (so a one-language site's
+ * HTML does not change), anything that is not a site path (`https:`,
+ * `mailto:`, `#top`, `//host`), a path that already names a configured
+ * language (`/ru/…` stored in content, `/en` from the language switcher), a
+ * file (`/llms.txt`), and the app's own routes (`/media`, `/api`, `/admin`…).
+ */
+export function withLocale(href: string, locale: Locale | undefined, config: Pick<LocaleConfig, 'locales' | 'defaultLocale'>): string {
+  if (!locale || locale === config.defaultLocale || !config.locales.includes(locale)) return href;
+  if (!href.startsWith('/') || href.startsWith('//')) return href;
+  const cut = href.search(/[?#]/);
+  const path = cut === -1 ? href : href.slice(0, cut);
+  const tail = cut === -1 ? '' : href.slice(cut);
+  const first = path.split('/')[1] ?? '';
+  if (config.locales.includes(first.toLowerCase()) || UNLOCALISED.has(first)) return href;
+  if (/\.[a-z0-9]{1,8}$/i.test(path.slice(path.lastIndexOf('/') + 1))) return href;
+  const clean = path.replace(/\/+$/, '') || '/';
+  return `${clean === '/' ? `/${locale}` : `/${locale}${clean}`}${tail}`;
+}
+
 /** The other configured languages, in configured order. */
 export function otherLocales(locale: Locale, config: LocaleConfig): Locale[] {
   return config.locales.filter((candidate) => candidate !== locale);

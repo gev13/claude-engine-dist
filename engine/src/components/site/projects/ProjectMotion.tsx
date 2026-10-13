@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useLocaleHref } from '@/components/ui/LocaleLinks';
 import { motionReduced } from '@/lib/motion';
 
 /**
@@ -9,9 +10,11 @@ import { motionReduced } from '@/lib/motion';
  * caption slides in when pointed at (library-showcase.css).
  */
 export function ProjectBack({ href, label }: { href: string; label: string }) {
+  // 3.30.1 — in the page's language.
+  const inLanguage = useLocaleHref();
   return (
     <a
-      href={href}
+      href={inLanguage(href)}
       className="he-prj-back"
       onClick={(event) => {
         const sameSite = document.referrer && new URL(document.referrer).origin === window.location.origin;

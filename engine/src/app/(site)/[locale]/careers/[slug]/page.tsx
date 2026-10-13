@@ -20,7 +20,7 @@ import { SiteImg } from '@/components/ui/SiteImg';
 import { getMessages } from '@/server/content/messages';
 import { getTheme } from '@/server/content/theme';
 import { cn, formatDate, isoDate } from '@/lib/utils';
-import type { Locale } from '@/lib/locales';
+import { localeConfig, type Locale } from '@/lib/locales';
 import { handleMiss } from '@/server/content/miss';
 import { allPublishedJobSlugs, getJob, getJobTranslations, listJobs } from '@/server/content/jobs';
 import { getPageByPath } from '@/server/content/pages';
@@ -73,7 +73,11 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
   await getPermalinks();
   const { locale, slug } = await params;
   const job = await getJob(slug, locale as Locale);
-  if (!job) return handleMiss(`${CAREERS_PATH}/${slug}`);
+  if (!job) {
+    // 3.30.1 — an advert not translated: the main language's, when there is one.
+    const main = localeConfig().defaultLocale;
+    return handleMiss(`${CAREERS_PATH}/${slug}`, async () => (locale !== main && (await getJob(slug, main)) ? `${CAREERS_PATH}/${slug}` : null));
+  }
 
   const [settings, others, careersPage, messages, theme, privacyPage] = await Promise.all([
     getSiteSettings(),
