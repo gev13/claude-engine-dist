@@ -8,12 +8,14 @@ import { useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
 import { SIGNATURE_HEADER, TIMESTAMP_HEADER, WEBHOOK_EVENTS, WEBHOOK_EVENT_LABELS, WEBHOOK_URL, type Webhook } from '@/lib/webhooks';
 import { errorMessage, useUnsavedWarning } from '../_shared';
+import { BodyEditor, HeadersEditor, partsInvalid } from './WebhookParts';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Enquiries → Webhooks (T13, 2.16)
    ───────────────────────────────────────────────────────────────────────────
-   Up to ten receivers, each an https address, the events it wants and an
-   optional signing secret. Below them, the last fifty deliveries — what was
+   Up to ten receivers, each an https address, the events it wants, an
+   optional signing secret, up to five headers of its own and (3.31) either
+   the engine's envelope or a body in the receiver's own field names. Below them, the last fifty deliveries — what was
    sent where, what came back — with a Resend for anything that failed.
    ═══════════════════════════════════════════════════════════════════════════ */
 
@@ -26,6 +28,8 @@ type Delivery = {
   attempts: number;
   responseCode: number | null;
   error: string | null;
+  /** What a refusing receiver said, cut short (3.31). */
+  responseBody?: string | null;
   createdAt: string;
 };
 
@@ -40,7 +44,20 @@ function newSecret(): string {
   return `whsec_${Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')}`;
 }
 
-const blank = (): Webhook => ({ id: crypto.randomUUID(), name: '', enabled: true, url: '', events: ['form.submitted'], forms: [], secret: '' });
+const blank = (): Webhook => ({
+  id: crypto.randomUUID(),
+  name: '',
+  enabled: true,
+  url: '',
+  events: ['form.submitted'],
+  forms: [],
+  secret: '',
+  headers: [],
+  body: { mode: 'envelope', fields: [] },
+});
+
+/** A hook as the editor holds it: the 3.31 parts filled in, whatever shape it arrived in. */
+const editable = (hook: Webhook): Webhook => ({ ...hook, headers: hook.headers ?? [], body: hook.body ?? { mode: 'envelope', fields: [] } });
 
 const when = (value: string) => new Date(value).toLocaleString();
 
@@ -54,8 +71,9 @@ export function WebhooksScreen() {
 
   useEffect(() => {
     if (!data) return;
-    setHooks(data.hooks);
-    setSaved(JSON.stringify(data.hooks));
+    const loaded = data.hooks.map(editable);
+    setHooks(loaded);
+    setSaved(JSON.stringify(loaded));
   }, [data]);
 
   const dirty = hooks !== null && JSON.stringify(hooks) !== saved;
@@ -71,16 +89,20 @@ export function WebhooksScreen() {
   }
 
   const update = (index: number, patch: Partial<Webhook>) => setHooks(hooks.map((hook, i) => (i === index ? { ...hook, ...patch } : hook)));
-  const invalid = hooks.some((hook) => !hook.name.trim() || !WEBHOOK_URL.test(hook.url) || hook.events.length === 0);
-  const savedIds = new Set((JSON.parse(saved || '[]') as Webhook[]).map((hook) => hook.id));
+  const invalid = hooks.some((hook) => !hook.name.trim() || !WEBHOOK_URL.test(hook.url) || hook.events.length === 0 || partsInvalid(hook));
+  const savedHooks = JSON.parse(saved || '[]') as Webhook[];
+  const savedIds = new Set(savedHooks.map((hook) => hook.id));
+  /** Headers whose value the server holds, so an emptied field means "keep it". */
+  const storedHeaderIds = new Set(savedHooks.flatMap((hook) => hook.headers.filter((header) => header.value === MASK).map((header) => header.id)));
 
   async function save() {
     if (!hooks) return;
     setBusy('save');
     try {
       const result = await api<{ hooks: Webhook[] }>('/api/admin/webhooks', { method: 'PUT', json: { hooks } });
-      setHooks(result.hooks);
-      setSaved(JSON.stringify(result.hooks));
+      const stored = result.hooks.map(editable);
+      setHooks(stored);
+      setSaved(JSON.stringify(stored));
       await mutate();
       toast('Webhooks saved.', 'success');
     } catch (error) {
@@ -93,8 +115,11 @@ export function WebhooksScreen() {
   async function test(hook: Webhook) {
     setBusy(`test:${hook.id}`);
     try {
-      const result = await api<{ ok: boolean; status?: number; error?: string }>('/api/admin/webhooks/test', { json: { id: hook.id } });
-      toast(result.ok ? `Delivered — the receiver answered ${result.status}.` : `Not delivered: ${result.error}`, result.ok ? 'success' : 'error');
+      const result = await api<{ ok: boolean; status?: number; error?: string; body?: string }>('/api/admin/webhooks/test', { json: { id: hook.id } });
+      toast(
+        result.ok ? `Delivered — the receiver answered ${result.status}.` : `Not delivered: ${result.error}${result.body ? ` It said: ${result.body}` : ''}`,
+        result.ok ? 'success' : 'error',
+      );
       await mutate();
     } catch (error) {
       toast(errorMessage(error, 'The test could not be sent.'), 'error');
@@ -120,7 +145,7 @@ export function WebhooksScreen() {
     <>
       <PageHeader
         title="Webhooks"
-        description="Send each submission on to another system — a CRM, Zapier, Make — as signed JSON."
+        description="Send each submission on to another system — a CRM, Zapier, Make — as JSON, in the engine's shape or the receiver's own."
         actions={
           <AdminButton type="button" onClick={() => void save()} disabled={busy === 'save' || !dirty || invalid}>
             {busy === 'save' ? 'Saving…' : 'Save'}
@@ -209,7 +234,7 @@ export function WebhooksScreen() {
                 <Field
                   label="Signing secret"
                   htmlFor={`wh-secret-${hook.id}`}
-                  hint={`optional — signs each request (${SIGNATURE_HEADER}); kept encrypted and never shown again once saved`}
+                  hint={`optional — signs each request (${SIGNATURE_HEADER}); leave it empty for a receiver that checks its own key instead. Kept encrypted and never shown again once saved`}
                 >
                   <div className="flex gap-2">
                     <Input
@@ -237,6 +262,8 @@ export function WebhooksScreen() {
                 {secretShown && hook.secret === secretShown && (
                   <p className="m-0 text-[13px] text-smoke">Copy it into the receiver now — after saving it is kept encrypted and not shown again.</p>
                 )}
+                <HeadersEditor hook={hook} storedIds={storedHeaderIds} onChange={(headers) => update(index, { headers })} />
+                <BodyEditor hook={hook} onChange={(body) => update(index, { body })} />
               </div>
             </Panel>
           );
@@ -285,6 +312,11 @@ export function WebhooksScreen() {
                         </span>
                         <span className="text-smoke"> · {delivery.attempts} attempt{delivery.attempts === 1 ? '' : 's'}</span>
                         {delivery.error && <span className="block text-smoke">{delivery.error}</span>}
+                        {delivery.responseBody && (
+                          <span className="mt-1 block text-smoke">
+                            It said: <code className="break-all whitespace-pre-wrap text-ash">{delivery.responseBody}</code>
+                          </span>
+                        )}
                       </td>
                       <td className="py-2 text-right">
                         {delivery.status !== 'ok' && delivery.targetId && (

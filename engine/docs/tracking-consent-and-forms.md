@@ -162,7 +162,59 @@ and, when a secret is set, `X-Engine-Signature`: `sha256=` and the hex
 HMAC-SHA256 of `<timestamp>.<raw body>` keyed with the secret. Compare it in
 constant time and refuse a timestamp more than five minutes old.
 
+The secret is optional: with none set, no `X-Engine-Signature` is sent,
+which is what a receiver that checks its own API key wants.
+
+### Your receiver's own header and field names (3.31)
+
+**Request headers.** Up to five per webhook, sent with every delivery — a
+CRM's `X-API-Key` or `Authorization: Bearer …`. Values are kept encrypted
+and never shown again: a stored one appears as an empty box with *a value is
+stored — type a new one to replace it*; leave it empty to keep it, remove
+the row to stop sending it. A name must be a plain header name (letters,
+digits and `-`), and the engine refuses the ones it sets itself —
+`X-Engine-*`, `Host`, `Content-Type`, `Content-Length`,
+`Transfer-Encoding`, `Connection`. Line breaks are refused in names and
+values.
+
+**Body.** *Envelope* is the JSON above and the default, so a webhook saved
+before 3.31 sends exactly what it did. *Custom* sends a flat object of the
+receiver's own field names, each filled from a template — text with
+`{{field}}` placeholders, so one field can combine several:
+
+```
+name     {{name}}
+contact  {{email}}
+message  {{message}}
+
+         Company: {{company}}
+         Role: {{role}}
+         Services: {{services}}
+         Timing: {{timing}}
+```
+
+sends `{"name": "…", "contact": "…", "message": "…"}`. The screen lists
+the fields of each chosen event and previews the body with stand-in values.
+
+- Contact form (`enquiry.received`): `name`, `email`, `company`, `role`,
+  `businessType`, `services`, `timing`, `message`, `receivedAt`, `enquiryId`.
+- Form blocks (`form.submitted`): `answers.<field id>` for one answer,
+  `answers` for all of them as `Label: value` lines, `hidden.<name>` and
+  `hidden`, `formName`, `page`, `receivedAt`, `formId`, `submissionId`.
+
+Every value is text; a list is joined with commas. A placeholder the event
+does not carry is refused when saving. A signature, when a secret is set,
+covers the custom body the same way. *Send a test* fills a custom body with
+the stand-in values from the preview — a receiver that stores what it gets
+will store the test too.
+
+### The delivery log
+
 Deliveries are tried three times (at once, after ten seconds, after a
 minute), logged for thirty days on the screen, and can be resent. The log
-never keeps the payload. The server refuses addresses that resolve to a
-private or local network, and does not follow redirects.
+never keeps the payload — but when a receiver refuses a delivery, the first
+500 characters of its answer are kept beside the status code (*It said: …*),
+since that is usually the only place its reason is written. A receiver that
+echoes the fields it rejected will have those in the snippet. The server
+refuses addresses that resolve to a private or local network, and does not
+follow redirects.

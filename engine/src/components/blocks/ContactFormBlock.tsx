@@ -36,6 +36,8 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    // Read before the first await: React clears `currentTarget` once the handler yields.
+    const formEl = e.currentTarget;
     const token = await challenge.token();
     if (token === false) {
       setState('error');
@@ -44,7 +46,7 @@ export function ContactFormClient(p: Props & { serviceOptions: readonly string[]
     setState('sending');
     setError('');
 
-    const form = new FormData(e.currentTarget);
+    const form = new FormData(formEl);
     const payload = {
       name: String(form.get('name') ?? ''),
       email: String(form.get('email') ?? ''),

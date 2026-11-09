@@ -10,6 +10,46 @@ improvements.
 
 ---
 
+## 3.31.0 — 2026-11-09
+
+**Webhooks speak the receiver's language, and the contact form sends
+again.** A webhook saved before this release sends exactly what it did.
+
+Added:
+
+- **Request headers on a webhook** (Enquiries → Webhooks): up to five
+  name/value pairs sent with every delivery — a CRM's `X-API-Key` or
+  `Authorization`. Values are kept encrypted and never shown again; a stored
+  one reads *a value is stored — type a new one to replace it*. The engine's
+  own headers (`X-Engine-*`, `Host`, `Content-Type`, `Content-Length`) and
+  line breaks are refused.
+- **A custom body**: instead of the engine's envelope, a flat object of the
+  receiver's own field names, each filled from a template such as
+  `{{message}} — {{company}}`, so one field can combine several. The screen
+  lists each event's fields and previews the body; a form's answers are
+  `{{answers.<field id>}}`.
+- **The receiver's reason in the delivery log.** When a receiver refuses a
+  delivery, the start of its answer is kept and shown beside the status
+  code, so a rejected field is diagnosable from the panel.
+
+Fixed:
+
+- **The contact form block sends.** Since 2.16 pressing Send threw in the
+  browser and nothing arrived; enquiries sent straight to the endpoint were
+  unaffected.
+
+Security:
+
+- **Dependencies updated for published advisories**, within their existing
+  ranges: Next.js 15.5.29 (cache poisoning of static and ISR pages, among
+  others), zod 4.6.7, TinyMCE 8.10.1, Nodemailer 10.4.0 and sanitize-html
+  2.18.1. Rebuild after updating.
+
+Includes a database migration: one column on the webhook delivery log. Take
+the backup the Updates screen offers.
+
+---
+
 ## 3.30.3 — 2026-10-13
 
 **The language switcher follows the page you are on.** Nothing changes on

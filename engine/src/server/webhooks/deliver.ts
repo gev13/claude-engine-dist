@@ -5,11 +5,15 @@ import { SITE_URL } from '@/lib/env';
 import {
   DELIVERY_HEADER,
   EVENT_HEADER,
+  HEADER_VALUE,
+  RESPONSE_SNIPPET_MAX,
   RETRY_DELAYS,
+  SAMPLE_DATA,
   SIGNATURE_HEADER,
   TIMESTAMP_HEADER,
   WEBHOOKS_SETTING_KEY,
   hooksFor,
+  renderCustomBody,
   resolveWebhooks,
   type Webhook,
   type WebhookEvent,
@@ -46,6 +50,45 @@ export async function getWebhooks(): Promise<WebhooksSettings> {
 
 type Payload = { event: WebhookEvent | 'webhook.test'; data: Record<string, unknown> };
 
+/**
+ * The body a hook sends: the engine's envelope, or (3.31) the flat object its
+ * custom fields make from the event's data. A test of a custom hook fills the
+ * fields from `sample`, so the receiver sees the shape it will get.
+ */
+export function buildBody(hook: Pick<Webhook, 'body'>, id: string, payload: Payload, sample?: Record<string, unknown>): string {
+  if (hook.body.mode === 'custom') return JSON.stringify(renderCustomBody(hook.body.fields, sample ?? payload.data));
+  return JSON.stringify({ id, event: payload.event, createdAt: new Date().toISOString(), site: SITE_URL, data: payload.data });
+}
+
+/**
+ * Every header a delivery carries: the hook's own (decrypted here, at the
+ * moment of use), then the engine's, which a custom header can never replace —
+ * the schema refuses those names, and they are written last regardless. A
+ * value that no longer decrypts (the key changed) is left out and logged
+ * rather than sent as ciphertext.
+ */
+export function buildHeaders(hook: Pick<Webhook, 'name' | 'headers' | 'secret'>, event: string, id: string, timestamp: string, body: string): Record<string, string> {
+  const headers: Record<string, string> = {};
+  for (const header of hook.headers) {
+    const value = decryptSecret(header.value);
+    // Checked again after decrypting: a line break here would be a second header.
+    if (value === null || !HEADER_VALUE.test(value)) {
+      console.error('[webhooks] a header value could not be decrypted', { hook: hook.name, header: header.name });
+      continue;
+    }
+    headers[header.name] = value;
+  }
+  headers[EVENT_HEADER] = event;
+  headers[DELIVERY_HEADER] = id;
+  headers[TIMESTAMP_HEADER] = timestamp;
+  const secret = decryptSecret(hook.secret);
+  if (secret) headers[SIGNATURE_HEADER] = signPayload(secret, timestamp, body);
+  return headers;
+}
+
+const failure = (result: { ok: boolean; error?: string; body?: string }) =>
+  result.ok ? { error: null, responseBody: null } : { error: (result.error ?? '').slice(0, 300), responseBody: result.body?.slice(0, RESPONSE_SNIPPET_MAX) ?? null };
+
 const wait = (seconds: number) => new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 
 /** One delivery, every attempt, recorded as it goes. Never throws. */
@@ -53,7 +96,7 @@ async function deliver(hook: Webhook, payload: Payload, targetId: string | null,
   try {
     let id = existingId;
     if (id) {
-      await db.update(webhookDeliveries).set({ status: 'pending', attempts: 0, responseCode: null, error: null, updatedAt: new Date() }).where(eq(webhookDeliveries.id, id));
+      await db.update(webhookDeliveries).set({ status: 'pending', attempts: 0, responseCode: null, error: null, responseBody: null, updatedAt: new Date() }).where(eq(webhookDeliveries.id, id));
     } else {
       const [row] = await db
         .insert(webhookDeliveries)
@@ -66,16 +109,12 @@ async function deliver(hook: Webhook, payload: Payload, targetId: string | null,
         .catch(() => undefined);
     }
 
-    const body = JSON.stringify({ id, event: payload.event, createdAt: new Date().toISOString(), site: SITE_URL, data: payload.data });
-    const secret = decryptSecret(hook.secret);
+    const body = buildBody(hook, id, payload);
 
     for (let attempt = 0; attempt < RETRY_DELAYS.length; attempt++) {
       if (RETRY_DELAYS[attempt]) await wait(RETRY_DELAYS[attempt]!);
       const timestamp = Math.floor(Date.now() / 1000).toString();
-      const headers: Record<string, string> = { [EVENT_HEADER]: payload.event, [DELIVERY_HEADER]: id, [TIMESTAMP_HEADER]: timestamp };
-      if (secret) headers[SIGNATURE_HEADER] = signPayload(secret, timestamp, body);
-
-      const result = await postPublic(hook.url, body, headers);
+      const result = await postPublic(hook.url, body, buildHeaders(hook, payload.event, id, timestamp, body), undefined, RESPONSE_SNIPPET_MAX);
       const done = result.ok || attempt === RETRY_DELAYS.length - 1;
       await db
         .update(webhookDeliveries)
@@ -83,7 +122,7 @@ async function deliver(hook: Webhook, payload: Payload, targetId: string | null,
           attempts: attempt + 1,
           status: result.ok ? 'ok' : done ? 'failed' : 'pending',
           responseCode: result.status ?? null,
-          error: result.ok ? null : result.error.slice(0, 300),
+          ...failure(result),
           updatedAt: new Date(),
         })
         .where(eq(webhookDeliveries.id, id));
@@ -169,14 +208,12 @@ export function dispatchEnquiry(enquiryId: string): void {
  * A test delivery, awaited so the screen can say what happened: one attempt,
  * no retries, and the answer comes back.
  */
-export async function testWebhook(hook: Webhook): Promise<{ ok: boolean; status?: number; error?: string }> {
+export async function testWebhook(hook: Webhook): Promise<{ ok: boolean; status?: number; error?: string; body?: string }> {
   const id = randomUUID();
-  const body = JSON.stringify({ id, event: 'webhook.test', createdAt: new Date().toISOString(), site: SITE_URL, data: { message: 'A test from the Webhooks screen.' } });
+  // A custom body is filled with stand-in values for the hook's first event.
+  const body = buildBody(hook, id, { event: 'webhook.test', data: { message: 'A test from the Webhooks screen.' } }, SAMPLE_DATA[hook.events[0] ?? 'form.submitted']);
   const timestamp = Math.floor(Date.now() / 1000).toString();
-  const secret = decryptSecret(hook.secret);
-  const headers: Record<string, string> = { [EVENT_HEADER]: 'webhook.test', [DELIVERY_HEADER]: id, [TIMESTAMP_HEADER]: timestamp };
-  if (secret) headers[SIGNATURE_HEADER] = signPayload(secret, timestamp, body);
-  const result = await postPublic(hook.url, body, headers);
+  const result = await postPublic(hook.url, body, buildHeaders(hook, 'webhook.test', id, timestamp, body), undefined, RESPONSE_SNIPPET_MAX);
   await db
     .insert(webhookDeliveries)
     .values({
@@ -186,10 +223,10 @@ export async function testWebhook(hook: Webhook): Promise<{ ok: boolean; status?
       status: result.ok ? 'ok' : 'failed',
       attempts: 1,
       responseCode: result.status ?? null,
-      error: result.ok ? null : result.error.slice(0, 300),
+      ...failure(result),
     })
     .catch(() => undefined);
-  return result.ok ? { ok: true, status: result.status } : { ok: false, status: result.status, error: result.error };
+  return result.ok ? { ok: true, status: result.status } : { ok: false, status: result.status, error: result.error, body: result.body };
 }
 
 /** Send a logged delivery again, rebuilt from what it was about. */

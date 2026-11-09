@@ -74,14 +74,30 @@ const publicLookup: LookupFunction = (hostname, options, callback) => {
   });
 };
 
-export type OutboundResult = { ok: true; status: number } | { ok: false; status?: number; error: string };
+export type OutboundResult = { ok: true; status: number } | { ok: false; status?: number; error: string; body?: string };
+
+/** How much of a refusing answer is read: enough for a reason, never a whole page. */
+const ANSWER_READ_MAX = 4096;
+
+/**
+ * A refusing receiver's answer as one line of text: tags dropped from an HTML
+ * error page, control characters and runs of space collapsed, cut short.
+ */
+export function answerSnippet(raw: Buffer, contentType: string, max: number): string {
+  let text = raw.toString('utf8');
+  if (/html/i.test(contentType)) text = text.replace(/<(script|style)[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]*>/g, ' ');
+  text = text.replace(/[\x00-\x1f\x7f]+/g, ' ').replace(/\s+/g, ' ').trim();
+  return text.length > max ? `${text.slice(0, max - 1)}…` : text;
+}
 
 /**
  * POST a body to an https address that must be public. Never throws; a
  * refusal, a timeout and a non-2xx answer all come back as `ok: false` with
- * something an administrator can act on.
+ * something an administrator can act on — and, for an answer that was not a
+ * 2xx, up to `snippetMax` characters of what the receiver said, which is
+ * usually the only place its reason is written down.
  */
-export function postPublic(url: string, body: string, headers: Record<string, string>, timeoutMs = 10_000): Promise<OutboundResult> {
+export function postPublic(url: string, body: string, headers: Record<string, string>, timeoutMs = 10_000, snippetMax = 500): Promise<OutboundResult> {
   return new Promise((resolve) => {
     let target: URL;
     try {
@@ -94,23 +110,54 @@ export function postPublic(url: string, body: string, headers: Record<string, st
       return resolve({ ok: false, error: 'That address is not on the public internet.' });
     }
 
-    const req = httpsRequest(
-      target,
-      {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', 'content-length': Buffer.byteLength(body).toString(), 'user-agent': 'engine-webhook/1', ...headers },
-        lookup: publicLookup,
-        timeout: timeoutMs,
-      },
-      (res) => {
-        // The body is not wanted; read and discard so the socket is released.
-        res.resume();
-        const status = res.statusCode ?? 0;
-        if (status >= 200 && status < 300) resolve({ ok: true, status });
-        else if (status >= 300 && status < 400) resolve({ ok: false, status, error: `Redirected (${status}) — redirects are not followed; update the address.` });
-        else resolve({ ok: false, status, error: `The receiver answered ${status}.` });
-      },
-    );
+    // A caller's headers first, so the framing ones are always ours.
+    const outgoing: Record<string, string> = { 'user-agent': 'engine-webhook/1' };
+    for (const [name, value] of Object.entries(headers)) {
+      if (!['content-type', 'content-length', 'host', 'transfer-encoding', 'connection'].includes(name.toLowerCase())) outgoing[name] = value;
+    }
+    outgoing['content-type'] = 'application/json';
+    outgoing['content-length'] = Buffer.byteLength(body).toString();
+
+    let req: ReturnType<typeof httpsRequest>;
+    try {
+      req = httpsRequest(
+        target,
+        { method: 'POST', headers: outgoing, lookup: publicLookup, timeout: timeoutMs },
+        (res) => {
+          const status = res.statusCode ?? 0;
+          if (status >= 200 && status < 300) {
+            // A success's body is not wanted; read and discard so the socket is released.
+            res.resume();
+            return resolve({ ok: true, status });
+          }
+          const error = status >= 300 && status < 400 ? `Redirected (${status}) — redirects are not followed; update the address.` : `The receiver answered ${status}.`;
+          const chunks: Buffer[] = [];
+          let size = 0;
+          let settled = false;
+          const finish = () => {
+            if (settled) return;
+            settled = true;
+            const snippet = answerSnippet(Buffer.concat(chunks).subarray(0, ANSWER_READ_MAX), String(res.headers['content-type'] ?? ''), snippetMax);
+            resolve({ ok: false, status, error, ...(snippet ? { body: snippet } : {}) });
+          };
+          res.on('data', (chunk: Buffer) => {
+            if (settled) return;
+            chunks.push(chunk);
+            size += chunk.length;
+            if (size >= ANSWER_READ_MAX) {
+              finish();
+              res.destroy();
+            }
+          });
+          res.on('end', finish);
+          res.on('error', finish);
+          res.on('close', finish);
+        },
+      );
+    } catch (error) {
+      // Node refuses a header it cannot send; the schema should have stopped it first.
+      return resolve({ ok: false, error: (error instanceof Error ? error.message : 'The request could not be built.').slice(0, 280) });
+    }
     req.on('timeout', () => req.destroy(new Error(`No answer within ${Math.round(timeoutMs / 1000)} seconds.`)));
     req.on('error', (error) => {
       resolve({ ok: false, error: error instanceof OutboundRefused ? error.message : (error.message || 'The request failed.').slice(0, 280) });

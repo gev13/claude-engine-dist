@@ -709,6 +709,12 @@ export const webhookDeliveries = pgTable(
     attempts: integer('attempts').notNull().default(0),
     responseCode: integer('response_code'),
     error: varchar('error', { length: 300 }),
+    /**
+     * What a refusing receiver said (3.31), cut to 500 characters — its reason
+     * for rejecting a field is usually only written there. Kept on failure
+     * only, and pruned with the row.
+     */
+    responseBody: varchar('response_body', { length: 500 }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
   },

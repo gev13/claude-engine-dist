@@ -1,6 +1,14 @@
 {
-  "latest": "3.30.3",
+  "latest": "3.31.0",
   "releases": [
+    {
+      "version": "3.31.0",
+      "date": "2026-11-09",
+      "summary": "Webhooks can send up to five encrypted headers of their own and a custom flat body built from templates of the event's fields; a refusing receiver's reason is kept in the delivery log. The contact form block sends again (broken since 2.16). Security updates: Next.js 15.5.29, zod, TinyMCE, Nodemailer, sanitize-html. Includes a migration: one column on the delivery log.",
+      "requiresMigration": true,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.30.3",
       "date": "2026-10-13",

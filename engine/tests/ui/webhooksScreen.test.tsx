@@ -73,6 +73,79 @@ describe('the webhooks screen', () => {
   });
 });
 
+describe('a webhook’s headers and body (3.31)', () => {
+  const hid = '1f3c1a52-6b7d-4e8f-9a0b-1c2d3e4f5a6b';
+  const withParts = (patch: Record<string, unknown>) => {
+    store.loaded = {
+      hooks: [{ ...hook, events: ['enquiry.received'], headers: [{ id: hid, name: 'X-API-Key', value: MASK }], body: { mode: 'envelope', fields: [] }, ...patch }],
+      forms: [],
+      deliveries: [
+        {
+          id: 'd2',
+          webhookName: 'CRM',
+          event: 'enquiry.received',
+          targetId: 't2',
+          status: 'failed',
+          attempts: 3,
+          responseCode: 422,
+          error: 'The receiver answered 422.',
+          responseBody: '{"error":"message must be at least 50 characters"}',
+          createdAt: new Date().toISOString(),
+        },
+      ],
+    };
+    store.api.mockImplementation(async (_url: string, init?: { json: { hooks: unknown } }) => ({ hooks: init?.json.hooks }));
+  };
+
+  it('shows a stored header value as empty with a note, never the mask in the box', () => {
+    withParts({});
+    const { container } = render(<WebhooksScreen />);
+    const value = container.querySelector<HTMLInputElement>(`#wh-hvalue-${hid}`)!;
+    expect(value.type).toBe('password');
+    expect(value.value).toBe('');
+    expect(value.placeholder).toBe(MASK);
+    expect(container.textContent).toContain('a value is stored — type a new one to replace it');
+    expect(container.querySelector<HTMLInputElement>(`#wh-hname-${hid}`)!.value).toBe('X-API-Key');
+  });
+
+  it('sends the mask back when the value was left alone, or emptied again', async () => {
+    withParts({});
+    const { container } = render(<WebhooksScreen />);
+    const value = container.querySelector(`#wh-hvalue-${hid}`)!;
+    fireEvent.change(value, { target: { value: 'typed' } });
+    fireEvent.change(value, { target: { value: '' } });
+    fireEvent.change(container.querySelector(`#wh-name-${hook.id}`)!, { target: { value: 'CRM 2' } });
+    await waitFor(() => expect(button(container, 'Save').disabled).toBe(false));
+    fireEvent.click(button(container, 'Save'));
+    await waitFor(() => expect(store.api).toHaveBeenCalled());
+    expect(store.api.mock.calls[0][1].json.hooks[0].headers).toEqual([{ id: hid, name: 'X-API-Key', value: MASK }]);
+  });
+
+  it('will not save a header the engine sets itself', async () => {
+    withParts({});
+    const { container } = render(<WebhooksScreen />);
+    fireEvent.change(container.querySelector(`#wh-hname-${hid}`)!, { target: { value: 'X-Engine-Signature' } });
+    await waitFor(() => expect(container.textContent).toContain('The engine sets that header itself'));
+    expect(button(container, 'Save').disabled).toBe(true);
+  });
+
+  it('lists the event’s fields, previews a custom body and refuses an unknown field', async () => {
+    withParts({ body: { mode: 'custom', fields: [{ name: 'message', template: '{{message}} — {{company}}' }] } });
+    const { container } = render(<WebhooksScreen />);
+    for (const key of ['{{name}}', '{{email}}', '{{company}}', '{{services}}', '{{timing}}']) expect(container.textContent).toContain(key);
+    expect(container.querySelector('pre')!.textContent).toContain('"message": "A test from the Webhooks screen — not a real enquiry. — Example Ltd"');
+    fireEvent.change(container.querySelector(`#wh-ftpl-${hook.id}-0`)!, { target: { value: '{{mesage}}' } });
+    await waitFor(() => expect(container.textContent).toContain('{{mesage}} is not a field of the chosen event'));
+    expect(button(container, 'Save').disabled).toBe(true);
+  });
+
+  it('shows what a refusing receiver said in the log', () => {
+    withParts({});
+    const { container } = render(<WebhooksScreen />);
+    expect(container.textContent).toContain('It said: {"error":"message must be at least 50 characters"}');
+  });
+});
+
 describe('bot protection', () => {
   it('never shows the stored secret, and says so', () => {
     store.loaded = {
