@@ -101,8 +101,14 @@ describe('a hook’s delivery', () => {
     const signed = { ...hook, secret: encryptSecret('s') };
     const body = buildBody(signed, 'd1', payload);
     expect(buildHeaders(signed, 'enquiry.received', 'd1', '1', body)['x-engine-signature']).toMatch(/^sha256=[0-9a-f]{64}$/);
-    const envelope = JSON.parse(buildBody({ body: { mode: 'envelope', fields: [] } }, 'd1', payload));
+    const envelope = JSON.parse(buildBody({ body: { mode: 'envelope', fields: [], replace: [] } }, 'd1', payload));
     expect(envelope).toMatchObject({ id: 'd1', event: 'enquiry.received', data: payload.data });
+  });
+
+  it('swaps text inside the values it sends, not in the template (3.31.1)', () => {
+    const swapped = { ...hook, body: { ...hook.body, replace: [{ find: ' & ', to: ' and ' }] } };
+    const body = buildBody(swapped, 'd1', { event: 'enquiry.received', data: { name: 'A & B', message: 'R&D & more', company: 'X & Y' } });
+    expect(JSON.parse(body)).toEqual({ name: 'A and B', message: 'R&D and more (X and Y)' });
   });
 
   it('leaves out a header whose value no longer decrypts rather than sending ciphertext', () => {

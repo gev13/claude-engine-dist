@@ -56,7 +56,7 @@ type Payload = { event: WebhookEvent | 'webhook.test'; data: Record<string, unkn
  * fields from `sample`, so the receiver sees the shape it will get.
  */
 export function buildBody(hook: Pick<Webhook, 'body'>, id: string, payload: Payload, sample?: Record<string, unknown>): string {
-  if (hook.body.mode === 'custom') return JSON.stringify(renderCustomBody(hook.body.fields, sample ?? payload.data));
+  if (hook.body.mode === 'custom') return JSON.stringify(renderCustomBody(hook.body.fields, sample ?? payload.data, hook.body.replace));
   return JSON.stringify({ id, event: payload.event, createdAt: new Date().toISOString(), site: SITE_URL, data: payload.data });
 }
 

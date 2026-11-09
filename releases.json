@@ -1,6 +1,14 @@
 {
-  "latest": "3.31.0",
+  "latest": "3.31.1",
   "releases": [
+    {
+      "version": "3.31.1",
+      "date": "2026-11-09",
+      "summary": "A webhook with a custom body can swap text inside every value before it is sent (Replace in every value): a receiver that refuses \"&\" can be sent \"and\" while the form keeps its labels on the site.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.31.0",
       "date": "2026-11-09",

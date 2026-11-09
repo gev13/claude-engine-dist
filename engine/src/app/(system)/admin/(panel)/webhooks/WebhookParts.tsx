@@ -7,6 +7,7 @@ import {
   HEADER_VALUE,
   HEADER_VALUE_MAX,
   MAX_BODY_FIELDS,
+  MAX_REPLACEMENTS,
   MAX_WEBHOOK_HEADERS,
   SAMPLE_DATA,
   TEMPLATE_MAX,
@@ -19,6 +20,7 @@ import {
   type Webhook,
   type WebhookBodyField,
   type WebhookHeader,
+  type WebhookReplacement,
 } from '@/lib/webhooks';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -53,6 +55,7 @@ export function partsInvalid(hook: Webhook): boolean {
   if (hook.headers.some((header) => headerProblem(header, hook.headers))) return true;
   if (hook.body.mode !== 'custom') return false;
   if (hook.body.fields.length === 0) return true;
+  if (hook.body.replace.some((row) => row.find === '')) return true;
   const names = hook.body.fields.map((field) => field.name.trim());
   if (names.some((name) => !name) || new Set(names).size !== names.length) return true;
   return templateProblems(hook).length > 0;
@@ -167,7 +170,11 @@ export function BodyEditor({ hook, onChange }: { hook: Webhook; onChange: (body:
             className="mt-1 h-4 w-4 accent-flare"
             checked={hook.body.mode === 'custom'}
             onChange={() =>
-              onChange({ mode: 'custom', fields: fields.length ? fields : [{ name: 'message', template: previewEvent === 'enquiry.received' ? '{{message}}' : '{{answers}}' }] })
+              onChange({
+                ...hook.body,
+                mode: 'custom',
+                fields: fields.length ? fields : [{ name: 'message', template: previewEvent === 'enquiry.received' ? '{{message}}' : '{{answers}}' }],
+              })
             }
           />
           <span>Custom — the receiver’s own field names, each filled from a template</span>
@@ -264,16 +271,60 @@ export function BodyEditor({ hook, onChange }: { hook: Webhook; onChange: (body:
             message followed by the company, role and timing, say.
           </p>
 
+          <ReplacementsEditor rows={hook.body.replace} onChange={(replace) => onChange({ ...hook.body, replace })} hookId={hook.id} />
+
           {previewEvent && fields.length > 0 && (
             <div>
               <p className={legend}>Preview, with stand-in values (Send a test sends this)</p>
               <pre className="m-0 max-h-72 overflow-auto rounded border border-hairline bg-ink p-3 text-[12px] whitespace-pre-wrap text-ash">
-                {JSON.stringify(renderCustomBody(fields, SAMPLE_DATA[previewEvent]), null, 2)}
+                {JSON.stringify(renderCustomBody(fields, SAMPLE_DATA[previewEvent], hook.body.replace), null, 2)}
               </pre>
             </div>
           )}
         </div>
       )}
     </fieldset>
+  );
+}
+
+/**
+ * Text swapped inside every value before it is sent (3.31.1): a choice
+ * labelled “A & B” on the site can reach a receiver that refuses `&` as
+ * “A and B”. Plain text, in order; the template's own words are untouched.
+ */
+function ReplacementsEditor({ rows, onChange, hookId }: { rows: WebhookReplacement[]; onChange: (rows: WebhookReplacement[]) => void; hookId: string }) {
+  const set = (index: number, patch: Partial<WebhookReplacement>) => onChange(rows.map((row, i) => (i === index ? { ...row, ...patch } : row)));
+  return (
+    <div>
+      <p className={legend}>Replace in every value</p>
+      <p className="m-0 mb-3 text-[13px] text-smoke">
+        Swaps text inside what the visitor sent before it leaves — e.g. <code>{' & '}</code> to <code>{' and '}</code> for a receiver that refuses{' '}
+        <code>&amp;</code>. Applied in order, to the values only; spaces count, so <code>{' & '}</code> leaves “R&amp;D” alone.
+      </p>
+      <div className="flex flex-col gap-3">
+        {rows.map((row, index) => (
+          <div key={index} className="grid items-start gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <Field label="Replace" htmlFor={`wh-rfind-${hookId}-${index}`} error={row.find === '' ? 'Say what to replace' : undefined}>
+              <Input id={`wh-rfind-${hookId}-${index}`} value={row.find} maxLength={40} spellCheck={false} placeholder=" & " onChange={(e) => set(index, { find: e.target.value })} />
+            </Field>
+            <Field label="With" htmlFor={`wh-rto-${hookId}-${index}`} hint="empty removes it">
+              <Input id={`wh-rto-${hookId}-${index}`} value={row.to} maxLength={40} spellCheck={false} placeholder=" and " onChange={(e) => set(index, { to: e.target.value })} />
+            </Field>
+            <div className="sm:pt-6">
+              <AdminButton variant="ghost" type="button" onClick={() => onChange(rows.filter((_, i) => i !== index))}>
+                Remove
+              </AdminButton>
+            </div>
+          </div>
+        ))}
+        {rows.length < MAX_REPLACEMENTS && (
+          <div>
+            <AdminButton type="button" variant="secondary" onClick={() => onChange([...rows, { find: ' & ', to: ' and ' }])}>
+              Add a replacement
+            </AdminButton>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }

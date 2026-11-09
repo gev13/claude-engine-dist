@@ -139,6 +139,19 @@ describe('a webhook’s headers and body (3.31)', () => {
     expect(button(container, 'Save').disabled).toBe(true);
   });
 
+  it('adds a replacement and shows it in the preview (3.31.1)', async () => {
+    withParts({ events: ['form.submitted'], body: { mode: 'custom', fields: [{ name: 'message', template: 'Q & A: {{answers.message}}' }], replace: [] } });
+    const { container } = render(<WebhooksScreen />);
+    fireEvent.click(button(container, 'Add a replacement'));
+    await waitFor(() => expect(container.querySelector<HTMLInputElement>(`#wh-rfind-${hook.id}-0`)!.value).toBe(' & '));
+    fireEvent.change(container.querySelector(`#wh-rfind-${hook.id}-0`)!, { target: { value: 'Webhooks' } });
+    fireEvent.change(container.querySelector(`#wh-rto-${hook.id}-0`)!, { target: { value: 'W' } });
+    await waitFor(() => expect(container.querySelector('pre')!.textContent).toContain('"message": "Q & A: A test from the W screen'));
+    fireEvent.click(button(container, 'Save'));
+    await waitFor(() => expect(store.api).toHaveBeenCalled());
+    expect(store.api.mock.calls[0][1].json.hooks[0].body.replace).toEqual([{ find: 'Webhooks', to: 'W' }]);
+  });
+
   it('shows what a refusing receiver said in the log', () => {
     withParts({});
     const { container } = render(<WebhooksScreen />);

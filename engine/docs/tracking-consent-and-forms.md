@@ -203,7 +203,14 @@ the fields of each chosen event and previews the body with stand-in values.
   `hidden`, `formName`, `page`, `receivedAt`, `formId`, `submissionId`.
 
 Every value is text; a list is joined with commas. A placeholder the event
-does not carry is refused when saving. A signature, when a secret is set,
+does not carry is refused when saving.
+
+**Replace in every value** (3.31.1) swaps text inside what a placeholder
+brings in, before it is sent — up to ten rows, applied in order, as plain
+text. A receiver that refuses `&` can be sent `Design and Build` while
+the form still reads `Design & Build` on the site: replace ` & ` with
+` and ` (the spaces count, so `R&D` is left alone). The template's own
+words are never touched, and the preview shows the result. A signature, when a secret is set,
 covers the custom body the same way. *Send a test* fills a custom body with
 the stand-in values from the preview — a receiver that stores what it gets
 will store the test too.

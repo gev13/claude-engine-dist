@@ -98,10 +98,25 @@ export const webhookBodyFieldSchema = z.object({
 
 export type WebhookBodyField = z.output<typeof webhookBodyFieldSchema>;
 
+/**
+ * 3.31.1 — text swapped inside every value a custom body sends, in order:
+ * a receiver that refuses `&` gets " and ", a choice keeps its label on the
+ * site. Applied to what a placeholder brings in, never to the template's own
+ * text, so the admin's wording is sent as typed.
+ */
+export const MAX_REPLACEMENTS = 10;
+export const webhookReplacementSchema = z.object({
+  find: z.string().min(1, 'Say what to replace').max(40),
+  to: z.string().max(40).default(''),
+});
+
+export type WebhookReplacement = z.output<typeof webhookReplacementSchema>;
+
 export const webhookBodySchema = z
   .object({
     mode: z.enum(WEBHOOK_BODY_MODES).default('envelope'),
     fields: z.array(webhookBodyFieldSchema).max(MAX_BODY_FIELDS).default([]),
+    replace: z.array(webhookReplacementSchema).max(MAX_REPLACEMENTS).default([]),
   })
   .superRefine((body, ctx) => {
     if (body.mode !== 'custom') return;
@@ -127,7 +142,7 @@ export const webhookSchema = z
     /** Encrypted at rest (`enc.v1:…`); the browser only ever sees a mask. Empty sends no signature. */
     secret: z.string().max(400).default(''),
     headers: z.array(webhookHeaderSchema).max(MAX_WEBHOOK_HEADERS, `At most ${MAX_WEBHOOK_HEADERS} headers`).default([]),
-    body: webhookBodySchema.default({ mode: 'envelope', fields: [] }),
+    body: webhookBodySchema.default({ mode: 'envelope', fields: [], replace: [] }),
   })
   .superRefine((hook, ctx) => {
     const seen = new Set<string>();
@@ -269,9 +284,17 @@ function resolve(data: Record<string, unknown>, key: string, sub: string | undef
   return Object.hasOwn(data, key) ? text(value) : '';
 }
 
-/** One template filled in. A field the event does not carry becomes empty text. */
-export function renderTemplate(template: string, data: Record<string, unknown>): string {
-  return template.replace(PLACEHOLDER, (_, key: string, sub: string | undefined) => resolve(data, key, sub));
+/** Every replacement, in order, as plain text — never a pattern. */
+export function applyReplacements(value: string, replacements: readonly WebhookReplacement[] = []): string {
+  return replacements.reduce((out, { find, to }) => (find ? out.split(find).join(to) : out), value);
+}
+
+/**
+ * One template filled in. A field the event does not carry becomes empty
+ * text; the replacements touch the values only, not the template around them.
+ */
+export function renderTemplate(template: string, data: Record<string, unknown>, replacements: readonly WebhookReplacement[] = []): string {
+  return template.replace(PLACEHOLDER, (_, key: string, sub: string | undefined) => applyReplacements(resolve(data, key, sub), replacements));
 }
 
 /**
@@ -279,8 +302,12 @@ export function renderTemplate(template: string, data: Record<string, unknown>):
  * `Object.fromEntries`, so a field called `__proto__` is a field and not a
  * prototype.
  */
-export function renderCustomBody(fields: readonly WebhookBodyField[], data: Record<string, unknown>): Record<string, string> {
-  return Object.fromEntries(fields.map((field) => [field.name, renderTemplate(field.template, data)]));
+export function renderCustomBody(
+  fields: readonly WebhookBodyField[],
+  data: Record<string, unknown>,
+  replacements: readonly WebhookReplacement[] = [],
+): Record<string, string> {
+  return Object.fromEntries(fields.map((field) => [field.name, renderTemplate(field.template, data, replacements)]));
 }
 
 /**

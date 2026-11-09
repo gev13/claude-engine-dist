@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import {
   SAMPLE_DATA,
+  applyReplacements,
   VALUE_MASK,
   WEBHOOK_FIELDS,
   renderCustomBody,
@@ -57,7 +58,7 @@ describe('custom headers', () => {
 describe('the body', () => {
   it('is the envelope for every hook stored before it existed', () => {
     const [hook] = resolveWebhooks({ hooks: [{ ...base, secret: '' }] }).hooks;
-    expect(hook!.body).toEqual({ mode: 'envelope', fields: [] });
+    expect(hook!.body).toEqual({ mode: 'envelope', fields: [], replace: [] });
     expect(hook!.headers).toEqual([]);
   });
 
@@ -115,6 +116,32 @@ describe('the body', () => {
     // Either event's fields will do when a hook takes both.
     expect(custom('{{message}} {{answers.email}}', ['form.submitted', 'enquiry.received'])).toEqual([]);
     expect(templateProblems(webhookSchema.parse(base))).toEqual([]);
+  });
+});
+
+describe('replacements (3.31.1)', () => {
+  const interests = { answers: [{ id: 'interests', label: 'Interests', value: ['Design & Build', 'Support', 'Sales & Marketing'] }] };
+
+  it('turns a choice’s ampersand into “and” on the way out', () => {
+    const body = renderCustomBody([{ name: 'interests', template: '{{answers.interests}}' }], interests, [{ find: ' & ', to: ' and ' }]);
+    expect(body).toEqual({ interests: 'Design and Build, Support, Sales and Marketing' });
+    expect(body.interests).not.toContain('&');
+  });
+
+  it('touches values only, in order, as plain text', () => {
+    // The template's own “&” is the admin's wording and is sent as typed.
+    expect(renderTemplate('Q & A: {{answers.interests}}', interests, [{ find: ' & ', to: ' and ' }])).toBe('Q & A: Design and Build, Support, Sales and Marketing');
+    expect(applyReplacements('a.b.c', [{ find: '.', to: '' }])).toBe('abc');
+    expect(applyReplacements('R&D & co', [{ find: ' & ', to: ' and ' }])).toBe('R&D and co');
+    expect(applyReplacements('x', [{ find: 'x', to: 'y' }, { find: 'y', to: 'z' }])).toBe('z');
+    expect(applyReplacements('$&', [{ find: '$&', to: '$1' }])).toBe('$1');
+  });
+
+  it('is part of a stored hook, empty unless set, and refuses an empty find', () => {
+    expect(webhookSchema.parse({ ...base, body: { mode: 'custom', fields: [{ name: 'a', template: '' }] } }).body.replace).toEqual([]);
+    expect(webhookSchema.safeParse({ ...base, body: { mode: 'custom', fields: [{ name: 'a', template: '' }], replace: [{ find: '', to: 'x' }] } }).success).toBe(false);
+    const eleven = Array.from({ length: 11 }, () => ({ find: 'a', to: 'b' }));
+    expect(webhookSchema.safeParse({ ...base, body: { mode: 'custom', fields: [{ name: 'a', template: '' }], replace: eleven } }).success).toBe(false);
   });
 });
 

@@ -10,6 +10,21 @@ improvements.
 
 ---
 
+## 3.31.1 — 2026-11-09
+
+**A webhook can change text on its way out.**
+
+Added:
+
+- **Replace in every value** (Enquiries → Webhooks, custom body): rows of
+  text to swap inside what a visitor sent before it leaves, in order. A
+  receiver that refuses `&` can be sent "Design and Build" while the form
+  still reads "Design & Build" on the site — replace ` & ` with ` and `.
+  The template's own words are never changed, and the preview shows the
+  result.
+
+---
+
 ## 3.31.0 — 2026-11-09
 
 **Webhooks speak the receiver's language, and the contact form sends

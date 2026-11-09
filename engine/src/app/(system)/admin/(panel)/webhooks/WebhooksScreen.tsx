@@ -53,11 +53,15 @@ const blank = (): Webhook => ({
   forms: [],
   secret: '',
   headers: [],
-  body: { mode: 'envelope', fields: [] },
+  body: { mode: 'envelope', fields: [], replace: [] },
 });
 
 /** A hook as the editor holds it: the 3.31 parts filled in, whatever shape it arrived in. */
-const editable = (hook: Webhook): Webhook => ({ ...hook, headers: hook.headers ?? [], body: hook.body ?? { mode: 'envelope', fields: [] } });
+const editable = (hook: Webhook): Webhook => ({
+  ...hook,
+  headers: hook.headers ?? [],
+  body: { mode: hook.body?.mode ?? 'envelope', fields: hook.body?.fields ?? [], replace: hook.body?.replace ?? [] },
+});
 
 const when = (value: string) => new Date(value).toLocaleString();
 
