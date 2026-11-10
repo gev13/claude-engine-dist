@@ -10,6 +10,32 @@ improvements.
 
 ---
 
+## 3.32.0 — 2026-11-10
+
+**The platform's name leaves your pages unless you want it there, and
+security.txt.**
+
+Changed:
+
+- **The platform credit tags are off by default.** `<meta name="generator">`
+  and `<meta name="creator">` no longer appear in every page's source; turn
+  them back on with **Settings → SEO → Name the platform in each page's
+  source**. A security review asked for this: the tags named the platform
+  for anybody looking for an exploit, and a person's name sat on a client's
+  production pages with no way to remove it. Neither tag affects search.
+  Settings still shows the platform, its creator and the version.
+
+Added:
+
+- **`/.well-known/security.txt`** (RFC 9116), from a new **Settings →
+  security.txt** panel: a contact, an expiry date, preferred languages, an
+  encryption key and a disclosure policy, with `Canonical` filled in from the
+  site's address. The panel previews the file. Nothing is served until there
+  is a contact and an expiry date, and it stops being served once that date
+  has passed — a stale file advertises a channel nobody is watching.
+
+---
+
 ## 3.31.1 — 2026-11-09
 
 **A webhook can change text on its way out.**

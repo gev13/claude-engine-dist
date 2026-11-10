@@ -1,6 +1,14 @@
 {
-  "latest": "3.31.1",
+  "latest": "3.32.0",
   "releases": [
+    {
+      "version": "3.32.0",
+      "date": "2026-11-10",
+      "summary": "The platform credit tags (generator, creator) are no longer printed on every page unless Settings switches them on. New: /.well-known/security.txt from a Settings panel, served only with a contact and an expiry date ahead.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.31.1",
       "date": "2026-11-09",

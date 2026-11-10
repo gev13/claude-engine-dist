@@ -7,6 +7,7 @@ import { AdminButton, Field, Input, Panel, Select, Spinner, Textarea } from '@/c
 import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
 import { PLATFORM_CREATOR, PLATFORM_NAME } from '@/lib/credits';
+import { SECURITY_TXT_PATH, securityTxt } from '@/lib/securityTxt';
 import { ENGINE_VERSION } from '@/lib/version';
 import { errorMessage } from '../_shared';
 
@@ -129,6 +130,19 @@ const KNOWN: KnownField[] = [
     kind: 'boolean',
     hint: 'each address names the pictures on it, which helps them appear in image search',
   },
+  // 3.32
+  {
+    key: 'seo.platformCredits',
+    label: 'Name the platform in each page’s source',
+    kind: 'boolean',
+    hint: `adds <meta name="generator"> and <meta name="creator"> naming ${PLATFORM_NAME} and ${PLATFORM_CREATOR}. Off by default: it tells a visitor which platform the site runs on`,
+  },
+  // 3.32 — /.well-known/security.txt (RFC 9116)
+  { key: 'securitytxt.contact', label: 'Security contact', kind: 'list', hint: 'where to report a vulnerability: an email address, an https:// page or tel:+…; several separated by commas' },
+  { key: 'securitytxt.expires', label: 'Expires', kind: 'text', hint: 'a date, e.g. 2027-10-31 — less than a year ahead; after it the file is no longer served' },
+  { key: 'securitytxt.languages', label: 'Preferred languages', kind: 'list', hint: 'language codes, e.g. en, hy' },
+  { key: 'securitytxt.encryption', label: 'Encryption key', kind: 'text', hint: 'optional — an https:// address of your public key (or dns:… / openpgp4fpr:…)' },
+  { key: 'securitytxt.policy', label: 'Disclosure policy', kind: 'text', hint: 'optional — an https:// address of your vulnerability disclosure policy' },
   { key: 'pages.notFoundPageId', label: 'Page shown for a missing address', kind: 'page', hint: 'any published page; it keeps the 404 status, is never indexed and is left out of the sitemap' },
   { key: 'pages.notFoundLinkLabel', label: 'Built-in 404: second button', kind: 'text', hint: 'e.g. Read the blog — with no page chosen above' },
   { key: 'pages.notFoundLinkHref', label: 'Built-in 404: second button link', kind: 'text', hint: 'a path such as /blog; empty links to the services index where there is one' },
@@ -280,6 +294,26 @@ function SettingsScreenInner() {
                   onCheck={(value) => setFlags((current) => ({ ...current, [field.key]: value }))}
                 />
               ))}
+            </div>
+          </Panel>
+
+          <Panel title="security.txt">
+            <div className="space-y-4">
+              <p className="m-0 text-[13px] text-smoke">
+                Tells security researchers where to report a vulnerability, at <code>{SECURITY_TXT_PATH}</code> (RFC 9116). Nothing is served until it has a
+                contact and an expiry date; <code>Canonical</code> is filled in from the site’s address.
+              </p>
+              {KNOWN.filter((field) => field.key.startsWith('securitytxt.')).map((field) => (
+                <KnownInput
+                  key={field.key}
+                  field={field}
+                  text={text[field.key] ?? ''}
+                  checked={flags[field.key] ?? false}
+                  onText={(value) => setText((current) => ({ ...current, [field.key]: value }))}
+                  onCheck={(value) => setFlags((current) => ({ ...current, [field.key]: value }))}
+                />
+              ))}
+              <SecurityTxtStatus text={text} />
             </div>
           </Panel>
 
@@ -439,5 +473,37 @@ function PageChoice({ field, value, onChange }: { field: KnownField; value: stri
         ))}
       </Select>
     </Field>
+  );
+}
+
+/** What /.well-known/security.txt will say with the values as typed — or why it says nothing (3.32). */
+function SecurityTxtStatus({ text }: { text: Record<string, string> }) {
+  const list = (key: string) => (text[key] ?? '').split(',').map((entry) => entry.trim()).filter(Boolean);
+  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? '').replace(/\/$/, '') || (typeof window === 'undefined' ? '' : window.location.origin);
+  const state = securityTxt(
+    {
+      contact: list('securitytxt.contact'),
+      expires: text['securitytxt.expires'],
+      languages: list('securitytxt.languages'),
+      encryption: text['securitytxt.encryption'],
+      policy: text['securitytxt.policy'],
+    },
+    siteUrl,
+  );
+  const touched = ['securitytxt.contact', 'securitytxt.expires'].some((key) => (text[key] ?? '').trim());
+  return (
+    <div className="space-y-2" data-testid="security-txt-status">
+      {state.serving ? (
+        <p className="m-0 text-[13px] text-bone">Served at {SECURITY_TXT_PATH} once saved:</p>
+      ) : (
+        <p className={`m-0 text-[13px] ${touched ? 'text-flare-soft' : 'text-smoke'}`}>{state.reason}</p>
+      )}
+      {state.notes.map((note) => (
+        <p key={note} className="m-0 text-[13px] text-flare-soft">
+          {note}
+        </p>
+      ))}
+      {state.serving && <pre className="m-0 overflow-x-auto rounded border border-hairline bg-ink p-3 text-[12px] text-ash">{state.body}</pre>}
+    </div>
   );
 }

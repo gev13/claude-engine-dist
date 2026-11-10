@@ -329,3 +329,27 @@ Every option below is off, or draws what it drew before, until it is set.
 space (they used to add to the section's own padding); *The row's own space*
 for the archive row; *Which post* in Up next can be the older one only; a
 card title's letter spacing can be negative.
+
+## security.txt — Settings → security.txt (3.32)
+
+`/.well-known/security.txt` (RFC 9116) tells security researchers where to
+report a vulnerability. Fill in:
+
+- **Security contact** — an email address (written as `mailto:`), an
+  `https://` page or `tel:+…`; several separated by commas.
+- **Expires** — a date such as `2027-10-31`, good to the end of that day
+  (UTC). RFC 9116 asks for less than a year ahead.
+- **Preferred languages** (optional) — codes such as `en, hy`.
+- **Encryption key** and **Disclosure policy** (optional) — `https://`
+  addresses.
+
+`Canonical` is written from the site's address. The screen previews the
+file as it will be served.
+
+Nothing is served — the address answers 404 — until there is a contact and
+an expiry date, and **the file stops being served the day after it
+expires**: a stale security.txt advertises a channel nobody is watching,
+which is worse than none. The screen warns a month ahead. These settings
+belong to the server they are set on and do not travel with a content
+export.
+

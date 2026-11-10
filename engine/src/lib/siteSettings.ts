@@ -107,6 +107,17 @@ export const siteSettingsSchema = z.object({
   /** Each address lists the pictures on it (image sitemap), read from its blocks, body and cover. */
   sitemapImages: z.boolean().optional(),
 
+  /* 3.32 — the platform's generator and creator tags in every page's source. Off unless switched on. */
+  platformCredits: z.boolean().optional(),
+
+  /* 3.32 — /.well-known/security.txt (RFC 9116). Served only with a contact and an expiry still ahead
+     (lib/securityTxt.ts decides); each value is checked again there before it is written. */
+  securityContact: z.array(z.string().trim().max(200)).max(5).optional(),
+  securityExpires: z.string().trim().max(40).optional(),
+  securityLanguages: z.array(z.string().trim().regex(/^[A-Za-z]{2,3}(-[A-Za-z0-9]{2,8})*$/)).max(10).optional(),
+  securityEncryption: z.string().trim().max(300).optional(),
+  securityPolicy: z.string().trim().max(300).optional(),
+
   /* 2.18 — the page shown for an address that does not exist. */
   notFoundPageId: z.string().uuid().or(z.literal('')).optional(),
   /** A second button on the built-in 404, beside "Back to the homepage". */
@@ -198,6 +209,12 @@ export const SITE_SETTING_FIELDS = {
   'seo.redirectsFirst': 'redirectsFirst',
   'seo.lowercaseUrls': 'lowercaseUrls',
   'site.region': 'region',
+  'seo.platformCredits': 'platformCredits',
+  'securitytxt.contact': 'securityContact',
+  'securitytxt.expires': 'securityExpires',
+  'securitytxt.languages': 'securityLanguages',
+  'securitytxt.encryption': 'securityEncryption',
+  'securitytxt.policy': 'securityPolicy',
   'pages.notFoundPageId': 'notFoundPageId',
   'pages.notFoundLinkLabel': 'notFoundLinkLabel',
   'pages.notFoundLinkHref': 'notFoundLinkHref',
@@ -214,6 +231,7 @@ export const PORTABLE_SEO_KEYS = [
   'seo.yandexVerification',
   'seo.sitemapStyle',
   'seo.sitemapImages',
+  'seo.platformCredits',
   'pages.notFoundPageId',
   'pages.notFoundLinkLabel',
   'pages.notFoundLinkHref',

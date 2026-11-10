@@ -1,12 +1,14 @@
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { PLATFORM_CREATOR, PLATFORM_META, PLATFORM_NAME } from '@/lib/credits';
+import { PLATFORM_CREATOR, PLATFORM_META, PLATFORM_NAME, platformMeta } from '@/lib/credits';
+import { PORTABLE_SEO_KEYS, parseSiteSettings } from '@/lib/siteSettings';
 
-/* 3.0 — every page says which platform made it and who created that, in
-   two meta tags no setting reaches. Neither is a ranking signal; the site's
-   own title, description, authors, publisher and structured data are left
-   exactly as they were. */
+/* 3.0 — the platform's name and who created it, in two meta tags whose words
+   no setting reaches. 3.32 — whether a page prints them at all is the site's
+   choice, off unless switched on: a security review asked for that. Neither is
+   a ranking signal; the site's own title, description, authors, publisher and
+   structured data are left exactly as they were. */
 
 const read = (path: string) => readFileSync(join(__dirname, '..', path), 'utf8');
 const LAYOUTS = ['src/app/(site)/[locale]/layout.tsx', 'src/app/(system)/layout.tsx'];
@@ -18,10 +20,22 @@ describe('the platform credits', () => {
     expect(PLATFORM_CREATOR).toBe('Gevorg Andreasyan');
   });
 
-  it('are printed by both layouts, which no longer name a creator of their own', () => {
+  it('are printed only when the site switches them on (3.32)', () => {
+    expect(platformMeta(undefined)).toEqual({});
+    expect(platformMeta(false)).toEqual({});
+    expect(platformMeta(true)).toEqual(PLATFORM_META);
+    // An untouched site has no stored value, and a bad one is dropped: both mean off.
+    expect(parseSiteSettings({}).platformCredits).toBeUndefined();
+    expect(parseSiteSettings({ platformCredits: 'yes' }).platformCredits).toBeUndefined();
+    expect(parseSiteSettings({ platformCredits: true }).platformCredits).toBe(true);
+    expect(PORTABLE_SEO_KEYS).toContain('seo.platformCredits');
+  });
+
+  it('are printed by both layouts through the switch, which no longer name a creator of their own', () => {
     for (const layout of LAYOUTS) {
       const source = read(layout);
-      expect(source).toContain('...PLATFORM_META');
+      expect(source).toMatch(/\.\.\.platformMeta\((s|settings)\.platformCredits\)/);
+      expect(source).not.toContain('...PLATFORM_META');
       expect(source).not.toMatch(/\bcreator:/);
       expect(source).not.toMatch(/\bgenerator:/);
       // The site keeps its own authorship.

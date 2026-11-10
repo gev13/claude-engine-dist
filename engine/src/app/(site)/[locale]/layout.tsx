@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { type Theme, isColor } from '@/lib/theme';
 import { notFound, redirect } from 'next/navigation';
-import { PLATFORM_META } from '@/lib/credits';
+import { platformMeta } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { localeConfig, htmlLang, localeDir, type Locale } from '@/lib/locales';
 import { themeToCss } from '@/lib/theme-css';
@@ -77,7 +77,8 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     description: settings.description,
     applicationName: settings.name,
     authors: [{ name: settings.name, url: SITE_URL }],
-    ...PLATFORM_META,
+    // 3.32 — off unless Settings → SEO switches them on.
+    ...platformMeta(settings.platformCredits),
     publisher: settings.name,
     formatDetection: { telephone: false, address: false, email: false },
     // 3.18 — the site's own icon on a phone's home screen too, not the engine's.

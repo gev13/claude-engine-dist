@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { PLATFORM_META } from '@/lib/credits';
+import { platformMeta } from '@/lib/credits';
 import { SITE_URL } from '@/lib/env';
 import { getSiteSettings } from '@/server/content/siteSettings';
 import '@/styles/globals.css';
@@ -17,7 +17,8 @@ export async function generateMetadata(): Promise<Metadata> {
     description: s.description,
     applicationName: s.name,
     authors: [{ name: s.name, url: SITE_URL }],
-    ...PLATFORM_META,
+    // 3.32 — off unless Settings → SEO switches them on.
+    ...platformMeta(s.platformCredits),
     publisher: s.name,
     formatDetection: { telephone: false, address: false, email: false },
     icons: {
