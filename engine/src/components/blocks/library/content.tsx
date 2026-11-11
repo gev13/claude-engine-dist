@@ -8,6 +8,7 @@ import type { blockSchemas } from '@/lib/blocks';
 import { isColor, isLength } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { itemClass } from '@/lib/itemStyle';
+import { cardMotion } from '@/lib/cardMotion';
 import { BlockHead, BlockTitle } from '../parts';
 import { CountUp } from './CountUp';
 import { MediaFill } from './media';
@@ -436,11 +437,16 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     overlay && p.textPaddingMobile && 'has-text-pad-m',
     overlay && tracksByCard && 'has-row-tracks',
   );
+  // 3.34 — the lift tuned, and the row that widens (not with a bento or exact row widths, which place the cards themselves).
+  const motion = cardMotion({ ...p, expand: bento || tracksByCard ? undefined : p.expand });
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
       <div className="shell">
         {head}
-        <ul className={cn('he-fgrid he-swipe-track', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className, p.columnsTablet && 'has-cols-t')} style={cols}>
+        <ul
+          className={cn('he-fgrid he-swipe-track', icons ? 'is-icons' : overlay ? 'is-overlay' : 'is-cards', head && 'has-head', mods, gaps.className, p.columnsTablet && 'has-cols-t', ...motion.className)}
+          style={Object.keys(motion.style).length ? ({ ...cols, ...motion.style } as React.CSSProperties) : cols}
+        >
           {p.cards.map((c, i) => {
             // 3.6 — the words after the title, in their own colour.
             const after = c.titleAfter && (
@@ -485,6 +491,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                   key={c.title + i}
                   className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', itemClass(p.blockId, i, c.style))}
                   style={Object.keys(own).length ? own : undefined}
+                  // 3.34 — a tap widens a card in a row that widens: focusable by the pointer, and by the keyboard only when its words wait to be revealed.
+                  tabIndex={motion.className.includes('is-expand') && !c.href ? (p.expandText === 'reveal' ? 0 : -1) : undefined}
                 >
                   <MediaFill imageUrl={c.imageUrl} mobileImageUrl={c.imageUrlMobile} alt={c.alt} className={cn('he-fill he-ocard__bg', c.imagePosition && `is-at-${c.imagePosition.replace(' ', '-')}`, c.imagePositionMobile && `is-at-m-${c.imagePositionMobile.replace(' ', '-')}`)} sizes={c.span && c.span > 6 ? 'half' : 'third'} />
                   {c.badge && <span className="he-badge">{c.badge}</span>}

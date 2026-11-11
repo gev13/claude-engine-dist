@@ -1,6 +1,14 @@
 {
-  "latest": "3.33.1",
+  "latest": "3.34.0",
   "releases": [
+    {
+      "version": "3.34.0",
+      "date": "2026-11-11",
+      "summary": "Opt-in motion and spacing: a section pinned to the scroll that moves its card slider sideways, with a counter and progress line; a tuned card lift with shadow and picture zoom; a row of cards that widen on hover, focus or tap; and the footer's sign-up width and phone spacing.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.33.1",
       "date": "2026-11-11",

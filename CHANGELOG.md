@@ -10,6 +10,37 @@ improvements.
 
 ---
 
+## 3.34.0 — 2026-11-11
+
+**A section pinned to the scroll, a tuned card lift, cards that widen, and
+the footer's spacing on phones.** Every one is off until set.
+
+Added:
+
+- **Design → Pin to the scroll:** on the screens chosen, a section holds at
+  the top while scrolling down moves its first sliding row from the first
+  card to the last, then the page goes on. Room for a sticky header, an
+  optional counter (01 / 07) and progress line, each with its own look. The
+  ordinary sliding row before the script runs, on other screens and for
+  visitors who ask for less motion.
+- **Card grid, hover Lift:** how far the card rises, the shadow it gains,
+  how far its picture zooms, the lengths and the easing; for pointers that
+  hover only.
+- **Card grid, pictures with text over them:** one row where the card
+  pointed at, focused or tapped widens while the others narrow, by a factor
+  of your choosing; optionally its words appear as it widens. Phones keep the
+  stacked cards.
+- **Footer:** the sign-up's width (and on phones), the space between links
+  and between language names on phones.
+
+Changed:
+
+- **Footer:** a space between parts on phones, when set, is now the only
+  space between them there; the head's and the middle column's own padding
+  and the menus' margin under them come off.
+
+---
+
 ## 3.33.1 — 2026-11-11
 
 **The last details of a design: the blog index, the full-screen menu, the

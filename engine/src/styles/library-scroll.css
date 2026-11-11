@@ -1,0 +1,71 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   3.34 — a section pinned to the scroll, the card grid's lift tuned, and a
+   row of cards that widen. Every rule is keyed to a class or an attribute
+   that exists only when its option is set (the pin's only once its script
+   has run), so an untouched site is drawn by none of it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer he-details {
+  /* The lift: a rise, a shadow and a zoom of the picture, for pointers that hover. Room inside the grid, so a sliding row (which clips) shows it whole. */
+  .he-fgrid.has-lift { padding-top: var(--he-lift-room-t); padding-bottom: var(--he-lift-room-b); margin-top: calc(-1 * var(--he-lift-room-t)); margin-bottom: calc(-1 * var(--he-lift-room-b)); }
+  .he-fgrid.has-lift.has-head { margin-top: calc(44px - var(--he-lift-room-t)); }
+  .he-fgrid.has-lift > .he-fgrid__item { transition: translate calc(var(--he-lift-t, 250ms) * var(--he-motion, 1)) var(--he-lift-ease, ease), box-shadow calc(var(--he-lift-t, 250ms) * var(--he-motion, 1)) var(--he-lift-ease, ease); }
+  .he-fgrid.has-lift-zoom .he-fgrid__item .he-fill { transition: transform calc(var(--he-lift-zt, var(--he-lift-t, 700ms)) * var(--he-motion, 1)) var(--he-lift-ease, cubic-bezier(0.2, 0.7, 0.2, 1)); }
+  @media (hover: hover) {
+    .he-fgrid.has-lift > .he-fgrid__item:hover { translate: 0 calc(-1 * var(--he-lift-d, 6px)); box-shadow: var(--he-lift-shadow, revert-layer); }
+    .he-fgrid.has-lift-zoom > .he-fgrid__item:hover .he-fill { transform: scale(var(--he-lift-zoom)); }
+  }
+  @media (hover: none) {
+    .he-fgrid.has-lift > .he-fgrid__item:hover { translate: none; }
+  }
+
+  /* The row that widens: one line from tablets up, the card pointed at (or focused) wider, the others narrower; the row's width and the cards' height stay. */
+  @media (width > 48rem) {
+    .he-fgrid.is-expand { display: flex; flex-wrap: nowrap; }
+    .he-fgrid.is-expand > .he-ocard { flex: 1 1 0; min-width: 0; height: var(--he-ocard-own-h, var(--he-ocard-h, auto)); transition: flex-grow calc(var(--he-expand-t, 700ms) * var(--he-motion, 1)) var(--he-expand-ease, cubic-bezier(0.2, 0.7, 0.2, 1)); }
+    .he-fgrid.is-expand.has-lift > .he-ocard { transition: flex-grow calc(var(--he-expand-t, 700ms) * var(--he-motion, 1)) var(--he-expand-ease, cubic-bezier(0.2, 0.7, 0.2, 1)), translate calc(var(--he-lift-t, 250ms) * var(--he-motion, 1)) var(--he-lift-ease, ease), box-shadow calc(var(--he-lift-t, 250ms) * var(--he-motion, 1)) var(--he-lift-ease, ease); }
+    .he-fgrid.is-expand > .he-ocard:is(:focus-visible, :has(:focus-visible)) { flex-grow: var(--he-expand); outline-offset: -3px; }
+    .he-fgrid.is-expand-reveal .he-ocard__body { max-height: 0; margin-top: 0; overflow: hidden; opacity: 0; transition: opacity calc(500ms * var(--he-motion, 1)) calc(150ms * var(--he-motion, 1)), max-height calc(600ms * var(--he-motion, 1)), margin-top calc(600ms * var(--he-motion, 1)); }
+    .he-fgrid.is-expand-reveal > .he-ocard:is(:focus-visible, :has(:focus-visible)) .he-ocard__body { max-height: 12em; margin-top: revert-layer; opacity: 1; }
+  }
+  @media (width > 48rem) and (hover: hover) {
+    .he-fgrid.is-expand > .he-ocard:hover { flex-grow: var(--he-expand); }
+    .he-fgrid.is-expand-reveal > .he-ocard:hover .he-ocard__body { max-height: 12em; margin-top: revert-layer; opacity: 1; }
+    /* The pointer elsewhere in the row wins over a card the keyboard left focused. */
+    .he-fgrid.is-expand:hover > .he-ocard:not(:hover) { flex-grow: 1; }
+    .he-fgrid.is-expand-reveal:hover > .he-ocard:not(:hover) .he-ocard__body { max-height: 0; margin-top: 0; opacity: 0; }
+  }
+  /* Touch: a tap focuses the card, and widens it until the next tap elsewhere. */
+  @media (width > 48rem) and (hover: none) {
+    .he-fgrid.is-expand > .he-ocard:is(:focus, :focus-within) { flex-grow: var(--he-expand); }
+    .he-fgrid.is-expand-reveal > .he-ocard:is(:focus, :focus-within) .he-ocard__body { max-height: 12em; margin-top: revert-layer; opacity: 1; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .he-fgrid:is(.has-lift, .is-expand) > .he-fgrid__item,
+    .he-fgrid.has-lift-zoom .he-fill,
+    .he-fgrid.is-expand-reveal .he-ocard__body { transition: none; }
+  }
+  .he-reduce-motion :is(.he-fgrid.has-lift > .he-fgrid__item, .he-fgrid.is-expand > .he-fgrid__item, .he-fgrid.has-lift-zoom .he-fill, .he-fgrid.is-expand-reveal .he-ocard__body) { transition: none; }
+}
+
+/* The pinned section (ScrollPin). Outside the layers, and firm about the
+   row's own scrolling, because the swipe rules it overrides are a block's own
+   stylesheet, written after every layer. */
+.he-pin-run { display: block; height: 0; }
+[data-he-pin='on'] > .he-pin-run { height: var(--he-pin-run, 0px); }
+[data-he-pin-clip] { overflow: clip !important; }
+/* Stuck so that the words above the row and the row are centred under the header; taller than the screen, the words at the top. */
+[data-he-pin='on'] > [data-he-pin-sticky] {
+  position: sticky;
+  top: calc(var(--he-pin-offset, 0px) + max(0px, (100svh - var(--he-pin-offset, 0px) - var(--he-pin-span, 0px)) / 2) - var(--he-pin-a, 0px));
+}
+[data-he-pin='on'] [data-he-pin-track] { overflow-x: hidden !important; scroll-snap-type: none !important; scroll-behavior: auto !important; }
+/* While pinned the scroll is the one control: the row's arrows step aside. */
+:is([data-he-pin='on'] .he-swipe-host:has([data-he-pin-track]), [data-he-pin='on']) > .he-swipe-nav { display: none !important; }
+.he-pin__progress { position: absolute; z-index: 2; top: var(--he-pin-y, 0px); left: var(--he-pin-x, 0px); display: flex; flex-direction: column; align-items: flex-end; gap: 12px; pointer-events: none; }
+.he-pin__progress[data-place='under'] { align-items: flex-start; }
+.he-pin__count { font-family: var(--he-pin-count-font, var(--font-display)); font-size: var(--he-pin-count-size, 32px); line-height: 1; color: var(--he-pin-count-color, var(--color-bone)); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.he-pin__total { color: var(--he-pin-count-total, var(--color-smoke)); }
+.he-pin__line { position: relative; display: block; width: var(--he-pin-line-w, 160px); height: var(--he-pin-line-h, 2px); overflow: hidden; background: var(--he-pin-line-track, var(--color-hairline)); }
+.he-pin__fill { position: absolute; inset: 0; background: var(--he-pin-line-fill, var(--color-flare)); transform: scaleX(0); transform-origin: left center; }

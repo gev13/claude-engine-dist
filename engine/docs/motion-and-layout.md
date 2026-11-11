@@ -725,3 +725,29 @@ Each of these is off until set; left empty, a page is drawn as before.
   and label.
 - **Icon lists, ruled rows:** the link's colour.
 
+## Pinned sections, the lift, widening cards, footer spacing (3.34)
+
+- **Design → Pin to the scroll** (any section, or a row): tick the screens.
+  The section holds at the top while scrolling down moves its first sliding
+  row (the block's own, or a card grid's in the row's columns) from the
+  first card to the last; then the page scrolls on. The row must slide on
+  those screens (*Swipe sideways*). *Room for a sticky header* keeps it
+  clear of the header. A counter (01 / 07) and a thin line can follow along,
+  each with its font, size and colours; they sit level with the words above
+  the row at the right, or under them at the left where there is no room (a
+  phone). While pinned the row's arrows step aside — the scroll is the one
+  control; a card reached with the keyboard brings the page to it. Before
+  the script runs, on other screens and for visitors who ask for less
+  motion, it is the ordinary sliding row.
+- **Card grid → On hover: Lift** takes how far, a shadow, a picture zoom,
+  the lengths (ms) and an easing. Pointers that hover only; a sliding row
+  makes room inside itself so the lift and shadow are not cut off.
+- **Card grid, pictures with text over them → Widen the card pointed at**
+  (e.g. 1.3): one row from tablets up, the card under the pointer, focused or
+  tapped wider and the others narrower; the row's width and the cards'
+  height stay. *Shown as the card widens* hides the words under the title
+  until then. Phones keep the stacked cards. Not with a bento, exact row
+  widths or a sliding row.
+- **Footer:** the sign-up's width (a size, 100% or none) and on phones; the
+  space between links and between language names on phones. A space between
+  parts on phones is now the only space between them there.

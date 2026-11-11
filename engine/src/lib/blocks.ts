@@ -27,6 +27,7 @@ import { SHARE_NETWORKS } from './share';
 import { formAfterSchema, formAutoresponderSchema, formFieldSchema, formHiddenSchema, formNotifySchema } from './forms';
 import { LOTTIE_PATH, LOTTIE_PLAY } from './lottie';
 import { projectCardSchema } from './projectCard';
+import { cardMotionFields } from './cardMotion';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Block vocabulary
@@ -449,6 +450,8 @@ export const blockSchemas = {
     /** 3.33 — pictures with text over them: the bullet lists under the words, in one or two columns, and the space between entries. */
     pointsColumns: z.union([z.literal(1), z.literal(2)]).optional(),
     pointsGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.34 — the lift tuned (`hover: 'lift'`), and a row of pictures with text over them that widen; see `lib/cardMotion.ts`. */
+    ...cardMotionFields,
     cards: z.array(
       z.object({
         /** This card's own colour, spacing and edge — see `lib/itemStyle.ts`. */

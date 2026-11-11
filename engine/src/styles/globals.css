@@ -24,6 +24,7 @@
 @import './library-lottie.css';
 @import './library-sliders.css';
 @import './library-details.css';
+@import './library-scroll.css';
 
 /* ══════════════════════════════════════════════════════════════════════════
    Stock theme — design tokens (the stock design; a new site replaces them)

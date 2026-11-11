@@ -231,6 +231,35 @@ export type RowTracks = z.infer<typeof rowTracksSchema>;
 
 export const COLUMN_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
 export const COLUMN_JUSTIFIES = ['start', 'center', 'end', 'between'] as const;
+/**
+ * 3.34 — a section pinned to the scroll.
+ *
+ * On the tiers in `at`, the section holds at the top of the screen (under
+ * `offset`, room for a sticky header) and ordinary vertical scrolling moves
+ * the first sliding row inside it — a block's own, or one in a row's columns —
+ * from its first card to its last; then the page scrolls on. Before the
+ * script runs, on other tiers, and for a visitor who asked for less motion it
+ * is the ordinary sliding row. While pinned the row's arrows step aside: the
+ * scroll is the one control. An optional counter ("01 / 07") and a thin line
+ * follow along.
+ */
+export const scrollPinSchema = z.object({
+  at: z.array(z.enum(VISIBILITY_TIERS)).max(4),
+  offset: length.optional(),
+  counter: z.boolean().optional(),
+  counterFont: z.enum(['display', 'body']).optional(),
+  counterSize: length.optional(),
+  counterColor: color.optional(),
+  /** The "/ 07" after the number. */
+  counterTotalColor: color.optional(),
+  line: z.boolean().optional(),
+  lineWidth: length.optional(),
+  lineHeight: length.optional(),
+  lineTrack: color.optional(),
+  lineFill: color.optional(),
+});
+export type ScrollPin = z.infer<typeof scrollPinSchema>;
+
 const tiered = <T extends readonly [string, ...string[]]>(values: T) =>
   z.object({ base: z.enum(values).optional(), laptop: z.enum(values).optional(), tablet: z.enum(values).optional(), mobile: z.enum(values).optional() });
 /** 3.33 — how one column sits in its row, and how its blocks are spread down it, per tier. */
@@ -457,6 +486,8 @@ export const blockStyleSchema = z.object({
   /** 3.29 — an arrow out of sight at its end (unset, dimmed, as before); the arrows filled in the main button's colours. */
   swipeArrowEnds: z.enum(['dim', 'hide']).optional(),
   swipeArrowFill: z.enum(['surface', 'primary']).optional(),
+  /** 3.34 — held at the top while vertical scrolling runs its first sliding row from the first card to the last; see `scrollPinSchema`. */
+  scrollPin: scrollPinSchema.optional(),
 
   /** Hidden at these widths and below — how visibility was stored before 2.19; still read. */
   hideOn: z.array(z.enum(STYLE_BREAKPOINTS)).max(3).optional(),

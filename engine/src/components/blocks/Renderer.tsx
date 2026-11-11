@@ -63,6 +63,7 @@ import { GlitchObserver } from './library/GlitchObserver';
 import { FormBlock } from './library/FormBlock';
 import { LottieBlock } from './library/LottieBlock';
 import { SwipeArrows } from './library/SwipeArrows';
+import { ScrollPin } from './library/ScrollPin';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const registry: Record<string, (props: any) => React.ReactNode | Promise<React.ReactNode>> = {
@@ -169,6 +170,7 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
       {...glitchTiming(style)}
     >
       {children}
+      {scrollPin(style)}
       {style.background?.videoUrl && <SectionVideo background={style.background} />}
       <ShapeDividers style={style} />
       {swipeArrows(style)}
@@ -180,6 +182,13 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
 function swipeArrows(style: BlockStyle) {
   if (!style.swipeOn || !style.swipeArrows || style.swipeArrows === 'none') return null;
   return <SwipeArrows placement={style.swipeArrows} look={style.swipeArrowLook} box={style.swipeArrowBox} ends={style.swipeArrowEnds} fill={style.swipeArrowFill} noPhone={style.swipeArrowsMobile === 'none'} />;
+}
+
+/** 3.34 — the section held at the top while the page scrolls its sliding row; right after the content, which it measures from. */
+function scrollPin(style: BlockStyle) {
+  const pin = style.scrollPin;
+  if (!pin?.at?.length) return null;
+  return <ScrollPin at={pin.at} counter={pin.counter} line={pin.line} />;
 }
 
 /** Width, entrance, hover, sticky, snap and shape classes a styled block or row carries (P3-C). */
@@ -301,6 +310,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
           ))}
         </div>
       </div>
+      {style && scrollPin(style)}
       {style?.background?.videoUrl && <SectionVideo background={style.background} />}
       {style && <ShapeDividers style={style} />}
       {style && swipeArrows(style)}

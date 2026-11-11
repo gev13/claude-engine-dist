@@ -775,7 +775,17 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
           <TextField label="Space above a language row" hint="under the link columns" value={footer?.languagesGap} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'languagesGap'])} />
           <TextField label="Wordmark rides up by" hint="over what is above it" value={footer?.wordmarkPull} maxLength={40} placeholder="0" onChange={set(['chrome', 'footer', 'wordmarkPull'])} />
           <TextField label="— on phones" value={footer?.wordmarkPullMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'wordmarkPullMobile'])} />
+          {/* 3.34 */}
+          <TextField label="Space between links on phones" value={footer?.linkGapMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'linkGapMobile'])} />
+          <TextField label="Space between languages on phones" value={footer?.languagesGapMobile} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'languagesGapMobile'])} />
+          {footer?.newsletter && (
+            <>
+              <TextField label="Sign-up width" hint="a size, 100% or none" value={footer?.newsletterWidth} maxLength={40} placeholder="320px" onChange={set(['chrome', 'footer', 'newsletterWidth'])} />
+              <TextField label="Sign-up width on phones" hint="a size, 100% or none" value={footer?.newsletterWidthMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'newsletterWidthMobile'])} />
+            </>
+          )}
         </div>
+        {footer?.gapMobile && <p className="m-0 text-[12px] text-smoke">With a space between parts on phones, that space is the only one between them there.</p>}
         {footer?.newsletter && (
           <div className="space-y-2">
             <p className="m-0 text-[13px] text-bone">The sign-up’s sentence</p>

@@ -317,7 +317,13 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   out.push(padded(f.padding));
   const paddedPhone = padded(f.paddingMobile);
   if (paddedPhone) out.push(`@media (max-width:768px){${paddedPhone}}`);
-  if (len(f.gapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__grid{row-gap:${len(f.gapMobile)}}}`);
+  /* 3.34 — set, the space between the parts on phones is that alone: the head's and the middle's own padding and the menus' margin under them come off. */
+  if (len(f.gapMobile))
+    out.push(
+      `@media (max-width:768px){.he-ftr .he-ftr__grid{row-gap:${len(f.gapMobile)}}` +
+        '.he-ftr .he-ftr__grid>:is(.he-ftr__lead,.he-ftr__middle){padding-bottom:0}' +
+        '.he-ftr.is-links-first .he-ftr__grid>:is(.he-ftr__col,.he-ftr__stack):is(:last-of-type,:has(+ .he-ftr__langrow)){margin-bottom:0}}',
+    );
   const glyph = len(f.socialSize);
   if (glyph) out.push(`.he-ftr .he-ftr__social a svg{width:${glyph};height:${glyph}}`);
   out.push(rule('.he-ftr .he-ftr__social a', [['width', len(f.socialBox)], ['height', len(f.socialBox)]]));
@@ -325,6 +331,12 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   out.push(rule('.he-ftr .he-ftr__social', [['gap', len(f.socialGap)]]));
   out.push(...typeRule(`${nl} .he-ftr__nltext`, f.newsletterText));
   if (len(f.languagesGap)) out.push(`@media (min-width:1024px){.he-ftr.has-langrow .he-ftr__grid{row-gap:${len(f.languagesGap)}}}`);
+  /* 3.34 — the sign-up's width, the links' and the languages' spacing on phones. */
+  const nlWidth = (value: unknown) => (value === 'none' ? 'none' : len(value));
+  out.push(rule('.he-ftr .he-ftr__nl', [['max-width', nlWidth(f.newsletterWidth)]]));
+  if (nlWidth(f.newsletterWidthMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__nl{max-width:${nlWidth(f.newsletterWidthMobile)}}}`);
+  if (len(f.linkGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__links{row-gap:${len(f.linkGapMobile)}}.he-ftr .he-ftr__links a{padding-block:0}}`);
+  if (len(f.languagesGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-langs{gap:${len(f.languagesGapMobile)}}}`);
   const pull = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wm{margin-top:calc(-1 * ${len(value)});pointer-events:none}` : '');
   out.push(pull(f.wordmarkPull));
   if (pull(f.wordmarkPullMobile)) out.push(`@media (max-width:768px){${pull(f.wordmarkPullMobile)}}`);

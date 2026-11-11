@@ -1095,6 +1095,32 @@ function OptNumber({ label, k, props, set, hint, step = 'any' }: { label: string
   );
 }
 
+/** 3.34 — the easings an option may name; empty is the effect's own. */
+const EASING_OPTIONS = [
+  ['', 'As drawn'],
+  ['soft', 'Soft (slows into place)'],
+  ['ease', 'Ease'],
+  ['easeOut', 'Ease out'],
+  ['easeInOut', 'Ease in and out'],
+  ['linear', 'Linear'],
+] as const;
+
+/** 3.34 — a choice that stores nothing for its first, empty option. */
+function OptSelect({ label, k, props, set, options, hint }: { label: string; k: string; props: Record<string, unknown>; set: (p: Record<string, unknown>) => void; options: readonly (readonly [string, string])[]; hint?: string }) {
+  const value = props[k];
+  return (
+    <Field label={label} hint={hint}>
+      <Select value={typeof value === 'string' ? value : ''} onChange={(e) => set(withOpt(props, k, e.target.value || undefined))}>
+        {options.map(([option, text]) => (
+          <option key={option} value={option}>
+            {text}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  );
+}
+
 /** 3.28 — a line of text (a colour, a length) that stores nothing when it is cleared. */
 function OptText({ label, k, props, set, hint, placeholder }: { label: string; k: string; props: Record<string, unknown>; set: (p: Record<string, unknown>) => void; hint?: string; placeholder?: string }) {
   const value = props[k];
@@ -5630,6 +5656,30 @@ function TypeFields({
                   <Field label="Tallest picture" hint="e.g. 220px; empty has no cap">
                     <Input value={str(props, 'mediaMaxHeight')} placeholder="220px" onChange={(e) => set(withOpt(props, 'mediaMaxHeight', e.target.value.trim() || undefined))} />
                   </Field>
+                </>
+              )}
+            </div>
+          )}
+          {/* 3.34 — the lift tuned: for pointers that hover. */}
+          {['icons', 'imageCards', 'overlay'].includes(variant) && str(props, 'hover') === 'lift' && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <OptText label="Lift by" hint="e.g. 10px" k="liftDistance" placeholder="6px" props={props} set={set} />
+              <OptText label="Shadow while lifted" hint="e.g. 0 30px 60px -30px rgba(0,0,0,0.35)" k="liftShadow" placeholder="none" props={props} set={set} />
+              <OptNumber label="Picture zoom" hint="1.07 is 7% larger; empty, none" k="liftZoom" step="0.01" props={props} set={set} />
+              <OptNumber label="Lift length (ms)" k="liftDuration" step="1" props={props} set={set} />
+              <OptNumber label="Zoom length (ms)" k="liftZoomDuration" step="1" props={props} set={set} />
+              <OptSelect label="Easing" k="liftEasing" options={EASING_OPTIONS} props={props} set={set} />
+            </div>
+          )}
+          {/* 3.34 — pictures with text over them in one row that widen. */}
+          {variant === 'overlay' && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <OptNumber label="Widen the card pointed at" hint="e.g. 1.3; empty, off. One row from tablets up; phones stack" k="expand" step="0.05" props={props} set={set} />
+              {props.expand !== undefined && (
+                <>
+                  <OptNumber label="Widening length (ms)" k="expandDuration" step="1" props={props} set={set} />
+                  <OptSelect label="Easing" k="expandEasing" options={EASING_OPTIONS} props={props} set={set} />
+                  <OptSelect label="The words under the title" k="expandText" options={[['', 'Always shown'], ['reveal', 'Shown as the card widens']]} props={props} set={set} />
                 </>
               )}
             </div>

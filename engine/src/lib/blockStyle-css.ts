@@ -1,4 +1,5 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
+import { TIER_RANGE } from './tierRange';
 import { cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
 import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
@@ -248,6 +249,32 @@ function swipeCss(root: string, isRow: boolean, maxWidth: number, width?: number
   );
 }
 
+/**
+ * 3.34 — the pinned section's custom properties, read by the stylesheet's
+ * `.he-pin` rules and by ScrollPin; every value re-checked, nothing for an
+ * option left unset.
+ */
+function scrollPinCss(root: string, pin: NonNullable<BlockStyle['scrollPin']>): string {
+  const decls: Decl[] = [];
+  const len = (property: string, value: unknown) => {
+    if (typeof value === 'string' && isLength(value)) decls.push([property, value.trim()]);
+  };
+  const colour = (property: string, value: unknown) => {
+    if (typeof value === 'string' && isColor(value)) decls.push([property, value.trim()]);
+  };
+  len('--he-pin-offset', pin.offset);
+  if (pin.counterFont === 'display') decls.push(['--he-pin-count-font', 'var(--font-display)']);
+  if (pin.counterFont === 'body') decls.push(['--he-pin-count-font', 'var(--font-sans)']);
+  len('--he-pin-count-size', pin.counterSize);
+  colour('--he-pin-count-color', pin.counterColor);
+  colour('--he-pin-count-total', pin.counterTotalColor);
+  len('--he-pin-line-w', pin.lineWidth);
+  len('--he-pin-line-h', pin.lineHeight);
+  colour('--he-pin-line-track', pin.lineTrack);
+  colour('--he-pin-line-fill', pin.lineFill);
+  return block(root, decls);
+}
+
 /* ── What each typography role of a section reaches (3.13) ─────────────────
    Body text is any paragraph, item, cell or span, except the labels, markers
    and headings that live in spans or paragraphs of their own — each of those
@@ -462,6 +489,8 @@ export function blockStyleToCss(
   }
   // 3.29 — a sliding row at every width.
   if (style.swipeOn === 'always') parts.push(swipeCss(root, isRow, 100000, style.swipeWidth, style.swipeArrows === 'belowRight', style.swipeArrowBox));
+  // 3.34 — a section pinned to the scroll: the header's room, the counter's and the line's look.
+  if (prefix === 'he-b' && style.scrollPin?.at?.length) parts.push(scrollPinCss(root, style.scrollPin));
   // 3.28 — the cards' share on tablets and phones (a grid that is not swiping there ignores it).
   if (style.swipeOn) {
     const target = swipeTarget(root, isRow);
@@ -570,13 +599,6 @@ function spanAt(width: ColumnWidth, breakpoint: 'base' | 'laptop' | 'tablet' | '
   return width.mobile ?? width.tablet ?? width.laptop ?? width.base;
 }
 
-/** Each tier as its own width range — the four never overlap (2.19). */
-const TIER_RANGE: Record<'base' | 'laptop' | 'tablet' | 'mobile', string> = {
-  base: '(min-width:1441px)',
-  laptop: '(min-width:1025px) and (max-width:1440px)',
-  tablet: '(min-width:769px) and (max-width:1024px)',
-  mobile: '(max-width:768px)',
-};
 
 /** 3.33 — a written track list as a template; `minmax(0, …fr)`, so long words cannot widen a track. */
 function writtenTracks(value: string): string {

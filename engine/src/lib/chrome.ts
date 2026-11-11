@@ -472,6 +472,15 @@ export const chromeSchema = z.object({
       /** How far the wordmark rides up over what is above it, and on phones. */
       wordmarkPull: len(),
       wordmarkPullMobile: len(),
+
+      /* ── 3.34 ── */
+      /** The sign-up's width: a size, 100% (its whole column) or none; unset is the drawn 320px. On phones its own. */
+      newsletterWidth: z.union([z.literal('none'), z.string().trim().max(40).regex(LENGTH, 'A size such as 420px or 100%, or none')]).optional(),
+      newsletterWidthMobile: z.union([z.literal('none'), z.string().trim().max(40).regex(LENGTH, 'A size such as 100%, or none')]).optional(),
+      /** The space between the menus' links on phones; unset follows linkGap. */
+      linkGapMobile: len(),
+      /** The space between the language names on phones. */
+      languagesGapMobile: len(),
     })
     .optional(),
 

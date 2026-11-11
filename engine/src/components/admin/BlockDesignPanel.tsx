@@ -915,6 +915,69 @@ export function BlockDesignPanel({
           </div>
         )}
 
+        {/* 3.34 — the section held at the top while the page scrolls its sliding row. */}
+        <div className="mt-4">
+          <p className="m-0 text-[13px] text-bone">Pin to the scroll</p>
+          <p className="m-0 mt-1 text-[12px] leading-relaxed text-smoke">
+            The section holds at the top while scrolling down moves its first sliding row (this block&rsquo;s, or one in its
+            columns) from the first card to the last. Needs a row that swipes on those screens; visitors who ask for less
+            motion get the ordinary sliding row.
+          </p>
+          <div className="mt-2 flex flex-wrap gap-4">
+            {VISIBILITY_TIERS.map((tier) => {
+              const on = current.scrollPin?.at ?? [];
+              return (
+                <label key={tier} className="flex items-center gap-2 text-[13px] text-ash">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 accent-flare"
+                    checked={on.includes(tier)}
+                    onChange={(e) => {
+                      const next = VISIBILITY_TIERS.filter((t) => (t === tier ? e.target.checked : on.includes(t)));
+                      set(['scrollPin'])(next.length ? { ...current.scrollPin, at: next } : undefined);
+                    }}
+                  />
+                  {TIER_LABELS[tier]}
+                </label>
+              );
+            })}
+          </div>
+          {current.scrollPin?.at?.length ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <LengthField label="Room for a sticky header" value={current.scrollPin.offset} emptyLabel="0" onChange={set(['scrollPin', 'offset'])} />
+              <label className="col-span-full flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={Boolean(current.scrollPin.counter)} onChange={(e) => set(['scrollPin', 'counter'])(e.target.checked || undefined)} />
+                A counter (01 / 07)
+              </label>
+              {current.scrollPin.counter && (
+                <>
+                  <Field label="Counter font">
+                    <Select value={current.scrollPin.counterFont ?? ''} onChange={(e) => set(['scrollPin', 'counterFont'])(e.target.value || undefined)}>
+                      <option value="">Display</option>
+                      <option value="body">Body</option>
+                    </Select>
+                  </Field>
+                  <LengthField label="Counter size" value={current.scrollPin.counterSize} emptyLabel="32px" onChange={set(['scrollPin', 'counterSize'])} />
+                  <ColorField label="Counter colour" value={current.scrollPin.counterColor} onChange={set(['scrollPin', 'counterColor'])} />
+                  <ColorField label="Colour of “/ 07”" value={current.scrollPin.counterTotalColor} onChange={set(['scrollPin', 'counterTotalColor'])} />
+                </>
+              )}
+              <label className="col-span-full flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={Boolean(current.scrollPin.line)} onChange={(e) => set(['scrollPin', 'line'])(e.target.checked || undefined)} />
+                A progress line
+              </label>
+              {current.scrollPin.line && (
+                <>
+                  <LengthField label="Line width" value={current.scrollPin.lineWidth} emptyLabel="160px" onChange={set(['scrollPin', 'lineWidth'])} />
+                  <LengthField label="Line height" value={current.scrollPin.lineHeight} emptyLabel="2px" onChange={set(['scrollPin', 'lineHeight'])} />
+                  <ColorField label="Line track" value={current.scrollPin.lineTrack} onChange={set(['scrollPin', 'lineTrack'])} />
+                  <ColorField label="Line fill" value={current.scrollPin.lineFill} onChange={set(['scrollPin', 'lineFill'])} />
+                </>
+              )}
+            </div>
+          ) : null}
+        </div>
+
         {/* 2.19 (T32) — each tier on its own, so a block can show on phones only. The
             old "this width and below" setting is shown as the tiers it hid, and
             replaced by these the first time one is changed. */}
