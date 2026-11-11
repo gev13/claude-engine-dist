@@ -778,6 +778,17 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
           {/* 3.34 */}
           <TextField label="Space between links on phones" value={footer?.linkGapMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'linkGapMobile'])} />
           <TextField label="Space between languages on phones" value={footer?.languagesGapMobile} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'languagesGapMobile'])} />
+          {/* 3.34.1 */}
+          <ChoiceField
+            label="Social icons"
+            value={footer?.socialLook}
+            inherited="circle"
+            options={[
+              { value: 'circle', label: 'In a ring, as drawn' },
+              { value: 'plain', label: 'Bare, on every screen' },
+            ]}
+            onChange={set(['chrome', 'footer', 'socialLook'])}
+          />
           {footer?.newsletter && (
             <>
               <TextField label="Sign-up width" hint="a size, 100% or none" value={footer?.newsletterWidth} maxLength={40} placeholder="320px" onChange={set(['chrome', 'footer', 'newsletterWidth'])} />

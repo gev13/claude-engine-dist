@@ -10,6 +10,26 @@ improvements.
 
 ---
 
+## 3.34.1 — 2026-11-11
+
+**The footer's social icons bare on every screen, and a pinned section that
+follows the sliding row shown on the screen.**
+
+Added:
+
+- **Footer:** the social icons in a ring (as before) or bare, on every
+  width; their box and glyph sizes still apply. Until now the middle
+  column dropped the ring from desktops up only.
+
+Fixed:
+
+- **Pin to the scroll:** a section holding one sliding row for desktops and
+  another for phones now drives the one shown on the current screen, and
+  switches when the screen changes, instead of the first in the section even
+  when it was hidden.
+
+---
+
 ## 3.34.0 — 2026-11-11
 
 **A section pinned to the scroll, a tuned card lift, cards that widen, and

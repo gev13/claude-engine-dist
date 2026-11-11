@@ -336,6 +336,8 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   out.push(rule('.he-ftr .he-ftr__nl', [['max-width', nlWidth(f.newsletterWidth)]]));
   if (nlWidth(f.newsletterWidthMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__nl{max-width:${nlWidth(f.newsletterWidthMobile)}}}`);
   if (len(f.linkGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__links{row-gap:${len(f.linkGapMobile)}}.he-ftr .he-ftr__links a{padding-block:0}}`);
+  // 3.34.1 — the icons bare on every width (the middle column's own rule drops the ring from desktops up only).
+  if (f.socialLook === 'plain') out.push('.he-ftr .he-ftr__social:not(.is-text) a{border:0;border-radius:0}');
   if (len(f.languagesGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-langs{gap:${len(f.languagesGapMobile)}}}`);
   const pull = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wm{margin-top:calc(-1 * ${len(value)});pointer-events:none}` : '');
   out.push(pull(f.wordmarkPull));

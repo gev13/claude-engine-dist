@@ -1,6 +1,14 @@
 {
-  "latest": "3.34.0",
+  "latest": "3.34.1",
   "releases": [
+    {
+      "version": "3.34.1",
+      "date": "2026-11-11",
+      "summary": "The footer's social icons can be bare on every screen size, and a pinned section now drives the sliding row shown on the current screen, switching when the screen changes, rather than a row hidden there.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.34.0",
       "date": "2026-11-11",

@@ -748,6 +748,11 @@ Each of these is off until set; left empty, a page is drawn as before.
   height stay. *Shown as the card widens* hides the words under the title
   until then. Phones keep the stacked cards. Not with a bento, exact row
   widths or a sliding row.
+- **Footer → Social icons** (3.34.1): in a ring, as drawn, or bare on every
+  screen; the box and glyph sizes still apply.
+- **A pinned section with a row per screen** (one block hidden on phones,
+  another shown only there) drives the row shown on the current screen
+  (3.34.1).
 - **Footer:** the sign-up's width (a size, 100% or none) and on phones; the
   space between links and between language names on phones. A space between
   parts on phones is now the only space between them there.

@@ -32,8 +32,10 @@ type Tier = keyof typeof TIER_RANGE;
 const pad = (n: number) => String(n).padStart(2, '0');
 
 /** The first grid in the section that is drawn as a sliding row right now. */
-function slidingRow(host: HTMLElement): HTMLElement | null {
+export function slidingRow(host: HTMLElement): HTMLElement | null {
   for (const el of host.querySelectorAll<HTMLElement>(TRACK)) {
+    // 3.34.1 — a row hidden on this screen (a block shown on other tiers only) is not the one.
+    if (el.getClientRects().length === 0) continue;
     const style = getComputedStyle(el);
     if (style.display === 'flex' && /auto|scroll|hidden/.test(style.overflowX)) return el;
   }

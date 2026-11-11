@@ -481,6 +481,10 @@ export const chromeSchema = z.object({
       linkGapMobile: len(),
       /** The space between the language names on phones. */
       languagesGapMobile: len(),
+
+      /* ── 3.34.1 ── */
+      /** The social icons in a ring (unset, as drawn) or bare, on every width; their box and glyph sizes still apply. */
+      socialLook: z.enum(['circle', 'plain']).optional(),
     })
     .optional(),
 
