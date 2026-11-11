@@ -708,3 +708,20 @@ Each of these is off until set; left empty, a page is drawn as before.
   and hyphens at line ends. A scale of 0.85 draws that language's headings at
   85% of whatever size they have, wherever it was set.
 - **Spacing and motion:** the footer can enter with the sections.
+
+## The last details (3.33.1)
+
+- **Header & menus → Full-screen menu:** the links' face, and capitals or as
+  written.
+- **Footer:** the links' size, padding and padding on phones, the space
+  between parts on phones, the social icons' glyph size, box and gap, the
+  sign-up sentence's type, the space above a language row, and how far the
+  wordmark rides up over what is above it. The wordmark never catches the
+  pointer once it overlaps.
+- **Languages:** with the row under the link columns, *In the footer on
+  phones* can put it under everything else, at the left.
+- **Careers → Details:** the details' order, as a comma-separated list; the
+  send button's width on phones; the drop zone's edge, fill, words, corners
+  and label.
+- **Icon lists, ruled rows:** the link's colour.
+

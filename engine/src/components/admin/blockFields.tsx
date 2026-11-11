@@ -5927,6 +5927,8 @@ function TypeFields({
             <div className="grid gap-3 sm:grid-cols-3">
               <Text label="The link’s words" k="linkLabel" props={props} set={set} placeholder="View ↗" hint="shared by every row; a row with no link shows none" />
               <OptText label="Rule colour" placeholder="the hairline" k="ruleColor" props={props} set={set} />
+              {/* 3.33.1 */}
+              <OptText label="Link colour" placeholder="the accent" k="linkColor" props={props} set={set} />
               <OptText label="Row padding" hint="one to four lengths" placeholder="16px 0" k="rowPadding" props={props} set={set} />
             </div>
           )}

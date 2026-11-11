@@ -764,6 +764,8 @@ export const blockSchemas = {
     layout: z.enum(['rows', 'plain', 'inline', 'grid', 'cards', 'linkRows']).default('rows'),
     linkLabel: text(40),
     ruleColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
+    /** 3.33.1 — the link's colour; unset is the accent. */
+    linkColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
     rowPadding: boxLengths.optional(),
     /** 2.22 — the marker on a tinted circle. */
     markerStyle: z.enum(['plain', 'circle']).optional(),

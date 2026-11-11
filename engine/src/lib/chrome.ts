@@ -267,6 +267,9 @@ export const chromeSchema = z.object({
       itemColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       barColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
       noCurrentMark: z.boolean().optional(),
+      /** 3.33.1 — full-screen menus: the links' face, and capitals or as written. */
+      itemFont: z.enum(['body', 'display']).optional(),
+      itemTransform: z.enum(['none', 'uppercase']).optional(),
       /** What opens a link's sub-items: a + in a circle (as before), a plain +, or a chevron. */
       expandIcon: z.enum(['circle', 'plus', 'chevron']).optional(),
       /** The menu's own colour, instead of the page's. */
@@ -451,6 +454,24 @@ export const chromeSchema = z.object({
       newsletterTitle: typeStyleSchema.optional(),
       /** The social icons' colour. */
       socialColor: colour(),
+
+      /* ── 3.33.1 ── */
+      /** The links' size; the footer's padding (and on phones); the space between its parts on phones. */
+      linkSize: len(),
+      padding: z.string().trim().max(60).regex(BOX, 'One to four sizes, e.g. 60px or 40px 24px').optional(),
+      paddingMobile: z.string().trim().max(60).regex(BOX, 'One to four sizes, e.g. 40px 24px').optional(),
+      gapMobile: len(),
+      /** The social icons: the glyph's size, its box, and the space between them. */
+      socialSize: len(),
+      socialBox: len(),
+      socialGap: len(),
+      /** The sign-up's sentence. */
+      newsletterText: typeStyleSchema.optional(),
+      /** The space between the link columns and a language row under them. */
+      languagesGap: len(),
+      /** How far the wordmark rides up over what is above it, and on phones. */
+      wordmarkPull: len(),
+      wordmarkPullMobile: len(),
     })
     .optional(),
 
@@ -473,6 +494,8 @@ export const chromeSchema = z.object({
       inFooter: z.enum(['off', 'always', 'phones']).optional(),
       /** 3.33 — where in the footer: with the head column (unset), or under the link columns at the right. */
       footerPlace: z.enum(['head', 'links']).optional(),
+      /** 3.33.1 — with `links`, on phones: under everything else at the left, rather than under the links at the right. */
+      footerPlaceMobile: z.enum(['below']).optional(),
       /** 3.33 — in the open menu: the codes' size. */
       menuSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 20px').optional(),
     })
@@ -747,6 +770,7 @@ export type ResolvedChrome = {
     inMenu: boolean;
     inFooter: 'off' | 'always' | 'phones';
     footerPlace: 'head' | 'links';
+    footerPlaceMobile?: 'below';
   };
   cursor: {
     style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend';
@@ -1030,6 +1054,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       inMenu: c.languages?.inMenu ?? false,
       inFooter: c.languages?.inFooter ?? 'off',
       footerPlace: c.languages?.footerPlace ?? 'head',
+      footerPlaceMobile: c.languages?.footerPlaceMobile,
     },
     backToTop: c.backToTop ?? false,
     videoControls: c.videoControls !== false,

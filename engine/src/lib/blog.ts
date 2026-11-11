@@ -423,6 +423,8 @@ export const blogSchema = z.object({
   featured: z.boolean().optional(),
   /** 3.3 — the category bar (with the search, when it is in the bar) on every category and research page too. */
   archiveBar: z.boolean().optional(),
+  /** 3.33.1 — false: no category bar on the blog's index either (unset, shown). */
+  indexBar: z.boolean().optional(),
   /** 3.3 — with the search in the bar: on its own row under the chips, labelled, instead of at the end. */
   searchBelow: z.boolean().optional(),
   /** 3.22 — no search box on the blog's pages (searching by address still works). */
@@ -497,6 +499,7 @@ export type ResolvedBlog = {
   searchInBar: boolean;
   featured: boolean;
   archiveBar: boolean;
+  indexBar: boolean;
   searchBelow: boolean;
   off: boolean;
   searchOff: boolean;
@@ -561,6 +564,7 @@ export function resolveBlog(blog: BlogSettings | undefined): ResolvedBlog {
     searchInBar: blog?.searchInBar ?? false,
     featured: blog?.featured ?? false,
     archiveBar: blog?.archiveBar ?? false,
+    indexBar: blog?.indexBar !== false,
     searchBelow: blog?.searchBelow ?? false,
     searchOff: blog?.searchOff ?? false,
     toolbar: blog?.toolbar ?? false,

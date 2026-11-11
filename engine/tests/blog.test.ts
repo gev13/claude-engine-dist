@@ -35,6 +35,7 @@ describe('blog layouts (BL1, BL2)', () => {
       featured: false,
       // 3.3 — no bar on category pages, and the search at the end of the bar when it is there.
       archiveBar: false,
+      indexBar: true,
       searchBelow: false,
       off: false,
       // 3.22 — the eyebrow after its rule, the meta row and excerpt shown, the cover card's own overlap, the corner card as before, the search and "Browse" as before.

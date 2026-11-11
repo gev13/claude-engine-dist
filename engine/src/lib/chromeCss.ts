@@ -212,6 +212,14 @@ function menuCss(m: NonNullable<Chrome['mobileMenu']>): string[] {
     ]),
   );
 
+  /* 3.33.1 — a full-screen menu's links: their face, and capitals or as written. */
+  const faces = { body: 'var(--he-body-family)', display: 'var(--font-display)' } as const;
+  out.push(
+    rule(`${fs} .he-menu__row`, [
+      ['font-family', m.itemFont === 'body' || m.itemFont === 'display' ? faces[m.itemFont] : undefined],
+      ['text-transform', m.itemTransform === 'none' || m.itemTransform === 'uppercase' ? m.itemTransform : undefined],
+    ]),
+  );
   /* 3.33 — the links' colour, no mark on the current one, the bar while open. */
   out.push(rule('.he-menu .he-menu__row', [['color', col(m.itemColor)]]));
   if (m.noCurrentMark) out.push(`.he-menu .he-menu__row[aria-current]{color:${col(m.itemColor) ?? 'inherit'};font-weight:inherit;text-decoration:none}.he-menu .he-menu__row[aria-current]::after,.he-menu .he-menu__row[aria-current]::before{content:none}`);
@@ -300,6 +308,26 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   out.push(rule(`${nl} .he-ftr__nlsend`, [['background-color', col(f.newsletterSendFill)], ['color', col(f.newsletterSendText)], ['border-radius', typeof f.newsletterSendRadius === 'string' && BOX.test(f.newsletterSendRadius.trim()) ? f.newsletterSendRadius.trim() : undefined], ['width', len(f.newsletterSendWidth)]]));
   out.push(...typeRule(`${nl} .he-ftr__nltitle`, f.newsletterTitle));
   out.push(rule('.he-ftr .he-ftr__social a', [['color', col(f.socialColor)]]));
+  /* 3.33.1 — the links' size, the footer's padding and rhythm, the icons, the sentence, the wordmark over what is above it. */
+  out.push(rule('.he-ftr .he-ftr__links a', [['font-size', len(f.linkSize)]]));
+  const padded = (value: unknown) => {
+    const size = box(value);
+    return size ? `.he-ftr>.shell{padding:${size}}.he-ftr .he-ftr__grid{padding-block:0}` : '';
+  };
+  out.push(padded(f.padding));
+  const paddedPhone = padded(f.paddingMobile);
+  if (paddedPhone) out.push(`@media (max-width:768px){${paddedPhone}}`);
+  if (len(f.gapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__grid{row-gap:${len(f.gapMobile)}}}`);
+  const glyph = len(f.socialSize);
+  if (glyph) out.push(`.he-ftr .he-ftr__social a svg{width:${glyph};height:${glyph}}`);
+  out.push(rule('.he-ftr .he-ftr__social a', [['width', len(f.socialBox)], ['height', len(f.socialBox)]]));
+  if (len(f.socialBox)) out.push(`.he-ftr.has-middle .he-ftr__middle .he-ftr__social a{width:${len(f.socialBox)};height:${len(f.socialBox)}}`);
+  out.push(rule('.he-ftr .he-ftr__social', [['gap', len(f.socialGap)]]));
+  out.push(...typeRule(`${nl} .he-ftr__nltext`, f.newsletterText));
+  if (len(f.languagesGap)) out.push(`@media (min-width:1024px){.he-ftr.has-langrow .he-ftr__grid{row-gap:${len(f.languagesGap)}}}`);
+  const pull = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wm{margin-top:calc(-1 * ${len(value)});pointer-events:none}` : '');
+  out.push(pull(f.wordmarkPull));
+  if (pull(f.wordmarkPullMobile)) out.push(`@media (max-width:768px){${pull(f.wordmarkPullMobile)}}`);
   return out;
 }
 

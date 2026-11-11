@@ -168,7 +168,16 @@
   .he-ftr__nl.is-split .he-ftr__nlrow { gap: 8px; padding: 0; border-radius: 0; background: transparent; }
   .he-ftr__nl.is-split .he-ftr__nlinput.he-nl__input { flex: 1 1 auto; min-width: 0; background: var(--color-surface); border-radius: 999px; }
   .he-ftr__nl.is-split .he-ftr__nlsend { flex: none; align-self: stretch; height: auto; }
-  .he-ftr__langrow { display: flex; justify-content: flex-end; padding-bottom: 20px; }
+  .he-ftr__langrow { display: flex; grid-column: 1 / -1; justify-content: flex-end; }
+  @media (width >= 64rem) {
+    .he-ftr.has-langrow .he-ftr__grid > :is(.he-ftr__lead, .he-ftr__middle) { grid-row: 1 / span 2; }
+    .he-ftr.has-langrow .he-ftr__langrow { grid-row: 2; grid-column: span var(--he-footer-cols) / -1; }
+  }
+  @media (width <= 48rem) {
+    .he-ftr__langrow.is-below-m { order: 9; justify-content: flex-start; }
+    /* The menus' last column keeps its space under it with the language row after it in the grid. */
+    .he-ftr.is-links-first .he-ftr__grid > :is(.he-ftr__col, .he-ftr__stack):has(+ .he-ftr__langrow) { margin-bottom: 40px; }
+  }
 }
 
 /* Team portraits. */
@@ -233,7 +242,7 @@
 @layer he-details {
   .he-ilist.is-linkRows .he-ilist__item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: var(--he-ilist-pad, 16px 0); border-top: 1px solid var(--he-ilist-rule, var(--color-hairline)); }
   .he-ilist.is-linkRows .he-ilist__item:last-child { border-bottom: 1px solid var(--he-ilist-rule, var(--color-hairline)); }
-  .he-ilist__rowlink { flex: none; white-space: nowrap; color: var(--color-flare-soft); }
+  .he-ilist__rowlink { flex: none; white-space: nowrap; color: var(--he-ilist-link, var(--color-flare-soft)); }
   .he-ilist__rowlink:hover { color: var(--he-link-hover, var(--color-flare-hot)); }
 }
 

@@ -320,6 +320,7 @@ export default async function SiteLayout({
               }
               languagesPhonesOnly={chrome.languages.inFooter === 'phones'}
               languagesUnderLinks={chrome.languages.footerPlace === 'links'}
+              languagesBelowMobile={chrome.languages.footerPlaceMobile === 'below'}
               newsletterSplit={chrome.footer.newsletterLook === 'split'}
               wordmark={wordmark}
               bottomRow={chrome.footer.bottomRow}

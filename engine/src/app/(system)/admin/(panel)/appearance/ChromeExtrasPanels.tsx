@@ -327,6 +327,27 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
           <TextField label="The bar’s colour while open" value={menu?.barColor} maxLength={60} placeholder="as drawn" onChange={set(at('barColor'))} />
         </div>
         <Check label="No mark on the current page’s link" value={menu?.noCurrentMark} onChange={set(at('noCurrentMark'))} />
+        {/* 3.33.1 */}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <ChoiceField
+            label="Links’ face"
+            value={menu?.itemFont}
+            options={[
+              { value: 'body', label: 'The text’s' },
+              { value: 'display', label: 'The headings’' },
+            ]}
+            onChange={set(at('itemFont'))}
+          />
+          <ChoiceField
+            label="Links’ capitals"
+            value={menu?.itemTransform}
+            options={[
+              { value: 'none', label: 'As written' },
+              { value: 'uppercase', label: 'ALL CAPITALS' },
+            ]}
+            onChange={set(at('itemTransform'))}
+          />
+        </div>
         <div className="grid gap-4 sm:grid-cols-3">
           <ChoiceField
             label="Opens a link’s sub-items"
@@ -743,7 +764,24 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
         )}
         <div className="grid gap-4 sm:grid-cols-3">
           <TextField label="Social icons’ colour" value={footer?.socialColor} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'socialColor'])} />
+          {/* 3.33.1 */}
+          <TextField label="Social glyph size" value={footer?.socialSize} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'socialSize'])} />
+          <TextField label="Social icon box" value={footer?.socialBox} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'socialBox'])} />
+          <TextField label="Space between social icons" value={footer?.socialGap} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'socialGap'])} />
+          <TextField label="Links’ size" value={footer?.linkSize} maxLength={40} placeholder="14px" onChange={set(['chrome', 'footer', 'linkSize'])} />
+          <TextField label="Padding" hint="one to four, e.g. 60px" value={footer?.padding} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'padding'])} />
+          <TextField label="Padding on phones" hint="e.g. 40px 24px" value={footer?.paddingMobile} maxLength={60} placeholder="as above" onChange={set(['chrome', 'footer', 'paddingMobile'])} />
+          <TextField label="Space between parts on phones" value={footer?.gapMobile} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'gapMobile'])} />
+          <TextField label="Space above a language row" hint="under the link columns" value={footer?.languagesGap} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'languagesGap'])} />
+          <TextField label="Wordmark rides up by" hint="over what is above it" value={footer?.wordmarkPull} maxLength={40} placeholder="0" onChange={set(['chrome', 'footer', 'wordmarkPull'])} />
+          <TextField label="— on phones" value={footer?.wordmarkPullMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'wordmarkPullMobile'])} />
         </div>
+        {footer?.newsletter && (
+          <div className="space-y-2">
+            <p className="m-0 text-[13px] text-bone">The sign-up’s sentence</p>
+            <TypeStyleFields type={footer?.newsletterText} set={(key) => set(['chrome', 'footer', 'newsletterText', key])} />
+          </div>
+        )}
         <div className="grid gap-4 sm:grid-cols-2">
           <ChoiceField
             label="A huge wordmark along the bottom edge"
@@ -887,6 +925,15 @@ export function LanguagesPanel({ chrome, set }: Props) {
             ]}
             onChange={set(at('footerPlace'))}
           />
+          {/* 3.33.1 */}
+          {languages?.footerPlace === 'links' && (
+            <ChoiceField
+              label="In the footer on phones"
+              value={languages?.footerPlaceMobile}
+              options={[{ value: 'below', label: 'Under everything else, at the left' }]}
+              onChange={set(at('footerPlaceMobile'))}
+            />
+          )}
           <TextField label="Size in the open menu" value={languages?.menuSize} maxLength={40} placeholder="as drawn" onChange={set(at('menuSize'))} />
         </div>
         <Check label="In the open menu, under the links (the header bar's copy then folds away with the links)" value={languages?.inMenu} onChange={set(at('inMenu'))} />

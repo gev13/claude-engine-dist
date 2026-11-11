@@ -330,8 +330,8 @@ export function CheckListsBlock(p: P<'checkLists'>) {
             <ul
               className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}
               style={
-                p.layout === 'linkRows' && (p.ruleColor || p.rowPadding)
-                  ? ({ ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}) } as React.CSSProperties)
+                p.layout === 'linkRows' && (p.ruleColor || p.rowPadding || p.linkColor)
+                  ? ({ ...(p.linkColor ? { '--he-ilist-link': p.linkColor } : {}), ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}) } as React.CSSProperties)
                   : undefined
               }
             >

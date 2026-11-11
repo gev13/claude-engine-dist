@@ -336,6 +336,8 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
         {blog?.searchInBar === true && (
           <Check label="…on its own row under the chips" checked={blog?.searchBelow === true} onChange={(v) => set(['blog', 'searchBelow'])(v || undefined)} />
         )}
+        {/* 3.33.1 */}
+        <Check label="The category bar on the blog’s index" checked={blog?.indexBar !== false} onChange={(v) => set(['blog', 'indexBar'])(v ? undefined : false)} />
         <Check label="The category bar on every category and research page too" checked={blog?.archiveBar === true} onChange={(v) => set(['blog', 'archiveBar'])(v || undefined)} />
         <Check
           label="One row under the title — breadcrumbs on the left; the result count and the categories on the right"

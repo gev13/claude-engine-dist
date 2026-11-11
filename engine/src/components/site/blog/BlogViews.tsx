@@ -345,11 +345,18 @@ export async function BlogIndexView({
         <ArchiveToolbar
           crumbs={blog.archiveBreadcrumbs ? <ArchiveCrumbs trail={trail} /> : undefined}
           count={blog.resultCount && builtIn && latest.length > 0 ? <ResultCount paging={paging} t={t} inBar /> : undefined}
-          bar={<CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} current="all" bare />}
+          bar={blog.indexBar ? <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} current="all" bare /> : searchInBar ? search : undefined}
           filters={blog.look.archive.phoneFilters ? t('blog.filters') : undefined}
         />
-      ) : (
+      ) : blog.indexBar ? (
         <CategoryBar locale={locale} permalinks={permalinks} t={t} blog={blog} search={searchInBar ? search : undefined} />
+      ) : (
+        // 3.33.1 — no categories on the index; a search that lived in the bar keeps its place.
+        searchInBar && search && (
+          <Section size="sm" className="he-arch-bar">
+            {search}
+          </Section>
+        )
       )}
 
       {searchRow && (

@@ -1,6 +1,14 @@
 {
-  "latest": "3.33.0",
+  "latest": "3.33.1",
   "releases": [
+    {
+      "version": "3.33.1",
+      "date": "2026-11-11",
+      "summary": "More opt-in details: the blog index without its category bar, the full-screen menu's face and capitals, the footer's sizes, padding, icons and wordmark overlap, the job advert's detail order, phone send button and drop zone, and the link rows' colour.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.33.0",
       "date": "2026-11-11",

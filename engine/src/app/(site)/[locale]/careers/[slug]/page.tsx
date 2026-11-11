@@ -12,7 +12,7 @@ import { breadcrumbs, graph, jobPostingNode, webPage } from '@/lib/seo/jsonld';
 import { buildMetadata } from '@/lib/seo/metadata';
 import { CAREERS_PATH, JOB_META } from '@/lib/careers';
 import { formatAbsolute, formatAmount, formatRelative, hasPassed } from '@/lib/relativeDate';
-import { resolveCareersLook } from '@/lib/careersLook';
+import { orderDetails, resolveCareersLook } from '@/lib/careersLook';
 import type { InfoIconName } from '@/lib/infoIcons';
 import { messageReader } from '@/lib/messages';
 import { InfoIcon } from '@/components/site/InfoIcon';
@@ -103,7 +103,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
     seniority: job.seniority,
     workweek: job.workweek,
   };
-  const meta = JOB_META.filter(([key]) => (values[key] ?? '').trim() !== '');
+  const meta = orderDetails(JOB_META, look.detailsOrder).filter(([key]) => (values[key] ?? '').trim() !== '');
   // 3.29 — each detail's label and icon, in the page's language.
   const META_ICONS: Record<string, InfoIconName> = { location: 'pin', department: 'people', contractType: 'document', workingTime: 'clock', seniority: 'briefcase', workweek: 'calendar' };
   const metaLabel = (key: string) => t(`careers.meta.${key}` as Parameters<typeof t>[0]);

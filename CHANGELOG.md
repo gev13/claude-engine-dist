@@ -10,6 +10,31 @@ improvements.
 
 ---
 
+## 3.33.1 — 2026-11-11
+
+**The last details of a design: the blog index, the full-screen menu, the
+footer, the job advert and link rows.** Every one is off until set.
+
+Added:
+
+- **Blog:** the category bar can be left off the blog's index.
+- **Full-screen menu:** the links' face, and capitals or as written.
+- **Footer:** the links' size, padding (and on phones), the space between
+  parts on phones, the social icons' glyph, box and gap, the sign-up
+  sentence's type, the space above a language row, the language row under
+  everything else on phones, and a wordmark that rides up over what is above
+  it.
+- **Careers:** the details in an order of their own, the send button its own
+  width on phones, and the drop zone's edge, fill, words, corners and label.
+- **Icon lists:** the link rows' link colour.
+
+Changed:
+
+- A language row under the footer's link columns now sits in the same
+  columns as the links, rather than in a row of its own across the footer.
+
+---
+
 ## 3.33.0 — 2026-11-11
 
 **A design that needed custom CSS can now be built from the admin.** Layout

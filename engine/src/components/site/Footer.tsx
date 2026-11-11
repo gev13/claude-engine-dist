@@ -76,6 +76,8 @@ export type FooterProps = {
   languagesPhonesOnly?: boolean;
   /** 3.33 — the language switcher under the link columns, at the right. */
   languagesUnderLinks?: boolean;
+  /** 3.33.1 — and on phones under everything else, at the left. */
+  languagesBelowMobile?: boolean;
   /** 3.33 — the sign-up's field and button apart. */
   newsletterSplit?: boolean;
   wordmark?: FooterWordmark;
@@ -330,6 +332,7 @@ export function Footer(props: FooterProps) {
         props.panel && 'is-panel',
         looks,
         socialMiddle && 'has-middle',
+        props.languagesUnderLinks && languages && 'has-langrow',
         props.linksFirstMobile && 'is-links-first',
         props.linksRowMobile && 'is-links-row',
         props.wordmark && 'has-wordmark',
@@ -357,8 +360,10 @@ export function Footer(props: FooterProps) {
             </div>
           )}
           {cols}
+          {/* 3.33.1 — in the grid, under the link columns. */}
+          {props.languagesUnderLinks && languages && <div className={cn('he-ftr__langrow', props.languagesBelowMobile && 'is-below-m')}>{languages}</div>}
         </div>
-        {props.languagesUnderLinks && languages && <div className="he-ftr__langrow">{languages}</div>}
+
         {!socialHead && !socialMiddle && social.length > 0 && (
           <div className="he-ftr__socialrow">
             <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />

@@ -17,6 +17,10 @@ const BOX = /^(0|-?\d*\.?\d+(px|rem|em|%))(\s+(0|-?\d*\.?\d+(px|rem|em|%))){0,3}
 const TRACKS = /^\d{1,5}(?:\.\d{1,3})?(?:fr|px|rem|%)\s+\d{1,5}(?:\.\d{1,3})?(?:fr|px|rem|%)$/;
 const POSITION = /^(\d{1,3}(?:\.\d{1,2})?%|left|center|right)(\s+(\d{1,3}(?:\.\d{1,2})?%|top|center|bottom))?$/;
 const SHADOW = /^-?\d{1,3}(?:px)?\s+-?\d{1,3}(?:px)?\s+\d{1,3}(?:px)?(\s+-?\d{1,3}px)?\s+(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
+const BORDER = /^\d{1,2}(?:\.\d{1,2})?px\s+(solid|dashed|dotted)\s+(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
+/** 3.33.1 — the advert's six details; `tests/round3331.test.tsx` holds this to `JOB_META`. */
+export const DETAIL_KEYS = ['location', 'department', 'contractType', 'workingTime', 'seniority', 'workweek'] as const;
+export type DetailKey = (typeof DETAIL_KEYS)[number];
 const isClear = (v: string) => v.trim() === 'transparent' || COLOUR.test(v.trim());
 const box = () => z.string().trim().max(60).refine((v) => BOX.test(v.trim()), 'One to four sizes, such as 20px 24px').optional();
 const colour = () => z.string().trim().max(60).refine((v) => COLOUR.test(v.trim()), 'Not a colour').optional();
@@ -136,6 +140,18 @@ export const careersLookSchema = z.object({
   applyTitle: typeStyleSchema.optional(),
   groupType: typeStyleSchema.optional(),
   groupGap: len(),
+
+  /* 3.33.1 */
+  /** The advert's details in an order of their own; any left out follow in the usual order. */
+  detailsOrder: z.array(z.enum(DETAIL_KEYS)).max(6).refine((list) => new Set(list).size === list.length, 'A detail is listed twice').optional(),
+  /** The send button as wide as its words on phones, at the right. */
+  applySubmitWidthMobile: z.enum(['own']).optional(),
+  /** The CV drop zone: its edge (e.g. 1.5px dashed #123456), fill, words' colour, corners; its label's type. */
+  dropBorder: z.string().trim().max(80).refine((v) => BORDER.test(v.trim()), 'Such as 1.5px dashed #123456').optional(),
+  dropFill: clear(),
+  dropText: colour(),
+  dropRadius: box(),
+  dropLabelType: typeStyleSchema.optional(),
 });
 
 export type CareersLook = z.infer<typeof careersLookSchema>;
@@ -152,7 +168,18 @@ export type ResolvedCareersLook = {
   doneButtons: boolean;
   afterSavedBlock?: string;
   buttonLook: 'outline' | 'primary';
+  detailsOrder?: DetailKey[];
 };
+
+/** 3.33.1 — the details in the order asked, then any left out in the order they came. */
+export function orderDetails<T extends readonly [string, ...unknown[]]>(meta: readonly T[], order: readonly string[] | undefined): T[] {
+  if (!order?.length) return [...meta];
+  const place = (item: T) => {
+    const at = order.indexOf(item[0]);
+    return at === -1 ? order.length : at;
+  };
+  return [...meta].sort((a, b) => place(a) - place(b));
+}
 
 export function resolveCareersLook(look: CareersLook | undefined): ResolvedCareersLook {
   return {
@@ -167,6 +194,7 @@ export function resolveCareersLook(look: CareersLook | undefined): ResolvedCaree
     doneButtons: look?.doneButtons === true,
     afterSavedBlock: look?.afterSavedBlock,
     buttonLook: look?.buttonLook ?? 'outline',
+    detailsOrder: look?.detailsOrder,
   };
 }
 
@@ -265,5 +293,13 @@ export function careersCss(look: CareersLook | undefined): string {
   out.push(...typeRule('.he-apply__group', look.groupType));
   if (look.groupType?.size) out.push('.he-apply__group{text-transform:none;letter-spacing:0}');
   out.push(rule('.he-apply__group', [['margin-bottom', lenOf(look.groupGap)]]));
+  // 3.33.1 — the send button on phones, and the drop zone.
+  if (look.applySubmitWidthMobile === 'own') out.push(phone('.he-apply__actions{justify-content:flex-end}.he-apply__actions>*{flex:none;width:auto}'));
+  const drop = '.he-apply__cv .he-fdrop:not(.has-file)';
+  out.push(rule(drop, [['border', ok(BORDER, look.dropBorder) ? look.dropBorder!.trim() : undefined], ['background-color', clearOf(look.dropFill)]]));
+  out.push(rule('.he-apply__cv .he-fdrop', [['border-radius', boxOf(look.dropRadius)]]));
+  out.push(rule('.he-apply__cv :is(.he-fdrop__lead,.he-fdrop__name)', [['color', colourOf(look.dropText)]]));
+  out.push(...typeRule('.he-apply__cv .he-fb__label', look.dropLabelType));
+  if (look.dropLabelType?.size) out.push('.he-apply__cv .he-fb__label{text-transform:none;letter-spacing:0}');
   return out.filter(Boolean).join('');
 }

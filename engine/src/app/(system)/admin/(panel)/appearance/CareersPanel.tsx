@@ -4,7 +4,7 @@ import { Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, LengthField } from '@/components/admin/styleFields';
 import { TypeStyleFields as TypeFields } from '@/components/admin/TypeStyleFields';
 import { useSavedBlocks } from '@/components/admin/SavedBlocksTools';
-import type { CareersLook } from '@/lib/careersLook';
+import { DETAIL_KEYS, type CareersLook, type DetailKey } from '@/lib/careersLook';
 
 /**
  * 3.29 — Appearance → Careers: how the listing, the advert and the
@@ -94,6 +94,11 @@ const APPLY: RowDef[] = [
   ['applyPaddingMobile', 'Padding on phones'],
   ['applyTop', 'Space above it'],
   ['groupGap', 'Space under a group label'],
+  /* 3.33.1 */
+  ['dropBorder', 'Drop zone’s edge', 'e.g. 1.5px dashed #123456'],
+  ['dropFill', 'Drop zone’s fill', 'a colour, or transparent'],
+  ['dropText', 'Drop zone’s words'],
+  ['dropRadius', 'Drop zone’s corners', 'one to four'],
 ];
 
 /** 3.33 — many small fields, all alike: a value typed in, checked when saved. */
@@ -243,6 +248,18 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
           <Rows careers={careers} set={set} defs={ADVERT} />
           <Check label="The side column stays in view while the text scrolls" value={careers?.sticky} onChange={set(at('sticky'))} />
           <Check label="On phones the centred heading sits at the left" value={careers?.headLeftMobile} onChange={set(at('headLeftMobile'))} />
+          {/* 3.33.1 */}
+          <Field label="The details’ order" hint={`separated by commas, any of: ${DETAIL_KEYS.join(', ')}; any left out follow`}>
+            <Input
+              defaultValue={careers?.detailsOrder?.join(', ') ?? ''}
+              placeholder="the usual order"
+              spellCheck={false}
+              onBlur={(e) => {
+                const list = [...new Set(e.target.value.split(',').map((key) => key.trim()))].filter((key): key is DetailKey => (DETAIL_KEYS as readonly string[]).includes(key));
+                set(at('detailsOrder'))(list.length ? list : undefined);
+              }}
+            />
+          </Field>
           <ChoiceField
             label="Details per row on phones"
             value={careers?.detailsColumnsMobile ? String(careers.detailsColumnsMobile) : undefined}
@@ -272,10 +289,13 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
       <Panel title="Details — the application card">
         <div className="space-y-5">
           <Rows careers={careers} set={set} defs={APPLY} />
+          {/* 3.33.1 */}
+          <Check label="On phones the send button is as wide as its words, at the right" value={careers?.applySubmitWidthMobile === 'own' ? true : undefined} onChange={(v) => set(at('applySubmitWidthMobile'))(v ? 'own' : undefined)} />
           {(
             [
               ['applyTitle', 'Its heading'],
               ['groupType', 'The group labels (“Contact information”)'],
+              ['dropLabelType', 'The drop zone’s label'],
             ] as const
           ).map(([key, label]) => (
             <div key={key} className="space-y-2">

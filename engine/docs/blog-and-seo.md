@@ -368,3 +368,6 @@ Appearance → Blog → Details. Each empty field keeps the drawn look.
 - The post list's *All writing* switch now applies to every layout except
   the news cards, which have their own button.
 
+Since 3.33.1, **The category bar on the blog's index** can be switched off
+(Appearance → Blog). A search box that lived in the bar keeps its place.
+
