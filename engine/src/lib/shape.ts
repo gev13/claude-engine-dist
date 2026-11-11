@@ -29,7 +29,21 @@ export const cornerShapeSchema = z.object({
   size: z.number().int().min(0).max(LEAF_MAX).optional(),
   /** Which corners are cut or rounded; unset is top right and bottom left. */
   corners: z.array(z.enum(CORNERS)).min(1).max(4).optional(),
+  /**
+   * 3.34.2 — a size of each corner's own over `size` (a corner given one is
+   * shaped even when not among `corners`; 0 squares it), and on phones
+   * (≤768px) one size and sizes per corner. On a phone a corner takes, in
+   * turn: its phone size, the phone size, its own size, the size. Written by
+   * a block's Design tab; elsewhere the per-corner sizes apply and the phone
+   * ones are not read.
+   */
+  sizes: z.lazy(() => cornerSizesSchema).optional(),
+  sizeMobile: z.number().int().min(0).max(LEAF_MAX).optional(),
+  sizesMobile: z.lazy(() => cornerSizesSchema).optional(),
 });
+
+const cornerSize = z.number().int().min(0).max(LEAF_MAX).optional();
+const cornerSizesSchema = z.object({ tl: cornerSize, tr: cornerSize, br: cornerSize, bl: cornerSize });
 
 export type CornerShape = z.infer<typeof cornerShapeSchema>;
 
@@ -37,12 +51,42 @@ export const DEFAULT_CUT_CORNERS: Corner[] = ['tr', 'bl'];
 
 export type CutLegs = Record<Corner, number>;
 
-/** A cut shape's four legs, in px; null for a rounded or unset shape. */
-export function cutLegs(shape: CornerShape | undefined, fallbackSize: number): CutLegs | null {
-  if (shape?.style !== 'cut') return null;
-  const size = typeof shape.size === 'number' && Number.isInteger(shape.size) && shape.size >= 0 && shape.size <= 96 ? shape.size : fallbackSize;
+const within = (value: unknown, max: number): number | undefined =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= max ? value : undefined;
+
+/**
+ * 3.34.2 — each corner's size, in px, 0 for a square one: the chosen corners
+ * at the size, a corner's own size over it, and on a phone the phone sizes
+ * over both. Bounded by `max` (96 for a cut, LEAF_MAX for a leaf).
+ */
+function cornerPx(shape: CornerShape, fallbackSize: number, max: number, phone: boolean): CutLegs {
+  const base = within(shape.size, max) ?? fallbackSize;
   const chosen = new Set(shape.corners?.length ? shape.corners : DEFAULT_CUT_CORNERS);
-  return { tl: chosen.has('tl') ? size : 0, tr: chosen.has('tr') ? size : 0, br: chosen.has('br') ? size : 0, bl: chosen.has('bl') ? size : 0 };
+  const out = {} as CutLegs;
+  for (const corner of CORNERS) {
+    const own = within(shape.sizes?.[corner], max);
+    const phoneOwn = phone ? within(shape.sizesMobile?.[corner], max) : undefined;
+    const phoneAll = phone ? within(shape.sizeMobile, max) : undefined;
+    const shaped = chosen.has(corner) || own !== undefined || phoneOwn !== undefined;
+    out[corner] = shaped ? (phoneOwn ?? phoneAll ?? own ?? base) : 0;
+  }
+  return out;
+}
+
+/** 3.34.2 — whether a shape has anything of its own on phones. */
+export function hasPhoneCorners(shape: CornerShape | undefined): boolean {
+  return Boolean((shape?.style === 'cut' || shape?.style === 'leaf') && (shape.sizeMobile !== undefined || (shape.sizesMobile && Object.values(shape.sizesMobile).some((v) => v !== undefined))));
+}
+
+/** 3.34.2 — whether a shape names a size per corner or for phones (a block then writes its radius too). */
+export function hasCornerSizes(shape: CornerShape | undefined): boolean {
+  return hasPhoneCorners(shape) || Boolean(shape?.sizes && Object.values(shape.sizes).some((v) => v !== undefined));
+}
+
+/** A cut shape's four legs, in px; null for a rounded or unset shape. (3.34.2) `phone`: as drawn on phones. */
+export function cutLegs(shape: CornerShape | undefined, fallbackSize: number, phone = false): CutLegs | null {
+  if (shape?.style !== 'cut') return null;
+  return cornerPx(shape, fallbackSize, 96, phone);
 }
 
 /**
@@ -50,12 +94,10 @@ export function cutLegs(shape: CornerShape | undefined, fallbackSize: number): C
  * bottom right, bottom left), e.g. `0px 64px 0px 64px`; null for anything
  * that is not a leaf. Bounded here, as `cutLegs` bounds a cut.
  */
-export function leafRadii(shape: CornerShape | undefined, fallbackSize: number): string | null {
+export function leafRadii(shape: CornerShape | undefined, fallbackSize: number, phone = false): string | null {
   if (shape?.style !== 'leaf') return null;
-  const size = typeof shape.size === 'number' && Number.isInteger(shape.size) && shape.size >= 0 && shape.size <= LEAF_MAX ? shape.size : fallbackSize;
-  const px = Math.max(0, Math.min(LEAF_MAX, Math.round(size)));
-  const chosen = new Set(shape.corners?.length ? shape.corners : DEFAULT_CUT_CORNERS);
-  return CORNERS.map((corner) => (chosen.has(corner) ? `${px}px` : '0px')).join(' ');
+  const px = cornerPx(shape, fallbackSize, LEAF_MAX, phone);
+  return CORNERS.map((corner) => `${Math.max(0, Math.min(LEAF_MAX, Math.round(px[corner])))}px`).join(' ');
 }
 
 /** The clip for a leaf: the box itself, with those corners rounded. */

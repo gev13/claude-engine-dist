@@ -594,6 +594,7 @@ export function BlockDesignPanel({
             fallbackSize={28}
             leafSize={64}
             roundedLabel={current.panel ? 'As the panels are' : 'Square, or the radius above'}
+            perTier
             onChange={(corners) => set(['corners'])(corners)}
           />
           {current.corners?.style !== 'cut' && current.corners?.style !== 'leaf' && (

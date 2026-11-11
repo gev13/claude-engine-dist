@@ -1,6 +1,6 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { TIER_RANGE } from './tierRange';
-import { cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
+import { cutLegs, cutPolygon, hasCornerSizes, hasPhoneCorners, leafClip, leafRadii } from './shape';
 import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -362,12 +362,24 @@ export function blockStyleToCss(
   const leaf = leafRadii(style.corners, 64);
   const shape: Decl[] = legs ? [['clip-path', cutPolygon(legs)]] : leaf ? [['clip-path', leafClip(leaf)]] : [];
   if (style.clip && !legs && !leaf) shape.push(['overflow', 'hidden']);
+  // 3.34.2 — sizes per corner or for phones: the radius follows the shape too, so a border or an outline keeps to the curve.
+  const sized = hasCornerSizes(style.corners);
+  if (sized && leaf) shape.push(['border-radius', leaf]);
 
   parts.push(block(root, [...panel, ...boxDecls(style.spacing?.base), ...own, ...background, ...border, ...shape]));
   // 3.28 — reaching into the gutter by the bleed, on each side, from tablets up.
   if (style.bleed && isLength(style.bleed)) {
     const from = style.panel ? 'min(var(--he-panel-inset,24px),3vw)' : '0px';
     parts.push(`@media (min-width:769px){${root}{margin-inline:calc(${from} - ${style.bleed})}}`);
+  }
+
+  /* 3.34.2 — the corners on phones. Before a panel set aside on phones, whose
+     square edge still wins there. */
+  if (hasPhoneCorners(style.corners)) {
+    const phoneLegs = cutLegs(style.corners, 28, true);
+    const phoneLeaf = leafRadii(style.corners, 64, true);
+    const decls: Decl[] = phoneLegs ? [['clip-path', cutPolygon(phoneLegs)]] : phoneLeaf ? [['clip-path', leafClip(phoneLeaf)], ['border-radius', phoneLeaf]] : [];
+    if (decls.length) parts.push(`@media (max-width:768px){${block(root, decls)}}`);
   }
 
   /* 3.33 — a panel set aside, or inset differently, on phones. Before the

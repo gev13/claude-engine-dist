@@ -1,6 +1,14 @@
 {
-  "latest": "3.34.1",
+  "latest": "3.34.2",
   "releases": [
+    {
+      "version": "3.34.2",
+      "date": "2026-11-11",
+      "summary": "A section's cut or rounded corners can take a size for each corner, a size on phones and a size for each corner on phones, so nested panels keep concentric curves. Off until set.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.34.1",
       "date": "2026-11-11",

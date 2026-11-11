@@ -16,6 +16,7 @@ export function CornerShapeFields({
   fallbackSize,
   leafSize = 48,
   roundedLabel = 'Rounded — as the design draws it',
+  perTier = false,
 }: {
   label: string;
   value: CornerShape | undefined;
@@ -25,6 +26,8 @@ export function CornerShapeFields({
   /** The leaf radius used when no size is given. */
   leafSize?: number;
   roundedLabel?: string;
+  /** 3.34.2 — a size of each corner's own and sizes on phones (a block's Design tab, which writes them). */
+  perTier?: boolean;
 }) {
   const id = useId();
   const shape = value ?? {};
@@ -41,6 +44,13 @@ export function CornerShapeFields({
     }
     for (const key of Object.keys(next) as (keyof CornerShape)[]) if (next[key] === undefined) delete next[key];
     onChange(next);
+  };
+  const num = (raw: string) => (raw === '' ? undefined : Math.min(max, Math.max(0, Math.round(Number(raw) || 0))));
+  // 3.34.2 — one corner's own size, on every screen or on phones; an emptied set is dropped.
+  const setCorner = (key: 'sizes' | 'sizesMobile', corner: Corner, raw: string) => {
+    const nextSizes = { ...(shape[key] ?? {}), [corner]: num(raw) };
+    for (const c of CORNERS) if (nextSizes[c] === undefined) delete nextSizes[c];
+    update({ [key]: Object.keys(nextSizes).length ? nextSizes : undefined });
   };
   const toggle = (corner: Corner) => {
     const set = new Set(corners);
@@ -61,7 +71,7 @@ export function CornerShapeFields({
             onChange={(e) => {
               const style = e.target.value === 'cut' ? 'cut' : e.target.value === 'leaf' ? 'leaf' : undefined;
               // A cut's legs stop at 96; a leaf's radius means something else, so a size does not carry over.
-              update({ style, size: undefined });
+              update({ style, size: undefined, sizes: undefined, sizeMobile: undefined, sizesMobile: undefined });
             }}
           >
             <option value="rounded">{roundedLabel}</option>
@@ -90,6 +100,21 @@ export function CornerShapeFields({
               <input type="checkbox" className="h-4 w-4 accent-flare" checked={corners.has(corner)} onChange={() => toggle(corner)} />
               {CORNER_LABELS[corner]}
             </label>
+          ))}
+        </div>
+      )}
+      {perTier && (cut || leaf) && (
+        <div className="grid gap-3 sm:grid-cols-5">
+          <Field label="On phones" hint="px, ≤768px" htmlFor={`${id}-size-m`}>
+            <Input id={`${id}-size-m`} type="number" min={0} max={max} placeholder="as above" value={shape.sizeMobile ?? ''} onChange={(e) => update({ sizeMobile: num(e.target.value) })} />
+          </Field>
+          {CORNERS.map((corner) => (
+            <Field key={corner} label={CORNER_LABELS[corner]} hint="own px; then on phones">
+              <div className="flex gap-1">
+                <Input aria-label={`${CORNER_LABELS[corner]}: its own size`} type="number" min={0} max={max} placeholder={corners.has(corner) ? 'as above' : '—'} value={shape.sizes?.[corner] ?? ''} onChange={(e) => setCorner('sizes', corner, e.target.value)} />
+                <Input aria-label={`${CORNER_LABELS[corner]}: on phones`} type="number" min={0} max={max} placeholder="—" value={shape.sizesMobile?.[corner] ?? ''} onChange={(e) => setCorner('sizesMobile', corner, e.target.value)} />
+              </div>
+            </Field>
           ))}
         </div>
       )}

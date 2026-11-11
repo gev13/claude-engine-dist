@@ -10,6 +10,21 @@ improvements.
 
 ---
 
+## 3.34.2 — 2026-11-11
+
+**Corners of their own size, each, and on phones.** Off until set.
+
+Added:
+
+- **Design → Corners** (cut, or rounded on chosen corners): a size for each
+  corner over the size, a size on phones, and a size for each corner on
+  phones, so nested panels can keep concentric curves. With any of these
+  set, a rounded corner's radius is written as well as its clip, so a border
+  follows the curve. A panel's own corners win over the theme's panel
+  corners on every screen; a panel set aside on phones stays square there.
+
+---
+
 ## 3.34.1 — 2026-11-11
 
 **The footer's social icons bare on every screen, and a pinned section that

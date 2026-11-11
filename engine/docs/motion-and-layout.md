@@ -753,6 +753,13 @@ Each of these is off until set; left empty, a page is drawn as before.
 - **A pinned section with a row per screen** (one block hidden on phones,
   another shown only there) drives the row shown on the current screen
   (3.34.1).
+- **Design → Corners, per corner and on phones** (3.34.2): with a cut or
+  rounded-on-chosen-corners shape, each corner can take a size of its own
+  (a corner given one is shaped even if not ticked; 0 squares it), and on
+  phones a size and sizes per corner. A corner on a phone takes its phone
+  size, then the phone size, then its own size, then the size. Nested panels
+  can so keep concentric curves (an outer 60, an inner 40, cards 30, with the
+  same padding between them).
 - **Footer:** the sign-up's width (a size, 100% or none) and on phones; the
   space between links and between language names on phones. A space between
   parts on phones is now the only space between them there.
