@@ -1,15 +1,19 @@
 import { z } from 'zod';
 import { INFO_ICONS } from './infoIcons';
 import { cardHoverSchema } from './cardHover';
+import { postCardExtras } from './blog';
 
 /** Ids become part of a CSS selector, so they are constrained to what is safe there. */
 export const BLOCK_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 import {
   type BlockStyle,
   blockStyleSchema,
+  columnAlignSchema,
+  columnJustifySchema,
   columnOrderSchema,
   columnWidthSchema,
   length,
+  rowTracksSchema,
   textTagSchema,
 } from './blockStyle';
 import { buttonPadSchema } from './buttonPad';
@@ -341,6 +345,9 @@ export const blockSchemas = {
     measure: z.enum(['text', 'full']).optional(),
     /** 3.28 — the space between paragraphs in this block, over the theme's (e.g. 0 or 16px). */
     paragraphGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.33 — the paragraphs' own width, and on phones; over the measure above. */
+    textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    textWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   }),
 
   /** Heading on the left, a stack of labelled points on the right. */
@@ -434,6 +441,14 @@ export const blockSchemas = {
     textTone: z.enum(['light', 'dark']).optional(),
     cardHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     cardHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.33 — pictures with text over them: the words' own inset (one or two lengths), and on phones; unset is the drawn 28px. */
+    textPadding: boxLengths.optional(),
+    textPaddingMobile: boxLengths.optional(),
+    /** 3.33 — pictures with text over them: exact widths for each row in turn (`1fr`, `668fr 508fr`); stacked on phones. */
+    rowTracks: z.array(z.string().trim().max(60).regex(/^\d{1,5}(?:\.\d{1,3})?fr(?:\s+\d{1,5}(?:\.\d{1,3})?fr){0,3}$/, 'Fractions separated by spaces, e.g. 668fr 508fr')).max(12).optional(),
+    /** 3.33 — pictures with text over them: the bullet lists under the words, in one or two columns, and the space between entries. */
+    pointsColumns: z.union([z.literal(1), z.literal(2)]).optional(),
+    pointsGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     cards: z.array(
       z.object({
         /** This card's own colour, spacing and edge — see `lib/itemStyle.ts`. */
@@ -444,6 +459,12 @@ export const blockSchemas = {
         textPlaceTablet: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
         textPlaceMobile: z.enum(['bottom', 'top', 'left', 'right', 'center']).optional(),
         imagePosition: z.enum(['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right']).optional(),
+        /** 3.33 — pictures with text over them: the picture's anchor on phones; this card's own height, and the words' width, each with a value on phones. */
+        imagePositionMobile: z.enum(['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right']).optional(),
+        height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        heightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        textWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         span: z.number().int().min(1).max(12).optional(),
         rowSpan: z.number().int().min(1).max(3).optional(),
         eyebrow: z.string().optional(),
@@ -573,11 +594,18 @@ export const blockSchemas = {
     /** 3.28 — a gap of its own at every width (e.g. 30px), over the one above. */
     gapLength: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     ratio: z.enum(['square', 'landscape', 'portrait']).default('square'),
+    /** 3.33 — the even grid: the pictures' height, over the shape above, and on phones; on phones an unset one keeps the wider screen's. */
+    height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    heightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     hover: z.enum(['zoom', 'lift', 'greyscale', 'none']).default('zoom'),
     captions: z.enum(['none', 'below', 'overlay']).default('none'),
     lightbox: z.boolean().default(true),
-    /** 3.29 — a round magnifier over a picture under the pointer, saying it opens larger. */
-    zoomIcon: z.boolean().optional(),
+    /** 3.29 — a round magnifier over a picture under the pointer, saying it opens larger. (3.33) `touch`: only on touch screens, always shown, at a corner. */
+    zoomIcon: z.union([z.boolean(), z.literal('touch')]).optional(),
+    /** 3.33 — with `touch`: which corner, how far in from it, and its size in px. */
+    zoomCorner: z.enum(['topRight', 'topLeft', 'bottomRight', 'bottomLeft']).optional(),
+    zoomOffset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    zoomSize: z.number().int().min(24).max(96).optional(),
     /** 3.29 — the pictures' corners as the site's cards are (Appearance → Shape), instead of the radius above. */
     cardCorners: z.boolean().optional(),
     images: z
@@ -605,10 +633,21 @@ export const blockSchemas = {
         peek: z.boolean().optional(),
         closeSide: z.enum(['right', 'left']).optional(),
         closeBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
-        arrows: z.enum(['sides', 'bottomRight']).optional(),
+        /** (3.33) `beside`: right next to the picture rather than at the screen's edges. */
+        arrows: z.enum(['sides', 'bottomRight', 'beside']).optional(),
         arrowStyle: z.enum(['circle', 'plain']).optional(),
         counter: z.boolean().optional(),
         speed: z.number().int().min(0).max(2000).optional(),
+        /** 3.33 — the page behind blurred (px); the picture's width and tallest height (and on phones), and its corners (px, 0 for square). */
+        blur: z.number().int().min(0).max(40).optional(),
+        imageWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        imageMaxHeight: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        imageMaxHeightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        imageRadius: z.number().int().min(0).max(48).optional(),
+        /** 3.33 — on phones, previous and next side by side under the picture. */
+        arrowsMobile: z.enum(['below']).optional(),
+        /** 3.33 — the close button over the next arrow, level with the picture's top; on phones above the picture at the right. */
+        closeAt: z.enum(['corner', 'overNext']).optional(),
       })
       .optional(),
   }),
@@ -721,7 +760,11 @@ export const blockSchemas = {
     iconUrl: mediaUrl.optional(),
     /** `rows` (ruled lines) is the original look. */
     /** 3.6 — `cards`: every entry a card of its own, cut or rounded like the site's cards. */
-    layout: z.enum(['rows', 'plain', 'inline', 'grid', 'cards']).default('rows'),
+    /** 3.33 — `linkRows`: each entry a ruled row, the words on the left and a link on the right, with a shared label. */
+    layout: z.enum(['rows', 'plain', 'inline', 'grid', 'cards', 'linkRows']).default('rows'),
+    linkLabel: text(40),
+    ruleColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
+    rowPadding: boxLengths.optional(),
     /** 2.22 — the marker on a tinted circle. */
     markerStyle: z.enum(['plain', 'circle']).optional(),
     /** 2.22 — hairline rules between rows instead of the 2px ones. */
@@ -873,10 +916,10 @@ export const blockSchemas = {
         reveal: z.boolean().optional(),
         /** 3.29 — the overlay's colour, fading up from the bottom (unset, black). */
         tint: z.string().trim().max(60).refine(isColor, 'Not a valid colour').optional(),
-        /** 3.29 — a round arrow over the card, with the words. */
-        arrow: z.boolean().optional(),
         /** 3.29 — the overlay cards' height, e.g. 520px (unset 380px). */
         height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.29, 3.33 — the arrow (a round mark with the words, or the pointer itself), the words' types, the height on phones. */
+        ...postCardExtras,
       })
       .optional(),
     /** 3.28 — the plain cards drawn as the blog's archive cards (Appearance → Blog → Details), and the "All writing →" link under them (unset, shown). */
@@ -1001,6 +1044,9 @@ export const blockSchemas = {
           width: columnWidthSchema,
           /** Its place at the smaller tiers; absent is the written order. */
           order: columnOrderSchema.optional(),
+          /** 3.33 — how it sits in the row, and how its blocks spread down it, per tier. */
+          alignSelf: columnAlignSchema.optional(),
+          justify: columnJustifySchema.optional(),
           /** Columns take the same Design Options panel that blocks do. */
           style: blockStyleSchema.optional(),
           /** Parsed by `parseBlock` in turn; see parseRowProps below. */
@@ -1020,6 +1066,10 @@ export const blockSchemas = {
     gapTablet: z.string().optional(),
     gapMobile: z.string().optional(),
     minHeightMobile: z.string().optional(),
+    /** 3.33 — the tracks written out, per tier (`592fr 584fr`, `230px 1fr`), over the twelfths. */
+    tracks: rowTracksSchema.optional(),
+    /** 3.33 — on phones, where the columns gather when the row is taller than they are. */
+    alignContentMobile: z.enum(['start', 'center', 'end']).optional(),
   }),
 
   /** Simple data table. */
@@ -1197,7 +1247,17 @@ export const blockSchemas = {
     alt: text(200),
     position: z.enum(MEDIA_BAND_POSITIONS).default('bottomLeft'),
     /** 3.30 — where the text sits on phones (≤768px): bottom left (unset, as before), at the bottom centred, or in the middle centred. */
-    positionMobile: z.enum(['bottomLeft', 'bottomCenter', 'center']).optional(),
+    positionMobile: z.enum(['bottomLeft', 'bottomCenter', 'center', 'top']).optional(),
+    /** 3.33 — the picture's anchor on phones. */
+    imagePositionMobile: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
+    /** 3.33 — a colour fading down from the top on phones, and how far it reaches. */
+    fadeMobile: z.object({ color: z.string().trim().refine(isColor, 'Not a valid colour'), height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional() }).optional(),
+    /** 3.33 — every line of the title after the first set in by this much; the title's typed line breaks dropped on phones. */
+    titleIndent: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    titleFlowMobile: z.boolean().optional(),
+    /** 3.33 — the words as a centred group within the band's text place, how far in from its end (tablets up). */
+    textGroup: z.enum(['center']).optional(),
+    textEnd: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     height: z.enum(['short', 'medium', 'tall', 'screen']).default('tall'),
     /** 3.22 — a height of its own (e.g. 900px or 80vh), and on phones; each unset keeps the chosen height. */
     heightCustom: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
@@ -1227,6 +1287,10 @@ export const blockSchemas = {
         bodyWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         bodyGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         actionsGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.33 — the words' column width, and the space under the eyebrow. */
+        width: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        widthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        eyebrowGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
       })
       .optional(),
     fade: z
@@ -1488,6 +1552,13 @@ export const blockSchemas = {
   heading: z.object({
     tone,
     align: z.enum(['left', 'center']).default('left'),
+    /** 3.33 — the alignment on phones; unset keeps the one above. */
+    alignMobile: z.enum(['left', 'center']).optional(),
+    /** 3.33 — how far the subtitle runs before it wraps, and on phones; unset is the block's own measure. */
+    subtitleWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    subtitleWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.33 — the space above the subtitle; unset is the block's own. */
+    subtitleGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** `lede` is large body text, the old statement block's size; (3.22) `theme` is the tag's own size from Appearance → Typography. */
     size: z.enum(['medium', 'large', 'display', 'lede', 'theme']).default('large'),
     /** `split` puts the subtitle beside the heading, as the old statement block did. */
@@ -1664,6 +1735,19 @@ export const blockSchemas = {
     /** 3.29 — the first so many, then a button that shows the rest in place ("All members"). */
     initial: z.number().int().min(1).max(48).optional(),
     moreLabel: text(40),
+    /** 3.33 — how many on phones; the button's look and an arrow on it. */
+    initialMobile: z.number().int().min(1).max(48).optional(),
+    moreStyle: z.enum(['outline', 'primary']).optional(),
+    moreArrow: z.boolean().optional(),
+    /** 3.33 — portrait cards: the card's padding, the space above the photo (each with a phone value), the photo's fit and anchor, the card's shape. */
+    cardPadding: boxLengths.optional(),
+    cardPaddingMobile: boxLengths.optional(),
+    photoGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    photoGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    photoFit: z.enum(['contain', 'cover']).optional(),
+    photoPosition: z.enum(['center', 'top', 'bottom', 'center top', 'center bottom']).optional(),
+    cardRatio: phoneRatio,
+    cardRatioMobile: phoneRatio,
     members: z
       .array(
         z.object({
@@ -1674,6 +1758,8 @@ export const blockSchemas = {
           links: z.array(socialItem).max(4).default([]),
           /** 3.29 — the portrait card's own colour. */
           color: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
+          /** 3.33 — this member's name in a colour of its own. */
+          nameColor: z.string().trim().refine(isColor, 'Not a valid colour').optional(),
         }),
       )
       .min(1)
@@ -2047,6 +2133,9 @@ export const blockSchemas = {
       .optional(),
     /** Choice chips sized to their text instead of the page's line height. */
     compactChoices: z.boolean().optional(),
+    /** 3.33 — the space between the questions; the send button as wide as its words on phones. */
+    fieldGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    submitWidthMobile: z.enum(['own']).optional(),
     /** 3.28 — the card wider than the column by this much each side (into the gutter), the fields past the card's padding by this much, the card edge to edge on phones, and the outline send button's edge. */
     cardBleed: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     fieldInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
@@ -2218,6 +2307,8 @@ export type ParsedColumn = {
   id: string;
   width: z.infer<typeof columnWidthSchema>;
   order?: z.infer<typeof columnOrderSchema>;
+  alignSelf?: z.infer<typeof columnAlignSchema>;
+  justify?: z.infer<typeof columnJustifySchema>;
   style?: BlockStyle;
   blocks: ParsedBlock[];
 };
@@ -2258,6 +2349,8 @@ function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>, depth: numb
       id: column.id,
       width: column.width,
       ...(column.order && Object.keys(column.order).length > 0 ? { order: column.order } : {}),
+      ...(column.alignSelf && Object.keys(column.alignSelf).length > 0 ? { alignSelf: column.alignSelf } : {}),
+      ...(column.justify && Object.keys(column.justify).length > 0 ? { justify: column.justify } : {}),
       style: column.style && Object.keys(column.style).length > 0 ? column.style : undefined,
       blocks: (column.blocks as AnyBlock[])
         .map((child) => (child && typeof child === 'object' ? parseBlock(child, depth + 1) : null))

@@ -353,3 +353,18 @@ which is worse than none. The screen warns a month ahead. These settings
 belong to the server they are set on and do not travel with a content
 export.
 
+## The category bar and the cover-aside post (3.33)
+
+Appearance → Blog → Details. Each empty field keeps the drawn look.
+
+- **Archives:** the category bar's colour (and on phones), side margins, no
+  rule under it, and the chips' fill, text, current fill and text, corners,
+  size, spacing and padding.
+- **A post:** the *Cover card beside the article* layout's two columns and
+  the space between them; the card's height, corners and tint stops
+  (`rgba(0,0,0,0.2) 25%, #000 92%`, top to bottom); its title's type; the
+  section as a panel with a colour and padding; the article's space under and
+  above a heading.
+- The post list's *All writing* switch now applies to every layout except
+  the news cards, which have their own button.
+

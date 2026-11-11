@@ -113,7 +113,7 @@ const SKIP = new Set(['STYLE', 'SCRIPT', 'NOSCRIPT', 'TEMPLATE', 'LINK']);
  * section already on screen is marked revealed as it is tagged, so nothing
  * in view ever blinks.
  */
-export function SiteReveal({ effect, items = false }: { effect: string; items?: boolean }) {
+export function SiteReveal({ effect, items = false, footer = false }: { effect: string; items?: boolean; /** 3.33 — the footer enters too. */ footer?: boolean }) {
   const path = usePathname();
 
   useEffect(() => {
@@ -124,8 +124,7 @@ export function SiteReveal({ effect, items = false }: { effect: string; items?: 
 
     const tag = () => {
       const fold = viewportHeight() * 0.95;
-      for (const el of main.children) {
-        if (!(el instanceof HTMLElement) || SKIP.has(el.tagName)) continue;
+      for (const el of [...sectionsOf(main), ...(footer ? document.querySelectorAll<HTMLElement>('.he-ftr') : [])]) {
         if (el.classList.contains('he-reveal') || el.classList.contains('he-noreveal') || el.classList.contains('he-reveal-items')) continue;
         if (el.getBoundingClientRect().top < fold) el.classList.add('is-in');
         el.classList.add('he-reveal', cls, 'he-reveal-site');
@@ -147,9 +146,25 @@ export function SiteReveal({ effect, items = false }: { effect: string; items?: 
       added.disconnect();
       window.removeEventListener(MOTION_EVENT, rearm);
     };
-  }, [path, effect, items]);
+  }, [path, effect, items, footer]);
 
   return null;
+}
+
+/**
+ * 3.33 — what counts as a section: `#main`'s children, except that a post,
+ * a job advert and a project are one `<article>` holding sections of their
+ * own, which enter one by one as a page's do.
+ */
+function sectionsOf(main: HTMLElement): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  for (const el of main.children) {
+    if (!(el instanceof HTMLElement) || SKIP.has(el.tagName)) continue;
+    if (el.tagName === 'ARTICLE') {
+      for (const part of el.children) if (part instanceof HTMLElement && !SKIP.has(part.tagName)) out.push(part);
+    } else out.push(el);
+  }
+  return out;
 }
 
 /**

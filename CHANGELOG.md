@@ -10,6 +10,84 @@ improvements.
 
 ---
 
+## 3.33.0 — 2026-11-11
+
+**A design that needed custom CSS can now be built from the admin.** Layout
+per screen, cards, sliders, the gallery viewer, the blog, careers, the
+cookie notice, the footer, the team block, media bands, forms and lists all
+gained opt-in options. Every one is off until set; an untouched site is
+drawn as before.
+
+Added — layout (Design tab, row and column editors):
+
+- **Exact widths for a row** on each screen, written as fractions and
+  lengths (`592fr 584fr`, `230px 1fr`), over the twelfths.
+- **A column's own alignment** per screen, and its blocks spread from the
+  top to the foot.
+- **A background of its own on phones**, or none.
+- **Text alignment and colour on tablets and phones**; a heading's alignment
+  on phones, its subtitle's width and the space above it; a paragraph width
+  on the Text block.
+- **A narrower section need not be centred**; a width on phones.
+- **A panel can stop being one on phones**, or take its own inset.
+- The eyebrow can lose its rule, line up as asked, and have its own space
+  under it.
+
+Added — blocks:
+
+- **Card grid, pictures with text over them:** the words' inset, each card's
+  height, words' width, phone picture and anchor, bullet lists in one or two
+  columns, and exact widths for each row.
+- **Sliders:** no arrows on phones while wider screens keep them.
+- **Gallery:** a picture height of its own, and on phones; a magnifier on
+  touch screens only; the viewer's blur, picture
+  width and height, corners, arrows beside the picture or under it on
+  phones, and the close button over the next arrow.
+- **Post list:** the pointer itself becomes a round arrow, generated from a
+  colour and a size; each word's type; height and padding on phones.
+- **Team portraits:** padding, the photo's fit and anchor, card shape per
+  screen, a name colour per member, a number shown on phones of its own and
+  the "show all" button's look.
+- **Media band:** a second-line indent, a centred text group with an end
+  inset, text at the top on phones, a picture anchor and a colour fade on
+  phones.
+- **Forms:** the space between questions; the send button its own width on
+  phones. **Fields:** frosted, with a shadow.
+- **Icon lists:** ruled rows with a shared link at the right.
+
+Added — site-wide:
+
+- **Careers** (Appearance → Careers): the listing as a section, the cards in
+  full, the Explore button in the site's look, a new centred advert layout,
+  and the panel, dates, details, cover and application card per screen. The
+  eyebrow's words are in Site translations.
+- **Blog** (Appearance → Blog → Details): the category bar and its chips;
+  the cover-aside post's columns, height, tint stops, title, section panel
+  and article spacing.
+- **Cookie notice:** corners one by one, distance from the left, centred on
+  phones, line height, the buttons' shape and words, and no wrapping.
+- **Footer:** the sign-up's field and button apart, social icon colour, the
+  language switcher under the link columns.
+- **Phone menu:** link colour, the bar's colour while open, no mark on the
+  current link, the language row's size.
+- **A heading scale per language** (Appearance → Typography), on phones too,
+  for languages with longer words.
+- The site-wide entrance can include the footer.
+
+Fixed:
+
+- The post list's *All writing* link switch was ignored by the list,
+  featured and carousel layouts.
+- A centred Buttons block went to the left on phones when its buttons kept
+  their own width.
+- Long words no longer run past a narrow screen in headings, card titles and
+  figures.
+- The site-wide entrance now reaches the sections inside posts, job adverts
+  and projects, which entered as one piece.
+- An eyebrow's alignment set in the Design tab now moves it.
+
+---
+
 ## 3.32.0 — 2026-11-10
 
 **The platform's name leaves your pages unless you want it there, and

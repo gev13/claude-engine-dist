@@ -1,4 +1,5 @@
-import type { ArchiveLook, BlogSettings, CardLook, PostLook } from './blog';
+import { ASIDE_COLUMNS, type ArchiveLook, type BlogSettings, type CardLook, type PostLook, TINT_STOPS } from './blog';
+import { typeRule } from './typeStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    3.28 — the blog's last details, as CSS
@@ -17,6 +18,7 @@ const BOX = /^(0|-?\d*\.?\d+(px|rem|em|%))(\s+(0|-?\d*\.?\d+(px|rem|em|%))){0,3}
 const LINE = /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/;
 const len = (v: unknown) => (typeof v === 'string' && LENGTH.test(v.trim()) ? v.trim() : undefined);
 const col = (v: unknown) => (typeof v === 'string' && COLOR.test(v.trim()) ? v.trim() : undefined);
+const colOrClear = (v: unknown) => (typeof v === 'string' && v.trim() === 'transparent' ? 'transparent' : col(v));
 const box = (v: unknown) => (typeof v === 'string' && BOX.test(v.trim()) ? v.trim().replace(/\s+/g, ' ') : undefined);
 const line = (v: unknown) => (typeof v === 'string' && LINE.test(v.trim()) ? v.trim() : undefined);
 const weight = (v: unknown) => (typeof v === 'string' && /^[3-8]00$/.test(v) ? v : undefined);
@@ -132,6 +134,21 @@ function archiveCss(a: ArchiveLook): string[] {
   const bar = typeof a.barPadding === 'string' && /^(0|\d*\.?\d+(px|rem|em))(\s+(0|\d*\.?\d+(px|rem|em)))?$/.test(a.barPadding.trim()) ? a.barPadding.trim() : undefined;
   out.push(rule('.he-arch-bar>.shell', [['padding-block', bar]]));
   if (bar && top) out.push(`.he-arch-bar:has(~.he-arch-list)>.shell{padding-bottom:0}`);
+  // 3.33 — the bar's own band, and its chips.
+  out.push(rule('.he-arch-bar', [['background-color', colOrClear(a.barBackground)], ['margin-inline', box(a.barMargin)], ['border-width', a.barRule === false ? '0' : undefined]]));
+  out.push(media(PHONE, rule('.he-arch-bar', [['background-color', colOrClear(a.barBackgroundMobile)]])));
+  out.push(
+    rule('.he-arch-bar .he-chip', [
+      ['border-width', colOrClear(a.chipFill) ? '0' : undefined],
+      ['background-color', colOrClear(a.chipFill)],
+      ['color', col(a.chipText)],
+      ['border-radius', box(a.chipRadius)],
+      ['font-size', len(a.chipSize)],
+      ['letter-spacing', len(a.chipTracking)],
+      ['padding', box(a.chipPadding)],
+    ]),
+  );
+  out.push(rule('.he-arch-bar .he-chip[aria-current]', [['background-color', col(a.chipActiveFill)], ['color', col(a.chipActiveText)]]));
   if (a.phoneFilters) {
     out.push(
       '.he-blogbar__filters{display:none}',
@@ -213,6 +230,21 @@ function postCss(p: PostLook): string[] {
   const marker = col(p.markerColor);
   if (marker) out.push(`${prose} ol>li::marker{color:${marker}}${prose} ul>li::before{background:${marker}}${prose} ul>li::marker{color:${marker}}`);
   out.push(rule(`${post} .he-post__inline`, [['margin-block', len(p.inlineSpace)]]));
+  // 3.33 — Cover card beside the article.
+  const columns = typeof p.asideColumns === 'string' && ASIDE_COLUMNS.test(p.asideColumns.trim()) ? p.asideColumns.trim().split(/\s+/).map((t) => (t.endsWith('fr') ? `minmax(0,${t})` : t)).join(' ') : undefined;
+  if (columns) out.push(`@media (min-width:1025px){.he-post-aside{grid-template-columns:${columns}}}`);
+  out.push(rule('.he-post-aside', [['gap', len(p.asideGap)]]));
+  out.push(rule('.he-post-aside__card', [['min-height', len(p.asideCoverHeight)], ['border-radius', box(p.asideCoverRadius)], ['clip-path', box(p.asideCoverRadius) ? 'none' : undefined]]));
+  out.push(media(TABLET, rule('.he-post-aside__card', [['min-height', len(p.asideCoverHeightMobile)]])));
+  if (typeof p.asideTintStops === 'string' && TINT_STOPS.test(p.asideTintStops.trim())) out.push(`.he-post-aside__card::after{background:linear-gradient(to bottom,${p.asideTintStops.trim()})}`);
+  out.push(...typeRule('.he-post-aside__text :is(h1,h2)', p.asideTitle));
+  const sec = '.he-post-aside-sec';
+  out.push(rule(sec, [['background-color', colOrClear(p.asidePanel)], ['border-radius', box(p.asidePanelRadius)], ['margin-inline', box(p.asidePanelMargin)], ['border-width', colOrClear(p.asidePanel) ? '0' : undefined]]));
+  out.push(rule(`${sec}>.shell`, [['padding', box(p.asidePanelPadding)]]));
+  out.push(media(TABLET, rule(sec, [['background-color', colOrClear(p.asidePanelMobile)]])));
+  out.push(media(TABLET, rule(`${sec}>.shell`, [['padding', box(p.asidePanelPaddingMobile)]])));
+  out.push(rule(`${post} .prose-edge :is(h2,h3)`, [['margin-bottom', len(p.headingGap)], ['margin-top', len(p.sectionGap)]]));
+  out.push(media(PHONE, rule(`${post} .prose-edge :is(h2,h3)`, [['margin-top', len(p.sectionGapMobile)]])));
   // Related posts.
   out.push(rule('.he-related', [['--container-shell', len(p.relatedWidth)]]));
   out.push(rule('.he-related h2', [['font-size', len(p.relatedTitleSize)], ['font-weight', weight(p.relatedTitleWeight)], ['margin-bottom', len(p.relatedTitleGap)]]));

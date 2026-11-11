@@ -74,6 +74,10 @@ export type FooterProps = {
   /** The language switcher, and whether it shows on phones only. */
   languages?: React.ReactNode;
   languagesPhonesOnly?: boolean;
+  /** 3.33 — the language switcher under the link columns, at the right. */
+  languagesUnderLinks?: boolean;
+  /** 3.33 — the sign-up's field and button apart. */
+  newsletterSplit?: boolean;
   wordmark?: FooterWordmark;
   /** false leaves out the copyright and legal row. */
   bottomRow?: boolean;
@@ -257,7 +261,7 @@ export function Footer(props: FooterProps) {
             </ul>
           )}
           <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
-          {props.newsletter && <FooterNewsletter />}
+          {props.newsletter && <FooterNewsletter split={props.newsletterSplit} />}
           {props.languages && <div className={cn('he-ftr__langs', props.languagesPhonesOnly && 'is-phones')}>{props.languages}</div>}
           {toggles}
           {props.bottomRow !== false && <div className="he-ftr__fine">
@@ -298,7 +302,7 @@ export function Footer(props: FooterProps) {
                 </a>
               )}
               <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
-              {props.newsletter && <FooterNewsletter />}
+              {props.newsletter && <FooterNewsletter split={props.newsletterSplit} />}
               {props.languages && <div className={cn('he-ftr__langs', props.languagesPhonesOnly && 'is-phones')}>{props.languages}</div>}
               <Mark siteName={siteName} logo={props.logo} />
             </div>
@@ -336,7 +340,7 @@ export function Footer(props: FooterProps) {
           <div className="he-ftr__lead">
             <Mark siteName={siteName} logo={props.logo} />
             {tagline && <p className="he-ftr__tagline">{tagline}</p>}
-            {props.newsletter && <FooterNewsletter />}
+            {props.newsletter && <FooterNewsletter split={props.newsletterSplit} />}
             {brandBlock && address && <address className="he-ftr__address">{address}</address>}
             {email && (
               <a href={`mailto:${email}`} className="he-ftr__email">
@@ -344,16 +348,17 @@ export function Footer(props: FooterProps) {
               </a>
             )}
             {socialHead && <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />}
-            {!socialMiddle && languages}
+            {!socialMiddle && !props.languagesUnderLinks && languages}
           </div>
           {socialMiddle && (
             <div className="he-ftr__middle">
               <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />
-              {languages}
+              {!props.languagesUnderLinks && languages}
             </div>
           )}
           {cols}
         </div>
+        {props.languagesUnderLinks && languages && <div className="he-ftr__langrow">{languages}</div>}
         {!socialHead && !socialMiddle && social.length > 0 && (
           <div className="he-ftr__socialrow">
             <Socials social={social} style={socialStyle} separator={props.socialSeparator} contacts={props.contactLinks} filled={props.filledIcons} />

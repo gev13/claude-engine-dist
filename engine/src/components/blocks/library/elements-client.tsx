@@ -440,20 +440,20 @@ export function TeamSplit({ members, hover }: { members: Member[]; hover: string
  * hidden by `is-later`; the button marks its section `is-all` and steps
  * away, and the keyboard lands on the first of them.
  */
-export function ShowAll({ label }: { label?: string }) {
+export function ShowAll({ label, look, arrow, tier }: { label?: string; /** 3.33 — the button's look, an arrow on it, and the screens that have anything to show. */ look?: 'outline' | 'primary'; arrow?: boolean; tier?: 'phones' | 'wide' }) {
   const t = useMessages();
   const ref = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
   if (done) return null;
   return (
-    <div className="he-show__more" ref={ref}>
+    <div className={cn('he-show__more', tier && `is-only-${tier}`)} ref={ref}>
       <button
         type="button"
-        className="he-cbtn is-outline is-medium"
+        className={cn('he-cbtn is-medium', look === 'primary' ? 'is-primary' : 'is-outline')}
         onClick={() => {
           const section = ref.current?.closest('section');
           section?.classList.add('is-all');
-          const first = section?.querySelector<HTMLElement>('.is-later');
+          const first = section?.querySelector<HTMLElement>('.is-later, .is-later-d, .is-later-m');
           if (first) {
             first.tabIndex = -1;
             first.focus({ preventScroll: true });
@@ -462,6 +462,7 @@ export function ShowAll({ label }: { label?: string }) {
         }}
       >
         {label || t('block.showAll')}
+        {arrow && <Icon.ArrowRight size={16} />}
       </button>
     </div>
   );

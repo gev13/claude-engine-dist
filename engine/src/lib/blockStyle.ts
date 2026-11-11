@@ -155,6 +155,14 @@ const typeOverride = z.object({
   /** 3.3 — the size on tablets and below, and on phones; unset keeps the size above. */
   sizeTablet: length.optional(),
   sizeMobile: length.optional(),
+  /** 3.33 — the alignment on tablets and on phones; unset keeps the wider screen's. */
+  alignTablet: z.enum(['left', 'center', 'right']).optional(),
+  alignMobile: z.enum(['left', 'center', 'right']).optional(),
+  /** 3.33 — the colour on phones; unset keeps the one above. */
+  colorMobile: color.optional(),
+  /** 3.33 — eyebrow only: false leaves out the short rule before the words; the space under it. */
+  rule: z.boolean().optional(),
+  spaceBelow: length.optional(),
   /** 3.13.1 — line height and letter spacing on tablets and on phones; unset keeps the value above. */
   lineHeightTablet: z.string().trim().optional(),
   lineHeightMobile: z.string().trim().optional(),
@@ -202,6 +210,34 @@ export const columnOrderSchema = z.object({
 });
 
 export type ColumnOrder = z.infer<typeof columnOrderSchema>;
+
+/**
+ * 3.33 — a row's tracks written out, per tier, where twelfths cannot say it:
+ * `592fr 584fr`, `230px 1fr`. Fractions and lengths only, one per column.
+ */
+const TRACK = /^(?:\d{1,5}(?:\.\d{1,3})?fr|\d{1,5}(?:\.\d{1,3})?(?:px|rem|em|%|vw))$/;
+export function isTrackList(value: string): boolean {
+  const tracks = value.trim().split(/\s+/);
+  return tracks.length >= 1 && tracks.length <= 6 && tracks.every((track) => TRACK.test(track));
+}
+const trackList = z.string().trim().max(120).refine(isTrackList, 'Fractions or lengths separated by spaces, e.g. 592fr 584fr or 230px 1fr');
+export const rowTracksSchema = z.object({
+  base: trackList.optional(),
+  laptop: trackList.optional(),
+  tablet: trackList.optional(),
+  mobile: trackList.optional(),
+});
+export type RowTracks = z.infer<typeof rowTracksSchema>;
+
+export const COLUMN_ALIGNS = ['start', 'center', 'end', 'stretch'] as const;
+export const COLUMN_JUSTIFIES = ['start', 'center', 'end', 'between'] as const;
+const tiered = <T extends readonly [string, ...string[]]>(values: T) =>
+  z.object({ base: z.enum(values).optional(), laptop: z.enum(values).optional(), tablet: z.enum(values).optional(), mobile: z.enum(values).optional() });
+/** 3.33 — how one column sits in its row, and how its blocks are spread down it, per tier. */
+export const columnAlignSchema = tiered(COLUMN_ALIGNS);
+export const columnJustifySchema = tiered(COLUMN_JUSTIFIES);
+export type ColumnAlign = z.infer<typeof columnAlignSchema>;
+export type ColumnJustify = z.infer<typeof columnJustifySchema>;
 
 /** The layout presets offered in the editor, mirroring the reference builder. */
 export const COLUMN_PRESETS: { label: string; spans: ColumnSpan[] }[] = [
@@ -268,6 +304,16 @@ export const blockStyleSchema = z.object({
       videoPoster: z.string().max(500).optional(),
       /** `poster` shows only the poster on phones — and every visitor with data saver on gets it anyway. */
       videoMobile: z.enum(['video', 'poster']).optional(),
+      /** 3.33 — the background on phones (≤768px): a colour, a picture of its own, or `clear` for none at all; each unset keeps the wider screen's. */
+      mobile: z
+        .object({
+          clear: z.boolean().optional(),
+          color: color.optional(),
+          imageUrl: z.string().max(500).optional(),
+          size: z.enum(BACKGROUND_SIZES).optional(),
+          position: z.enum(BACKGROUND_POSITIONS).optional(),
+        })
+        .optional(),
       /** P3-C4 — a gradient, used when there is no image; it can drift slowly. Drawn once both ends are set. */
       gradient: z
         .object({
@@ -299,6 +345,9 @@ export const blockStyleSchema = z.object({
   clip: z.boolean().optional(),
   /** 2.21 — the block as a panel: inset from the page's edges, in the panel colour and corners set in Appearance. */
   panel: z.boolean().optional(),
+  /** 3.33 — on phones (≤768px): `off` is no panel there (full width, no colour or corners); or a side inset of its own. */
+  panelMobile: z.enum(['off']).optional(),
+  panelInsetMobile: length.optional(),
   /** 3.28 — wider than its place by this much on each side, from tablets up: a panel or a column reaching into the page's gutter. */
   bleed: z.string().trim().max(40).refine((v) => isLength(v), 'Not a valid CSS length').optional(),
 
@@ -339,6 +388,9 @@ export const blockStyleSchema = z.object({
   titleWidth: length.optional(),
   /** 3.12 — the section no wider than this, centred: a document card on a wide page. */
   maxWidth: length.optional(),
+  /** 3.33 — where a section narrower than its place sits (unset, centred), and its width on phones. */
+  maxWidthAlign: z.enum(['start', 'center', 'end']).optional(),
+  maxWidthMobile: length.optional(),
 
   /** P3-C3 — shape dividers along the top and bottom edges. */
   shapeTop: dividerShape.optional(),
@@ -397,6 +449,8 @@ export const blockStyleSchema = z.object({
   swipeWidthMobile: z.number().int().min(20).max(100).optional(),
   /** 3.22 — ‹ › buttons for the swipe: none (unset, as before), under the cards on the right, or either side of them. Hidden when the cards fit. */
   swipeArrows: z.enum(['none', 'belowRight', 'sides']).optional(),
+  /** 3.33 — `none`: phones swipe without the buttons, wider screens keep them. */
+  swipeArrowsMobile: z.enum(['none']).optional(),
   /** 3.28 — those buttons in circles (unset, as before) or as bare chevrons, and their box in px. */
   swipeArrowLook: z.enum(['circle', 'plain']).optional(),
   swipeArrowBox: z.number().int().min(20).max(80).optional(),

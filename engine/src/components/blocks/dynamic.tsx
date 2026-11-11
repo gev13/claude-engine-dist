@@ -22,6 +22,8 @@ import { resolveBlog, titleClamp, type PostCardOptions } from '@/lib/blog';
 import { getTheme } from '@/server/content/theme';
 import { isColor, isLength } from '@/lib/theme';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
+import { arrowCursor } from '@/lib/pointerArrow';
+import { typeVars } from '@/lib/typeStyle';
 import { CardTilt } from '@/components/site/CardTilt';
 
 type P<T extends keyof typeof blockSchemas> = z.output<(typeof blockSchemas)[T]>;
@@ -267,7 +269,7 @@ function postCarousel(p: P<'postList'>, posts: PostRow[], { permalinks, t }: Lis
     title: p.title?.slice(0, 160),
     titleAs: p.titleAs,
     intro: p.intro?.slice(0, 400),
-    link: { label: t('blog.allWriting'), href: blogIndexPath(permalinks) },
+    link: p.allLink === false ? undefined : { label: t('blog.allWriting'), href: blogIndexPath(permalinks) },
     slides: posts.slice(0, 24).map((post) => ({
       eyebrow: [chipFor(post, t), post.publishedAt ? cardDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
       title: post.title.slice(0, 160),
@@ -330,7 +332,7 @@ function FeaturedPosts({ p, posts, ctx: { permalinks, t } }: { p: P<'postList'>;
           )}
         </div>
       )}
-      {lead && <AllWriting href={blogIndexPath(permalinks)} t={t} />}
+      {lead && p.allLink !== false && <AllWriting href={blogIndexPath(permalinks)} t={t} />}
     </Section>
   );
 }
@@ -398,7 +400,7 @@ export function PostCollection({
             {card.readMore && labels.readMore && <span className="he-plst__more he-more">{labels.readMore} <span className="he-more__icon" aria-hidden="true">→</span></span>}
           </div>
           {/* 3.29 — the round arrow over an overlay card. */}
-          {variant === 'overlay' && card.arrow && (
+          {variant === 'overlay' && card.arrow === true && (
             <span className="he-plst__go" aria-hidden="true">
               <svg width="14" height="14" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l6-6M4 3h5v5" />
@@ -420,13 +422,36 @@ export function PostCollection({
   const overlay = variant === 'overlay';
   const tint = overlay && card.tint && isColor(card.tint) ? card.tint : undefined;
   const height = overlay && card.height && isLength(card.height) ? card.height : undefined;
-  const listClass = cn('he-plst he-swipe-track', `is-${variant}`, card.ratio && 'has-ratio', clamp.className, overlay && card.reveal && 'is-reveal', tint && 'has-tint');
+  // 3.33 — the words' own types, the phone height and padding, and the pointer as the arrow.
+  const heightMobile = overlay && card.heightMobile && isLength(card.heightMobile) ? card.heightMobile : undefined;
+  const listClass = cn(
+    'he-plst he-swipe-track',
+    `is-${variant}`,
+    card.ratio && 'has-ratio',
+    clamp.className,
+    overlay && card.reveal && 'is-reveal',
+    tint && 'has-tint',
+    card.titleType && 'has-title-type',
+    card.chipType && 'has-chip-type',
+    card.excerptType && 'has-excerpt-type',
+    heightMobile && 'has-h-m',
+    overlay && card.textPadding && 'has-pad',
+    overlay && card.textPaddingMobile && 'has-pad-m',
+    card.arrow === 'pointer' && 'has-arrow-pointer',
+  );
   const style = {
     '--cols': columns,
     ...(card.ratio ? { '--he-plst-ratio': card.ratio.replace('/', ' / ') } : {}),
     ...clamp.style,
     ...(tint ? { '--he-plst-tint': tint } : {}),
     ...(height ? { '--he-plst-h': height } : {}),
+    ...typeVars('plst-t', card.titleType),
+    ...typeVars('plst-c', card.chipType),
+    ...typeVars('plst-e', card.excerptType),
+    ...(heightMobile ? { '--he-plst-h-m': heightMobile } : {}),
+    ...(overlay && card.textPadding ? { '--he-plst-pad': card.textPadding } : {}),
+    ...(overlay && card.textPaddingMobile ? { '--he-plst-pad-m': card.textPaddingMobile } : {}),
+    ...(card.arrow === 'pointer' ? { '--he-plst-cursor': arrowCursor(card.arrowColor, card.arrowGlyph, card.arrowSize) } : {}),
   } as React.CSSProperties;
 
   const tilt = wantsTilt(card.hover) && <CardTilt />;
@@ -485,7 +510,7 @@ function PostLayouts({
           />
         </>
       )}
-      {pager ?? (posts.length > 0 && <AllWriting href={blogIndexPath(permalinks)} t={t} />)}
+      {pager ?? (posts.length > 0 && p.allLink !== false && <AllWriting href={blogIndexPath(permalinks)} t={t} />)}
     </Section>
   );
 }

@@ -49,6 +49,8 @@ export type Consent = (typeof CONSENT_VALUES)[number];
 export const COOKIE_SETTINGS_HASH = '#cookie-settings';
 
 const text = (max: number) => z.string().trim().max(max);
+/** 3.33 — corners or padding as px sizes; it lands in a style attribute. */
+export const COOKIE_BOX = /^(0|\d{1,3}px)(\s+(0|\d{1,3}px)){0,3}$/;
 
 const category = (title: string, description: string, enabled = true) =>
   z
@@ -113,6 +115,21 @@ export const cookieNoticeSchema = z.object({
   buttonBorder: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
   buttonHoverBackground: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
   buttonHoverText: z.string().trim().max(60).refine((v) => isColor(v), 'Not a colour').optional(),
+  /** 3.33 — the notice's corners one by one (one to four px, e.g. 0 40px 0 40px), the distance from the left, centred on phones, the text's line height, the space between its parts. */
+  corners: z.string().trim().max(40).regex(COOKIE_BOX, 'Up to four px sizes, e.g. 0 40px 0 40px').optional(),
+  left: z.number().int().min(0).max(120).optional(),
+  centerMobile: z.boolean().optional(),
+  textLine: z.number().min(1).max(2.5).optional(),
+  gap: z.number().int().min(0).max(60).optional(),
+  /** 3.33 — the buttons' shape and words: corners, padding, size, weight, line height, letter spacing; and no wrapping on phones. */
+  buttonRadius: z.string().trim().max(40).regex(COOKIE_BOX, 'Up to four px sizes, e.g. 0 16px 0 16px').optional(),
+  buttonPadding: z.string().trim().max(40).regex(COOKIE_BOX, 'Up to four px sizes, e.g. 14px 20px').optional(),
+  buttonSize: z.number().min(10).max(24).optional(),
+  buttonWeight: z.enum(['300', '400', '500', '600', '700']).optional(),
+  buttonLine: z.number().min(0.8).max(2).optional(),
+  buttonTracking: z.number().min(-3).max(6).optional(),
+  noWrap: z.boolean().optional(),
+  noWrapMobile: z.boolean().optional(),
 
   /* ── Consent manager (T11, 2.16) ────────────────────────────────────────
      `notice` is the banner as it always was: a recorded answer and nothing

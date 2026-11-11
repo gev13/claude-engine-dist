@@ -329,6 +329,13 @@ function AppearanceScreenInner() {
                   <LengthField label="Corners" placeholder="e.g. 8px" emptyLabel="as drawn" value={get(['fields', 'radius'])} onChange={set(['fields', 'radius'])} />
                   <LengthField label="Side padding" placeholder="e.g. 16px" emptyLabel="as drawn" value={get(['fields', 'paddingInline'])} onChange={set(['fields', 'paddingInline'])} />
                   <LengthField label="Text box height" placeholder="e.g. 160px" emptyLabel="as drawn" value={get(['fields', 'textareaHeight'])} onChange={set(['fields', 'textareaHeight'])} />
+                  {/* 3.33 */}
+                  <Field label="Blur behind the fields" hint="px — frosted fields">
+                    <Input type="number" min={0} max={40} value={theme.fields?.blur ?? ''} onChange={(e) => set(['fields', 'blur'])(e.target.value === '' ? undefined : Math.min(40, Math.max(0, Math.round(Number(e.target.value) || 0))))} />
+                  </Field>
+                  <Field label="Shadow under the fields" hint="e.g. 0 4px 20px rgba(0,0,0,0.1)">
+                    <Input value={theme.fields?.shadow ?? ''} placeholder="none" spellCheck={false} onChange={(e) => set(['fields', 'shadow'])(e.target.value.trim() || undefined)} />
+                  </Field>
                 </div>
               </Panel>
 
@@ -774,6 +781,13 @@ function AppearanceScreenInner() {
                     onChange={(e) => setTheme((c) => ({ ...c, revealItems: e.target.checked || undefined }))}
                   />
                   Each part enters on its own — headings, text, cards, list items, pictures and buttons, one after another
+                </label>
+              )}
+              {/* 3.33 */}
+              {theme.reveal && (
+                <label className="mt-2 flex items-center gap-2.5 text-[14px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={theme.revealFooter === true} onChange={(e) => setTheme((c) => ({ ...c, revealFooter: e.target.checked || undefined }))} />
+                  The footer enters too
                 </label>
               )}
               {/* 3.28 — how every entrance moves, the site's and each section's. */}
@@ -1510,6 +1524,23 @@ function LocaleFonts({
                     </div>
                   );
                 })}
+              </div>
+              {/* 3.33 — a language with longer words. */}
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {(
+                  [
+                    ['headingScale', 'Headings’ scale', '1 is as drawn; e.g. 0.85'],
+                    ['headingScaleMobile', 'Headings’ scale on phones', 'e.g. 0.7'],
+                  ] as const
+                ).map(([key, label, hint]) => (
+                  <Field key={key} label={label} hint={hint}>
+                    <Input type="number" step="0.01" min={0.4} max={1.2} value={(get(['localeTypography', locale, key]) as number | undefined) ?? ''} onChange={(e) => set(['localeTypography', locale, key])(e.target.value === '' ? undefined : Math.min(1.2, Math.max(0.4, Number(e.target.value))))} />
+                  </Field>
+                ))}
+                <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={(get(['localeTypography', locale, 'hyphens']) as unknown) === true} onChange={(e) => set(['localeTypography', locale, 'hyphens'])(e.target.checked || undefined)} />
+                  Hyphens at the ends of heading lines
+                </label>
               </div>
             </div>
           );

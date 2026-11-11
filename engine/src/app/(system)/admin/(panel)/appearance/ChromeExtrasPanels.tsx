@@ -1,5 +1,6 @@
 'use client';
 
+import { TypeStyleFields } from '@/components/admin/TypeStyleFields';
 import { useEffect, useId, useState } from 'react';
 import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
@@ -321,7 +322,11 @@ export function MenuExtrasPanel({ chrome, set }: Props) {
         <div className="grid gap-4 sm:grid-cols-3">
           <TextField label="Link line height" hint="e.g. 1.2 or 54px" value={menu?.itemLineHeight} maxLength={20} placeholder="1.05" onChange={set(at('itemLineHeight'))} />
           <TextField label="Space above and below each link" hint="e.g. 4px" value={menu?.itemPadding} maxLength={40} placeholder="10px" onChange={set(at('itemPadding'))} />
+          {/* 3.33 */}
+          <TextField label="Link colour" value={menu?.itemColor} maxLength={60} placeholder="as drawn" onChange={set(at('itemColor'))} />
+          <TextField label="The bar’s colour while open" value={menu?.barColor} maxLength={60} placeholder="as drawn" onChange={set(at('barColor'))} />
         </div>
+        <Check label="No mark on the current page’s link" value={menu?.noCurrentMark} onChange={set(at('noCurrentMark'))} />
         <div className="grid gap-4 sm:grid-cols-3">
           <ChoiceField
             label="Opens a link’s sub-items"
@@ -709,6 +714,36 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
           <Check label="On phones, the menus first" value={footer?.linksFirstMobile} onChange={set(['chrome', 'footer', 'linksFirstMobile'])} />
           <Check label="On phones, the menus side by side, open" value={footer?.linksRowMobile} onChange={set(['chrome', 'footer', 'linksRowMobile'])} />
         </div>
+        {/* 3.33 */}
+        {footer?.newsletter && (
+          <div className="space-y-3">
+            <div className="grid gap-4 sm:grid-cols-3">
+              <ChoiceField
+                label="The sign-up’s field and button"
+                value={footer?.newsletterLook}
+                inherited="inline"
+                options={[
+                  { value: 'inline', label: 'The arrow inside the field' },
+                  { value: 'split', label: 'Two separate things, with a gap' },
+                ]}
+                onChange={set(['chrome', 'footer', 'newsletterLook'])}
+              />
+              <TextField label="Space between them" value={footer?.newsletterGap} maxLength={40} placeholder="6px" onChange={set(['chrome', 'footer', 'newsletterGap'])} />
+              <TextField label="Field fill" value={footer?.newsletterFieldFill} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterFieldFill'])} />
+              <TextField label="Field text" value={footer?.newsletterFieldText} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterFieldText'])} />
+              <TextField label="Field corners" value={footer?.newsletterFieldRadius} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterFieldRadius'])} />
+              <TextField label="Button fill" value={footer?.newsletterSendFill} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendFill'])} />
+              <TextField label="Button arrow" value={footer?.newsletterSendText} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendText'])} />
+              <TextField label="Button corners" hint="one to four, e.g. 0 16px 0 16px" value={footer?.newsletterSendRadius} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendRadius'])} />
+              <TextField label="Button width" value={footer?.newsletterSendWidth} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendWidth'])} />
+            </div>
+            <p className="m-0 text-[13px] text-bone">The sign-up’s heading</p>
+            <TypeStyleFields type={footer?.newsletterTitle} set={(key) => set(['chrome', 'footer', 'newsletterTitle', key])} />
+          </div>
+        )}
+        <div className="grid gap-4 sm:grid-cols-3">
+          <TextField label="Social icons’ colour" value={footer?.socialColor} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'socialColor'])} />
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <ChoiceField
             label="A huge wordmark along the bottom edge"
@@ -841,6 +876,18 @@ export function LanguagesPanel({ chrome, set }: Props) {
             ]}
             onChange={set(at('inFooter'))}
           />
+          {/* 3.33 */}
+          <ChoiceField
+            label="Where in the footer"
+            value={languages?.footerPlace}
+            inherited="head"
+            options={[
+              { value: 'head', label: 'In the head column' },
+              { value: 'links', label: 'Under the link columns, at the right' },
+            ]}
+            onChange={set(at('footerPlace'))}
+          />
+          <TextField label="Size in the open menu" value={languages?.menuSize} maxLength={40} placeholder="as drawn" onChange={set(at('menuSize'))} />
         </div>
         <Check label="In the open menu, under the links (the header bar's copy then folds away with the links)" value={languages?.inMenu} onChange={set(at('inMenu'))} />
         <p className="m-0 text-[12px] text-smoke">The languages themselves are set in Settings. A site with one language shows no switcher.</p>

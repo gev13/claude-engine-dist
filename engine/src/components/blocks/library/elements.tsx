@@ -4,7 +4,7 @@ import { Eyebrow } from '@/components/ui/Eyebrow';
 import type { blockSchemas } from '@/lib/blocks';
 import { SOCIAL_LABELS, type SocialNetwork } from '@/lib/navigation';
 import { buttonPadProps } from '@/lib/buttonPad';
-import { isColor } from '@/lib/theme';
+import { isColor, isLength } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { BlockHead, BlockTitle } from '../parts';
 import { RotatingWords, ShowAll, TeamSplit, TypingWords } from './elements-client';
@@ -54,10 +54,20 @@ export function HeadingBlock(p: P<'heading'>) {
     </BlockTitle>
   );
   const divider = p.divider !== 'none' && <span className={cn('he-hd__divider', `is-${p.divider}`)} aria-hidden="true" />;
-  const subtitle = p.subtitle && <p className="he-lbody he-hd__sub">{p.subtitle}</p>;
+  // 3.33 — the subtitle's own width and the space above it; checked again, as they land in a style attribute.
+  const subStyle = {
+    ...(p.subtitleWidth && isLength(p.subtitleWidth) ? { '--he-hd-sub-w': p.subtitleWidth } : {}),
+    ...(p.subtitleWidthMobile && isLength(p.subtitleWidthMobile) ? { '--he-hd-sub-w-m': p.subtitleWidthMobile } : {}),
+    ...(p.subtitleGap && isLength(p.subtitleGap) ? { '--he-hd-sub-gap': p.subtitleGap } : {}),
+  } as React.CSSProperties;
+  const subtitle = p.subtitle && (
+    <p className={cn('he-lbody he-hd__sub', p.subtitleWidth && 'has-w', p.subtitleWidthMobile && 'has-w-m', p.subtitleGap && 'has-gap')} style={Object.keys(subStyle).length ? subStyle : undefined}>
+      {p.subtitle}
+    </p>
+  );
 
   return (
-    <section className={cn('he-lsec he-hd', toneClass(p.tone), `is-${p.align}`, `is-${p.size}`, `is-${p.layout}`)}>
+    <section className={cn('he-lsec he-hd', toneClass(p.tone), `is-${p.align}`, `is-${p.size}`, `is-${p.layout}`, p.alignMobile && p.alignMobile !== p.align && `is-m-${p.alignMobile}`)}>
       <div className="shell he-hd__inner">
         {p.badge && <span className="he-hd__badge">{p.badge}</span>}
         {p.eyebrow && <Eyebrow className={p.align === 'center' ? 'justify-center' : undefined}>{p.eyebrow}</Eyebrow>}
@@ -149,20 +159,44 @@ export function TeamBlock(p: P<'team'>) {
 
   // 3.29 — the first so many, the rest behind a button.
   const initial = p.initial && p.initial < p.members.length ? p.initial : undefined;
+  // 3.33 — a number of its own on phones: each tier hides its own later members.
+  const initialPhone = p.initialMobile && p.initialMobile < p.members.length ? p.initialMobile : undefined;
+  const tiered = p.initialMobile !== undefined;
+  const hidesSome = tiered ? initial !== undefined || initialPhone !== undefined : initial !== undefined;
+  const laterClass = (i: number) =>
+    tiered ? cn(initial !== undefined && i >= initial && 'is-later-d', initialPhone !== undefined && i >= initialPhone && 'is-later-m') : initial !== undefined && i >= initial && 'is-later';
+  const showAll = hidesSome && <ShowAll label={p.moreLabel} look={p.moreStyle} arrow={p.moreArrow} tier={tiered ? (initial === undefined ? 'phones' : initialPhone === undefined ? 'wide' : undefined) : undefined} />;
+  const moreClass = cn(hidesSome && 'has-more', tiered && 'has-tier-more');
 
   if (p.variant === 'portrait') {
     return (
-      <section className={cn('he-lsec he-team', toneClass(p.tone), initial && 'has-more')}>
+      <section className={cn('he-lsec he-team', toneClass(p.tone), moreClass)}>
         <div className="shell">
           {head}
-          <ul className={cn('he-team__grid he-swipe-track is-portrait', `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as React.CSSProperties}>
+          <ul
+            className={cn('he-team__grid he-swipe-track is-portrait', `is-hover-${p.hover}`, p.cardPadding && 'has-pad', p.cardPaddingMobile && 'has-pad-m', p.photoGap && 'has-photo-gap', p.photoGapMobile && 'has-photo-gap-m', p.photoFit && `is-photo-${p.photoFit}`, p.photoPosition && 'has-photo-at', p.cardRatio && 'has-ratio', p.cardRatioMobile && 'has-ratio-m')}
+            style={
+              {
+                '--cols': p.columns,
+                ...(p.cardPadding ? { '--he-team-pad': p.cardPadding } : {}),
+                ...(p.cardPaddingMobile ? { '--he-team-pad-m': p.cardPaddingMobile } : {}),
+                ...(p.photoGap ? { '--he-team-photo-gap': p.photoGap } : {}),
+                ...(p.photoGapMobile ? { '--he-team-photo-gap-m': p.photoGapMobile } : {}),
+                ...(p.photoPosition ? { '--he-team-photo-at': p.photoPosition } : {}),
+                ...(p.cardRatio ? { '--he-team-ratio': p.cardRatio } : {}),
+                ...(p.cardRatioMobile ? { '--he-team-ratio-m': p.cardRatioMobile } : {}),
+              } as React.CSSProperties
+            }
+          >
             {p.members.map((m, i) => (
               <li
                 key={m.name + i}
-                className={cn('he-team__member', initial !== undefined && i >= initial && 'is-later')}
+                className={cn('he-team__member', laterClass(i))}
                 style={m.color && isColor(m.color) ? ({ '--he-team-card': m.color } as React.CSSProperties) : undefined}
               >
-                <h3 className="he-team__name">{m.name}</h3>
+                <h3 className="he-team__name" style={m.nameColor && isColor(m.nameColor) ? { color: m.nameColor } : undefined}>
+                  {m.name}
+                </h3>
                 {m.role && <p className="he-team__role">{m.role}</p>}
                 {m.imageUrl && (
                   <div className="he-team__figure">
@@ -172,19 +206,19 @@ export function TeamBlock(p: P<'team'>) {
               </li>
             ))}
           </ul>
-          {initial && <ShowAll label={p.moreLabel} />}
+          {showAll}
         </div>
       </section>
     );
   }
 
   return (
-    <section className={cn('he-lsec he-team', toneClass(p.tone), initial && 'has-more')}>
+    <section className={cn('he-lsec he-team', toneClass(p.tone), moreClass)}>
       <div className="shell">
         {head}
         <ul className={cn('he-team__grid he-swipe-track', `is-${p.variant}`, `is-hover-${p.hover}`)} style={{ '--cols': p.columns } as React.CSSProperties}>
           {p.members.map((m, i) => (
-            <li key={m.name + i} className={cn('he-team__member', initial !== undefined && i >= initial && 'is-later')}>
+            <li key={m.name + i} className={cn('he-team__member', laterClass(i))}>
               <div className="he-team__photo">
                 <MediaFill imageUrl={m.imageUrl} alt={m.name} className="he-fill" />
                 {p.variant === 'overlay' && (m.bio || m.links.length > 0) && (
@@ -212,7 +246,7 @@ export function TeamBlock(p: P<'team'>) {
             </li>
           ))}
         </ul>
-        {initial && <ShowAll label={p.moreLabel} />}
+        {showAll}
       </div>
     </section>
   );

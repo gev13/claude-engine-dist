@@ -495,10 +495,14 @@ export function FormBlock(p: P) {
         p.fieldInset && 'has-inset',
         p.bleedMobile && 'is-bleed-m',
         (p.submitBorder || typeof p.submitBorderWidth === 'number') && 'has-submit-edge',
+        // 3.33 — the space between questions, the send button's width on phones.
+        p.fieldGap && 'has-field-gap',
+        p.submitWidthMobile === 'own' && 'is-submit-own-m',
       )}
       style={
-        p.cardBleed || p.fieldInset || p.submitBorder || typeof p.submitBorderWidth === 'number'
+        p.cardBleed || p.fieldInset || p.submitBorder || typeof p.submitBorderWidth === 'number' || p.fieldGap
           ? ({
+              ...(p.fieldGap ? { '--he-fb-gap': p.fieldGap } : {}),
               ...(p.cardBleed ? { '--he-fb-bleed': p.cardBleed } : {}),
               ...(p.fieldInset ? { '--he-fb-inset': p.fieldInset } : {}),
               ...(p.submitBorder ? { '--he-fb-submit-edge': p.submitBorder } : {}),

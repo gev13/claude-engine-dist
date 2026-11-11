@@ -93,6 +93,7 @@ export function MediaBand(p: P<'mediaBand'>) {
   const hasText = Boolean(p.eyebrow || p.title || p.body || p.links.length);
   // Checked again: the colour lands in a style attribute.
   const fade = p.fade && (!p.fade.color || isColor(p.fade.color)) ? p.fade : undefined;
+  const fadeMobile = p.fadeMobile && isColor(p.fadeMobile.color) && (!p.fadeMobile.height || isLength(p.fadeMobile.height)) ? p.fadeMobile : undefined;
   return (
     <section
       className={cn(
@@ -116,10 +117,20 @@ export function MediaBand(p: P<'mediaBand'>) {
         p.split && 'is-split',
         // 3.30 — the text's place on phones.
         p.positionMobile && p.positionMobile !== 'bottomLeft' && `is-m-${p.positionMobile}`,
+        // 3.33 — the picture's anchor and a fade on phones, the title's indent, the words as a centred group.
+        p.imagePositionMobile && `is-bg-m-${p.imagePositionMobile}`,
+        fadeMobile && 'has-fade-m',
+        p.titleIndent && 'has-title-indent',
+        p.titleFlowMobile && 'is-title-flow-m',
+        p.textGroup === 'center' && 'is-group-center',
+        p.textEnd && 'has-text-end',
       )}
       style={
-        fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize)
+        fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize) || fadeMobile || p.titleIndent || p.textEnd
           ? ({
+              ...(fadeMobile ? { '--he-band-fade-m': fadeMobile.color, ...(fadeMobile.height ? { '--he-band-fade-m-h': fadeMobile.height } : {}) } : {}),
+              ...(p.titleIndent ? { '--he-band-indent': p.titleIndent } : {}),
+              ...(p.textEnd ? { '--he-band-end': p.textEnd } : {}),
               ...(p.parallax !== 'none' && p.parallaxSize ? { '--he-plx-inset': `${-(p.parallaxSize - 100) / 2}%` } : {}),
               ...(fade
                 ? { ...(fade.color ? { '--he-fade-color': fade.color } : {}), ...(fade.ink ? { '--he-fade-ink': fade.ink } : {}), '--he-fade-solid': `${fade.solid}%`, '--he-fade-clear': `${Math.max(fade.solid, fade.clear)}%` }
@@ -132,7 +143,7 @@ export function MediaBand(p: P<'mediaBand'>) {
     >
       {p.parallax !== 'none' ? <ParallaxLayer speed={p.parallaxSpeed} sideways={p.parallax === 'horizontal'}>{media}</ParallaxLayer> : media}
       {hasText && (
-        <div className={cn('shell he-band__inner', p.textBox && 'has-text-box')} style={{ ...textBoxStyle(p.textBox), ...panelStyle(p) }}>
+        <div className={cn('shell he-band__inner', p.textBox && 'has-text-box', p.textBox?.width && 'has-w', p.textBox?.widthMobile && 'has-w-m', p.textBox?.eyebrowGap && 'has-eyebrow-gap')} style={{ ...textBoxStyle(p.textBox), ...panelStyle(p) }}>
           {/* 3.29 — split: the heading on one side, the text and buttons on the other. */}
           {p.split ? (
             <div className="he-band__text is-split">
@@ -179,6 +190,9 @@ function textBoxStyle(box: P<'mediaBand'>['textBox']): React.CSSProperties | und
   if (box.bodyWidth) style['--he-band-body'] = box.bodyWidth;
   if (box.bodyGap) style['--he-band-body-gap'] = box.bodyGap;
   if (box.actionsGap) style['--he-band-actions-gap'] = box.actionsGap;
+  if (box.width) style['--he-band-w'] = box.width;
+  if (box.widthMobile) style['--he-band-w-m'] = box.widthMobile;
+  if (box.eyebrowGap) style['--he-band-eyebrow-gap'] = box.eyebrowGap;
   return style as React.CSSProperties;
 }
 
@@ -189,6 +203,21 @@ function figureSizes(p: P<'stats'>): React.CSSProperties | undefined {
   if (p.valueSizeTablet) style['--he-figs-size-tablet'] = p.valueSizeTablet;
   if (p.valueSizeMobile) style['--he-figs-size-mobile'] = p.valueSizeMobile;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
+}
+
+/**
+ * 3.33 — each card's share of its row, from the rows' written tracks, in turn
+ * (the list repeats). A card is sized in a wrapping flex line, because a grid
+ * has one set of tracks for all its rows.
+ */
+function rowTrackShares(rows: string[], cards: number): { '--he-rt-share': string; '--he-rt-n': number }[] {
+  const out: { '--he-rt-share': string; '--he-rt-n': number }[] = [];
+  for (let row = 0; out.length < cards; row++) {
+    const tracks = rows[row % rows.length]!.trim().split(/\s+/).map((track) => parseFloat(track));
+    const total = tracks.reduce((sum, track) => sum + track, 0);
+    for (const track of tracks) if (out.length < cards) out.push({ '--he-rt-share': (track / total).toFixed(6), '--he-rt-n': tracks.length });
+  }
+  return out;
 }
 
 /* ── CT4 / CT5: card grid variants ────────────────────────────────────────── */
@@ -223,6 +252,13 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     ...(p.variant === 'overlay' && p.shade === 'tint' && p.shadeColor && isColor(p.shadeColor) ? { '--he-ocard-tint': p.shadeColor } : {}),
     ...(p.variant === 'overlay' && p.cardHeight ? { '--he-ocard-h': p.cardHeight } : {}),
     ...(p.variant === 'overlay' && p.cardHeightMobile ? { '--he-ocard-h-m': p.cardHeightMobile } : {}),
+    // 3.33 — the words' inset and the bullet lists.
+    ...(p.variant === 'overlay' && p.textPadding ? { '--he-ocard-pad': p.textPadding } : {}),
+    ...(p.variant === 'overlay' && p.textPaddingMobile ? { '--he-ocard-pad-m': p.textPaddingMobile } : {}),
+    ...(p.variant === 'overlay' && p.pointsColumns ? { '--he-ocard-pcols': p.pointsColumns } : {}),
+    ...(p.variant === 'overlay' && p.pointsGap ? { '--he-ocard-pgap': p.pointsGap } : {}),
+    ...(p.variant === 'overlay' && p.rowTracks?.length && p.gap ? { '--he-rt-gap': p.gap } : {}),
+    ...(p.variant === 'overlay' && p.rowTracks?.length && p.gapTablet ? { '--he-rt-gap-t': p.gapTablet } : {}),
   } as React.CSSProperties;
   // 3.24 — the card link's mark: the chevron as before, or the theme's "Read more" arrow (which Appearance → Buttons styles).
   const moreMark =
@@ -372,6 +408,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
   const overlay = p.variant === 'overlay';
   // 3.29 — pictures with text over them laid out as a bento of the cards' own spans.
   const bento = overlay && p.cards.some((c) => c.span || c.rowSpan);
+  // 3.33 — exact widths for each row in turn.
+  const tracksByCard = overlay && !bento && p.rowTracks?.length ? rowTrackShares(p.rowTracks, p.cards.length) : null;
   const mods = cn(
     `is-hover-${p.hover}`,
     p.shadow && 'has-shadow',
@@ -393,6 +431,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     overlay && p.textTone === 'dark' && 'is-text-dark',
     overlay && p.cardHeight && 'has-card-h',
     overlay && p.cardHeightMobile && 'has-card-h-m',
+    // 3.33
+    overlay && p.textPadding && 'has-text-pad',
+    overlay && p.textPaddingMobile && 'has-text-pad-m',
+    overlay && tracksByCard && 'has-row-tracks',
   );
   return (
     <section className={cn('he-lsec', toneClass(p.tone))}>
@@ -429,15 +471,36 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                   ? ({ ...(c.span ? { '--he-span': c.span } : {}), ...(c.rowSpan ? { '--he-rows': c.rowSpan } : {}) } as React.CSSProperties)
                   : undefined;
               const number = p.numbered ? `${p.numberStyle === 'slash' ? '/' : ''}${String(i + 1).padStart(2, '0')}` : null;
+              // 3.33 — this card's own height and words' width, and its share of an exact row; checked again, as they land in a style attribute.
+              const own = {
+                ...spans,
+                ...(tracksByCard?.[i] ?? {}),
+                ...(c.height && isLength(c.height) ? { '--he-ocard-own-h': c.height } : {}),
+                ...(c.heightMobile && isLength(c.heightMobile) ? { '--he-ocard-own-h-m': c.heightMobile } : {}),
+                ...(c.textWidth && isLength(c.textWidth) ? { '--he-ocard-tw': c.textWidth } : {}),
+                ...(c.textWidthMobile && isLength(c.textWidthMobile) ? { '--he-ocard-tw-m': c.textWidthMobile } : {}),
+              } as React.CSSProperties;
               return (
-                <li key={c.title + i} className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, itemClass(p.blockId, i, c.style))} style={spans}>
-                  <MediaFill imageUrl={c.imageUrl} alt={c.alt} className={cn('he-fill he-ocard__bg', c.imagePosition && `is-at-${c.imagePosition.replace(' ', '-')}`)} sizes={c.span && c.span > 6 ? 'half' : 'third'} />
+                <li
+                  key={c.title + i}
+                  className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', itemClass(p.blockId, i, c.style))}
+                  style={Object.keys(own).length ? own : undefined}
+                >
+                  <MediaFill imageUrl={c.imageUrl} mobileImageUrl={c.imageUrlMobile} alt={c.alt} className={cn('he-fill he-ocard__bg', c.imagePosition && `is-at-${c.imagePosition.replace(' ', '-')}`, c.imagePositionMobile && `is-at-m-${c.imagePositionMobile.replace(' ', '-')}`)} sizes={c.span && c.span > 6 ? 'half' : 'third'} />
                   {c.badge && <span className="he-badge">{c.badge}</span>}
                   <div className="he-ocard__text">
                     {number && <div className="he-ocard__num">{number}</div>}
                     {c.eyebrow && <div className="he-ocard__eyebrow">{c.eyebrow}</div>}
                     <h3 className="he-ocard__title">{title}</h3>
                     {c.body && <p className="he-ocard__body">{c.body}</p>}
+                    {/* 3.33 — the card's bullet lists, under the words. */}
+                    {c.points && c.points.length > 0 && (
+                      <ul className="he-ocard__points">
+                        {c.points.map((point) => (
+                          <li key={point}>{point}</li>
+                        ))}
+                      </ul>
+                    )}
                     {c.href && c.buttonLabel && (
                       <span className={cn('he-ocard__more', p.moreArrow === 'theme' && 'he-more')} aria-hidden="true">
                         {c.buttonLabel} {moreMark}

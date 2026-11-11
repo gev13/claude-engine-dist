@@ -11,6 +11,7 @@ import { Prose } from '@/components/ui/Prose';
 import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
+import { MessageText } from '@/components/site/MessageText';
 import { BlockHead, BlockTitle, Ordinal, Tick } from './parts';
 import { ConvergeFigure } from './ConvergeFigure';
 import { LayersFigure } from './LayersFigure';
@@ -110,8 +111,19 @@ export function ProseBlock(p: P<'prose'>) {
           !p.eyebrow && !p.title && 'he-prose-bare',
           // 3.28 — the block's own space between paragraphs.
           p.paragraphGap && 'he-pgap',
+          // 3.33 — the paragraphs' own width, and on phones.
+          p.textWidth && 'he-prose-w',
+          p.textWidthMobile && 'he-prose-w-m',
         )}
-        style={p.paragraphGap ? ({ '--he-prose-gap': p.paragraphGap } as React.CSSProperties) : undefined}
+        style={
+          p.paragraphGap || p.textWidth || p.textWidthMobile
+            ? ({
+                ...(p.paragraphGap ? { '--he-prose-gap': p.paragraphGap } : {}),
+                ...(p.textWidth ? { '--he-prose-w': p.textWidth } : {}),
+                ...(p.textWidthMobile ? { '--he-prose-w-m': p.textWidthMobile } : {}),
+              } as React.CSSProperties)
+            : undefined
+        }
       >
         <div>
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
@@ -315,10 +327,32 @@ export function CheckListsBlock(p: P<'checkLists'>) {
             {list.title && (
               <h3 className="he-ilist__title mb-5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{list.title}</h3>
             )}
-            <ul className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}>
+            <ul
+              className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}
+              style={
+                p.layout === 'linkRows' && (p.ruleColor || p.rowPadding)
+                  ? ({ ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}) } as React.CSSProperties)
+                  : undefined
+              }
+            >
               {list.items.map((raw, i) => {
                 const item: { text: string; href?: string; note?: string } = typeof raw === 'string' ? { text: raw } : raw;
                 return (
+                  p.layout === 'linkRows' ? (
+                    // 3.33 — a ruled row: the words on the left, the shared label as a link on the right.
+                    <li key={i} className="he-ilist__item">
+                      <span className="he-ilist__text">
+                        {item.text}
+                        {item.note && <span className="he-ilist__note">{item.note}</span>}
+                      </span>
+                      {item.href && (
+                        <Link href={item.href} className="he-ilist__rowlink">
+                          {p.linkLabel || <MessageText k="block.view" />}
+                          <span className="sr-only">: {item.text}</span>
+                        </Link>
+                      )}
+                    </li>
+                  ) : (
                   <li
                     key={i}
                     className={cn('he-ilist__item', rows && 'flex gap-3.5 border-t-2 border-hairline py-3.5 text-[length:var(--he-block-text,16px)] text-ash last:border-b-2')}
@@ -340,6 +374,7 @@ export function CheckListsBlock(p: P<'checkLists'>) {
                       {item.note && <span className="he-ilist__note">{item.note}</span>}
                     </span>
                   </li>
+                  )
                 );
               })}
             </ul>

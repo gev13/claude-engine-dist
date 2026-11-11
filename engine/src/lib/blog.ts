@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { type CardHover, cardHoverSchema } from './cardHover';
 import { SHARE_NETWORKS, type ShareNetwork } from './share';
+import { type TypeStyle, typeStyleSchema } from './typeStyle';
 
 /** 3.22 — a plain length (80px, 5rem, 0). Kept here rather than imported: theme.ts imports this file. */
 const isLength = (value: string) => /^(0|\d*\.?\d+(px|rem|em|vw|vh|%))$/.test(value.trim());
@@ -23,6 +24,31 @@ const tracking = () =>
     .max(20)
     .refine((v) => /^(0|-?\d*\.?\d+(px|rem|em))$/.test(v.trim()), 'A spacing such as -0.5px or -0.02em')
     .optional();
+
+/** 3.33 — a colour, or `transparent` for none. */
+const colourOrClear = () => z.string().trim().max(60).refine((v) => v.trim() === 'transparent' || isColorish(v), 'Not a colour').optional();
+/** 3.33 — two tracks, as a grid writes them: fractions or lengths. */
+export const ASIDE_COLUMNS = /^\d{1,5}(?:\.\d{1,3})?(?:fr|px|rem|%)\s+\d{1,5}(?:\.\d{1,3})?(?:fr|px|rem|%)$/;
+const COLOUR_TEXT = '(?:#[0-9a-f]{3,8}|(?:rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg-]+\\))';
+/** 3.33 — a gradient's stops: `rgba(0,0,0,0.2) 25%, rgba(0,0,0,0.8) 73%, #000 92%`. */
+export const TINT_STOPS = new RegExp(`^${COLOUR_TEXT}\\s+\\d{1,3}(?:\\.\\d{1,3})?%(?:\\s*,\\s*${COLOUR_TEXT}\\s+\\d{1,3}(?:\\.\\d{1,3})?%){1,4}$`, 'i');
+
+/* 3.33 — what a post card can add, in the post list block and the blog's own cards alike. */
+export const postCardExtras = {
+  /** The overlay cards: a round arrow with the words (true), or (`pointer`) the pointer itself becomes the arrow over a card, drawn from a colour and a size; nothing on the card, nothing on touch. */
+  arrow: z.union([z.boolean(), z.literal('pointer')]).optional(),
+  arrowColor: colour(),
+  arrowGlyph: colour(),
+  arrowSize: z.number().int().min(24).max(96).optional(),
+  /** The card's words, each in a type of its own. */
+  titleType: typeStyleSchema.optional(),
+  chipType: typeStyleSchema.optional(),
+  excerptType: typeStyleSchema.optional(),
+  /** The overlay cards' height on phones, and the space inside them (and on phones). */
+  heightMobile: len(),
+  textPadding: box(),
+  textPaddingMobile: box(),
+};
 
 /** 3.28 — the archive cards (blog index, categories, a post list showing the archive's card, related posts). */
 const cardLookSchema = z.object({
@@ -92,6 +118,19 @@ const archiveLookSchema = z.object({
   pagerWeight: weight(),
   pagerHideDisabled: z.boolean().optional(),
   pagerGlyph: z.enum(['chevron', 'arrow']).optional(),
+  /** 3.33 — the category bar: its own band (and on phones), side margins, no rule under it; the chips' fill, text, active fill and text, corners, size, spacing and padding. */
+  barBackground: colourOrClear(),
+  barBackgroundMobile: colourOrClear(),
+  barMargin: box(),
+  barRule: z.boolean().optional(),
+  chipFill: colourOrClear(),
+  chipText: colour(),
+  chipActiveFill: colour(),
+  chipActiveText: colour(),
+  chipRadius: box(),
+  chipSize: len(),
+  chipTracking: tracking(),
+  chipPadding: box(),
   /** The space from the toolbar to the first cards, and under the grid (each the whole space). */
   gridTop: len(),
   gridBottom: len(),
@@ -159,6 +198,25 @@ const postLookSchema = z.object({
   relatedWidth: len(),
   /** Their own hover, apart from the archive cards'. */
   relatedHover: cardHoverSchema.optional(),
+  /** 3.33 — Cover card beside the article: the two columns and the space between; the card's height (and on phones), corners and tint stops; the title's type. */
+  asideColumns: z.string().trim().max(40).refine((v) => ASIDE_COLUMNS.test(v.trim()), 'Two widths, such as 1fr 1fr or 540px 1fr').optional(),
+  asideGap: len(),
+  asideCoverHeight: len(),
+  asideCoverHeightMobile: len(),
+  asideCoverRadius: box(),
+  asideTintStops: z.string().trim().max(200).refine((v) => TINT_STOPS.test(v.trim()), 'Colours and places, such as rgba(0,0,0,0.2) 25%, #000 92%').optional(),
+  asideTitle: typeStyleSchema.optional(),
+  /** 3.33 — the whole section as a panel: its colour (and on phones), corners, side margins and padding (and on phones). */
+  asidePanel: colourOrClear(),
+  asidePanelMobile: colourOrClear(),
+  asidePanelRadius: box(),
+  asidePanelMargin: box(),
+  asidePanelPadding: box(),
+  asidePanelPaddingMobile: box(),
+  /** 3.33 — in the article: the space under a heading, and above one (and on phones). */
+  headingGap: len(),
+  sectionGap: len(),
+  sectionGapMobile: len(),
 });
 export type PostLook = z.infer<typeof postLookSchema>;
 
@@ -351,10 +409,10 @@ export const blogSchema = z.object({
       reveal: z.boolean().optional(),
       /** 3.29 — the overlay's colour, fading up from the bottom (unset, black). */
       tint: z.string().trim().max(60).refine(isColorish, 'Not a colour').optional(),
-      /** 3.29 — a round arrow over the card, with the words. */
-      arrow: z.boolean().optional(),
       /** 3.29 — the overlay cards' height, e.g. 520px (unset 380px). */
       height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+      /** 3.29, 3.33 — the arrow, the words' types, the height on phones. */
+      ...postCardExtras,
     })
     .optional(),
   /** A category's own heading: the name, or the name with its description and picture. */
@@ -390,7 +448,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3; reveal: boolean; tint: string; arrow: boolean; height: string }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3; reveal: boolean; tint: string; arrow: boolean | 'pointer'; arrowColor: string; arrowGlyph: string; arrowSize: number; height: string; heightMobile: string; textPadding: string; textPaddingMobile: string; titleType: TypeStyle; chipType: TypeStyle; excerptType: TypeStyle }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';

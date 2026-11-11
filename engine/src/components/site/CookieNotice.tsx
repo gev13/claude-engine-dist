@@ -16,7 +16,7 @@ import {
   consentVersion,
   decodeConsent,
   encodeConsent,
-} from '@/lib/cookies';
+  COOKIE_BOX } from '@/lib/cookies';
 import { cn } from '@/lib/utils';
 import { isColor } from '@/lib/theme';
 import { useMessages } from './Messages';
@@ -86,8 +86,22 @@ function lookStyle(notice: Notice): React.CSSProperties | undefined {
     const value = notice[key];
     if (value && isColor(value)) style[name] = value;
   }
+  // 3.33 — corners one by one, the place, the text, and the buttons' shape.
+  if (notice.corners && COOKIE_BOX.test(notice.corners)) style['--he-cookie-corners'] = notice.corners;
+  if (typeof notice.left === 'number') style['--he-cookie-left'] = `${notice.left}px`;
+  if (typeof notice.textLine === 'number') style['--he-cookie-line'] = String(notice.textLine);
+  if (typeof notice.gap === 'number') style['--he-cookie-gap'] = `${notice.gap}px`;
+  if (notice.buttonRadius && COOKIE_BOX.test(notice.buttonRadius)) style['--he-cookie-btn-r'] = notice.buttonRadius;
+  if (notice.buttonPadding && COOKIE_BOX.test(notice.buttonPadding)) style['--he-cookie-btn-pad'] = notice.buttonPadding;
+  if (typeof notice.buttonSize === 'number') style['--he-cookie-btn-size'] = `${notice.buttonSize}px`;
+  if (notice.buttonWeight) style['--he-cookie-btn-w'] = notice.buttonWeight;
+  if (typeof notice.buttonLine === 'number') style['--he-cookie-btn-line'] = String(notice.buttonLine);
+  if (typeof notice.buttonTracking === 'number') style['--he-cookie-btn-track'] = `${notice.buttonTracking}px`;
   return Object.keys(style).length ? (style as React.CSSProperties) : undefined;
 }
+
+/** 3.33 — the classes the phone options turn on. */
+const phoneClasses = (notice: Notice) => cn(notice.centerMobile && 'is-center-m', notice.noWrap && 'is-nowrap', notice.noWrapMobile && 'is-nowrap-m');
 
 function NoticeBanner({ notice }: { notice: Notice }) {
   const t = useMessages();
@@ -157,7 +171,7 @@ function NoticeBanner({ notice }: { notice: Notice }) {
       {/* The dim is the modal's own, and only the modal has one. */}
       {modal && <div className="he-cookie__scrim" aria-hidden="true" />}
       <section
-        className={cn('he-cookie', `is-${notice.position}`, notice.look === 'pill' && 'is-pill', notice.closeButton && 'has-close')}
+        className={cn('he-cookie', `is-${notice.position}`, notice.look === 'pill' && 'is-pill', notice.closeButton && 'has-close', phoneClasses(notice))}
         role={modal ? 'dialog' : 'region'}
         aria-modal={modal ? true : undefined}
         aria-label={notice.title || 'Cookies'}
@@ -316,7 +330,7 @@ function ConsentBanner({ notice }: { notice: Notice }) {
     <>
       {modal && <div className="he-cookie__scrim" aria-hidden="true" />}
       <section
-        className={cn('he-cookie', details ? 'is-centre is-details' : `is-${notice.position}`, !details && notice.look === 'pill' && 'is-pill')}
+        className={cn('he-cookie', details ? 'is-centre is-details' : `is-${notice.position}`, !details && notice.look === 'pill' && 'is-pill', !details && phoneClasses(notice))}
         style={lookStyle(notice)}
         role={modal ? 'dialog' : 'region'}
         aria-modal={modal ? true : undefined}

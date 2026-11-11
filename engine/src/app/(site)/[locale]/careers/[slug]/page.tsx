@@ -220,11 +220,60 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
     />
   );
 
+  // 3.33 — the heading centred over two columns: the words in a panel, the details above the cover.
+  if (look.page === 'centered') {
+    return (
+      <>
+        <article className="he-job is-centered">
+          <Section size="lg" className="he-job-sec">
+            <header className="he-job-c__head">
+              <Eyebrow className="justify-center">{t('careers.hiring')}</Eyebrow>
+              <Heading level={1} className="he-job-c__title">
+                {job.title}
+              </Heading>
+            </header>
+            <div className="he-job-c">
+              <div className="he-job-c__main">
+                <div className="he-job-aside__panel">
+                  {sections
+                    .filter(([, html]) => html.trim() !== '')
+                    .map(([heading, html]) => (
+                      <div key={heading} className="he-job__section">
+                        <Heading level={2}>{heading}</Heading>
+                        <Prose html={html} />
+                      </div>
+                    ))}
+                  {dates}
+                  <div className="he-job-aside__apply">
+                    <Heading level={2} className="he-job-aside__applytitle he-job__applytitle">
+                      {job.isOpen ? t('careers.apply') : t('careers.filled')}
+                    </Heading>
+                    {job.isOpen ? applyForm : closedNote}
+                  </div>
+                </div>
+              </div>
+              <div className="he-job-c__side">
+                {metaGrid}
+                {job.coverUrl && (
+                  <div className="he-job-aside__cover">
+                    <SiteImg src={job.coverUrl} alt="" className="he-fill" sizes="half" priority />
+                  </div>
+                )}
+              </div>
+            </div>
+          </Section>
+        </article>
+        {after}
+        {jsonLd}
+      </>
+    );
+  }
+
   if (look.page === 'aside') {
     return (
       <>
         <article className="he-job is-aside">
-          <Section size="lg">
+          <Section size="lg" className="he-job-sec">
             <div className="he-job-aside">
               <div className="he-job-aside__head">
                 <Heading level={1} className="he-job-aside__title">

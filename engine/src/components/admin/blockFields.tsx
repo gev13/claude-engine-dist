@@ -28,6 +28,7 @@ import { FigureStylePanel } from '@/components/admin/FigureStylePanel';
 import type { FigureStyle } from '@/lib/figureStyle';
 import { ColorField, LengthField } from '@/components/admin/styleFields';
 import { CardHoverFields } from '@/components/admin/CardHoverFields';
+import { PostCardExtraFields } from '@/components/admin/PostCardExtraFields';
 import { ProjectCardFields } from '@/components/admin/ProjectCardFields';
 import type { ProjectCardOptions } from '@/lib/projectCard';
 import type { CardHover } from '@/lib/cardHover';
@@ -993,7 +994,7 @@ type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
 type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean; fill?: string };
 type InfoRow = { label: string; value: string; icon?: InfoIconName; href?: string };
-type GridCard = { button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceTablet?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceMobile?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
+type GridCard = { imagePositionMobile?: string; height?: string; heightMobile?: string; textWidth?: string; textWidthMobile?: string; button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceTablet?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceMobile?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -1013,7 +1014,7 @@ type PlanItem = {
   features?: { text: string; included: boolean }[];
   button?: { label: string; href: string };
 };
-type MemberItem = { name: string; role?: string; bio?: string; imageUrl?: string; links?: SocialItem[]; color?: string };
+type MemberItem = { nameColor?: string; name: string; role?: string; bio?: string; imageUrl?: string; links?: SocialItem[]; color?: string };
 type GalleryImage = { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string; videoUrlAlt?: string };
 type AccordionPanel = { title: string; label?: string; body?: string; imageUrl?: string; alt?: string; link?: { label: string; href: string } };
 type ProjectItem = {
@@ -1853,7 +1854,10 @@ function CarouselFields({ props, set }: { props: Props; set: Setter }) {
    both reliable and keyboard-accessible. The top-level list keeps its dragging.
    ──────────────────────────────────────────────────────────────────────────── */
 
+type TierValues = { base?: string; laptop?: string; tablet?: string; mobile?: string };
 type Column = {
+  alignSelf?: TierValues;
+  justify?: TierValues;
   id: string;
   width: { base: number; laptop?: number; tablet?: number; mobile?: number };
   order?: { laptop?: number; tablet?: number; mobile?: number };
@@ -1880,7 +1884,7 @@ type BandFade = { side: 'left' | 'right'; color?: string; solid: number; clear: 
 
 /** 2.21 — the media band's colour fading in from one side, over the picture. */
 /** 3.11 — a band's text box: its padding, inset, paragraph width and gaps. */
-type BandTextBox = { paddingBlock?: string; paddingBlockMobile?: string; inset?: string; bodyWidth?: string; bodyGap?: string; actionsGap?: string };
+type BandTextBox = { width?: string; widthMobile?: string; eyebrowGap?: string; paddingBlock?: string; paddingBlockMobile?: string; inset?: string; bodyWidth?: string; bodyGap?: string; actionsGap?: string };
 function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
   const box = (props.textBox as BandTextBox | undefined) ?? {};
   const put = (key: keyof BandTextBox) => (value: string) => {
@@ -1901,6 +1905,10 @@ function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
         {field('paddingBlockMobile', 'Space above and below on phones', 'as above')}
         {field('inset', 'Further in than the page edge', '0')}
         {field('bodyWidth', 'Paragraph width', '60ch')}
+        {/* 3.33 */}
+        {field('width', 'Width of the words', '640px')}
+        {field('widthMobile', 'Width of the words on phones', 'as above')}
+        {field('eyebrowGap', 'Space under the eyebrow', 'as drawn')}
         {field('bodyGap', 'Gap above the paragraph', '16px')}
         {field('actionsGap', 'Gap above the buttons', '28px')}
       </div>
@@ -1976,6 +1984,9 @@ function inheritedSpan(width: Column['width'], key: 'laptop' | 'tablet' | 'mobil
   return width.tablet ?? width.laptop ?? width.base;
 }
 
+/** 3.33 — the four tiers, as a row's written tracks and a column's alignment name them. */
+const TRACK_TIER_LABELS = { base: 'large desktop', laptop: 'desktop', tablet: 'tablets', mobile: 'phones' } as const;
+
 function RowFields({ props, set, depth }: { props: Props; set: Setter; depth: number }) {
   const columns = readColumns(props);
   const [openColumn, setOpenColumn] = useState<string | null>(columns[0]?.id ?? null);
@@ -2041,6 +2052,34 @@ function RowFields({ props, set, depth }: { props: Props; set: Setter; depth: nu
         <Text label="Gap on tablets" k="gapTablet" props={props} set={set} placeholder="as above" />
         <Text label="Gap on phones" k="gapMobile" props={props} set={set} placeholder="as on tablets" />
         <Text label="Minimum height on phones" k="minHeightMobile" props={props} set={set} placeholder="as above" />
+        {/* 3.33 */}
+        {(['base', 'laptop', 'tablet', 'mobile'] as const).map((tier) => (
+          <Field key={tier} label={`Exact widths — ${TRACK_TIER_LABELS[tier]}`} hint="one per column, over the twelfths, e.g. 592fr 584fr or 230px 1fr">
+            <Input
+              value={(props.tracks as Record<string, string> | undefined)?.[tier] ?? ''}
+              placeholder={tier === 'base' ? 'the twelfths' : 'as on the wider screen'}
+              spellCheck={false}
+              onChange={(e) => {
+                const tracks = { ...((props.tracks as Record<string, string> | undefined) ?? {}) };
+                if (e.target.value.trim()) tracks[tier] = e.target.value;
+                else delete tracks[tier];
+                const next = { ...props };
+                if (Object.keys(tracks).length) next.tracks = tracks;
+                else delete next.tracks;
+                set(next);
+              }}
+            />
+          </Field>
+        ))}
+        {/* 3.33 */}
+        <Field label="Columns gather on phones" hint="when the row is taller than they are">
+          <Select value={str(props, 'alignContentMobile')} onChange={(e) => set(withOpt(props, 'alignContentMobile', e.target.value || undefined))}>
+            <option value="">Spread, as drawn</option>
+            <option value="start">At the top</option>
+            <option value="center">In the middle</option>
+            <option value="end">At the foot</option>
+          </Select>
+        </Field>
         <Field label="Column alignment" hint="how columns line up when they differ in height">
           <Select
             value={str(props, 'align') || 'stretch'}
@@ -2237,6 +2276,40 @@ function ColumnEditor({
                   ))}
                 </div>
               )}
+
+              {/* 3.33 — how the column sits in its row and spreads its blocks, per tier. */}
+              {(
+                [
+                  ['alignSelf', 'Sits in the row', [['start', 'At the top'], ['center', 'In the middle'], ['end', 'At the bottom'], ['stretch', 'Full height']]],
+                  ['justify', 'Its blocks', [['start', 'From the top'], ['center', 'In the middle'], ['end', 'At the foot'], ['between', 'Spread: first at the top, last at the foot']]],
+                ] as const
+              ).map(([prop, label, options]) => (
+                <div key={prop} className="grid gap-3 sm:grid-cols-4">
+                  {(['base', 'laptop', 'tablet', 'mobile'] as const).map((key) => (
+                    <Field key={key} label={`${label} — ${TRACK_TIER_LABELS[key]}`}>
+                      <Select
+                        value={column[prop]?.[key] ?? ''}
+                        onChange={(e) => {
+                          const values = { ...column[prop] };
+                          if (e.target.value) values[key] = e.target.value;
+                          else delete values[key];
+                          const next = { ...column };
+                          if (Object.keys(values).length) next[prop] = values;
+                          else delete next[prop];
+                          onChange(next);
+                        }}
+                      >
+                        <option value="">{key === 'base' ? 'As the row says' : 'As on the wider screen'}</option>
+                        {options.map(([value, name]) => (
+                          <option key={value} value={value}>
+                            {name}
+                          </option>
+                        ))}
+                      </Select>
+                    </Field>
+                  ))}
+                </div>
+              ))}
 
               <BlockDesignPanel
                 style={column.style}
@@ -2829,6 +2902,17 @@ function TypeFields({
             )}
             <PropSelect label="Divider" k="divider" fallback="none" options={[['none', 'None'], ['line', 'Thin line'], ['accent', 'Short accent bar']]} props={props} set={set} />
             <PropSelect label="Letters" k="textStyle" fallback="solid" options={[['solid', 'Solid'], ['outline', 'Outlined'], ['gradient', 'Gradient']]} props={props} set={set} />
+            {/* 3.33 */}
+            <Field label="Aligned on phones">
+              <Select value={str(props, 'alignMobile')} onChange={(e) => set(withOpt(props, 'alignMobile', e.target.value || undefined))}>
+                <option value="">As above</option>
+                <option value="left">Left</option>
+                <option value="center">Centred</option>
+              </Select>
+            </Field>
+            <OptText label="Subtitle width" hint="how far it runs before it wraps, e.g. 560px" placeholder="the block’s own" k="subtitleWidth" props={props} set={set} />
+            <OptText label="Subtitle width on phones" placeholder="as above" k="subtitleWidthMobile" props={props} set={set} />
+            <OptText label="Space above the subtitle" placeholder="as drawn" k="subtitleGap" props={props} set={set} />
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <Text label="Badge" k="badge" props={props} set={set} hint="a small pill above, e.g. New" />
@@ -3229,6 +3313,22 @@ function TypeFields({
           <div className="grid gap-3 sm:grid-cols-2">
             <OptNumber label="Show the first" hint="then a button shows the rest in place; empty shows everyone" step="1" k="initial" props={props} set={set} />
             <Text label="That button’s words" k="moreLabel" props={props} set={set} placeholder="Show all" />
+            {/* 3.33 */}
+            <OptNumber label="Show the first, on phones" hint="empty is the number above" step="1" k="initialMobile" props={props} set={set} />
+            <PropSelect label="That button’s look" k="moreStyle" fallback="outline" options={[['outline', 'Outlined'], ['primary', 'Filled']]} props={props} set={set} />
+            <PropCheck label="An arrow on it" k="moreArrow" props={props} set={set} />
+            {props.variant === 'portrait' && (
+              <>
+                <OptText label="Card padding" hint="one to four lengths" placeholder="as drawn" k="cardPadding" props={props} set={set} />
+                <OptText label="Card padding on phones" placeholder="as above" k="cardPaddingMobile" props={props} set={set} />
+                <OptText label="Space above the photo" placeholder="as drawn" k="photoGap" props={props} set={set} />
+                <OptText label="Space above the photo on phones" placeholder="as drawn" k="photoGapMobile" props={props} set={set} />
+                <PropSelect label="Photo" k="photoFit" fallback="contain" options={[['contain', 'Shown whole'], ['cover', 'Fills the card, cut by its edge']]} props={props} set={set} />
+                <PropSelect label="Photo anchored" k="photoPosition" fallback="center bottom" options={[['center bottom', 'At the bottom'], ['center top', 'At the top'], ['center', 'In the middle']]} props={props} set={set} />
+                <OptText label="Card shape" hint="width / height, e.g. 435/475" placeholder="as drawn" k="cardRatio" props={props} set={set} />
+                <OptText label="Card shape on phones" placeholder="as above" k="cardRatioMobile" props={props} set={set} />
+              </>
+            )}
           </div>
           <Repeater
             label="Members"
@@ -3251,9 +3351,15 @@ function TypeFields({
                 </Field>
                 <MediaInput label="Photo" value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
                 {props.variant === 'portrait' && (
-                  <Field label="Card colour" hint="e.g. #e6e6e6; empty is the surface colour">
-                    <Input value={item.color ?? ''} onChange={(e) => update({ color: e.target.value.trim() || undefined })} />
-                  </Field>
+                  <>
+                    <Field label="Card colour" hint="e.g. #e6e6e6; empty is the surface colour">
+                      <Input value={item.color ?? ''} onChange={(e) => update({ color: e.target.value.trim() || undefined })} />
+                    </Field>
+                    {/* 3.33 */}
+                    <Field label="Name colour" hint="empty is the card’s text colour">
+                      <Input value={item.nameColor ?? ''} onChange={(e) => update({ nameColor: e.target.value.trim() || undefined })} />
+                    </Field>
+                  </>
                 )}
                 <Repeater
                   label="Profiles (up to 4)"
@@ -3466,7 +3572,12 @@ function TypeFields({
             </Field>
             <PropSelect label="Space between" k="gap" fallback="medium" options={[['none', 'None'], ['small', 'Small'], ['medium', 'Medium'], ['large', 'Large']]} props={props} set={set} />
             {layout === 'grid' && (
+              <>
               <PropSelect label="Picture shape" k="ratio" fallback="square" options={[['square', 'Square'], ['landscape', 'Landscape'], ['portrait', 'Portrait']]} props={props} set={set} />
+              {/* 3.33 */}
+              <OptText label="Picture height" hint="e.g. 487px — over the shape" placeholder="the shape’s" k="height" props={props} set={set} />
+              <OptText label="Picture height on phones" hint="768px and below" placeholder="as above" k="heightMobile" props={props} set={set} />
+              </>
             )}
             <PropSelect label="On hover" k="hover" fallback="zoom" options={[['zoom', 'Zoom in'], ['lift', 'Lift'], ['greyscale', 'Greyscale until hovered'], ['none', 'Nothing']]} props={props} set={set} />
             <PropSelect label="Captions" k="captions" fallback="none" options={[['none', 'Hidden'], ['below', 'Below each picture'], ['overlay', 'Over each picture']]} props={props} set={set} />
@@ -3476,7 +3587,23 @@ function TypeFields({
             Open pictures in a full-screen viewer
           </label>
           {/* 3.29 */}
-          {props.lightbox !== false && <PropCheck label="A round magnifier over the picture under the pointer" k="zoomIcon" props={props} set={set} />}
+          {/* 3.33 — on touch screens only, at a corner, always shown. */}
+          {props.lightbox !== false && (
+            <Field label="Magnifier">
+              <Select value={props.zoomIcon === 'touch' ? 'touch' : props.zoomIcon === true ? 'hover' : ''} onChange={(e) => set(withOpt(props, 'zoomIcon', e.target.value === 'touch' ? 'touch' : e.target.value === 'hover' ? true : undefined))}>
+                <option value="">None</option>
+                <option value="hover">Over the picture under the pointer</option>
+                <option value="touch">On touch screens only, always shown, at a corner</option>
+              </Select>
+            </Field>
+          )}
+          {props.zoomIcon === 'touch' && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <PropSelect label="Corner" k="zoomCorner" fallback="bottomRight" options={[['bottomRight', 'Bottom right'], ['bottomLeft', 'Bottom left'], ['topRight', 'Top right'], ['topLeft', 'Top left']]} props={props} set={set} />
+              <OptText label="In from the corner" k="zoomOffset" placeholder="12px" props={props} set={set} />
+              <OptNumber label="Its size" hint="px; empty is 60" step="1" k="zoomSize" props={props} set={set} />
+            </div>
+          )}
           <PropCheck label="Corners as the site’s cards are (Appearance → Shape)" k="cardCorners" props={props} set={set} />
           {/* 3.28 — the gap at every width, and the viewer's own look. */}
           <div className="grid gap-3 sm:grid-cols-3">
@@ -3501,8 +3628,10 @@ function TypeFields({
                 {(
                   [
                     ['closeSide', 'Close button', [['right', 'Top right'], ['left', 'Top left']]],
-                    ['arrows', 'Arrows', [['sides', 'Either side'], ['bottomRight', 'Bottom right']]],
+                    ['arrows', 'Arrows', [['sides', 'Either side, at the screen’s edges'], ['beside', 'Right beside the picture'], ['bottomRight', 'Bottom right']]],
                     ['arrowStyle', 'Arrows drawn', [['circle', 'In circles'], ['plain', 'Bare']]],
+                    ['arrowsMobile', 'Arrows on phones', [['below', 'Side by side under the picture']]],
+                    ['closeAt', 'Close button sits', [['corner', 'In the screen’s corner'], ['overNext', 'Over the next arrow; above the picture on phones']]],
                   ] as const
                 ).map(([key, label, options]) => (
                   <Field key={key} label={label}>
@@ -3517,6 +3646,38 @@ function TypeFields({
                         </option>
                       ))}
                     </Select>
+                  </Field>
+                ))}
+                {/* 3.33 */}
+                {(
+                  [
+                    ['imageWidth', 'Picture width', 'e.g. 758px'],
+                    ['imageMaxHeight', 'Picture height', 'e.g. 487px'],
+                    ['imageMaxHeightMobile', 'Picture height on phones', 'e.g. 449px'],
+                  ] as const
+                ).map(([key, label, hint]) => (
+                  <Field key={key} label={label} hint={hint}>
+                    <Input
+                      value={((props.viewer as Record<string, unknown> | undefined)?.[key] as string | undefined) ?? ''}
+                      placeholder="as drawn"
+                      onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), [key]: e.target.value.trim() || undefined })))}
+                    />
+                  </Field>
+                ))}
+                {(
+                  [
+                    ['blur', 'Blur behind', 'px; 0 for none', 40],
+                    ['imageRadius', 'Picture corners', 'px; 0 for square', 48],
+                  ] as const
+                ).map(([key, label, hint, most]) => (
+                  <Field key={key} label={label} hint={hint}>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={most}
+                      value={((props.viewer as Record<string, unknown> | undefined)?.[key] as number | undefined) ?? ''}
+                      onChange={(e) => set(withOpt(props, 'viewer', tidyObject({ ...(props.viewer as object), [key]: e.target.value === '' ? undefined : Math.min(most, Math.max(0, Math.round(Number(e.target.value) || 0))) })))}
+                    />
                   </Field>
                 ))}
                 <Field label="Picture change" hint="ms — a fade">
@@ -4203,6 +4364,9 @@ function TypeFields({
           <Text label="Space inside the card on phones" k="cardPaddingMobile" props={props} set={set} placeholder="22px 18px" />
           {/* 3.28 */}
           <div className="grid gap-3 sm:grid-cols-3">
+            {/* 3.33 */}
+            <OptText label="Space between questions" hint="e.g. 10px" placeholder="as drawn" k="fieldGap" props={props} set={set} />
+            <PropSelect label="Send button on phones" k="submitWidthMobile" fallback="" options={[['', 'Fills the row'], ['own', 'As wide as its words']]} props={props} set={(next) => set(withOpt(next, 'submitWidthMobile', next.submitWidthMobile || undefined))} />
             <OptText label="Card past the column" hint="each side, e.g. 15px" placeholder="0" k="cardBleed" props={props} set={set} />
             <OptText label="Fields past the padding" hint="each side, e.g. 20px" placeholder="0" k="fieldInset" props={props} set={set} />
             <OptText label="Outline send button’s edge" hint="a colour" placeholder="the theme’s" k="submitBorder" props={props} set={set} />
@@ -4230,7 +4394,7 @@ function TypeFields({
         <>
           {HEAD_FIELDS(props, set)}
           <div className="grid gap-3 sm:grid-cols-3">
-            <PropSelect label="Layout" k="layout" fallback="grid" options={[['grid', 'Grid'], ['masonry', 'Masonry'], ['list', 'List']]} props={props} set={set} />
+            <PropSelect label="Layout" k="layout" fallback="grid" options={[['grid', 'Grid'], ['linkRows', 'Ruled rows with a link at the right'], ['masonry', 'Masonry'], ['list', 'List']]} props={props} set={set} />
             {str(props, 'layout') === 'masonry' && (
               <PropSelect label="Masonry order" k="masonryOrder" fallback="columns" options={[['columns', 'Column by column'], ['rows', 'Row by row — more are added below']]} props={props} set={set} />
             )}
@@ -4732,8 +4896,23 @@ function TypeFields({
                 <option value="">Bottom left</option>
                 <option value="bottomCenter">At the bottom, centred</option>
                 <option value="center">In the middle, centred</option>
+                <option value="top">At the top</option>
               </Select>
             </Field>
+            {/* 3.33 */}
+            <PropSelect label="Picture anchored on phones" k="imagePositionMobile" fallback="" options={[['', 'In the middle, as drawn'], ['top', 'At the top'], ['bottom', 'At the bottom'], ['left', 'At the left'], ['right', 'At the right']]} props={props} set={(next) => set(withOpt(next, 'imagePositionMobile', next.imagePositionMobile || undefined))} />
+            <OptText label="Second line of the title set in by" hint="e.g. 46px" placeholder="none" k="titleIndent" props={props} set={set} />
+            <PropCheck label="On phones, the title’s typed line breaks are dropped" k="titleFlowMobile" props={props} set={set} />
+            <PropSelect label="The words" k="textGroup" fallback="" options={[['', 'Lined up as the position says'], ['center', 'A centred group inside that place']]} props={props} set={(next) => set(withOpt(next, 'textGroup', next.textGroup || undefined))} />
+            <OptText label="Inset from the end" hint="from tablets up" placeholder="none" k="textEnd" props={props} set={set} />
+            <Field label="Fade from the top on phones" hint="a colour; empty for none">
+              <Input value={(props.fadeMobile as { color?: string } | undefined)?.color ?? ''} onChange={(e) => set(withOpt(props, 'fadeMobile', e.target.value.trim() ? { ...(props.fadeMobile as object), color: e.target.value.trim() } : undefined))} />
+            </Field>
+            {Boolean(props.fadeMobile) && (
+              <Field label="How far it reaches" hint="e.g. 337px; empty is half">
+                <Input value={(props.fadeMobile as { height?: string } | undefined)?.height ?? ''} onChange={(e) => set(withOpt(props, 'fadeMobile', tidyObject({ ...(props.fadeMobile as object), height: e.target.value.trim() || undefined })))} />
+              </Field>
+            )}
             <PropSelect
               label="Height"
               k="height"
@@ -5294,6 +5473,9 @@ function TypeFields({
           </label>
           {/* 3.28 */}
           <OptText label="Space between paragraphs" hint="e.g. 16px or 0 — over the theme’s" placeholder="as drawn" k="paragraphGap" props={props} set={set} />
+          {/* 3.33 */}
+          <OptText label="Paragraph width" hint="e.g. 560px, without centring the block" placeholder="the measure above" k="textWidth" props={props} set={set} />
+          <OptText label="Paragraph width on phones" placeholder="as above" k="textWidthMobile" props={props} set={set} />
           <StringListRepeater
             label="Paragraphs"
             hint="One box per paragraph. Enter starts a new line inside the same paragraph."
@@ -5460,6 +5642,26 @@ function TypeFields({
               <PropSelect label="The words" k="textTone" fallback="light" options={[['light', 'Light'], ['dark', 'Dark — the text colour']]} props={props} set={set} />
               <OptText label="Card height" hint="e.g. 520px; empty is 380px" k="cardHeight" placeholder="380px" props={props} set={set} />
               <OptText label="— on phones" k="cardHeightMobile" placeholder="320px" props={props} set={set} />
+              {/* 3.33 */}
+              <OptText label="Inset of the words" hint="one or two lengths, e.g. 0 or 24px 16px" k="textPadding" placeholder="28px" props={props} set={set} />
+              <OptText label="— on phones" k="textPaddingMobile" placeholder="as above" props={props} set={set} />
+              <Field label="Exact widths by row" hint="one row per line, e.g. 1fr then 668fr 508fr; stacked on phones">
+                <Textarea
+                  rows={3}
+                  spellCheck={false}
+                  value={arr<string>(props, 'rowTracks').join('\n')}
+                  onChange={(e) => {
+                    const rows = e.target.value.split('\n');
+                    set(withOpt(props, 'rowTracks', rows.some((row) => row.trim()) ? rows : undefined));
+                  }}
+                  onBlur={(e) => {
+                    const rows = e.target.value.split('\n').map((row) => row.trim()).filter(Boolean);
+                    set(withOpt(props, 'rowTracks', rows.length ? rows : undefined));
+                  }}
+                />
+              </Field>
+              <PropSelect label="Bullet points in" k="pointsColumns" fallback="1" options={[['1', 'One column'], ['2', 'Two columns']]} props={{ ...props, pointsColumns: props.pointsColumns === undefined ? undefined : String(props.pointsColumns) }} set={(next) => set(withOpt(props, 'pointsColumns', next.pointsColumns === '2' ? 2 : next.pointsColumns === '1' ? 1 : undefined))} />
+              <OptText label="Space between bullet points" k="pointsGap" placeholder="as drawn" props={props} set={set} />
               <div className="flex items-end pb-3">
                 <PropCheck label="A running number (01) above each title" k="numbered" props={props} set={set} />
               </div>
@@ -5586,8 +5788,38 @@ function TypeFields({
                 {variant !== 'cards' && (
                   <>
                     <MediaInput label={variant === 'icons' || variant === 'rows' ? 'Icon' : 'Image'} value={item.imageUrl} onChange={(imageUrl) => update({ imageUrl })} />
-                    {variant === 'mediaRows' && (
+                    {(variant === 'mediaRows' || variant === 'overlay') && (
                       <MediaInput label="Image on phones" hint="optional; shown instead at 768px and below" value={item.imageUrlMobile} onChange={(imageUrlMobile) => update({ imageUrlMobile })} />
+                    )}
+                    {/* 3.33 */}
+                    {variant === 'overlay' && (
+                      <>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                          <Field label="Picture’s anchor on phones">
+                            <Select value={item.imagePositionMobile ?? ''} onChange={(e) => update({ imagePositionMobile: e.target.value || undefined })}>
+                              <option value="">As above</option>
+                              {['center', 'top', 'bottom', 'left', 'right', 'top left', 'top right', 'bottom left', 'bottom right'].map((value) => (
+                                <option key={value} value={value}>
+                                  {value}
+                                </option>
+                              ))}
+                            </Select>
+                          </Field>
+                          <Field label="This card’s height" hint="e.g. 520px">
+                            <Input value={item.height ?? ''} placeholder="the cards’" onChange={(e) => update({ height: e.target.value.trim() || undefined })} />
+                          </Field>
+                          <Field label="— on phones">
+                            <Input value={item.heightMobile ?? ''} placeholder="the cards’" onChange={(e) => update({ heightMobile: e.target.value.trim() || undefined })} />
+                          </Field>
+                          <Field label="Width of the words" hint="e.g. 300px">
+                            <Input value={item.textWidth ?? ''} placeholder="as drawn" onChange={(e) => update({ textWidth: e.target.value.trim() || undefined })} />
+                          </Field>
+                          <Field label="— on phones">
+                            <Input value={item.textWidthMobile ?? ''} placeholder="as above" onChange={(e) => update({ textWidthMobile: e.target.value.trim() || undefined })} />
+                          </Field>
+                        </div>
+                        <StringListRepeater label="Bullet points" hint="shown under the words, up to eight" items={item.points ?? []} onChange={(points) => update({ points: points.length ? points : undefined })} />
+                      </>
                     )}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {variant !== 'icons' && variant !== 'rows' && (
@@ -5690,6 +5922,14 @@ function TypeFields({
             </label>
           </div>
           {custom && <PropMedia label="Icon" k="iconUrl" hint="a small square picture, shown before every entry" props={props} set={set} />}
+          {/* 3.33 */}
+          {str(props, 'layout') === 'linkRows' && (
+            <div className="grid gap-3 sm:grid-cols-3">
+              <Text label="The link’s words" k="linkLabel" props={props} set={set} placeholder="View ↗" hint="shared by every row; a row with no link shows none" />
+              <OptText label="Rule colour" placeholder="the hairline" k="ruleColor" props={props} set={set} />
+              <OptText label="Row padding" hint="one to four lengths" placeholder="16px 0" k="rowPadding" props={props} set={set} />
+            </div>
+          )}
           <Repeater
             label="Lists"
             items={arr<{ title?: string; accent?: string; items: ListEntry[] }>(props, 'lists')}
@@ -6268,8 +6508,11 @@ function PostListPaging({ props, set }: { props: Props; set: Setter }) {
       {(str(props, 'variant') || 'cards') === 'cards' && (
         <>
           <PropCheck label="Drawn as the blog’s archive cards (Appearance → Blog → Details)" k="archiveCards" props={props} set={set} />
-          <PropCheckOn label="“All writing →” under the cards" k="allLink" props={props} set={(next) => set(withOpt(next, 'allLink', next.allLink === false ? false : undefined))} />
         </>
+      )}
+      {/* 3.33 — every layout but the news cards' own button. */}
+      {(str(props, 'variant') || 'cards') !== 'news' && (
+        <PropCheckOn label="“All writing →” under the cards" k="allLink" props={props} set={(next) => set(withOpt(next, 'allLink', next.allLink === false ? false : undefined))} />
       )}
     </>
   );
@@ -6320,13 +6563,13 @@ function PostCardFields({ props, set }: { props: Props; set: Setter }) {
       <div className="grid gap-2 border-t-2 border-hairline pt-3 pb-1 sm:grid-cols-2">
         <p className="m-0 text-[12px] text-smoke sm:col-span-2">Text over the picture (the Overlay layout):</p>
         {box('Only the picture until the pointer is on it', 'reveal', card.reveal === true, (v) => v || undefined)}
-        {box('A round arrow with the words', 'arrow', card.arrow === true, (v) => v || undefined)}
         <Field label="The overlay’s colour" hint="fades up from the bottom; empty is black">
           <Input value={(card.tint as string) ?? ''} placeholder="#3b2f6b" onChange={(e) => setCard('tint', e.target.value.trim() || undefined)} />
         </Field>
         <Field label="Card height" hint="e.g. 520px; empty is 380px">
           <Input value={(card.height as string) ?? ''} placeholder="380px" onChange={(e) => setCard('height', e.target.value.trim() || undefined)} />
         </Field>
+        <PostCardExtraFields card={card} setCard={setCard} />
       </div>
       <div className="border-t-2 border-hairline pt-3 pb-1">
         <CardHoverFields value={card.hover as CardHover | undefined} onChange={(hover) => setCard('hover', hover)} />

@@ -91,6 +91,12 @@ export function isUsableLength(value: string): boolean {
   return Number(trimmed) === 0 || !/^-?\d*\.?\d+$/.test(trimmed);
 }
 
+/** 3.33 — a box shadow: offsets, a blur, an optional spread, a colour. */
+const SHADOW_PATTERN = /^-?\d{1,3}(?:px)?\s+-?\d{1,3}(?:px)?\s+\d{1,3}(?:px)?(\s+-?\d{1,3}px)?\s+(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
+export function isShadow(value: string): boolean {
+  return SHADOW_PATTERN.test(value.trim());
+}
+
 export function isLineHeight(value: string): boolean {
   return LINE_HEIGHT_PATTERN.test(value.trim());
 }
@@ -423,6 +429,8 @@ export const themeSchema = z.object({
    * section as one piece; parts arriving together follow one another.
    */
   revealItems: z.boolean().optional(),
+  /** 3.33 — the footer enters too, as the sections do. */
+  revealFooter: z.boolean().optional(),
   /**
    * 3.28 — how every entrance moves: how far a rise travels, how long and with
    * what easing, where on the screen it starts (85 — when its top reaches 85%
@@ -471,6 +479,17 @@ export const themeSchema = z.object({
    * Keyed by locale; a language with no entry uses the site's own fonts.
    */
   localeFonts: z.record(z.string().trim().min(2).max(5), localeFontSchema).optional(),
+  /** 3.33 — a language with longer words: its headings' scale (1 is as drawn), on phones too, and hyphens at line ends. */
+  localeTypography: z
+    .record(
+      z.string().trim().min(2).max(5),
+      z.object({
+        headingScale: z.number().min(0.4).max(1.2).optional(),
+        headingScaleMobile: z.number().min(0.4).max(1.2).optional(),
+        hyphens: z.boolean().optional(),
+      }),
+    )
+    .optional(),
 
   typography: z
     .object(
@@ -686,6 +705,9 @@ export const themeSchema = z.object({
       radius: length.optional(),
       paddingInline: length.optional(),
       textareaHeight: length.optional(),
+      /** 3.33 — frosted fields (blur behind, px) and a shadow under them. */
+      blur: z.number().int().min(0).max(40).optional(),
+      shadow: z.string().trim().max(120).refine(isShadow, 'Such as 0 4px 20px rgba(0,0,0,0.1)').optional(),
     })
     .optional(),
 

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { typeStyleSchema } from './typeStyle';
 import { SOCIAL_LABEL_STYLES, SOCIAL_NETWORKS, imageUrl, isSafeHref, type SocialLabelStyle, type SocialNetwork } from './navigation';
 
 /** A hex colour — the one colour grammar this module needs, kept here so it does not import the theme (which imports it). */
@@ -262,6 +263,10 @@ export const chromeSchema = z.object({
       itemSizeMobile: z.string().trim().max(40).regex(LENGTH, 'A size such as 28px').optional(),
       itemWeight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
       itemTracking: z.string().trim().max(20).regex(LENGTH, 'A spacing such as 0 or -0.02em').optional(),
+      /** 3.33 — the links' colour, the header bar's colour while the menu is open, and no mark on the current page's link. */
+      itemColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
+      barColor: z.string().trim().max(60).regex(COLOR, 'A colour').optional(),
+      noCurrentMark: z.boolean().optional(),
       /** What opens a link's sub-items: a + in a circle (as before), a plain +, or a chevron. */
       expandIcon: z.enum(['circle', 'plus', 'chevron']).optional(),
       /** The menu's own colour, instead of the page's. */
@@ -431,6 +436,21 @@ export const chromeSchema = z.object({
       linksFirstMobile: z.boolean().optional(),
       /** On phones: the menus side by side in one row, open (unset, one under another). */
       linksRowMobile: z.boolean().optional(),
+
+      /* ── 3.33 ── */
+      /** The sign-up: the field with the arrow inside it (unset) or the field and the button as two separate things, with a gap. */
+      newsletterLook: z.enum(['inline', 'split']).optional(),
+      newsletterGap: len(),
+      newsletterFieldFill: colour(),
+      newsletterFieldText: colour(),
+      newsletterFieldRadius: len('A size such as 30px'),
+      newsletterSendFill: colour(),
+      newsletterSendText: colour(),
+      newsletterSendRadius: z.string().trim().max(40).regex(BOX, 'One to four sizes, e.g. 0 16px 0 16px').optional(),
+      newsletterSendWidth: len(),
+      newsletterTitle: typeStyleSchema.optional(),
+      /** The social icons' colour. */
+      socialColor: colour(),
     })
     .optional(),
 
@@ -451,6 +471,10 @@ export const chromeSchema = z.object({
       inMenu: z.boolean().optional(),
       /** In the footer: never (unset), always, or on phones only. */
       inFooter: z.enum(['off', 'always', 'phones']).optional(),
+      /** 3.33 — where in the footer: with the head column (unset), or under the link columns at the right. */
+      footerPlace: z.enum(['head', 'links']).optional(),
+      /** 3.33 — in the open menu: the codes' size. */
+      menuSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 20px').optional(),
     })
     .optional(),
 
@@ -712,6 +736,7 @@ export type ResolvedChrome = {
     bottomRow: boolean;
     linksFirstMobile: boolean;
     linksRowMobile: boolean;
+    newsletterLook: 'inline' | 'split';
   };
   languages: {
     look: 'menu' | 'inline';
@@ -721,6 +746,7 @@ export type ResolvedChrome = {
     gap?: string;
     inMenu: boolean;
     inFooter: 'off' | 'always' | 'phones';
+    footerPlace: 'head' | 'links';
   };
   cursor: {
     style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend';
@@ -930,6 +956,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       bottomRow: c.footer?.bottomRow !== false,
       linksFirstMobile: c.footer?.linksFirstMobile ?? false,
       linksRowMobile: c.footer?.linksRowMobile ?? false,
+      newsletterLook: c.footer?.newsletterLook ?? 'inline',
     },
     cursor: {
       style: c.cursor?.style ?? 'off',
@@ -1002,6 +1029,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       gap: c.languages?.gap && LENGTH.test(c.languages.gap) ? c.languages.gap : undefined,
       inMenu: c.languages?.inMenu ?? false,
       inFooter: c.languages?.inFooter ?? 'off',
+      footerPlace: c.languages?.footerPlace ?? 'head',
     },
     backToTop: c.backToTop ?? false,
     videoControls: c.videoControls !== false,

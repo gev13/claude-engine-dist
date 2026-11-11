@@ -218,6 +218,8 @@ export const MESSAGES = {
      the components; every word they show is here now. */
   'careers.title': 'Careers',
   'careers.openRoles': 'Open roles',
+  'careers.hiring': 'We are hiring',
+  'block.view': 'View ↗',
   'careers.open': 'Open',
   'careers.closed': 'Closed',
   'careers.posted': 'Posted {when}',

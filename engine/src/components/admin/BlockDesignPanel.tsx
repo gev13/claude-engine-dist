@@ -6,6 +6,8 @@ import { MediaPicker } from '@/components/admin/MediaPicker';
 import { CornerShapeFields } from '@/components/admin/CornerShapeFields';
 import { ChoiceField, ColorField, LengthField } from '@/components/admin/styleFields';
 import {
+  BACKGROUND_POSITIONS,
+  BACKGROUND_SIZES,
   BOX_SIDES,
   GRADIENT_ANGLES,
   REVEAL_DELAYS,
@@ -153,7 +155,7 @@ export function BlockDesignPanel({
   const band = useBandStyle(blockType);
   const [spacingTab, setSpacingTab] = useState<'base' | StyleBreakpoint>('base');
   /** Which background field the media picker is choosing for; null when it is closed. */
-  const [picking, setPicking] = useState<null | 'imageUrl' | 'videoUrl' | 'videoUrlAlt' | 'videoMobileUrl' | 'videoPoster'>(null);
+  const [picking, setPicking] = useState<null | 'imageUrl' | 'videoUrl' | 'videoUrlAlt' | 'videoMobileUrl' | 'videoPoster' | 'mobileImageUrl'>(null);
 
   const current = style ?? {};
   const set = (path: Path) => (value: unknown) => {
@@ -211,6 +213,19 @@ export function BlockDesignPanel({
 
           <LengthField label="Heading width" hint="how far this section’s heading runs before it wraps" value={current.titleWidth} emptyLabel="the site’s" onChange={set(['titleWidth'])} />
           <LengthField label="Most width" hint="the section no wider than this, centred — a document card" value={current.maxWidth} emptyLabel="full" onChange={set(['maxWidth'])} />
+          {/* 3.33 */}
+          {current.maxWidth && (
+            <>
+              <Field label="Where it sits">
+                <Select value={current.maxWidthAlign ?? ''} onChange={(e) => set(['maxWidthAlign'])(e.target.value || undefined)}>
+                  <option value="">Centred</option>
+                  <option value="start">At the start</option>
+                  <option value="end">At the end</option>
+                </Select>
+              </Field>
+              <LengthField label="Most width on phones" value={current.maxWidthMobile} emptyLabel="as above" onChange={set(['maxWidthMobile'])} />
+            </>
+          )}
 
           <Field label="Anchor id" hint="lets a link jump here, e.g. #pricing">
             <Input
@@ -360,6 +375,12 @@ export function BlockDesignPanel({
             placeholder="none"
             onChange={set(['background', 'overlay'])}
           />
+          {/* 3.33 — the phone's own background. */}
+          <ColorField label="Colour on phones" hint="≤768px" value={get(['background', 'mobile', 'color'])} placeholder="as above" onChange={set(['background', 'mobile', 'color'])} />
+          <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+            <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.background?.mobile?.clear === true} onChange={(e) => set(['background', 'mobile', 'clear'])(e.target.checked || undefined)} />
+            No background on phones
+          </label>
           <ChoiceField
             label="Image size"
             value={get(['background', 'size']) as never}
@@ -466,6 +487,32 @@ export function BlockDesignPanel({
 
         {/* 2.17 — a film behind the section, under the overlay. */}
         <div className="mt-4 grid gap-3">
+          {/* 3.33 */}
+          <PickedFile label="Image on phones" hint="optional — a crop of its own for ≤768px" value={current.background?.mobile?.imageUrl} onChoose={() => setPicking('mobileImageUrl')} onClear={() => set(['background', 'mobile', 'imageUrl'])(undefined)} />
+          {current.background?.mobile?.imageUrl && (
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Size on phones">
+                <Select value={current.background.mobile.size ?? ''} onChange={(e) => set(['background', 'mobile', 'size'])(e.target.value || undefined)}>
+                  <option value="">As above</option>
+                  {BACKGROUND_SIZES.map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Position on phones">
+                <Select value={current.background.mobile.position ?? ''} onChange={(e) => set(['background', 'mobile', 'position'])(e.target.value || undefined)}>
+                  <option value="">As above</option>
+                  {BACKGROUND_POSITIONS.map((value) => (
+                    <option key={value} value={value}>
+                      {value}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+            </div>
+          )}
           <PickedFile label="Video" hint="an mp4 or webm from the media library — muted, looped, playing while on screen" value={current.background?.videoUrl} onChoose={() => setPicking('videoUrl')} onClear={() => set(['background', 'videoUrl'])(undefined)} />
           {current.background?.videoUrl && (
             <>
@@ -527,6 +574,16 @@ export function BlockDesignPanel({
             <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.panel === true} onChange={(e) => set(['panel'])(e.target.checked || undefined)} />
             Panel — inset from the page’s edges, in the panel colour and corners (Appearance → Shape)
           </label>
+          {/* 3.33 */}
+          {current.panel && (
+            <>
+              <label className="flex items-center gap-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.panelMobile === 'off'} onChange={(e) => set(['panelMobile'])(e.target.checked ? 'off' : undefined)} />
+                No panel on phones — full width, without its colour or corners
+              </label>
+              {current.panelMobile !== 'off' && <LengthField label="Inset on phones" value={current.panelInsetMobile} emptyLabel="the panel’s" onChange={set(['panelInsetMobile'])} />}
+            </>
+          )}
           {/* 3.28 */}
           <Field label="Reaches past its place by" hint="each side, from tablets up — e.g. 15px into the gutter">
             <Input value={current.bleed ?? ''} placeholder="0" onChange={(e) => set(['bleed'])(e.target.value.trim() || undefined)} />
@@ -648,6 +705,17 @@ export function BlockDesignPanel({
                 options={ALIGN_OPTIONS}
                 onChange={set(['typography', role, 'align'])}
               />
+              {/* 3.33 */}
+              <ChoiceField label="Alignment on tablets" hint="≤1024px" value={get(['typography', role, 'alignTablet']) as never} options={ALIGN_OPTIONS} onChange={set(['typography', role, 'alignTablet'])} />
+              <ChoiceField label="Alignment on phones" hint="≤768px" value={get(['typography', role, 'alignMobile']) as never} options={ALIGN_OPTIONS} onChange={set(['typography', role, 'alignMobile'])} />
+              <ColorField label="Colour on phones" hint="≤768px" value={get(['typography', role, 'colorMobile'])} placeholder="as above" onChange={set(['typography', role, 'colorMobile'])} />
+              {role === 'eyebrow' && (
+                <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.typography?.eyebrow?.rule === false} onChange={(e) => set(['typography', 'eyebrow', 'rule'])(e.target.checked ? false : undefined)} />
+                  No rule before the words
+                </label>
+              )}
+              {role === 'eyebrow' && <LengthField label="Space under it" value={get(['typography', 'eyebrow', 'spaceBelow'])} placeholder="as drawn" onChange={set(['typography', 'eyebrow', 'spaceBelow'])} />}
             </div>
           </div>
         ))}
@@ -815,6 +883,11 @@ export function BlockDesignPanel({
             </Field>
             {current.swipeArrows && current.swipeArrows !== 'none' && (
               <>
+                {/* 3.33 */}
+                <label className="col-span-full flex items-center gap-2 text-[13px] text-ash">
+                  <input type="checkbox" className="h-4 w-4 accent-flare" checked={current.swipeArrowsMobile === 'none'} onChange={(e) => set(['swipeArrowsMobile'])(e.target.checked ? 'none' : undefined)} />
+                  No arrows on phones — the row is swiped
+                </label>
                 <Field label="Arrows drawn">
                   <Select value={current.swipeArrowLook ?? ''} onChange={(e) => set(['swipeArrowLook'])(e.target.value || undefined)}>
                     <option value="">In circles</option>
@@ -925,7 +998,8 @@ export function BlockDesignPanel({
         accept={picking === 'videoUrl' || picking === 'videoUrlAlt' || picking === 'videoMobileUrl' ? 'video' : 'image'}
         onClose={() => setPicking(null)}
         onSelect={(media) => {
-          if (picking) set(['background', picking])(media.url);
+          if (picking === 'mobileImageUrl') set(['background', 'mobile', 'imageUrl'])(media.url);
+          else if (picking) set(['background', picking])(media.url);
           setPicking(null);
         }}
       />

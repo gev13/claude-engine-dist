@@ -12,6 +12,7 @@ import {
   isColor,
   isUsableLength as isLength,
   isLineHeight,
+  isShadow,
   roleVar,
 } from './theme';
 import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars, leafClip, leafRadii } from './shape';
@@ -293,6 +294,25 @@ function localeFontCss(theme: Theme, selector: string): string {
   return parts.join('');
 }
 
+/* 3.33 — a language's heading scale. `zoom` rather than a size, because a
+   heading's size comes from the theme, a block's own style or a clamp; a
+   factor on top reaches them all with one rule, and nothing can outbid it. */
+function localeTypographyCss(theme: Theme, selector: string): string {
+  const parts: string[] = [];
+  const HEADS = ':is(h1,h2,h3,h4,h5,h6)';
+  const scale = (n: unknown) => (typeof n === 'number' && n >= 0.4 && n <= 1.2 ? String(n) : undefined);
+  for (const [locale, type] of Object.entries(theme.localeTypography ?? {})) {
+    if (!LOCALE_PATTERN.test(locale)) continue;
+    const root = `${selector}:lang(${locale})`;
+    const all = scale(type?.headingScale);
+    const phone = scale(type?.headingScaleMobile);
+    if (all) parts.push(`${root} ${HEADS}{zoom:${all}}`);
+    if (phone) parts.push(`@media (max-width:768px){${root} ${HEADS}{zoom:${phone}}}`);
+    if (type?.hyphens) parts.push(`${root} ${HEADS}{hyphens:auto}`);
+  }
+  return parts.join('');
+}
+
 /* ── 2.21: corners, panels, button extras, eyebrow marker, header links ──── */
 
 /** The fallback cut, per kind of element, when a size is not given — the pattern book's sizes. */
@@ -338,6 +358,11 @@ function fieldCss(theme: Theme, scope: string): string {
   push(shape, 'padding-inline', f.paddingInline, isLength);
   if (shape.length) sized.push(block(box, shape));
   if (f.textareaHeight && isLength(f.textareaHeight)) sized.push(block(`${scope}textarea.he-fb__input`, [['min-height', f.textareaHeight], ['height', f.textareaHeight]]));
+  // 3.33 — frosted fields, and a shadow under them.
+  const frost: Decl[] = [];
+  if (typeof f.blur === 'number' && f.blur >= 0 && f.blur <= 40) frost.push(['backdrop-filter', `blur(${f.blur}px)`]);
+  push(frost, 'box-shadow', f.shadow, isShadow);
+  if (frost.length) sized.push(block(box, frost));
   if (field.length === 0) return sized.join('');
   const chip = field.filter(([property]) => property !== 'color');
   return block(`${scope}${INPUT_SELECTOR}`, field) + (chip.length ? block(`${scope}.he-fb__choice input:not(:checked)+span`, chip) : '') + sized.join('');
@@ -692,6 +717,7 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   }
 
   parts.push(localeFontCss(theme, safeSelector));
+  parts.push(localeTypographyCss(theme, safeSelector));
   parts.push(shapeCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
   parts.push(fieldCss(theme, safeSelector === ':root' ? '' : `${safeSelector} `));
 

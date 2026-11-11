@@ -319,6 +319,8 @@ export default async function SiteLayout({
                 ) : undefined
               }
               languagesPhonesOnly={chrome.languages.inFooter === 'phones'}
+              languagesUnderLinks={chrome.languages.footerPlace === 'links'}
+              newsletterSplit={chrome.footer.newsletterLook === 'split'}
               wordmark={wordmark}
               bottomRow={chrome.footer.bottomRow}
               linksFirstMobile={chrome.footer.linksFirstMobile}
@@ -330,7 +332,7 @@ export default async function SiteLayout({
           {chrome.footer.reveal && <RevealFooter onMobile={chrome.footer.revealOnMobile} minWidth={chrome.footer.revealMinWidth} />}
           {chrome.footer.activeLink && <FooterActive />}
           {/* 3.5 — every section's entrance, when the site sets one. */}
-          {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} />}
+          {theme.reveal && !chrome.reduceMotion && <SiteReveal effect={theme.reveal} items={theme.revealItems === true} footer={theme.revealFooter === true} />}
           {chrome.rails && <SideRails rails={chrome.rails} social={navigation.social ?? []} socialStyle={navigation.socialStyle ?? 'short'} />}
           {chrome.cursor.style !== 'off' && !chrome.reduceMotion && <CustomCursor
               style={chrome.cursor.style}

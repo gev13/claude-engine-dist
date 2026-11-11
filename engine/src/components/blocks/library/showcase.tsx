@@ -379,7 +379,7 @@ export function GalleryBlock(p: P<'gallery'>) {
         <div className="he-cq">
           {rowOrder && <MasonryRows turn={p.masonryOrder === 'turn'} />}
           <ul
-            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows', p.gapLength && 'has-gap', p.cardCorners && 'is-card-corners')}
+            className={cn('he-gal he-swipe-track', `is-${p.layout}`, `is-gap-${p.gap}`, `is-${p.ratio}`, `is-hover-${p.hover}`, rowOrder && 'is-rows', p.gapLength && 'has-gap', p.cardCorners && 'is-card-corners', p.height && 'has-h', p.heightMobile && 'has-h-m')}
             style={
               {
                 '--cols': p.columns,
@@ -388,6 +388,11 @@ export function GalleryBlock(p: P<'gallery'>) {
                 ...(p.columnsMobile ? { '--cols-m': p.columnsMobile } : {}),
                 ...(typeof p.radius === 'number' ? { '--he-gal-radius': `${p.radius}px` } : {}),
                 ...(p.gapLength ? { '--he-gal-gap': p.gapLength } : {}),
+                // 3.33 — the pictures' height, and the touch magnifier's place and size.
+                ...(p.height ? { '--he-gal-h': p.height } : {}),
+                ...(p.heightMobile ? { '--he-gal-h-m': p.heightMobile } : {}),
+                ...(p.zoomIcon === 'touch' && p.zoomOffset ? { '--he-gal-zoom-at': p.zoomOffset } : {}),
+                ...(p.zoomIcon === 'touch' && p.zoomSize ? { '--he-gal-zoom': `${p.zoomSize}px` } : {}),
               } as CSSProperties
             }
             data-masonry-rows={rowOrder ? '' : undefined}
@@ -423,7 +428,7 @@ export function GalleryBlock(p: P<'gallery'>) {
                     >
                       {media}
                       {p.zoomIcon && (
-                        <span className="he-gal__zoom" aria-hidden="true">
+                        <span className={cn('he-gal__zoom', p.zoomIcon === 'touch' && `is-touch is-${p.zoomCorner ?? 'bottomRight'}`)} aria-hidden="true">
                           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                             <circle cx="11" cy="11" r="7" />
                             <path d="M16.5 16.5L21 21M11 8v6M8 11h6" />
@@ -470,13 +475,27 @@ export function GalleryBlock(p: P<'gallery'>) {
             viewer.arrowStyle === 'plain' && 'is-arrows-plain',
             viewer.counter === false && 'no-count',
             typeof viewer.speed === 'number' && 'has-speed',
+            // 3.33
+            typeof viewer.blur === 'number' && 'has-blur',
+            viewer.arrows === 'beside' && 'is-arrows-beside',
+            viewer.imageWidth && 'has-img-w',
+            viewer.imageMaxHeight && 'has-img-h',
+            viewer.imageMaxHeightMobile && 'has-img-h-m',
+            typeof viewer.imageRadius === 'number' && 'has-img-r',
+            viewer.arrowsMobile === 'below' && 'is-arrows-m-below',
+            viewer.closeAt === 'overNext' && 'is-close-over',
           )}
           style={
-            viewer.backdrop || viewer.closeBackground || typeof viewer.speed === 'number'
+            viewer.backdrop || viewer.closeBackground || typeof viewer.speed === 'number' || typeof viewer.blur === 'number' || viewer.imageWidth || viewer.imageMaxHeight || viewer.imageMaxHeightMobile || typeof viewer.imageRadius === 'number'
               ? ({
                   ...(viewer.backdrop ? { '--he-lb-backdrop': viewer.backdrop } : {}),
                   ...(viewer.closeBackground ? { '--he-lb-close': viewer.closeBackground } : {}),
                   ...(typeof viewer.speed === 'number' ? { '--he-lb-speed': `${viewer.speed}ms` } : {}),
+                  ...(typeof viewer.blur === 'number' ? { '--he-lb-blur': `${viewer.blur}px` } : {}),
+                  ...(viewer.imageWidth ? { '--he-lb-img-w': viewer.imageWidth } : {}),
+                  ...(viewer.imageMaxHeight ? { '--he-lb-img-h': viewer.imageMaxHeight } : {}),
+                  ...(viewer.imageMaxHeightMobile ? { '--he-lb-img-h-m': viewer.imageMaxHeightMobile } : {}),
+                  ...(typeof viewer.imageRadius === 'number' ? { '--he-lb-img-r': `${viewer.imageRadius}px` } : {}),
                 } as CSSProperties)
               : undefined
           }

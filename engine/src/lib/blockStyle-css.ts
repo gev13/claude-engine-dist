@@ -1,6 +1,6 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
-import { type BlockStyle, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, SECTION_VIDEO, type SpacingBox, type TypeOverride } from './blockStyle';
+import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section style → CSS
@@ -66,7 +66,7 @@ function backgroundDecls(style: BlockStyle): Decl[] {
   // check: same-origin path or a full http(s) URL, and nothing that could
   // close the url() and start a new declaration.
   const url = safe(bg.imageUrl);
-  if (url && /^(\/[A-Za-z0-9._~\-/%]*|https?:\/\/[A-Za-z0-9._~\-/%?=&:]+)$/.test(url) && !url.includes(')')) {
+  if (url && isBackgroundUrl(url)) {
     out.push(['background-image', `url("${url}")`]);
     push(out, 'background-size', bg.size, isKeyword(['cover', 'contain', 'auto']));
     push(out, 'background-position', bg.position, isKeyword(['center', 'top', 'bottom', 'left', 'right']));
@@ -83,6 +83,24 @@ function backgroundDecls(style: BlockStyle): Decl[] {
     }
   }
 
+  return out;
+}
+
+function isBackgroundUrl(url: string): boolean {
+  return /^(\/[A-Za-z0-9._~\-/%]*|https?:\/\/[A-Za-z0-9._~\-/%?=&:]+)$/.test(url) && !url.includes(')');
+}
+
+/** 3.33 — the background on phones; only what was set, so the rest stays the wider screen's. */
+function mobileBackgroundDecls(style: BlockStyle): Decl[] {
+  const m = style.background?.mobile;
+  if (!m) return [];
+  const out: Decl[] = [];
+  if (m.clear) out.push(['background-color', 'transparent'], ['background-image', 'none']);
+  push(out, 'background-color', m.color, isColor);
+  const url = safe(m.imageUrl);
+  if (url && isBackgroundUrl(url)) out.push(['background-image', `url("${url}")`]);
+  push(out, 'background-size', m.size, isKeyword(['cover', 'contain', 'auto']));
+  push(out, 'background-position', m.position, isKeyword(['center', 'top', 'bottom', 'left', 'right']));
   return out;
 }
 
@@ -170,6 +188,8 @@ function tierDecls(override: TypeOverride | undefined, tier: 'tablet' | 'mobile'
   push(out, 'font-size', tier === 'tablet' ? override.sizeTablet : override.sizeMobile, isLength);
   push(out, 'line-height', tier === 'tablet' ? override.lineHeightTablet : override.lineHeightMobile, isLineHeight);
   push(out, 'letter-spacing', tier === 'tablet' ? override.letterSpacingTablet : override.letterSpacingMobile, isLength);
+  push(out, 'text-align', tier === 'tablet' ? override.alignTablet : override.alignMobile, isKeyword(['left', 'center', 'right']));
+  if (tier === 'mobile') push(out, 'color', override.colorMobile, isColor);
   return out;
 }
 
@@ -285,7 +305,9 @@ export function blockStyleToCss(
   const titleWidth = safe(style.titleWidth);
   if (titleWidth && isLength(titleWidth)) own.push(['--he-title-measure', titleWidth]);
   const maxWidth = safe(style.maxWidth);
-  if (maxWidth && isLength(maxWidth)) own.push(['max-width', maxWidth], ['margin-inline', 'auto']);
+  // 3.33 — where it sits: centred unless told otherwise.
+  const maxWidthAt = style.maxWidthAlign === 'start' ? ['0', 'auto'] : style.maxWidthAlign === 'end' ? ['auto', '0'] : null;
+  if (maxWidth && isLength(maxWidth)) own.push(['max-width', maxWidth], ...(maxWidthAt ? ([['margin-left', maxWidthAt[0]], ['margin-right', maxWidthAt[1]]] as Decl[]) : ([['margin-inline', 'auto']] as Decl[])));
   if (typeof style.motion === 'number' && Number.isFinite(style.motion) && style.motion >= 0) {
     own.push(['--he-motion', String(style.motion)]);
   }
@@ -319,6 +341,14 @@ export function blockStyleToCss(
   if (style.bleed && isLength(style.bleed)) {
     const from = style.panel ? 'min(var(--he-panel-inset,24px),3vw)' : '0px';
     parts.push(`@media (min-width:769px){${root}{margin-inline:calc(${from} - ${style.bleed})}}`);
+  }
+
+  /* 3.33 — a panel set aside, or inset differently, on phones. Before the
+     phone spacing and the phone background below, so those still win. */
+  if (style.panel && style.panelMobile === 'off') {
+    parts.push(`@media (max-width:768px){${root}{margin-inline:0;background-color:transparent;clip-path:none}}`);
+  } else if (style.panel && style.panelInsetMobile && isLength(style.panelInsetMobile)) {
+    parts.push(`@media (max-width:768px){${root}{margin-inline:${style.panelInsetMobile}}}`);
   }
 
   if (ownsBand) {
@@ -379,6 +409,13 @@ export function blockStyleToCss(
   if (cardLink.length) parts.push(block(`${root} ${CARD_LINKS}`, cardLink));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
   if (eyebrowColor && isColor(eyebrowColor)) parts.push(`${root} .he-eyebrow__rule{background-color:${eyebrowColor}}`);
+  // 3.33 — the eyebrow is a flex row: its alignment moves the row. And its rule can go.
+  if (style.typography?.eyebrow?.rule === false) parts.push(`${root} .he-eyebrow__rule{display:none}${root} .he-eyebrow{gap:0}`);
+  const eyebrowJustify = (value: string | undefined) => (value === 'left' ? 'flex-start' : value === 'center' ? 'center' : value === 'right' ? 'flex-end' : undefined);
+  const eyebrowAlign = eyebrowJustify(style.typography?.eyebrow?.align);
+  if (eyebrowAlign) parts.push(`${root} .he-eyebrow{justify-content:${eyebrowAlign}}`);
+  const eyebrowBelow = safe(style.typography?.eyebrow?.spaceBelow);
+  if (eyebrowBelow && isLength(eyebrowBelow)) parts.push(`${root} .he-eyebrow{margin-bottom:${eyebrowBelow}}`);
 
   /* 3.3 — a section's own sizes on tablets and phones, so a 56px heading
      set for a desktop is not 56px on a phone. */
@@ -394,9 +431,19 @@ export function blockStyleToCss(
       block(`${root} ${CARD_LINKS}`, tierDecls(style.typography?.cardLink, tier)),
       // 3.13 — the section's gap on this tier.
       block(root, tierGap && isLength(tierGap) ? [['--he-gap', tierGap]] : []),
+      // 3.33 — the eyebrow's row, when its alignment changes on this tier.
+      block(`${root} .he-eyebrow`, eyebrowJustify(tier === 'tablet' ? style.typography?.eyebrow?.alignTablet : style.typography?.eyebrow?.alignMobile) ? [['justify-content', eyebrowJustify(tier === 'tablet' ? style.typography?.eyebrow?.alignTablet : style.typography?.eyebrow?.alignMobile)!]] : []),
     ].join('');
     if (inner) parts.push(`@media (max-width:${maxWidth}px){${inner}}`);
   }
+
+  /* 3.33 — the phone's background and width, before the phone spacing. */
+  const phoneBackground = mobileBackgroundDecls(style);
+  if (phoneBackground.length) {
+    // The band steps aside here too, as it does for a background on every screen; a column's blocks are not its band.
+    parts.push(`@media (max-width:768px){${block(root, phoneBackground)}${ownsBand ? `${root}>*{background:transparent}` : ''}}`);
+  }
+  if (style.maxWidthMobile && isLength(style.maxWidthMobile)) parts.push(`@media (max-width:768px){${root}{max-width:${style.maxWidthMobile}}}`);
 
   for (const { key, maxWidth } of BREAKPOINTS) {
     const decls = boxDecls(style.spacing?.[key]);
@@ -441,7 +488,8 @@ export function blockStyleToCss(
     const button = `${row}>:is(.he-btn,.he-cbtn)`;
     parts.push(
       style.buttonsMobile === 'fit'
-        ? `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}}`
+        ? // 3.33 — `.he-btns` asks to be centred or at the right; a stack has to honour that across, where its row did along.
+          `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}${root} .he-btns.is-center{align-items:center}${root} .he-btns.is-right{align-items:flex-end}}`
         : `@media (max-width:768px){${row}{flex-direction:column;align-items:stretch;gap:12px}${button}{flex:0 0 auto;width:100%;justify-content:space-between;text-align:left;white-space:normal;line-height:1.35}}`,
     );
   }
@@ -490,7 +538,10 @@ export type RowCssInput = {
   gapTablet?: string;
   gapMobile?: string;
   minHeightMobile?: string;
-  columns: { id: string; width: ColumnWidth; order?: ColumnOrder; style?: BlockStyle }[];
+  /** 3.33 — the tracks written out, per tier, over the twelfths. */
+  tracks?: RowTracks;
+  alignContentMobile?: 'start' | 'center' | 'end';
+  columns: { id: string; width: ColumnWidth; order?: ColumnOrder; alignSelf?: ColumnAlign; justify?: ColumnJustify; style?: BlockStyle }[];
 };
 
 /**
@@ -527,6 +578,11 @@ const TIER_RANGE: Record<'base' | 'laptop' | 'tablet' | 'mobile', string> = {
   mobile: '(max-width:768px)',
 };
 
+/** 3.33 — a written track list as a template; `minmax(0, …fr)`, so long words cannot widen a track. */
+function writtenTracks(value: string): string {
+  return value.trim().split(/\s+/).map((track) => (track.endsWith('fr') ? `minmax(0,${track})` : track)).join(' ');
+}
+
 export function rowToCss(row: RowCssInput): string {
   if (!isSafeBlockId(row.id)) return '';
 
@@ -541,15 +597,30 @@ export function rowToCss(row: RowCssInput): string {
    * rest of the row was blank — the hero's text sat in 648px of a 1024px
    * viewport with the hidden figure's 347px empty beside it.
    */
-  const tracksAt = (breakpoint: 'base' | 'laptop' | 'tablet' | 'mobile') =>
-    trackList(
-      columns
-        .filter((c) =>
-          // `hideAt` removes a column's track on exactly its tiers; `hideOn` keeps the rule it always had.
-          c.style?.hideAt ? !c.style.hideAt.includes(breakpoint) : breakpoint === 'base' || !c.style?.hideOn?.includes(breakpoint),
-        )
-        .map((c) => spanAt(c.width, breakpoint)),
-    );
+  const spansAt = (breakpoint: 'base' | 'laptop' | 'tablet' | 'mobile') =>
+    columns
+      .filter((c) =>
+        // `hideAt` removes a column's track on exactly its tiers; `hideOn` keeps the rule it always had.
+        c.style?.hideAt ? !c.style.hideAt.includes(breakpoint) : breakpoint === 'base' || !c.style?.hideOn?.includes(breakpoint),
+      )
+      .map((c) => spanAt(c.width, breakpoint));
+  /* 3.33 — a tier's written tracks, or the wider tier's while the columns
+     keep their widths there. Where the twelfths change (the row stacks on
+     phones) the twelfths decide, so a written desktop list cannot squeeze a
+     stacked phone layout back into columns. */
+  const TIERS = ['base', 'laptop', 'tablet', 'mobile'] as const;
+  const writtenAt = (breakpoint: (typeof TIERS)[number]): string | undefined => {
+    const own = row.tracks?.[breakpoint];
+    if (own && isTrackList(own)) return own;
+    const index = TIERS.indexOf(breakpoint);
+    if (index === 0) return undefined;
+    const wider = TIERS[index - 1];
+    return spansAt(breakpoint).join() === spansAt(wider).join() ? writtenAt(wider) : undefined;
+  };
+  const tracksAt = (breakpoint: (typeof TIERS)[number]) => {
+    const written = writtenAt(breakpoint);
+    return written ? writtenTracks(written) : trackList(spansAt(breakpoint));
+  };
 
   const decls: Decl[] = [
     ['display', 'grid'],
@@ -578,6 +649,8 @@ export function rowToCss(row: RowCssInput): string {
     for (const [prop, value] of tier) push(tierDecls, prop, value, isLength);
     if (tierDecls.length) parts.push(`@media (max-width:${maxWidth}px){${block(root, tierDecls)}}`);
   }
+
+  if (row.alignContentMobile && ['start', 'center', 'end'].includes(row.alignContentMobile)) parts.push(`@media (max-width:768px){${root}{align-content:${row.alignContentMobile}}}`);
 
   // Below the point where columns stack, "reverse" is the only way to say
   // "the image should come first on a phone".
@@ -620,6 +693,23 @@ export function rowToCss(row: RowCssInput): string {
     });
     const rules = columns.map((c, index) => `${root}>.he-c-${c.id}{order:${slots.indexOf(index) + 1}}`).join('');
     parts.push(`@media (max-width:${maxWidth}px){${rules}}`);
+  }
+
+  /* 3.33 — how each column sits in the row, and how its blocks spread down
+     it. Written per tier, widest first, so an unset tier keeps the wider one's. */
+  const JUSTIFY: Record<string, string> = { start: 'flex-start', center: 'center', end: 'flex-end', between: 'space-between' };
+  for (const key of TIERS) {
+    const rules = columns
+      .map((c) => {
+        const decls: Decl[] = [];
+        push(decls, 'align-self', c.alignSelf?.[key], isKeyword(['start', 'center', 'end', 'stretch']));
+        const justify = c.justify?.[key];
+        if (justify && JUSTIFY[justify]) decls.push(['display', 'flex'], ['flex-direction', 'column'], ['justify-content', JUSTIFY[justify]]);
+        return block(`${root}>.he-c-${c.id}`, decls);
+      })
+      .join('');
+    if (!rules) continue;
+    parts.push(key === 'base' ? rules : `@media (max-width:${BREAKPOINTS.find((b) => b.key === key)!.maxWidth}px){${rules}}`);
   }
 
   // 3.23 — scoped to this row: a column id is unique only inside its row, and `.he-c-c0` alone hid every row's first column.

@@ -299,6 +299,54 @@ export function CookiesScreen({ canWrite }: { canWrite: boolean }) {
               <Field label="Button text under the pointer" htmlFor="cookie-btn-hover-text" hint="empty keeps the text colour">
                 <Input id="cookie-btn-hover-text" value={form.buttonHoverText ?? ''} disabled={!canWrite} onChange={(e) => set('buttonHoverText', e.target.value.trim() || undefined)} />
               </Field>
+              {/* 3.33 */}
+              {(
+                [
+                  ['corners', 'Corners one by one', 'px, e.g. 0 40px 0 40px'],
+                  ['buttonRadius', 'Buttons’ corners', 'px, e.g. 0 16px 0 16px'],
+                  ['buttonPadding', 'Buttons’ padding', 'px, e.g. 14px 20px'],
+                ] as const
+              ).map(([key, label, hint]) => (
+                <Field key={key} label={label} hint={hint} htmlFor={`cookie-${key}`}>
+                  <Input id={`cookie-${key}`} value={form[key] ?? ''} disabled={!canWrite} onChange={(e) => set(key, e.target.value.trim() || undefined)} />
+                </Field>
+              ))}
+              {(
+                [
+                  ['left', 'Distance from the left', 'px', 0, 120],
+                  ['gap', 'Space between its parts', 'px', 0, 60],
+                  ['textLine', 'Text line height', 'e.g. 1.12', 1, 2.5],
+                  ['buttonSize', 'Buttons’ text size', 'px', 10, 24],
+                  ['buttonLine', 'Buttons’ line height', 'e.g. 1.1', 0.8, 2],
+                  ['buttonTracking', 'Buttons’ letter spacing', 'px', -3, 6],
+                ] as const
+              ).map(([key, label, hint, least, most]) => (
+                <Field key={key} label={label} hint={hint} htmlFor={`cookie-${key}`}>
+                  <Input id={`cookie-${key}`} type="number" step="any" min={least} max={most} value={form[key] ?? ''} disabled={!canWrite} onChange={(e) => set(key, e.target.value === '' ? undefined : Math.min(most, Math.max(least, Number(e.target.value))))} />
+                </Field>
+              ))}
+              <Field label="Buttons’ weight" htmlFor="cookie-btn-weight">
+                <Select id="cookie-btn-weight" value={form.buttonWeight ?? ''} disabled={!canWrite} onChange={(e) => set('buttonWeight', (e.target.value || undefined) as typeof form.buttonWeight)}>
+                  <option value="">As drawn</option>
+                  {['300', '400', '500', '600', '700'].map((w) => (
+                    <option key={w} value={w}>
+                      {w}
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.centerMobile === true} disabled={!canWrite} onChange={(e) => set('centerMobile', e.target.checked || undefined)} />
+                Centred on phones
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.noWrapMobile === true} disabled={!canWrite} onChange={(e) => set('noWrapMobile', e.target.checked || undefined)} />
+                On phones, the words and the button stay on one line
+              </label>
+              <label className="flex items-center gap-2 self-end pb-2 text-[13px] text-ash">
+                <input type="checkbox" className="h-4 w-4 accent-flare" checked={form.noWrap === true} disabled={!canWrite} onChange={(e) => set('noWrap', e.target.checked || undefined)} />
+                The words and the button stay on one line, on every screen
+              </label>
               {/* 3.28 — the text, its place and padding, the phones' insets. */}
               <Field label="The policy link" htmlFor="cookie-link-place">
                 <Select id="cookie-link-place" value={form.linkPlace ?? ''} disabled={!canWrite} onChange={(e) => set('linkPlace', (e.target.value || undefined) as typeof form.linkPlace)}>

@@ -84,7 +84,7 @@ function JobCardItem({ job, locale, t, look }: { job: JobCard; locale: string; t
           {!job.isOpen ? t('careers.closed') : job.postedAt ? t('careers.posted', { when: formatRelative(new Date(job.postedAt), locale) }) : ''}
         </span>
         {look.button && (
-          <span className="he-cbtn is-small is-outline he-jobc__btn" aria-hidden="true">
+          <span className={cn('he-cbtn is-small he-jobc__btn', look.buttonLook === 'primary' ? 'is-primary' : 'is-outline')} aria-hidden="true">
             {t('careers.explore')}
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
               <path d="M3 9l6-6M4 3h5v5" />
@@ -165,7 +165,7 @@ export default async function CareersIndex({ params }: { params: Promise<Params>
         </Section>
       )}
 
-      <Section tone={page ? 'raised' : 'base'} size="lg">
+      <Section tone={page ? 'raised' : 'base'} size="lg" className="he-jobs-sec">
         {/* The page's own blocks may already have used h1, so this is h2 when
             one exists and the listing's own heading otherwise. */}
         {/* 3.29 — with cards, the page's own blocks carry the heading (the design's "Join our team"). */}

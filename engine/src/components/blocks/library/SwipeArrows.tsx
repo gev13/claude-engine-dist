@@ -24,6 +24,7 @@ export function SwipeArrows({
   box,
   ends,
   fill,
+  noPhone,
 }: {
   placement: 'belowRight' | 'sides';
   /** 3.28 — bare chevrons, a box of their own. */
@@ -32,6 +33,8 @@ export function SwipeArrows({
   /** 3.29 — an arrow at its end hidden rather than dimmed; the arrows in the main button's colours. */
   ends?: 'dim' | 'hide';
   fill?: 'surface' | 'primary';
+  /** 3.33 — phones swipe with no buttons at all. */
+  noPhone?: boolean;
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const trackRef = useRef<HTMLElement | null>(null);
@@ -77,7 +80,7 @@ export function SwipeArrows({
   return (
     <div
       ref={ref}
-      className={cn('he-swipe-nav', `is-${placement}`, look === 'plain' && 'is-plain', box && 'has-box', ends === 'hide' && 'is-hide-ends', fill === 'primary' && 'is-fill-primary')}
+      className={cn('he-swipe-nav', `is-${placement}`, look === 'plain' && 'is-plain', box && 'has-box', ends === 'hide' && 'is-hide-ends', fill === 'primary' && 'is-fill-primary', noPhone && 'is-no-phone')}
       hidden={!state.can}
       style={
         {

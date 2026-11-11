@@ -39,10 +39,10 @@ describe('careers type', () => {
     expect(out).toContain('.he-job__section>h2{font-family:var(--he-body-family);font-size:26px;line-height:1.1;letter-spacing:-0.2px}');
     expect(out).toContain('@media (max-width:768px){.he-job__section>h2{font-size:22px}}');
   });
-  it('puts space under the application form’s heading, in both layouts', () => {
+  it('puts space under the application form’s heading, in every layout', () => {
     expect(careersCss(careersLookSchema.parse({ applyGap: '32px' }))).toBe('.he-job__applytitle{margin-bottom:32px}');
     const page = readFileSync(join(__dirname, '../src/app/(site)/[locale]/careers/[slug]/page.tsx'), 'utf8');
-    expect(page.match(/he-job__applytitle/g)).toHaveLength(2);
+    expect(page.match(/he-job__applytitle/g)).toHaveLength(3);
   });
   it('refuses a value that could break out of the style element', () => {
     expect(careersLookSchema.safeParse({ cardTitle: { color: 'red;}body{' } }).success).toBe(false);

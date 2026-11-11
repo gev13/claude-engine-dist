@@ -301,7 +301,7 @@ export async function PostArticle({
         )}
         {layout === 'coverAside' ? (
           // 3.29 — the cover as a card beside the article, the title and details over it.
-          <Section size="lg">
+          <Section size="lg" className="he-post-aside-sec">
             <div className="he-post-aside" style={blog.coverTint && isColor(blog.coverTint) ? ({ '--he-aside-tint': blog.coverTint } as React.CSSProperties) : undefined}>
               <header className="he-post-aside__card">
                 <SiteImg src={post.coverUrl!} alt="" className="he-post-aside__img" sizes="half" priority />

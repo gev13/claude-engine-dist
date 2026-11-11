@@ -11,7 +11,7 @@ import { useMessages } from '@/components/site/Messages';
  * engine's own (`footer.newsletter*`, `newsletter.*`), translated per
  * language in Site translations.
  */
-export function FooterNewsletter() {
+export function FooterNewsletter({ split }: { /** 3.33 — the field and the button as two separate things. */ split?: boolean }) {
   const id = useId();
   const t = useMessages();
   const challenge = useChallenge('newsletter');
@@ -53,7 +53,7 @@ export function FooterNewsletter() {
   }
 
   return (
-    <div className="he-ftr__nl">
+    <div className={split ? 'he-ftr__nl is-split' : 'he-ftr__nl'}>
       <p className="he-ftr__nltitle">{t('footer.newsletterTitle')}</p>
       <p className="he-ftr__nltext">{t('footer.newsletterText')}</p>
       {state === 'sent' ? (

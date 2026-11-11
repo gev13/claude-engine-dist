@@ -1,0 +1,247 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   3.33 — the options a design needed so that it takes no custom CSS.
+   Every rule here is keyed to a class or a custom property that exists only
+   when its option is set, so an untouched site is drawn by none of it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+@layer components {
+  /* Sliders: phones swipe, with no buttons. */
+  @media (width <= 48rem) {
+    .he-swipe-nav.is-no-phone { display: none; }
+  }
+
+  /* Heading: the subtitle's own width and the space above it. */
+  .he-hd__sub.has-w { max-width: var(--he-hd-sub-w); }
+  .he-hd__sub.has-gap { margin-top: var(--he-hd-sub-gap); }
+  @media (width <= 48rem) {
+    .he-hd__sub.has-w-m { max-width: var(--he-hd-sub-w-m); }
+  }
+
+  /* Pictures with text over them. */
+  .he-fgrid.is-overlay.has-text-pad .he-ocard__text { padding: var(--he-ocard-pad); }
+  .he-ocard.has-own-h { min-height: var(--he-ocard-own-h); }
+  .he-ocard.has-tw .he-ocard__text { width: min(100%, var(--he-ocard-tw)); max-width: 100%; }
+  .he-ocard__points { display: grid; grid-template-columns: repeat(var(--he-ocard-pcols, 1), minmax(0, 1fr)); gap: var(--he-ocard-pgap, 6px 16px); margin: 12px 0 0; padding: 0 0 0 1.1em; list-style: disc; font-size: 15px; }
+  .he-ocard__bg:is(.is-at-m-center, .is-at-m-top, .is-at-m-bottom, .is-at-m-left, .is-at-m-right, .is-at-m-top-left, .is-at-m-top-right, .is-at-m-bottom-left, .is-at-m-bottom-right) { object-fit: cover; }
+  @media (width > 48rem) {
+    .he-fgrid.has-row-tracks { display: flex; flex-wrap: wrap; }
+    .he-fgrid.has-row-tracks > .he-ocard { flex: 0 0 calc((100% - (var(--he-rt-n, 1) - 1) * var(--he-rt-gap, 24px)) * var(--he-rt-share, 1) - 0.02px); min-width: 0; }
+  }
+  @media (48rem < width <= 64rem) {
+    .he-fgrid.has-row-tracks > .he-ocard { flex-basis: calc((100% - (var(--he-rt-n, 1) - 1) * var(--he-rt-gap-t, var(--he-rt-gap, 24px))) * var(--he-rt-share, 1) - 0.02px); }
+  }
+  @media (width <= 48rem) {
+    .he-fgrid.is-overlay.has-text-pad-m .he-ocard__text { padding: var(--he-ocard-pad-m); }
+    .he-ocard.has-own-h-m { min-height: var(--he-ocard-own-h-m); }
+    .he-ocard.has-tw-m .he-ocard__text { width: min(100%, var(--he-ocard-tw-m)); }
+    .he-ocard__bg.is-at-m-center { object-position: center; }
+    .he-ocard__bg.is-at-m-top { object-position: center top; }
+    .he-ocard__bg.is-at-m-bottom { object-position: center bottom; }
+    .he-ocard__bg.is-at-m-left { object-position: left center; }
+    .he-ocard__bg.is-at-m-right { object-position: right center; }
+    .he-ocard__bg.is-at-m-top-left { object-position: left top; }
+    .he-ocard__bg.is-at-m-top-right { object-position: right top; }
+    .he-ocard__bg.is-at-m-bottom-left { object-position: left bottom; }
+    .he-ocard__bg.is-at-m-bottom-right { object-position: right bottom; }
+  }
+
+  /* Gallery: the even grid's pictures at a height of their own. */
+  .he-gal.is-grid.has-h .he-gal__media { height: var(--he-gal-h); aspect-ratio: auto; }
+  @media (width <= 48rem) {
+    .he-gal.is-grid.has-h-m .he-gal__media { height: var(--he-gal-h-m); aspect-ratio: auto; }
+  }
+
+  /* Gallery: a magnifier for touch screens only, at a corner, always shown. */
+  .he-gal__zoom.is-touch { display: none; top: auto; right: auto; bottom: auto; left: auto; width: var(--he-gal-zoom, 60px); height: var(--he-gal-zoom, 60px); opacity: 1; transform: none; transition: none; }
+  .he-gal__media.is-zoomable:is(:hover, :focus-visible) .he-gal__zoom.is-touch { transform: none; }
+  .he-gal__zoom.is-touch.is-topLeft { top: var(--he-gal-zoom-at, 12px); left: var(--he-gal-zoom-at, 12px); }
+  .he-gal__zoom.is-touch.is-topRight { top: var(--he-gal-zoom-at, 12px); right: var(--he-gal-zoom-at, 12px); }
+  .he-gal__zoom.is-touch.is-bottomLeft { bottom: var(--he-gal-zoom-at, 12px); left: var(--he-gal-zoom-at, 12px); }
+  .he-gal__zoom.is-touch.is-bottomRight { bottom: var(--he-gal-zoom-at, 12px); right: var(--he-gal-zoom-at, 12px); }
+  @media (hover: none) {
+    .he-gal__zoom.is-touch { display: grid; }
+  }
+
+  /* Gallery: the viewer. */
+  .he-lightbox.has-blur::backdrop { backdrop-filter: blur(var(--he-lb-blur)); }
+  .he-lightbox.has-img-w .he-lightbox__img { width: min(var(--he-lb-img-w), 100%); object-fit: cover; }
+  .he-lightbox.has-img-h .he-lightbox__img { max-height: min(var(--he-lb-img-h), calc(100svh - 170px)); object-fit: cover; }
+  .he-lightbox.has-img-r .he-lightbox__img { border-radius: var(--he-lb-img-r); }
+  @media (width > 48rem) {
+    .he-lightbox[open].is-arrows-beside { grid-template-columns: 48px minmax(0, max-content) 48px; justify-content: center; column-gap: 24px; }
+    .he-lightbox[open].is-arrows-beside.has-img-w { grid-template-columns: 48px min(var(--he-lb-img-w), calc(100% - 144px)) 48px; }
+  }
+  .he-lightbox.is-close-over[open] { align-content: center; }
+  .he-lightbox.is-close-over .he-dialog-close { position: static; grid-row: 1; grid-column: 3; align-self: start; justify-self: center; margin-top: 5px; }
+  @media (width <= 48rem) {
+    .he-lightbox.has-img-w .he-lightbox__img { width: 100%; }
+    .he-lightbox.has-img-h-m .he-lightbox__img { max-height: min(var(--he-lb-img-h-m), calc(100svh - 220px)); object-fit: cover; }
+    .he-lightbox[open].is-arrows-m-below { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto auto; justify-content: stretch; align-content: center; column-gap: 10px; row-gap: 12px; padding: 0 10px; }
+    .he-lightbox.is-arrows-m-below .he-lightbox__fig { grid-row: 2; grid-column: 1 / -1; }
+    .he-lightbox.is-arrows-m-below .he-lightbox__nav { position: static; grid-row: 3; }
+    .he-lightbox.is-arrows-m-below .he-lightbox__nav.is-prev { grid-column: 1; justify-self: end; }
+    .he-lightbox.is-arrows-m-below .he-lightbox__nav.is-next { grid-column: 2; justify-self: start; }
+    .he-lightbox.is-close-over .he-dialog-close { grid-row: 1; grid-column: 1 / -1; justify-self: end; margin-top: 0; }
+  }
+}
+
+/* Over the utilities the blocks are drawn with. */
+@media (width <= 48rem) {
+  .he-hd.is-m-left { text-align: left; }
+  .he-hd.is-m-left :is(.he-hd__title, .he-hd__sub, .he-hd__divider) { margin-inline: 0; }
+  .he-hd.is-m-left .he-eyebrow { justify-content: flex-start; }
+  .he-hd.is-m-center { text-align: center; }
+  .he-hd.is-m-center :is(.he-hd__title, .he-hd__sub, .he-hd__divider) { margin-inline: auto; }
+  .he-hd.is-m-center .he-eyebrow { justify-content: center; }
+}
+.he-prose-w :is(p, .prose-edge) { max-width: var(--he-prose-w); }
+@media (width <= 48rem) {
+  .he-prose-w-m :is(p, .prose-edge) { max-width: var(--he-prose-w-m); }
+}
+
+/* Post cards: the words' own type. A layer of its own, after the utilities, so an unset value can fall back with `revert-layer`. */
+@layer he-details {
+  .he-plst.has-title-type .he-plst__title { font-family: var(--he-plst-t-font, revert-layer); font-size: var(--he-plst-t-size, revert-layer); font-weight: var(--he-plst-t-weight, revert-layer); line-height: var(--he-plst-t-line, revert-layer); letter-spacing: var(--he-plst-t-tracking, revert-layer); color: var(--he-plst-t-color, revert-layer); }
+  .he-plst.has-chip-type .he-plst__chip { font-family: var(--he-plst-c-font, revert-layer); font-size: var(--he-plst-c-size, revert-layer); font-weight: var(--he-plst-c-weight, revert-layer); line-height: var(--he-plst-c-line, revert-layer); letter-spacing: var(--he-plst-c-tracking, revert-layer); color: var(--he-plst-c-color, revert-layer); }
+  .he-plst.has-excerpt-type .he-plst__excerpt { font-family: var(--he-plst-e-font, revert-layer); font-size: var(--he-plst-e-size, revert-layer); font-weight: var(--he-plst-e-weight, revert-layer); line-height: var(--he-plst-e-line, revert-layer); letter-spacing: var(--he-plst-e-tracking, revert-layer); color: var(--he-plst-e-color, revert-layer); }
+  @media (width <= 48rem) {
+    .he-plst.has-title-type .he-plst__title { font-size: var(--he-plst-t-size-m, var(--he-plst-t-size, revert-layer)); }
+    .he-plst.has-chip-type .he-plst__chip { font-size: var(--he-plst-c-size-m, var(--he-plst-c-size, revert-layer)); }
+    .he-plst.has-excerpt-type .he-plst__excerpt { font-size: var(--he-plst-e-size-m, var(--he-plst-e-size, revert-layer)); }
+  }
+  .he-plst.is-overlay.has-pad .he-plst__link { padding: var(--he-plst-pad); }
+  @media (width <= 48rem) {
+    .he-plst.is-overlay.has-h-m .he-plst__link { min-height: var(--he-plst-h-m); }
+    .he-plst.is-overlay.has-pad-m .he-plst__link { padding: var(--he-plst-pad-m); }
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .he-plst.has-arrow-pointer .he-plst__link { cursor: var(--he-plst-cursor); }
+  }
+}
+
+/* The centred advert: the heading above two columns; the words in a panel, the details above the cover. */
+@layer components {
+  .he-job-c__head { margin-bottom: 40px; text-align: center; }
+  .he-job-c__title { max-width: none; }
+  .he-job-c { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); align-items: start; gap: var(--he-gap, 10px); }
+  .he-job-c__side { display: flex; flex-direction: column; gap: 24px; min-width: 0; }
+  .he-job-c__side .he-job__meta { grid-template-columns: repeat(2, minmax(0, 1fr)); margin: 0; padding-block: 0; border: 0; }
+  .he-job-c__main .he-job__section:first-child { margin-top: 0; }
+  @media (width <= 1024px) {
+    .he-job-c { grid-template-columns: minmax(0, 1fr); }
+    .he-job-c__side { order: -1; }
+  }
+}
+
+/* The cookie notice. */
+@layer components {
+  .he-cookie[style*='--he-cookie-corners'] { border-radius: var(--he-cookie-corners); }
+  .he-cookie[style*='--he-cookie-left'].is-bottom-left { left: var(--he-cookie-left); }
+  .he-cookie[style*='--he-cookie-line'] .he-cookie__body { line-height: var(--he-cookie-line); }
+  .he-cookie[style*='--he-cookie-gap'] { gap: var(--he-cookie-gap); }
+  .he-cookie[style*='--he-cookie-btn-r'] .he-btn { border-radius: var(--he-cookie-btn-r); }
+  .he-cookie[style*='--he-cookie-btn-pad'] .he-btn { height: auto; min-height: 0; padding: var(--he-cookie-btn-pad); }
+  .he-cookie[style*='--he-cookie-btn-size'] .he-btn { font-size: var(--he-cookie-btn-size); }
+  .he-cookie[style*='--he-cookie-btn-w'] .he-btn { font-weight: var(--he-cookie-btn-w); }
+  .he-cookie[style*='--he-cookie-btn-line'] .he-btn { line-height: var(--he-cookie-btn-line); }
+  .he-cookie[style*='--he-cookie-btn-track'] .he-btn { letter-spacing: var(--he-cookie-btn-track); }
+  .he-cookie[style*='--he-cookie-w']:is(.is-bottom-left, .is-bottom-right) { width: min(var(--he-cookie-w), calc(100vw - 20px)); max-width: none; }
+  @media (width <= 48rem) {
+    .he-cookie.is-center-m:not(.is-bottom-bar) { inset: auto auto var(--he-cookie-bottom, 16px) 50%; translate: -50% 0; width: min(var(--he-cookie-w, 420px), calc(100vw - 20px)); max-width: none; }
+  }
+}
+
+/* The cookie notice on one line: in the later layer, over a pill's own wrapping on phones. */
+@layer he-details {
+  .he-cookie.is-nowrap { flex-wrap: nowrap; align-items: center; }
+  .he-cookie.is-nowrap .he-cookie__text { flex: 1 1 auto; }
+  @media (width <= 48rem) {
+    .he-cookie:is(.is-nowrap, .is-nowrap-m) { flex-wrap: nowrap; align-items: center; }
+    .he-cookie:is(.is-nowrap, .is-nowrap-m) .he-cookie__text { flex: 1 1 auto; }
+    .he-cookie:is(.is-nowrap, .is-nowrap-m) .he-cookie__actions { flex: none; width: auto; }
+    .he-cookie:is(.is-nowrap, .is-nowrap-m) .he-btn { width: auto; }
+  }
+}
+
+/* The footer: the sign-up's two parts, the languages under the link columns. */
+@layer components {
+  .he-ftr__nl.is-split .he-ftr__nlrow { gap: 8px; padding: 0; border-radius: 0; background: transparent; }
+  .he-ftr__nl.is-split .he-ftr__nlinput.he-nl__input { flex: 1 1 auto; min-width: 0; background: var(--color-surface); border-radius: 999px; }
+  .he-ftr__nl.is-split .he-ftr__nlsend { flex: none; align-self: stretch; height: auto; }
+  .he-ftr__langrow { display: flex; justify-content: flex-end; padding-bottom: 20px; }
+}
+
+/* Team portraits. */
+@layer he-details {
+  .he-team__grid.is-portrait.has-pad .he-team__member { padding: var(--he-team-pad); }
+  .he-team__grid.is-portrait.has-photo-gap .he-team__figure { margin-top: var(--he-team-photo-gap); }
+  .he-team__grid.is-portrait.is-photo-cover .he-team__figure .he-fill { object-fit: cover; }
+  .he-team__grid.is-portrait.is-photo-contain .he-team__figure .he-fill { object-fit: contain; }
+  .he-team__grid.is-portrait.has-photo-at .he-team__figure .he-fill { object-position: var(--he-team-photo-at); }
+  .he-team__grid.is-portrait.has-ratio .he-team__member { aspect-ratio: var(--he-team-ratio); }
+  @media (width <= 48rem) {
+    .he-team__grid.is-portrait.has-pad-m .he-team__member { padding: var(--he-team-pad-m); }
+    .he-team__grid.is-portrait.has-photo-gap-m .he-team__figure { margin-top: var(--he-team-photo-gap-m); }
+    .he-team__grid.is-portrait.has-ratio-m .he-team__member { aspect-ratio: var(--he-team-ratio-m); }
+  }
+}
+@media (width > 48rem) {
+  .he-team.has-tier-more:not(.is-all) .he-team__member.is-later-d { display: none; }
+  .he-show__more.is-only-phones { display: none; }
+}
+@media (width <= 48rem) {
+  .he-team.has-tier-more:not(.is-all) .he-team__member.is-later-m { display: none; }
+  .he-show__more.is-only-wide { display: none; }
+}
+
+/* The media band. */
+@layer he-details {
+  .he-band__inner.has-w .he-band__text { max-width: var(--he-band-w); }
+  .he-band__inner.has-w :is(h1, h2) { max-width: none; }
+  .he-band__inner.has-eyebrow-gap .he-eyebrow { margin-bottom: var(--he-band-eyebrow-gap); }
+  .he-band.has-title-indent :is(h1, h2) { padding-left: var(--he-band-indent); text-indent: calc(-1 * var(--he-band-indent)); }
+  @media (width > 48rem) {
+    .he-band.is-group-center .he-band__text { display: flex; flex-direction: column; align-items: center; max-width: none; text-align: center; }
+    .he-band.is-group-center :is(h1, h2) { text-align: left; }
+    .he-band.is-group-center .he-actions { justify-content: center; }
+    .he-band.has-text-end .he-band__text { margin-inline-end: var(--he-band-end); }
+  }
+  @media (width <= 48rem) {
+    .he-band__inner.has-w-m .he-band__text { max-width: var(--he-band-w-m); }
+    .he-band.is-m-top .he-band__inner { align-items: flex-start; }
+    .he-band.is-bg-m-center .he-band__bg { object-position: center; }
+    .he-band.is-bg-m-top .he-band__bg { object-position: center top; }
+    .he-band.is-bg-m-bottom .he-band__bg { object-position: center bottom; }
+    .he-band.is-bg-m-left .he-band__bg { object-position: left center; }
+    .he-band.is-bg-m-right .he-band__bg { object-position: right center; }
+    .he-band.has-fade-m::after { inset: 0 0 auto 0; height: var(--he-band-fade-m-h, 50%); background: linear-gradient(to bottom, var(--he-band-fade-m), color-mix(in srgb, var(--he-band-fade-m) 0%, transparent)); }
+    .he-band.has-title-indent :is(h1, h2) { padding-left: 0; text-indent: 0; }
+    .he-band.is-title-flow-m :is(h1, h2) { white-space: normal; }
+  }
+}
+
+/* The form: the space between questions, the send button's width on phones. */
+@layer components {
+  .has-field-gap .he-fb__grid { gap: var(--he-fb-gap); }
+  @media (width <= 48rem) {
+    .is-submit-own-m .he-fb__actions { justify-content: flex-start; }
+    .is-submit-own-m .he-fb__actions > * { flex: none; width: auto; }
+  }
+}
+
+/* Icon lists: each entry a ruled row, the words at the left and a link at the right. */
+@layer he-details {
+  .he-ilist.is-linkRows .he-ilist__item { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: var(--he-ilist-pad, 16px 0); border-top: 1px solid var(--he-ilist-rule, var(--color-hairline)); }
+  .he-ilist.is-linkRows .he-ilist__item:last-child { border-bottom: 1px solid var(--he-ilist-rule, var(--color-hairline)); }
+  .he-ilist__rowlink { flex: none; white-space: nowrap; color: var(--color-flare-soft); }
+  .he-ilist__rowlink:hover { color: var(--he-link-hover, var(--color-flare-hot)); }
+}
+
+/* Long words (Armenian, Russian, German) break rather than run past a narrow screen. Only ever acts on a word wider than its box. */
+@media (width <= 48rem) {
+  :is(h1, h2, h3, h4, .he-figs__label, .he-ocard__title, .he-plst__title, .he-jobc__title) { overflow-wrap: break-word; }
+  :is(.he-band__text, .he-hd__inner) { min-width: 0; }
+  .he-eyebrow { flex-wrap: wrap; }
+  .he-eyebrow .type-eyebrow { white-space: normal; }
+  .he-ftr a { overflow-wrap: anywhere; }
+}

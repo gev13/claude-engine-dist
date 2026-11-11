@@ -1,6 +1,7 @@
 'use client';
 
 import { CardHoverFields } from '@/components/admin/CardHoverFields';
+import { TypeStyleFields } from '@/components/admin/TypeStyleFields';
 import { Field, Input, Panel, Select } from '@/components/admin/ui';
 import type { BlogSettings } from '@/lib/blog';
 import type { CardHover } from '@/lib/cardHover';
@@ -85,6 +86,19 @@ const ARCHIVE: FieldDef[] = [
   { key: 'barPadding', label: 'The row’s own space', kind: 'text', hint: 'above and below, e.g. 16px or 16px 24px' },
   { key: 'gridTop', label: 'Row to first cards', kind: 'text', hint: 'e.g. 40px' },
   { key: 'gridBottom', label: 'Under the cards', kind: 'text', hint: 'e.g. 55px' },
+  /* 3.33 */
+  { key: 'barBackground', label: 'Category bar colour', kind: 'text', hint: 'a colour, or transparent' },
+  { key: 'barBackgroundMobile', label: 'Bar colour on phones', kind: 'text', hint: 'a colour, or transparent' },
+  { key: 'barMargin', label: 'Bar side margins', kind: 'text', hint: 'e.g. 0 or 0 10px' },
+  { key: 'barRule', label: 'The rule under the bar', kind: 'select', options: [['false', 'None']] },
+  { key: 'chipFill', label: 'Chip fill', kind: 'text', hint: 'a colour, or transparent' },
+  { key: 'chipText', label: 'Chip text', kind: 'text' },
+  { key: 'chipActiveFill', label: 'Current chip fill', kind: 'text' },
+  { key: 'chipActiveText', label: 'Current chip text', kind: 'text' },
+  { key: 'chipRadius', label: 'Chip corners', kind: 'text', hint: 'one to four, e.g. 0 16px 0 16px' },
+  { key: 'chipSize', label: 'Chip text size', kind: 'text' },
+  { key: 'chipTracking', label: 'Chip letter spacing', kind: 'text', hint: 'e.g. 3px' },
+  { key: 'chipPadding', label: 'Chip padding', kind: 'text', hint: 'e.g. 10px 18px' },
 ];
 
 const POST: FieldDef[] = [
@@ -126,6 +140,22 @@ const POST: FieldDef[] = [
   { key: 'relatedTitleGap', label: 'Space under it', kind: 'text' },
   { key: 'relatedGap', label: 'Space between their cards', kind: 'text' },
   { key: 'relatedWidth', label: 'Their width', kind: 'text', hint: 'e.g. 1120px' },
+  /* 3.33 */
+  { key: 'asideColumns', label: 'Cover card: columns', kind: 'text', hint: 'two widths, e.g. 1fr 1fr' },
+  { key: 'asideGap', label: 'Cover card: space between', kind: 'text' },
+  { key: 'asideCoverHeight', label: 'Cover card: height', kind: 'text' },
+  { key: 'asideCoverHeightMobile', label: 'Cover card: height on phones', kind: 'text' },
+  { key: 'asideCoverRadius', label: 'Cover card: corners', kind: 'text', hint: 'one to four, e.g. 0 60px 0 60px' },
+  { key: 'asideTintStops', label: 'Cover card: tint', kind: 'text', hint: 'top to bottom, e.g. rgba(0,0,0,0.2) 25%, #000 92%' },
+  { key: 'asidePanel', label: 'Section panel colour', kind: 'text', hint: 'a colour, or transparent' },
+  { key: 'asidePanelMobile', label: 'Panel colour on phones', kind: 'text', hint: 'a colour, or transparent' },
+  { key: 'asidePanelRadius', label: 'Panel corners', kind: 'text', hint: 'one to four' },
+  { key: 'asidePanelMargin', label: 'Panel side margins', kind: 'text', hint: 'e.g. 10px' },
+  { key: 'asidePanelPadding', label: 'Panel padding', kind: 'text', hint: 'e.g. 80px 10px' },
+  { key: 'asidePanelPaddingMobile', label: 'Panel padding on phones', kind: 'text' },
+  { key: 'headingGap', label: 'Article: space under a heading', kind: 'text' },
+  { key: 'sectionGap', label: 'Article: space above a heading', kind: 'text' },
+  { key: 'sectionGapMobile', label: 'Article: above a heading on phones', kind: 'text' },
 ];
 
 function Fields({ defs, value, set, base }: { defs: FieldDef[]; value: Record<string, unknown> | undefined; set: Setter; base: string[] }) {
@@ -186,6 +216,11 @@ export function BlogDetailsPanel({ blog, set }: { blog: BlogSettings | undefined
       </Panel>
       <Panel title="Details — a post">
         <Fields defs={POST} value={look?.post} set={set} base={['blog', 'look', 'post']} />
+        {/* 3.33 */}
+        <div className="mt-4 border-t-2 border-hairline pt-3">
+          <p className="m-0 mb-2 text-[13px] text-ash">Cover card beside the article: the title</p>
+          <TypeStyleFields type={look?.post?.asideTitle} set={(key) => set(['blog', 'look', 'post', 'asideTitle', key])} />
+        </div>
         <div className="mt-4 border-t-2 border-hairline pt-3">
           <p className="m-0 mb-2 text-[13px] text-ash">Related posts drawn as archive cards, pointed at</p>
           <CardHoverFields value={look?.post?.relatedHover as CardHover | undefined} onChange={(hover) => set(['blog', 'look', 'post', 'relatedHover'])(hover)} />

@@ -639,3 +639,72 @@ Every option is off, or draws what it drew before, until it is set.
 - **Media band**: *Text on phones* — bottom left as before, at the bottom
   centred, or in the middle centred.
 
+## Building a design without custom CSS (3.33)
+
+Each of these is off until set; left empty, a page is drawn as before.
+
+**Rows and columns** (row editor)
+
+- **Exact widths** per screen: fractions or lengths, one per column, such as
+  `592fr 584fr` or `230px 1fr`. They replace the twelfths on that screen and
+  carry down to narrower ones until the columns' twelfths change there, so a
+  row that stacks on phones still stacks.
+- **A column's Width & design tab:** where it sits in the row (top, middle,
+  bottom, full height) and how its blocks spread (from the top, in the
+  middle, at the foot, or first at the top and last at the foot), per screen.
+- **Columns gather on phones**, when the row is taller than they are.
+
+**Design tab, any block**
+
+- **Background on phones:** a colour, a picture of its own with its size and
+  position, or none.
+- **Typography:** alignment on tablets and phones, colour on phones. The
+  eyebrow can go without its rule and have its own space under it.
+- **Most width:** where a narrower section sits (start, centre, end) and its
+  width on phones.
+- **Panel:** none on phones, or an inset of its own there.
+- **Swipe:** no arrows on phones.
+
+**Blocks**
+
+- **Heading:** alignment on phones, the subtitle's width (and on phones), the
+  space above it. **Text:** a paragraph width, and on phones.
+- **Card grid (pictures with text over them):** the words' inset; exact
+  widths for each row in turn, one row per line (`1fr`, `668fr 508fr`),
+  stacked on phones; per card a height, the words' width, a phone picture
+  and its anchor, and bullet points.
+- **Gallery:** the even grid's picture height, over its shape, and on phones.
+  The magnifier on touch screens only, at a corner. The viewer:
+  blur behind it, picture width, height and corners, arrows right beside the
+  picture, side by side under it on phones, the close button over the next
+  arrow.
+- **Post list (card options):** *The arrow: the pointer itself becomes the
+  arrow*, drawn from a circle colour, a glyph colour and a size. Nothing is
+  uploaded, and nothing is drawn on the card or on touch screens. Each of the
+  title, category and excerpt can take its own type.
+- **Team, portrait cards:** padding and the space above the photo (each with
+  a phone value), the photo's fit and anchor, the card's shape, a name colour
+  per member. *Show the first, on phones* is a number of its own.
+- **Media band:** *Second line of the title set in by*; the words as a
+  centred group, with an inset from the end; text at the top on phones; the
+  picture's anchor and a colour fade from the top on phones.
+- **Form:** the space between questions; the send button as wide as its
+  words on phones.
+- **Icon lists:** *Ruled rows with a link at the right*; the link's words are
+  shared by every row, and a row without a link shows none.
+
+**Appearance**
+
+- **Careers → Details:** the listing's section, the cards, the advert and the
+  application card, each with phone values. The **centred** advert layout
+  puts the heading over two columns, the text in a panel on one side and the
+  details above the cover on the other. The word over its title is
+  `careers.hiring` in Site translations.
+- **Header & menus → Footer:** the sign-up's field and button apart, and their
+  colours; the social icons' colour. **Languages:** under the link columns.
+- **Header & menus → Full-screen menu:** the links' colour, the bar's colour
+  while open, no mark on the current link.
+- **Typography → Languages:** each language's heading scale, on phones too,
+  and hyphens at line ends. A scale of 0.85 draws that language's headings at
+  85% of whatever size they have, wherever it was set.
+- **Spacing and motion:** the footer can enter with the sections.

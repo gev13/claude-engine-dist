@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { CardHoverFields } from '@/components/admin/CardHoverFields';
+import { PostCardExtraFields } from '@/components/admin/PostCardExtraFields';
 import { Field, Input, Panel, Select } from '@/components/admin/ui';
 import type { BlogSettings } from '@/lib/blog';
 import { SHARE_LABELS, SHARE_NETWORKS, type ShareNetwork } from '@/lib/share';
@@ -423,7 +424,6 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
           <p className="m-0 mt-4 mb-2 text-[12px] text-smoke">Text over the picture (the Overlay index):</p>
           <div className="grid max-w-[600px] gap-2 sm:grid-cols-2">
             <Check label="Only the picture until the pointer is on it" checked={card.reveal === true} onChange={(v) => setCard('reveal', v || undefined)} />
-            <Check label="A round arrow with the words" checked={card.arrow === true} onChange={(v) => setCard('arrow', v || undefined)} />
           </div>
           <div className="mt-3 grid max-w-[600px] gap-4 sm:grid-cols-2">
             <Field label="The overlay’s colour" hint="fades up from the bottom; empty is black">
@@ -432,6 +432,8 @@ export function ArchiveFeaturesPanel({ blog, set }: { blog: BlogSettings | undef
             <Field label="Card height" hint="e.g. 520px; empty is 380px">
               <Input value={card.height ?? ''} placeholder="380px" onChange={(e) => setCard('height', e.target.value.trim() || undefined)} />
             </Field>
+            {/* 3.33 */}
+            <PostCardExtraFields card={card as Record<string, unknown>} setCard={(key, value) => setCard(key as keyof NonNullable<BlogSettings['card']>, value)} />
           </div>
           <div className="mt-4 max-w-[600px]">
             <CardHoverFields value={card.hover} onChange={(hover) => setCard('hover', hover)} />

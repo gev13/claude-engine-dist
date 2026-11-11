@@ -225,3 +225,12 @@ since that is usually the only place its reason is written. A receiver that
 echoes the fields it rejected will have those in the snippet. The server
 refuses addresses that resolve to a private or local network, and does not
 follow redirects.
+
+## The cookie notice's shape (3.33)
+
+Cookies → The buttons, and where it sits: corners one by one, the distance
+from the left, centred on phones, the text's line height and the space
+between its parts; the buttons' corners, padding, text size, weight, line
+height and letter spacing; the words and the button on one line, on every
+screen or on phones only.
+

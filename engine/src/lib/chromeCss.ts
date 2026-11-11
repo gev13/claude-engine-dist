@@ -1,4 +1,5 @@
 import { CHROME_GRAMMAR, type Chrome } from './chrome';
+import { typeRule } from './typeStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    3.28 — the header's, menus' and footer's last details, as CSS
@@ -211,6 +212,11 @@ function menuCss(m: NonNullable<Chrome['mobileMenu']>): string[] {
     ]),
   );
 
+  /* 3.33 — the links' colour, no mark on the current one, the bar while open. */
+  out.push(rule('.he-menu .he-menu__row', [['color', col(m.itemColor)]]));
+  if (m.noCurrentMark) out.push(`.he-menu .he-menu__row[aria-current]{color:${col(m.itemColor) ?? 'inherit'};font-weight:inherit;text-decoration:none}.he-menu .he-menu__row[aria-current]::after,.he-menu .he-menu__row[aria-current]::before{content:none}`);
+  if (col(m.barColor)) out.push(`html:has(#he-menu:not([hidden])) .he-hdr__bar{background-color:${col(m.barColor)}}`);
+
   /* 2.4 — the drawer. */
   const d = m.drawer;
   if (d) {
@@ -287,6 +293,13 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   );
   if (gap) out.push(`.he-ftr :is(.he-ftr__social.has-sep,.he-ftr__social.has-sep li,.he-ftr__legal.has-sep,.he-ftr__legal.has-sep li){column-gap:${gap}}`);
   out.push(rule('.he-ftr .he-ftr__bottom', [['border-top-color', col(f.dividerColor)]]));
+  /* 3.33 — the sign-up's two parts, and the social icons. */
+  const nl = '.he-ftr .he-ftr__nl';
+  out.push(rule(`${nl}.is-split .he-ftr__nlrow`, [['gap', len(f.newsletterGap)]]));
+  out.push(rule(`${nl} .he-ftr__nlinput.he-nl__input`, [['background-color', col(f.newsletterFieldFill)], ['color', col(f.newsletterFieldText)], ['border-radius', len(f.newsletterFieldRadius)]]));
+  out.push(rule(`${nl} .he-ftr__nlsend`, [['background-color', col(f.newsletterSendFill)], ['color', col(f.newsletterSendText)], ['border-radius', typeof f.newsletterSendRadius === 'string' && BOX.test(f.newsletterSendRadius.trim()) ? f.newsletterSendRadius.trim() : undefined], ['width', len(f.newsletterSendWidth)]]));
+  out.push(...typeRule(`${nl} .he-ftr__nltitle`, f.newsletterTitle));
+  out.push(rule('.he-ftr .he-ftr__social a', [['color', col(f.socialColor)]]));
   return out;
 }
 
@@ -294,5 +307,7 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
 export function chromeCss(chrome: Chrome | undefined): string {
   if (!chrome) return '';
   const parts = [...(chrome.header ? headerCss(chrome.header) : []), ...(chrome.mobileMenu ? menuCss(chrome.mobileMenu) : []), ...(chrome.footer ? footerCss(chrome.footer) : [])];
+  // 3.33 — the language row in the open menu.
+  if (chrome.languages?.menuSize && len(chrome.languages.menuSize)) parts.push(`.he-menu .he-menu__langs :is(.he-langs__item,a,button){font-size:${len(chrome.languages.menuSize)}}`);
   return parts.filter(Boolean).join('');
 }
