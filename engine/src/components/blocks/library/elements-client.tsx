@@ -8,6 +8,7 @@ import type { z } from 'zod';
 import { Icon, SocialIcon } from '@/components/site/icons';
 import type { blockSchemas } from '@/lib/blocks';
 import { splitDuration } from '@/lib/countdown';
+import { graphemes, longestByGraphemes } from '@/lib/graphemes';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { SOCIAL_LABELS, type SocialNetwork } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
@@ -38,7 +39,9 @@ export function TypingWords({ words, speed }: { words: string[]; speed: keyof ty
     let cancelled = false;
     let timer = 0;
     let index = 0;
-    let chars = (words[0] ?? '').length;
+    // Counted in visible characters, never UTF-16 units: half an emoji is a "?".
+    const letters = words.map(graphemes);
+    let chars = (letters[0] ?? []).length;
     let deleting = true;
 
     const tick = () => {
@@ -48,7 +51,7 @@ export function TypingWords({ words, speed }: { words: string[]; speed: keyof ty
         timer = window.setTimeout(tick, 1000);
         return;
       }
-      const word = words[index] ?? '';
+      const word = letters[index] ?? [];
       if (deleting) {
         chars -= 1;
         if (chars <= 0) {
@@ -58,8 +61,8 @@ export function TypingWords({ words, speed }: { words: string[]; speed: keyof ty
       } else {
         chars += 1;
       }
-      const current = words[index] ?? '';
-      setShown((deleting ? word : current).slice(0, Math.max(chars, 0)));
+      const current = letters[index] ?? [];
+      setShown((deleting ? word : current).slice(0, Math.max(chars, 0)).join(''));
       const full = !deleting && chars >= current.length;
       if (full) deleting = true;
       timer = window.setTimeout(tick, full ? 1800 : deleting ? TYPE_MS[speed] * 0.6 : TYPE_MS[speed]);
@@ -115,7 +118,7 @@ export function RotatingWords({ words, effect }: { words: string[]; effect: 'sli
     };
   }, [words]);
 
-  const longest = words.reduce((a, w) => (w.length > a.length ? w : a), '');
+  const longest = longestByGraphemes(words);
   return (
     <span className={cn('he-rot', `is-${effect}`)}>
       <span className="sr-only">{words.join(', ')}</span>

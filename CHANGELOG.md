@@ -10,6 +10,21 @@ improvements.
 
 ---
 
+## 3.34.3 — 2026-11-16
+
+**A typed headline never shows half an emoji.**
+
+Fixed:
+
+- **Heading → typed words:** an emoji in a typed word flashed as a broken
+  character for one step while it was typed or deleted, because the words
+  were counted and cut in UTF-16 units. They are now typed one visible
+  character at a time, so emoji, flags, skin tones and joined emoji appear
+  and disappear whole. The changing-words heading sizes its box by visible
+  characters too.
+
+---
+
 ## 3.34.2 — 2026-11-11
 
 **Corners of their own size, each, and on phones.** Off until set.
