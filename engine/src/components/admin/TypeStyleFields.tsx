@@ -25,6 +25,8 @@ export function TypeStyleFields({ type, set }: { type: TypeStyle | undefined; se
         onChange={set('weight')}
       />
       <LengthField label="Line height" kind="lineHeight" value={type?.line} placeholder="e.g. 1.1" onChange={set('line')} />
+      <LengthField label="Line height on tablets" kind="lineHeight" value={type?.lineTablet} placeholder="as above" onChange={set('lineTablet')} />
+      <LengthField label="Line height on phones" kind="lineHeight" value={type?.lineMobile} placeholder="as above" onChange={set('lineMobile')} />
       <LengthField label="Letter spacing" value={type?.tracking} placeholder="e.g. -0.2px" onChange={set('tracking')} />
       <ColorField label="Colour" value={type?.color} onChange={set('color')} />
     </div>

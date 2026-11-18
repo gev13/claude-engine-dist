@@ -1,5 +1,6 @@
 import { blogCss } from './blogCss';
 import { careersCss } from './careersLook';
+import { headingSpaceCss } from './headingSpace';
 import { chromeCss } from './chromeCss';
 import {
   BREAKPOINTS,
@@ -763,6 +764,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   // 3.23 — the space under an eyebrow, before its heading.
   if (theme.layout?.eyebrowGap && isLength(theme.layout.eyebrowGap) && safeSelector === ':root') {
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
+  }
+
+  // 3.36 — at least this much between a heading and the text after it, on the tiers asked for.
+  if (safeSelector === ':root') {
+    const floor = headingSpaceCss(theme.layout?.headingSpace, theme.careers?.cardPartGap);
+    if (floor) parts.push(floor);
   }
 
   // 3.26 — rich text, set from the theme; unlayered, so it beats the `prose-edge` utility.

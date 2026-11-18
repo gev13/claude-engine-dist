@@ -272,6 +272,8 @@ export const columnStickySchema = z.object({
   at: z.array(z.enum(VISIBILITY_TIERS)).max(4),
   offset: length.optional(),
   center: z.boolean().optional(),
+  /** 3.36 — with `center`: its blocks start at their written place and rise with the page until their middle is the visible part's, then hold. */
+  rise: z.boolean().optional(),
 });
 export type ColumnSticky = z.infer<typeof columnStickySchema>;
 

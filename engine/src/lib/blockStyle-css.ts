@@ -753,7 +753,12 @@ export function rowToCss(row: RowCssInput): string {
      reverse on phones) has nothing to be held beside. It sits at the top of
      its place and sticks under the offset; centred, it is at least the
      visible part tall (never taller than the row) with its blocks in the
-     middle. After the alignment rules above, so it wins on its tiers. */
+     middle. After the alignment rules above, so it wins on its tiers.
+     3.36 — centred to `rise`: the column stays as tall as its blocks and
+     starts at its written place; its top is the offset plus half of what
+     the visible part has over it, so it rises with the page to the middle
+     and holds there. Its height comes from a script (`--he-hold-h`); with
+     none, or a column taller than the visible part, it holds at the offset. */
   const stackedAt = (c: (typeof columns)[number], tier: (typeof TIERS)[number]) =>
     (tier === 'mobile' && Boolean(row.reverseOnMobile)) ||
     (writtenAt(tier) ? writtenAt(tier)!.trim().split(/\s+/).length < 2 : spanAt(c.width, tier) >= 12);
@@ -763,7 +768,8 @@ export function rowToCss(row: RowCssInput): string {
     if (!sticky?.at?.length) continue;
     const offset = sticky.offset && isLength(sticky.offset) ? sticky.offset.trim() : '0px';
     const decls: Decl[] = [['position', 'sticky'], ['top', offset], ['align-self', 'start']];
-    if (sticky.center) decls.push(['min-height', `min(100%,calc(100svh - ${offset}))`], ['display', 'flex'], ['flex-direction', 'column'], ['justify-content', 'center']);
+    if (sticky.center && sticky.rise) decls[1] = ['top', `max(${offset},calc(${offset} + (100svh - ${offset} - var(--he-hold-h,100svh))/2))`];
+    else if (sticky.center) decls.push(['min-height', `min(100%,calc(100svh - ${offset}))`], ['display', 'flex'], ['flex-direction', 'column'], ['justify-content', 'center']);
     for (const tier of TIERS) {
       if (!sticky.at.includes(tier) || stackedAt(c, tier)) continue;
       held = true;

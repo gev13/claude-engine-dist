@@ -1,6 +1,14 @@
 {
-  "latest": "3.35.0",
+  "latest": "3.36.0",
   "releases": [
+    {
+      "version": "3.36.0",
+      "date": "2026-11-18",
+      "summary": "Opt-in: a held row column that starts at its place and rises to the middle of the screen before it is held, a minimum space between any heading and the text after it on chosen screen sizes, and line heights per screen size for type styles.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.35.0",
       "date": "2026-11-18",

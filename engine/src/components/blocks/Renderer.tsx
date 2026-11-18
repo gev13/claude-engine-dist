@@ -64,6 +64,7 @@ import { FormBlock } from './library/FormBlock';
 import { LottieBlock } from './library/LottieBlock';
 import { SwipeArrows } from './library/SwipeArrows';
 import { ScrollPin } from './library/ScrollPin';
+import { HeldRise } from './library/HeldRise';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const registry: Record<string, (props: any) => React.ReactNode | Promise<React.ReactNode>> = {
@@ -288,6 +289,9 @@ async function SavedBlockRef({ savedBlockId, ctx }: { savedBlockId: string; ctx:
   );
 }
 
+/** 3.36 — a held, centred column that rises from its written place; its height is measured on the page. */
+const rises = (sticky: ParsedRowProps['columns'][number]['sticky']) => Boolean(sticky?.at?.length && sticky.center && sticky.rise);
+
 function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
   const props = block.props as ParsedRowProps;
   const style = block.style;
@@ -304,12 +308,13 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       <div className="shell">
         <div className={`he-r-${block.id}`}>
           {props.columns.map((column) => (
-            <div key={column.id} className={cn(`he-c-${column.id}`, 'he-nested')}>
+            <div key={column.id} className={cn(`he-c-${column.id}`, 'he-nested')} data-he-hold={rises(column.sticky) ? 'rise' : undefined}>
               {column.blocks.filter(isLive).map((child) => renderBlock(child, ctx))}
             </div>
           ))}
         </div>
       </div>
+      {props.columns.some((column) => rises(column.sticky)) && <HeldRise />}
       {style && scrollPin(style)}
       {style?.background?.videoUrl && <SectionVideo background={style.background} />}
       {style && <ShapeDividers style={style} />}

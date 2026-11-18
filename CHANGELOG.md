@@ -10,6 +10,30 @@ improvements.
 
 ---
 
+## 3.36.0 — 2026-11-18
+
+**A held column that rises into the middle, a floor under headings, and line
+heights per screen size for type styles.** All off until set.
+
+Added:
+
+- **Rows → a held column → Reaching the middle → Rising from their place:**
+  the column's blocks start at their written place, level with the column
+  beside them, move up with the page until their middle is the visible
+  part's, and are held there until the row ends. The column is as tall as
+  its blocks; a small script measures it. Without the script, or for a
+  column taller than the screen, it holds at the top as before.
+- **Appearance → Layout → Space under a heading, at least:** on the screens
+  ticked, every heading followed straight away by paragraph text — section
+  headings, text blocks, every kind of card, steps, team members, post and
+  job cards, rich text, page heads — has at least this much space before
+  the text. Larger spaces stay; nothing gets smaller, and a site's own
+  margins still count.
+- **Type styles → Line height on tablets and on phones:** each falls back to
+  the wider screen's when unset.
+
+---
+
 ## 3.35.0 — 2026-11-18
 
 **A column held in view while its row scrolls, and one face for every text

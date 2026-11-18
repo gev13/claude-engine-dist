@@ -104,6 +104,17 @@
   .he-plst.has-title-type .he-plst__title { font-family: var(--he-plst-t-font, revert-layer); font-size: var(--he-plst-t-size, revert-layer); font-weight: var(--he-plst-t-weight, revert-layer); line-height: var(--he-plst-t-line, revert-layer); letter-spacing: var(--he-plst-t-tracking, revert-layer); color: var(--he-plst-t-color, revert-layer); }
   .he-plst.has-chip-type .he-plst__chip { font-family: var(--he-plst-c-font, revert-layer); font-size: var(--he-plst-c-size, revert-layer); font-weight: var(--he-plst-c-weight, revert-layer); line-height: var(--he-plst-c-line, revert-layer); letter-spacing: var(--he-plst-c-tracking, revert-layer); color: var(--he-plst-c-color, revert-layer); }
   .he-plst.has-excerpt-type .he-plst__excerpt { font-family: var(--he-plst-e-font, revert-layer); font-size: var(--he-plst-e-size, revert-layer); font-weight: var(--he-plst-e-weight, revert-layer); line-height: var(--he-plst-e-line, revert-layer); letter-spacing: var(--he-plst-e-tracking, revert-layer); color: var(--he-plst-e-color, revert-layer); }
+  /* A line height per tier (3.36): unset falls back to the wider tier's, so these resolve to the rule above. */
+  @media (width <= 64rem) {
+    .he-plst.has-title-type .he-plst__title { line-height: var(--he-plst-t-line-t, var(--he-plst-t-line, revert-layer)); }
+    .he-plst.has-chip-type .he-plst__chip { line-height: var(--he-plst-c-line-t, var(--he-plst-c-line, revert-layer)); }
+    .he-plst.has-excerpt-type .he-plst__excerpt { line-height: var(--he-plst-e-line-t, var(--he-plst-e-line, revert-layer)); }
+  }
+  @media (width <= 48rem) {
+    .he-plst.has-title-type .he-plst__title { line-height: var(--he-plst-t-line-m, var(--he-plst-t-line-t, var(--he-plst-t-line, revert-layer))); }
+    .he-plst.has-chip-type .he-plst__chip { line-height: var(--he-plst-c-line-m, var(--he-plst-c-line-t, var(--he-plst-c-line, revert-layer))); }
+    .he-plst.has-excerpt-type .he-plst__excerpt { line-height: var(--he-plst-e-line-m, var(--he-plst-e-line-t, var(--he-plst-e-line, revert-layer))); }
+  }
   @media (width <= 48rem) {
     .he-plst.has-title-type .he-plst__title { font-size: var(--he-plst-t-size-m, var(--he-plst-t-size, revert-layer)); }
     .he-plst.has-chip-type .he-plst__chip { font-size: var(--he-plst-c-size-m, var(--he-plst-c-size, revert-layer)); }

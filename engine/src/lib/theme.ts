@@ -637,6 +637,13 @@ export const themeSchema = z.object({
       nestedFlush: z.boolean().optional(),
       /** 3.23 — the space between an eyebrow and the heading under it (e.g. 12px); unset is each block's own (28px). */
       eyebrowGap: length.optional(),
+      /** 3.36 — on the tiers given, at least this much space between a heading and paragraph text right after it; a larger space stays. */
+      headingSpace: z
+        .object({
+          min: length,
+          at: z.array(z.enum(['base', 'laptop', 'tablet', 'mobile'])).max(4),
+        })
+        .optional(),
     })
     .optional(),
 

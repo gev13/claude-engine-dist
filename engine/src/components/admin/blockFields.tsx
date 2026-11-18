@@ -1884,7 +1884,7 @@ type TierValues = { base?: string; laptop?: string; tablet?: string; mobile?: st
 type Column = {
   alignSelf?: TierValues;
   justify?: TierValues;
-  sticky?: { at: ('base' | 'laptop' | 'tablet' | 'mobile')[]; offset?: string; center?: boolean };
+  sticky?: { at: ('base' | 'laptop' | 'tablet' | 'mobile')[]; offset?: string; center?: boolean; rise?: boolean };
   id: string;
   width: { base: number; laptop?: number; tablet?: number; mobile?: number };
   order?: { laptop?: number; tablet?: number; mobile?: number };
@@ -2383,12 +2383,30 @@ function ColumnEditor({
                         checked={Boolean(column.sticky.center)}
                         onChange={(e) => {
                           const sticky = { ...column.sticky!, center: e.target.checked || undefined };
-                          if (!sticky.center) delete sticky.center;
+                          if (!sticky.center) {
+                            delete sticky.center;
+                            delete sticky.rise;
+                          }
                           onChange({ ...column, sticky });
                         }}
                       />
                       Its blocks in the middle of the screen
                     </label>
+                    {column.sticky.center ? (
+                      <Field label="Reaching the middle" hint="Rising: they start level with the row's top and move up with the page until centred, then hold.">
+                        <Select
+                          value={column.sticky.rise ? 'rise' : 'centred'}
+                          onChange={(e) => {
+                            const sticky = { ...column.sticky!, rise: e.target.value === 'rise' || undefined };
+                            if (!sticky.rise) delete sticky.rise;
+                            onChange({ ...column, sticky });
+                          }}
+                        >
+                          <option value="centred">Centred from the start</option>
+                          <option value="rise">Rising from their place</option>
+                        </Select>
+                      </Field>
+                    ) : null}
                     <p className="col-span-full m-0 text-[12px] leading-relaxed text-smoke">
                       Only where the columns sit side by side; where they stack it has no effect. A column taller than the screen is held at the top and its foot arrives with the row&rsquo;s.
                     </p>

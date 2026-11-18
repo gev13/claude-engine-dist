@@ -682,6 +682,38 @@ function AppearanceScreenInner() {
                 <LengthField label="Space above a section’s introduction" hint="under its heading" placeholder="16px" value={get(['layout', 'introGap'])} onChange={set(['layout', 'introGap'])} />
                 <LengthField label="Introduction width" placeholder="62ch" value={get(['layout', 'introWidth'])} onChange={set(['layout', 'introWidth'])} />
                 <LengthField label="Space under an eyebrow" hint="before its heading" emptyLabel="each block’s own (28px)" value={get(['layout', 'eyebrowGap'])} onChange={set(['layout', 'eyebrowGap'])} />
+                {/* 3.36 */}
+                <div>
+                  <LengthField
+                    label="Space under a heading, at least"
+                    hint="before paragraph text right after it; a larger space stays"
+                    emptyLabel="each part’s own"
+                    value={theme.layout?.headingSpace?.min}
+                    onChange={(value) => setTheme((c) => setIn(c, ['layout', 'headingSpace'], typeof value === 'string' && value.trim() ? { min: value.trim(), at: c.layout?.headingSpace?.at ?? ['base', 'laptop', 'tablet', 'mobile'] } : undefined))}
+                  />
+                  {theme.layout?.headingSpace?.min ? (
+                    <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[13px] text-ash" role="group" aria-label="Screens the space under a heading applies to">
+                      {(['base', 'laptop', 'tablet', 'mobile'] as const).map((tier) => (
+                        <label key={tier} className="flex items-center gap-1.5">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 accent-flare"
+                            checked={theme.layout?.headingSpace?.at.includes(tier) ?? false}
+                            onChange={(e) =>
+                              setTheme((c) => {
+                                const now = c.layout?.headingSpace;
+                                if (!now) return c;
+                                const at = e.target.checked ? [...new Set([...now.at, tier])] : now.at.filter((t) => t !== tier);
+                                return setIn(c, ['layout', 'headingSpace'], { ...now, at: (['base', 'laptop', 'tablet', 'mobile'] as const).filter((t) => at.includes(t)) });
+                              })
+                            }
+                          />
+                          {{ base: 'Wide screens', laptop: 'Laptops', tablet: 'Tablets', mobile: 'Phones' }[tier]}
+                        </label>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
               </div>
               <label className="mt-4 flex items-center gap-2.5 text-[14px] text-ash">
                 <input

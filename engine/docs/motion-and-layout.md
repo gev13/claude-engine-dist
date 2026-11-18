@@ -783,3 +783,34 @@ Each of these is off until set; left empty, a page is drawn as before.
   sizes and spacing stay as set. The catalogue's faces are variable or carry
   their weights, so 400 and 500 are real, not faked.
 
+
+## A column that rises into the middle, a floor under headings, line heights per tier (3.36)
+
+- **Row → a column → Held in view → Reaching the middle → Rising from their
+  place:** with *Its blocks in the middle of the screen* ticked, the
+  column's blocks start at their written place (level with the first item
+  of the column beside them), move up with the page until their middle is
+  the middle of the visible part below the room for a sticky header, and are
+  held there until the row ends. The column is only as tall as its blocks.
+  A small script measures that height (`--he-hold-h`); without it, and for a
+  column taller than the visible part, the column holds at the room's edge
+  as a plain held column does. *Centred from the start* is 3.35's way and
+  stays the default.
+- **Appearance → Layout → Space under a heading, at least:** on the screens
+  ticked, a heading followed straight away by paragraph text — in a section
+  heading, a text block, a card, a step, a team member, a post or job card,
+  rich text, a page's own head — has at least this much space before the
+  text. A larger space stays; nothing gets smaller, and other screens are
+  untouched. In the normal flow an empty block under the heading's words
+  carries the floor as a margin that collapses with the heading's and the
+  text's own, so whatever set those (a block's option, the theme, a site's
+  CSS) still counts. In parts that lay their words out as a column (post,
+  job, flip, slider and feature cards, portrait and split team members,
+  scroll stories, category cards, a band's centred group), the heading's own
+  bottom margin makes up the shortfall instead. A heading beside its text
+  (a minimal project list) and a card whose text appears only when pointed
+  at are left out.
+- **Type styles → Line height on tablets / on phones:** every type style
+  (careers, blog asides, post cards, the footer's sign-up, …) takes a line
+  height for tablets (1024px and below) and for phones (768px and below);
+  each unset keeps the wider screen's.

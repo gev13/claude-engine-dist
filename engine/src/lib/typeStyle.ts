@@ -21,6 +21,9 @@ export const typeStyleSchema = z.object({
   sizeMobile: len(),
   weight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
   line: z.string().trim().max(20).refine((v) => LINE.test(v), 'A line height').optional(),
+  /** The line height on tablets (≤1024px) and on phones (≤768px), 3.36; unset keeps the wider tier's. */
+  lineTablet: z.string().trim().max(20).refine((v) => LINE.test(v), 'A line height').optional(),
+  lineMobile: z.string().trim().max(20).refine((v) => LINE.test(v), 'A line height').optional(),
   tracking: z.string().trim().max(20).refine((v) => TRACKING.test(v), 'A spacing such as -0.5px').optional(),
   color: z.string().trim().max(60).refine((v) => COLOUR.test(v), 'Not a colour').optional(),
 });
@@ -48,17 +51,21 @@ export function typeRule(selector: string, type: TypeStyle | undefined): string[
   if (!type) return [];
   const decls = declarations(type);
   const out = decls.length ? [`${selector}{${decls.map(([p, v]) => `${p}:${v}`).join(';')}}`] : [];
-  if (ok(LENGTH, type.sizeMobile)) out.push(`@media (max-width:768px){${selector}{font-size:${type.sizeMobile.trim()}}}`);
+  if (ok(LINE, type.lineTablet)) out.push(`@media (max-width:1024px){${selector}{line-height:${type.lineTablet.trim()}}}`);
+  const phone = [ok(LENGTH, type.sizeMobile) ? `font-size:${type.sizeMobile.trim()}` : '', ok(LINE, type.lineMobile) ? `line-height:${type.lineMobile.trim()}` : ''].filter(Boolean);
+  if (phone.length) out.push(`@media (max-width:768px){${selector}{${phone.join(';')}}}`);
   return out;
 }
 
 const VAR_NAMES: Record<string, string> = { 'font-family': 'font', 'font-size': 'size', 'font-weight': 'weight', 'line-height': 'line', 'letter-spacing': 'tracking', color: 'color' };
 
-/** A type style as custom properties (`--he-x-size`, `--he-x-size-m`, …), for a style attribute. */
+/** A type style as custom properties (`--he-x-size`, `--he-x-size-m`, `--he-x-line-t`, `--he-x-line-m`, …), for a style attribute. */
 export function typeVars(prefix: string, type: TypeStyle | undefined): Record<string, string> {
   if (!type) return {};
   const out: Record<string, string> = {};
   for (const [property, value] of declarations(type)) out[`--he-${prefix}-${VAR_NAMES[property]}`] = value;
   if (ok(LENGTH, type.sizeMobile)) out[`--he-${prefix}-size-m`] = type.sizeMobile.trim();
+  if (ok(LINE, type.lineTablet)) out[`--he-${prefix}-line-t`] = type.lineTablet.trim();
+  if (ok(LINE, type.lineMobile)) out[`--he-${prefix}-line-m`] = type.lineMobile.trim();
   return out;
 }
