@@ -260,6 +260,21 @@ export const scrollPinSchema = z.object({
 });
 export type ScrollPin = z.infer<typeof scrollPinSchema>;
 
+/**
+ * 3.35 — a column held in view while the other columns of its row scroll
+ * past: on the tiers in `at` where the columns sit side by side (never where
+ * they stack), under `offset` (room for a sticky header); `center` keeps its
+ * blocks in the middle of the visible part below the offset. When the row
+ * ends, the column leaves with it. A column taller than the screen is held at
+ * the offset and its foot arrives with the row's.
+ */
+export const columnStickySchema = z.object({
+  at: z.array(z.enum(VISIBILITY_TIERS)).max(4),
+  offset: length.optional(),
+  center: z.boolean().optional(),
+});
+export type ColumnSticky = z.infer<typeof columnStickySchema>;
+
 const tiered = <T extends readonly [string, ...string[]]>(values: T) =>
   z.object({ base: z.enum(values).optional(), laptop: z.enum(values).optional(), tablet: z.enum(values).optional(), mobile: z.enum(values).optional() });
 /** 3.33 — how one column sits in its row, and how its blocks are spread down it, per tier. */

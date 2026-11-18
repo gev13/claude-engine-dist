@@ -1478,6 +1478,8 @@ function LocaleFonts({
   if (!config.multilingual) return null;
 
   const roles = [
+    // 3.35 — one face for every text of the language, over the faces the site names one by one.
+    ['all', 'Whole language — every text'],
     ['display', 'Headings'],
     ['sans', 'Body text'],
     ['mono', 'Labels'],

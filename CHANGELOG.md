@@ -10,6 +10,25 @@ improvements.
 
 ---
 
+## 3.35.0 — 2026-11-18
+
+**A column held in view while its row scrolls, and one face for every text
+in a language.** Both off until set.
+
+Added:
+
+- **Rows → a column held in view:** on the screens chosen, a column stays
+  put under room for a sticky header while the other columns scroll past,
+  and leaves with the row. It can keep its blocks in the middle of the
+  visible part. It does nothing where the columns stack. CSS only; a row
+  that clips its overflow clips without stopping it.
+- **Appearance → Fonts by language → Whole language:** one face for every
+  text on that language's pages — headings, body, every block's own face,
+  header, menus, buttons, forms, cards, footer and the cookie notice. Code
+  keeps its own face; weights, sizes and spacing stay as set.
+
+---
+
 ## 3.34.3 — 2026-11-16
 
 **A typed headline never shows half an emoji.**

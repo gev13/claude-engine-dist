@@ -288,7 +288,18 @@ function localeFontCss(theme: Theme, selector: string): string {
     if (fonts?.display && fonts.display in FONT_STACKS) decls.push(['--font-display', FONT_STACKS[fonts.display]]);
     if (fonts?.sans && fonts.sans in FONT_STACKS) decls.push(['--font-sans', FONT_STACKS[fonts.sans]]);
     if (fonts?.mono && fonts.mono in FONT_STACKS) decls.push(['--font-mono', FONT_STACKS[fonts.mono]]);
+    /* 3.35 — the whole language in one face. The roles, a block's own face,
+       the nav, buttons and the rest name a face outright rather than read
+       the three variables, so the face is set on every element, firmly
+       enough to outbid them; code keeps its own. The variables follow too,
+       for anything that reads them. */
+    const all = fonts?.all && fonts.all in FONT_STACKS ? FONT_STACKS[fonts.all] : undefined;
+    if (all) {
+      if (!fonts?.display) decls.push(['--font-display', all]);
+      if (!fonts?.sans) decls.push(['--font-sans', all]);
+    }
     if (decls.length) parts.push(block(`${selector}:lang(${locale})`, decls));
+    if (all) parts.push(`${selector}:lang(${locale}) :not(code,kbd,pre,samp,code *,kbd *,pre *,samp *){font-family:${all}!important}`);
   }
 
   return parts.join('');

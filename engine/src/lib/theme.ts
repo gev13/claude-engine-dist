@@ -333,6 +333,13 @@ const localeFontSchema = z.object({
   display: fontKey.optional(),
   sans: fontKey.optional(),
   mono: fontKey.optional(),
+  /**
+   * 3.35 — one face for every text on this language's pages: headings, body,
+   * every block's own face, header, menus, buttons, forms, cards, footer and
+   * the cookie notice. Code, `pre`, `kbd` and `samp` keep theirs; weights,
+   * sizes and spacing stay as set.
+   */
+  all: fontKey.optional(),
 });
 
 /* ═══════════════════════════════════════════════════════════════════════════

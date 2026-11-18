@@ -9,7 +9,7 @@ import {
   type BlockStyle,
   blockStyleSchema,
   columnAlignSchema,
-  columnJustifySchema,
+  columnJustifySchema, columnStickySchema,
   columnOrderSchema,
   columnWidthSchema,
   length,
@@ -1052,6 +1052,8 @@ export const blockSchemas = {
           /** 3.33 — how it sits in the row, and how its blocks spread down it, per tier. */
           alignSelf: columnAlignSchema.optional(),
           justify: columnJustifySchema.optional(),
+          /** 3.35 — held in view while the other columns scroll past. */
+          sticky: columnStickySchema.optional(),
           /** Columns take the same Design Options panel that blocks do. */
           style: blockStyleSchema.optional(),
           /** Parsed by `parseBlock` in turn; see parseRowProps below. */
@@ -2314,6 +2316,7 @@ export type ParsedColumn = {
   order?: z.infer<typeof columnOrderSchema>;
   alignSelf?: z.infer<typeof columnAlignSchema>;
   justify?: z.infer<typeof columnJustifySchema>;
+  sticky?: z.infer<typeof columnStickySchema>;
   style?: BlockStyle;
   blocks: ParsedBlock[];
 };
@@ -2356,6 +2359,8 @@ function parseRowProps(props: z.infer<(typeof blockSchemas)['row']>, depth: numb
       ...(column.order && Object.keys(column.order).length > 0 ? { order: column.order } : {}),
       ...(column.alignSelf && Object.keys(column.alignSelf).length > 0 ? { alignSelf: column.alignSelf } : {}),
       ...(column.justify && Object.keys(column.justify).length > 0 ? { justify: column.justify } : {}),
+      // 3.35 — kept, or the column would lose it between the schema and the stylesheet.
+      ...(column.sticky?.at?.length ? { sticky: column.sticky } : {}),
       style: column.style && Object.keys(column.style).length > 0 ? column.style : undefined,
       blocks: (column.blocks as AnyBlock[])
         .map((child) => (child && typeof child === 'object' ? parseBlock(child, depth + 1) : null))

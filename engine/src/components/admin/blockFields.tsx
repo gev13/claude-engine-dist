@@ -1884,6 +1884,7 @@ type TierValues = { base?: string; laptop?: string; tablet?: string; mobile?: st
 type Column = {
   alignSelf?: TierValues;
   justify?: TierValues;
+  sticky?: { at: ('base' | 'laptop' | 'tablet' | 'mobile')[]; offset?: string; center?: boolean };
   id: string;
   width: { base: number; laptop?: number; tablet?: number; mobile?: number };
   order?: { laptop?: number; tablet?: number; mobile?: number };
@@ -2336,6 +2337,64 @@ function ColumnEditor({
                   ))}
                 </div>
               ))}
+
+              {/* 3.35 — held in view while the other columns scroll past. */}
+              <div className="grid gap-2">
+                <p className="m-0 text-[13px] text-bone">Held in view while the row scrolls</p>
+                <div className="flex flex-wrap gap-4">
+                  {(['base', 'laptop', 'tablet', 'mobile'] as const).map((key) => {
+                    const at = column.sticky?.at ?? [];
+                    return (
+                      <label key={key} className="flex items-center gap-2 text-[13px] text-ash">
+                        <input
+                          type="checkbox"
+                          className="h-4 w-4 accent-flare"
+                          checked={at.includes(key)}
+                          onChange={(e) => {
+                            const nextAt = (['base', 'laptop', 'tablet', 'mobile'] as const).filter((t) => (t === key ? e.target.checked : at.includes(t)));
+                            const next = { ...column };
+                            if (nextAt.length) next.sticky = { ...column.sticky, at: nextAt };
+                            else delete next.sticky;
+                            onChange(next);
+                          }}
+                        />
+                        {TRACK_TIER_LABELS[key]}
+                      </label>
+                    );
+                  })}
+                </div>
+                {column.sticky?.at?.length ? (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <Field label="Room for a sticky header" hint="e.g. 82px; empty, 0">
+                      <Input
+                        value={column.sticky.offset ?? ''}
+                        placeholder="0"
+                        onChange={(e) => {
+                          const sticky = { ...column.sticky!, offset: e.target.value.trim() || undefined };
+                          if (!sticky.offset) delete sticky.offset;
+                          onChange({ ...column, sticky });
+                        }}
+                      />
+                    </Field>
+                    <label className="flex items-end gap-2 pb-3 text-[13px] text-ash">
+                      <input
+                        type="checkbox"
+                        className="h-4 w-4 accent-flare"
+                        checked={Boolean(column.sticky.center)}
+                        onChange={(e) => {
+                          const sticky = { ...column.sticky!, center: e.target.checked || undefined };
+                          if (!sticky.center) delete sticky.center;
+                          onChange({ ...column, sticky });
+                        }}
+                      />
+                      Its blocks in the middle of the screen
+                    </label>
+                    <p className="col-span-full m-0 text-[12px] leading-relaxed text-smoke">
+                      Only where the columns sit side by side; where they stack it has no effect. A column taller than the screen is held at the top and its foot arrives with the row&rsquo;s.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
 
               <BlockDesignPanel
                 style={column.style}

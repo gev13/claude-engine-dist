@@ -373,7 +373,7 @@ function collectCss(blocks: ParsedBlock[]): string {
 
     if (block.type === 'row') {
       const props = block.props as ParsedRowProps;
-      parts.push(rowToCss({ id: block.id, ...props }));
+      parts.push(rowToCss({ id: block.id, ...props, clip: Boolean(block.style?.clip) }));
       for (const column of props.columns) {
         parts.push(collectCss(column.blocks.filter(isLive)));
       }

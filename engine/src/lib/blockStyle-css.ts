@@ -1,7 +1,7 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { TIER_RANGE } from './tierRange';
 import { cutLegs, cutPolygon, hasCornerSizes, hasPhoneCorners, leafClip, leafRadii } from './shape';
-import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
+import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnSticky, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section style → CSS
@@ -582,7 +582,9 @@ export type RowCssInput = {
   /** 3.33 — the tracks written out, per tier, over the twelfths. */
   tracks?: RowTracks;
   alignContentMobile?: 'start' | 'center' | 'end';
-  columns: { id: string; width: ColumnWidth; order?: ColumnOrder; alignSelf?: ColumnAlign; justify?: ColumnJustify; style?: BlockStyle }[];
+  columns: { id: string; width: ColumnWidth; order?: ColumnOrder; alignSelf?: ColumnAlign; justify?: ColumnJustify; sticky?: ColumnSticky; style?: BlockStyle }[];
+  /** 3.35 — the row clips its overflow (`style.clip`): with a column held in view it clips without becoming a scroll box, which would stop it. */
+  clip?: boolean;
 };
 
 /**
@@ -745,6 +747,30 @@ export function rowToCss(row: RowCssInput): string {
     if (!rules) continue;
     parts.push(key === 'base' ? rules : `@media (max-width:${BREAKPOINTS.find((b) => b.key === key)!.maxWidth}px){${rules}}`);
   }
+
+  /* 3.35 — a column held in view, on each tier asked for where it sits beside
+     the others: a column a whole row wide there (or a row that stacks in
+     reverse on phones) has nothing to be held beside. It sits at the top of
+     its place and sticks under the offset; centred, it is at least the
+     visible part tall (never taller than the row) with its blocks in the
+     middle. After the alignment rules above, so it wins on its tiers. */
+  const stackedAt = (c: (typeof columns)[number], tier: (typeof TIERS)[number]) =>
+    (tier === 'mobile' && Boolean(row.reverseOnMobile)) ||
+    (writtenAt(tier) ? writtenAt(tier)!.trim().split(/\s+/).length < 2 : spanAt(c.width, tier) >= 12);
+  let held = false;
+  for (const c of columns) {
+    const sticky = c.sticky;
+    if (!sticky?.at?.length) continue;
+    const offset = sticky.offset && isLength(sticky.offset) ? sticky.offset.trim() : '0px';
+    const decls: Decl[] = [['position', 'sticky'], ['top', offset], ['align-self', 'start']];
+    if (sticky.center) decls.push(['min-height', `min(100%,calc(100svh - ${offset}))`], ['display', 'flex'], ['flex-direction', 'column'], ['justify-content', 'center']);
+    for (const tier of TIERS) {
+      if (!sticky.at.includes(tier) || stackedAt(c, tier)) continue;
+      held = true;
+      parts.push(`@media ${TIER_RANGE[tier]}{${block(`${root}>.he-c-${c.id}`, decls)}}`);
+    }
+  }
+  if (held && row.clip) parts.push(`.he-row.he-b-${row.id}{overflow:clip}`);
 
   // 3.23 — scoped to this row: a column id is unique only inside its row, and `.he-c-c0` alone hid every row's first column.
   for (const column of columns) {

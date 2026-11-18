@@ -763,3 +763,23 @@ Each of these is off until set; left empty, a page is drawn as before.
 - **Footer:** the sign-up's width (a size, 100% or none) and on phones; the
   space between links and between language names on phones. A space between
   parts on phones is now the only space between them there.
+
+## A column held in view, one face per language (3.35)
+
+- **Row → a column → Held in view while the row scrolls:** tick the screens.
+  On those where the columns sit side by side, the column stays under *Room
+  for a sticky header* while the other columns scroll past, and leaves with
+  the row; where they stack it does nothing, ticked or not. *Its blocks in
+  the middle of the screen* centres them in the visible part below the room
+  (the column is then at least that tall, never taller than the row). A
+  column taller than the screen is held at the top and its foot arrives with
+  the row's. It is CSS only (`position: sticky`), so it follows the row's
+  entrance and alignment, works in a panel, and keeps the reading order. A
+  row set to clip its overflow clips without stopping it; another ancestor
+  that clips (a block or outer row with *Clip*) would still stop it.
+- **Appearance → Fonts by language → Whole language — every text:** one face
+  for every text on that language's pages, for an alphabet the site's chosen
+  faces do not have. Code, `pre`, `kbd` and `samp` keep theirs; weights,
+  sizes and spacing stay as set. The catalogue's faces are variable or carry
+  their weights, so 400 and 500 are real, not faked.
+
