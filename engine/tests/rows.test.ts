@@ -239,7 +239,7 @@ describe('spacer', () => {
   it('validates its heights like every other CSS value', () => {
     expect(parseBlock({ id: 's1', type: 'spacer', props: { height: '80px' } })).not.toBeNull();
     expect(parseBlock({ id: 's1', type: 'spacer', props: { height: '80px;background:red' } })).toBeNull();
-    expect(parseBlock({ id: 's1', type: 'spacer', props: { height: 'calc(100% - 2px)' } })).toBeNull();
+    expect(parseBlock({ id: 's1', type: 'spacer', props: { height: 'calc(var(--x) - 2px)' } })).toBeNull();
   });
 
   it('defaults to a plain 48px gap', () => {

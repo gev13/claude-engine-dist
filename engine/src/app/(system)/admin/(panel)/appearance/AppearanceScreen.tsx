@@ -5,6 +5,7 @@ import useSWR from 'swr';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { AdminButton, Alert, Field, Input, Panel, Select, Spinner } from '@/components/admin/ui';
 import { MediaPicker } from '@/components/admin/MediaPicker';
+import { FONT_CATALOGUE } from '@/lib/fontCatalogue';
 import { ToastProvider, useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
 import {
@@ -617,6 +618,8 @@ function AppearanceScreenInner() {
               <EyebrowMarkerPanel theme={theme} set={set} />
 
               <LocaleFonts set={set} get={get} />
+              {/* 3.38 */}
+              <FontFill fill={theme.fontFill} onChange={(next) => setTheme((c) => setIn(c, ['fontFill'], next && Object.keys(next).length ? next : undefined))} />
             </>
           )}
 
@@ -1493,6 +1496,73 @@ function MediaField({
         )}
       </div>
     </Field>
+  );
+}
+
+/* 3.38 — a face's missing alphabets drawn from another face (theme.fontFill). */
+function FontFill({ fill, onChange }: { fill: Record<string, string> | undefined; onChange: (next: Record<string, string> | undefined) => void }) {
+  const entries = Object.entries(fill ?? {});
+  const [face, setFace] = useState('');
+  const [from, setFrom] = useState('');
+  const name = (key: string) => FONT_CATALOGUE.find((f) => f.key === key)?.family ?? key;
+  const options = FONT_CATALOGUE.map((f) => (
+    <option key={f.key} value={f.key}>
+      {f.family} ({f.scripts.join(', ')})
+    </option>
+  ));
+  return (
+    <Panel title="A face’s missing alphabets">
+      <p className="m-0 mb-4 max-w-[70ch] text-[13px] leading-relaxed text-ash">
+        A face without, say, Cyrillic can take those letters from another face, wherever it is used — its own letters stay as they are.
+      </p>
+      {entries.length > 0 && (
+        <ul className="m-0 mb-4 list-none p-0">
+          {entries.map(([key, other]) => (
+            <li key={key} className="flex items-center gap-3 py-1 text-[13px] text-bone">
+              {name(key)} takes the alphabets it lacks from {name(other)}
+              <button
+                type="button"
+                className="font-mono text-[10px] uppercase tracking-[0.1em] text-smoke hover:text-bone"
+                onClick={() => {
+                  const next = { ...fill };
+                  delete next[key];
+                  onChange(next);
+                }}
+              >
+                Remove
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Field label="The face">
+          <Select value={face} onChange={(e) => setFace(e.target.value)}>
+            <option value="">Choose…</option>
+            {options}
+          </Select>
+        </Field>
+        <Field label="Takes the letters it lacks from">
+          <Select value={from} onChange={(e) => setFrom(e.target.value)}>
+            <option value="">Choose…</option>
+            {options}
+          </Select>
+        </Field>
+        <div className="self-end pb-1">
+          <AdminButton
+            type="button"
+            disabled={!face || !from || face === from}
+            onClick={() => {
+              onChange({ ...fill, [face]: from });
+              setFace('');
+              setFrom('');
+            }}
+          >
+            Add
+          </AdminButton>
+        </div>
+      </div>
+    </Panel>
   );
 }
 

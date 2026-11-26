@@ -35,13 +35,22 @@ export function PictureZoomFields({ value, update }: { value: PictureZoom; updat
         {focusField('imageFocus', 'Focus point', 'the anchor')}
         {focusField('imageFocusTablet', 'Focus on tablets', 'as above')}
         {focusField('imageFocusMobile', 'Focus on phones', 'as above')}
-        <Field label="Fit">
-          <Select value={value.imageFit ?? ''} onChange={(e) => update({ imageFit: (e.target.value || undefined) as PictureZoom['imageFit'] })}>
-            <option value="">Cover the box, as drawn</option>
-            <option value="contain">Whole, inside the box</option>
-            <option value="fill">Stretched to the box</option>
-          </Select>
-        </Field>
+        {(
+          [
+            ['imageFit', 'Fit', 'Cover the box, as drawn'],
+            ['imageFitTablet', 'Fit on tablets', 'As above'],
+            ['imageFitMobile', 'Fit on phones', 'As above'],
+          ] as const
+        ).map(([key, label, empty]) => (
+          <Field key={key} label={label}>
+            <Select value={value[key] ?? ''} onChange={(e) => update({ [key]: (e.target.value || undefined) as PictureZoom['imageFit'] })}>
+              <option value="">{empty}</option>
+              <option value="cover">Cover the box</option>
+              <option value="contain">Whole, inside the box</option>
+              <option value="fill">Stretched to the box</option>
+            </Select>
+          </Field>
+        ))}
       </div>
       <p className="m-0 mt-2 text-[12px] text-smoke">The picture covers its box, then is zoomed about the focus point, which also anchors it. To match a design drawing it W % wide from L % at the left: zoom W, focus −L ÷ (W − 100) × 100 %.</p>
     </details>

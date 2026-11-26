@@ -8,6 +8,9 @@ import { postCardExtras } from './blog';
 /** Ids become part of a CSS selector, so they are constrained to what is safe there. */
 export const BLOCK_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 import {
+  BG_POSITION,
+  BG_SIZE,
+  GRADIENT_STOPS,
   type BlockStyle,
   blockStyleSchema,
   columnAlignSchema,
@@ -209,6 +212,12 @@ export const FIGURE_LABELS = {
   converge: ['SOURCE A', 'SOURCE B', 'OUTCOME'],
   layers: ['FOUNDATION', 'PLATFORM', 'PRODUCT'],
 } as const;
+
+/** 3.38 — a gradient over a card's picture: colours at places, and a direction in degrees. */
+const cardGradient = z.object({
+  stops: z.string().trim().max(300).refine((v) => GRADIENT_STOPS.test(v), 'Colours and places, such as rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%'),
+  angle: z.number().min(-360).max(360).optional(),
+});
 
 export const blockSchemas = {
   /** Page opener: eyebrow, h1, lede, body, buttons, optional SVG figure. */
@@ -463,6 +472,8 @@ export const blockSchemas = {
     headInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     headInsetMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     pointsInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.38 — bullet columns of equal width (unset) or each as wide as its own words (`auto`), with the gap between. */
+    pointsColumnWidth: z.enum(['equal', 'auto']).optional(),
     /** 3.34 — the lift tuned (`hover: 'lift'`), and a row of pictures with text over them that widen; see `lib/cardMotion.ts`. */
     ...cardMotionFields,
     cards: z.array(
@@ -483,6 +494,19 @@ export const blockSchemas = {
         textWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         /** 3.37 — the card's picture zoomed and placed (pictures with text over them, image cards, tiles); see `lib/pictureZoom.ts`. */
         ...pictureZoomFields,
+        /** 3.38 — pictures with text over them: a gradient laid over this card's picture (under its shade and words), and on phones. */
+        imageOverlay: cardGradient.optional(),
+        imageOverlayMobile: cardGradient.optional(),
+        /** 3.38 — a colour, a picture or both under this card's picture, showing where the picture does not cover (a picture fitted whole). */
+        underlay: z
+          .object({
+            color: z.string().trim().refine(isColor, 'Not a colour').optional(),
+            imageUrl: mediaUrl.optional(),
+            imageUrlMobile: mediaUrl.optional(),
+            size: z.string().trim().max(60).refine((v) => BG_SIZE.test(v) || ['cover', 'contain'].includes(v), 'cover, contain, or one or two of auto, a length or a percentage').optional(),
+            position: z.string().trim().max(60).refine((v) => BG_POSITION.test(v), 'One or two of a side, a length or a percentage').optional(),
+          })
+          .optional(),
         span: z.number().int().min(1).max(12).optional(),
         rowSpan: z.number().int().min(1).max(3).optional(),
         eyebrow: z.string().optional(),
@@ -632,7 +656,7 @@ export const blockSchemas = {
     images: z
       /* 2.17 — `videoUrl` makes the tile a moving picture (an uploaded film,
          muted and looped while on screen); `url` is its poster. */
-      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional(), videoUrlAlt: mediaUrl.optional() }))
+      .array(z.object({ url: mediaUrl, alt: text(200), caption: text(200), href: safeHref.optional(), videoUrl: mediaUrl.optional(), videoUrlAlt: mediaUrl.optional(), /** 3.38 — this picture zoomed and placed in its tile. */ ...pictureZoomFields }))
       .min(1)
       .max(200),
     link: libraryLink.optional(),
@@ -1013,6 +1037,8 @@ export const blockSchemas = {
     newTab: z.boolean().optional(),
     /** 3.24 — what pointing at a linked picture does: nothing (unset) or a slow zoom. */
     hover: z.enum(['none', 'zoom']).optional(),
+    /** 3.38 — the picture zoomed about a point inside its own frame, per screen; see `lib/pictureZoom.ts`. */
+    ...pictureZoomFields,
   }),
 
   /**

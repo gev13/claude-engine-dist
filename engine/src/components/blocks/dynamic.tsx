@@ -14,6 +14,7 @@ import type { Paging } from '@/server/content/resolve';
 import { getServiceCatalogue } from '@/server/content/services';
 import { cardDate } from '@/lib/dates';
 import { listPosts } from '@/server/content/posts';
+import { pictureZoom } from '@/lib/pictureZoom';
 import type { Locale } from '@/lib/locales';
 import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
@@ -383,8 +384,9 @@ export function PostCollection({
     return (
       <li key={post.id} className={cn('he-plst__item', moves.className)} style={heights.length ? ({ ...moves.style, '--he-plst-hi': heights[Math.min(index, heights.length - 1)] } as React.CSSProperties) : moves.style}>
         <Link href={postPath(permalinks, post)} className="he-plst__link">
+          {/* 3.38 — the post's own cover framing. */}
           {!minimal && (
-            <div className="he-plst__media">
+            <div className={cn('he-plst__media', ...pictureZoom(post.cover).className)} style={post.cover && pictureZoom(post.cover).className.length ? (pictureZoom(post.cover).style as React.CSSProperties) : undefined}>
               {post.coverUrl ? (
                 <SiteImg src={post.coverUrl} alt="" className="he-fill" loading="lazy" decoding="async" sizes="third" />
               ) : (

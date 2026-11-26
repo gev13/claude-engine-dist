@@ -186,6 +186,30 @@ function panelStyle(p: P<'mediaBand'>): React.CSSProperties {
   return style as React.CSSProperties;
 }
 
+/** 3.38 — an overlay card's gradient over its picture and its underlay, as classes and checked properties; nothing for nothing set. */
+const GRADIENT = /^(?:#[0-9a-f]{3,8}|rgba?\([0-9.,\s]+\)|transparent)\s+\d{1,3}(?:\.\d{1,4})?%(?:\s*,\s*(?:#[0-9a-f]{3,8}|rgba?\([0-9.,\s]+\)|transparent)\s+\d{1,3}(?:\.\d{1,4})?%){1,5}$/i;
+const MEDIA = /^\/media\/[A-Za-z0-9._\-/]+$/;
+function cardLayers(c: { imageOverlay?: { stops: string; angle?: number }; imageOverlayMobile?: { stops: string; angle?: number }; underlay?: { color?: string; imageUrl?: string; imageUrlMobile?: string; size?: string; position?: string } }) {
+  const className: string[] = [];
+  const style: Record<string, string> = {};
+  const gradient = (g: { stops: string; angle?: number } | undefined) =>
+    g && GRADIENT.test(g.stops.trim()) ? `linear-gradient(${typeof g.angle === 'number' && Number.isFinite(g.angle) ? Math.round(g.angle * 100) / 100 : 180}deg,${g.stops.trim()})` : null;
+  const over = gradient(c.imageOverlay);
+  const overPhone = gradient(c.imageOverlayMobile);
+  if (over) (className.push('has-ov'), (style['--he-ocard-ov'] = over));
+  if (overPhone) (className.push('has-ov-m'), (style['--he-ocard-ov-m'] = overPhone));
+  const u = c.underlay;
+  if (u && (u.color || u.imageUrl || u.imageUrlMobile)) {
+    className.push('has-under');
+    if (u.color && isColor(u.color)) style['--he-ocard-uc'] = u.color;
+    if (u.imageUrl && MEDIA.test(u.imageUrl)) style['--he-ocard-ui'] = `url("${u.imageUrl}")`;
+    if (u.imageUrlMobile && MEDIA.test(u.imageUrlMobile)) style['--he-ocard-ui-m'] = `url("${u.imageUrlMobile}")`;
+    if (u.size && /^(cover|contain|[a-z0-9.%\s-]+)$/i.test(u.size) && !/[;:{}]/.test(u.size)) style['--he-ocard-us'] = u.size;
+    if (u.position && /^[a-z0-9.%\s-]+$/i.test(u.position)) style['--he-ocard-up'] = u.position;
+  }
+  return { className, style };
+}
+
 /** A media band's text: one paragraph, as before, or (3.37, with a paragraph gap) one for each block of lines between blank lines. */
 function bandBody(p: P<'mediaBand'>) {
   if (!p.body) return null;
@@ -462,6 +486,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     overlay && p.labelGapMobile && 'has-lg-m',
     overlay && p.headInset && 'has-hi',
     overlay && p.headInsetMobile && 'has-hi-m',
+    overlay && p.pointsColumnWidth === 'auto' && 'is-points-auto',
     p.titleHover === 'none' && 'no-title-line',
     p.linkArea === 'links' && 'is-links-own',
     // 3.29
@@ -526,11 +551,12 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 ...(c.textWidth && isLength(c.textWidth) ? { '--he-ocard-tw': c.textWidth } : {}),
                 ...(c.textWidthMobile && isLength(c.textWidthMobile) ? { '--he-ocard-tw-m': c.textWidthMobile } : {}),
                 ...zoom.style,
+                ...cardLayers(c).style,
               } as React.CSSProperties;
               return (
                 <li
                   key={c.title + i}
-                  className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', ...zoom.className, itemClass(p.blockId, i, c.style))}
+                  className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', ...zoom.className, ...cardLayers(c).className, itemClass(p.blockId, i, c.style))}
                   style={Object.keys(own).length ? own : undefined}
                   // 3.34 — a tap widens a card in a row that widens: focusable by the pointer, and by the keyboard only when its words wait to be revealed.
                   tabIndex={motion.className.includes('is-expand') && !c.href ? (p.expandText === 'reveal' ? 0 : -1) : undefined}

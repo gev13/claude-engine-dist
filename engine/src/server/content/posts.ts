@@ -8,6 +8,7 @@ import type { AnyBlock } from '@/lib/blocks';
 import { resolvePostLayout, type PostLayout } from '@/lib/blog';
 import { postPath, type Permalinks } from '@/lib/permalinks';
 import { readPageAppearance, type PageAppearance } from '@/lib/pageAppearance';
+import type { PictureZoom } from '@/lib/pictureZoom';
 
 /**
  * The category a post is filed under in its address: the primary one, or —
@@ -35,6 +36,8 @@ export type PostListItem = {
   categorySlug: string | null;
   categoryName: string | null;
   coverUrl: string | null;
+  /** 3.38 — the post's own cover zoom and focus, when it has one. */
+  cover?: PictureZoom;
 };
 
 export type PostDetail = PostListItem & {
@@ -141,6 +144,7 @@ export async function listPosts(opts: {
         categorySlug: firstCategory('slug'),
         categoryName: firstCategory('name'),
         coverUrl: media.url,
+        appearance: posts.appearance,
       })
       .from(posts)
       .leftJoin(categories, eq(categories.id, posts.primaryCategoryId))
@@ -150,7 +154,11 @@ export async function listPosts(opts: {
       .limit(limit)
       .offset(offset);
 
-    return rows;
+    // 3.38 — a post's own cover framing travels with its card; nothing for a post without one.
+    return rows.map(({ appearance, ...row }) => {
+      const cover = readPageAppearance(appearance).cover;
+      return cover && Object.keys(cover).length ? { ...row, cover } : row;
+    });
   } catch {
     // Database unreachable (first run before `npm run setup`). The site still
     // renders; the blog section is simply empty.

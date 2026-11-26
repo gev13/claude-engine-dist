@@ -31,6 +31,7 @@ import { withBodyImages } from '@/server/content/bodyImages';
 import { PageAppearanceStyle } from '@/components/site/PageAppearanceStyle';
 import { TocReveal } from './TocReveal';
 import { splitAtBlocks } from '@/lib/inlineBlocks';
+import { pictureZoom } from '@/lib/pictureZoom';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One post, as the public sees it — and as its preview shows it
@@ -219,6 +220,8 @@ export async function PostArticle({
     ));
   const shareTop = !preview && (blog.share.position === 'top' || (blog.share.position === 'beside' && !showBody)) && <PostShare blog={blog} t={t} />;
   const shareBottom = !preview && blog.share.position === 'bottom' && <PostShare blog={blog} t={t} />;
+  // 3.38 — the post's own cover framing, on its cover card.
+  const coverZoom = pictureZoom(post.appearance?.cover);
   const title = (
     <Heading level={titleLevel} className={cn('max-w-[20ch]', onCover && 'text-white')}>
       {post.title}
@@ -305,7 +308,7 @@ export async function PostArticle({
           // 3.29 — the cover as a card beside the article, the title and details over it.
           <Section size="lg" className="he-post-aside-sec">
             <div className="he-post-aside" style={blog.coverTint && isColor(blog.coverTint) ? ({ '--he-aside-tint': blog.coverTint } as React.CSSProperties) : undefined}>
-              <header className="he-post-aside__card">
+              <header className={cn('he-post-aside__card', ...coverZoom.className)} style={coverZoom.className.length ? (coverZoom.style as React.CSSProperties) : undefined}>
                 <SiteImg src={post.coverUrl!} alt="" className="he-post-aside__img" sizes="half" priority />
                 <div className={asideTextGap ? 'he-post-aside__text has-tg' : 'he-post-aside__text'} style={asideTextGap ? ({ '--he-aside-tg': asideTextGap } as React.CSSProperties) : undefined}>
                   {back}

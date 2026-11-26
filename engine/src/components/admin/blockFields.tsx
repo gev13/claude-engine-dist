@@ -997,7 +997,9 @@ type ScreenItem = { imageUrl: string; alt?: string };
 type ViewItem = { label: string; imageUrl?: string; alt?: string; code?: string };
 type CardButton = { label: string; href: string; variant?: 'primary' | 'outline' | 'ghost'; arrow?: boolean; fill?: string };
 type InfoRow = { label: string; value: string; icon?: InfoIconName; href?: string };
-type GridCard = PictureZoom & { imagePositionMobile?: string; height?: string; heightMobile?: string; textWidth?: string; textWidthMobile?: string; button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceTablet?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceMobile?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
+type CardGradient = { stops: string; angle?: number };
+type CardUnderlay = { color?: string; imageUrl?: string; imageUrlMobile?: string; size?: string; position?: string };
+type GridCard = PictureZoom & { imageOverlay?: CardGradient; imageOverlayMobile?: CardGradient; underlay?: CardUnderlay; imagePositionMobile?: string; height?: string; heightMobile?: string; textWidth?: string; textWidthMobile?: string; button?: CardButton; imageUrlMobile?: string; eyebrow?: string; title: string; titleAfter?: string; titleAfterColor?: string; body?: string; href?: string; imageUrl?: string; alt?: string; buttonLabel?: string; badge?: string; points?: string[]; style?: ItemStyle; textPlace?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceTablet?: 'bottom' | 'top' | 'left' | 'right' | 'center'; textPlaceMobile?: 'bottom' | 'top' | 'left' | 'right' | 'center'; imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top left' | 'top right' | 'bottom left' | 'bottom right'; span?: number; rowSpan?: number };
 type FaqEntry = { question: string; answer: string; imageUrl?: string; alt?: string };
 type StatItem = { value: string; label: string; unit?: string; iconUrl?: string };
 type StoryItem = { title: string; body?: string; imageUrl?: string; alt?: string };
@@ -1018,7 +1020,7 @@ type PlanItem = {
   button?: { label: string; href: string };
 };
 type MemberItem = { nameColor?: string; name: string; role?: string; bio?: string; imageUrl?: string; links?: SocialItem[]; color?: string };
-type GalleryImage = { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string; videoUrlAlt?: string };
+type GalleryImage = PictureZoom & { url: string; alt?: string; caption?: string; href?: string; videoUrl?: string; videoUrlAlt?: string };
 type AccordionPanel = { title: string; label?: string; body?: string; imageUrl?: string; alt?: string; link?: { label: string; href: string } };
 type ProjectItem = {
   title: string;
@@ -1946,6 +1948,47 @@ function BandTextBoxFields({ props, set }: { props: Props; set: Setter }) {
         {field('bodyWidthMobile', 'Paragraph width on phones', 'as above')}
         {field('actionsGapMobile', 'Gap above the buttons on phones', 'as above')}
         {field('paragraphGap', 'Between paragraphs (a blank line starts one)', 'one paragraph')}
+      </div>
+    </details>
+  );
+}
+
+/** 3.38 — an overlay card's gradient over its picture, and what lies under the picture. */
+function CardLayerFields({ item, update }: { item: GridCard; update: (patch: Partial<GridCard>) => void }) {
+  const gradient = (key: 'imageOverlay' | 'imageOverlayMobile', label: string) => {
+    const g = item[key];
+    return (
+      <>
+        <Field label={label} hint="colours at places, e.g. rgba(0,0,0,0) 40%, rgba(0,0,0,0.5) 100%">
+          <Input value={g?.stops ?? ''} placeholder="none" onChange={(e) => update({ [key]: e.target.value.trim() ? { ...g, stops: e.target.value.trim() } : undefined })} />
+        </Field>
+        <Field label="— its direction" hint="degrees; 180 is downwards">
+          <Input type="number" min={-360} max={360} step={0.01} value={g?.angle ?? ''} disabled={!g} placeholder="180" onChange={(e) => g && update({ [key]: { ...g, angle: e.target.value === '' ? undefined : Math.min(360, Math.max(-360, Number(e.target.value) || 0)) } })} />
+        </Field>
+      </>
+    );
+  };
+  const u = item.underlay ?? {};
+  const setUnder = (patch: Partial<CardUnderlay>) => {
+    const next = { ...u, ...patch };
+    for (const k of Object.keys(next) as (keyof CardUnderlay)[]) if (!next[k]) delete next[k];
+    update({ underlay: Object.keys(next).length ? next : undefined });
+  };
+  return (
+    <details>
+      <summary className="cursor-pointer text-[13px] text-ash">Picture layers — a gradient over it, something under it</summary>
+      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
+        {gradient('imageOverlay', 'Gradient over the picture')}
+        {gradient('imageOverlayMobile', 'Gradient over it on phones')}
+        <ColorField label="Under the picture: colour" value={u.color} placeholder="the card’s" onChange={(color) => setUnder({ color: color || undefined })} />
+        <MediaInput label="Under the picture: picture" value={u.imageUrl} onChange={(imageUrl) => setUnder({ imageUrl })} />
+        <MediaInput label="— on phones" value={u.imageUrlMobile} onChange={(imageUrlMobile) => setUnder({ imageUrlMobile })} />
+        <Field label="— its size" hint="cover, contain, or e.g. 100% auto">
+          <Input value={u.size ?? ''} placeholder="cover" onChange={(e) => setUnder({ size: e.target.value.trim() || undefined })} />
+        </Field>
+        <Field label="— its place" hint="e.g. 50% 100%">
+          <Input value={u.position ?? ''} placeholder="the middle" onChange={(e) => setUnder({ position: e.target.value.trim() || undefined })} />
+        </Field>
       </div>
     </details>
   );
@@ -3887,6 +3930,8 @@ function TypeFields({
                 {item.videoUrl && (
                   <MediaInput label="The same film in another format (optional)" hint="a webm beside the mp4" accept="video" value={item.videoUrlAlt} onChange={(videoUrlAlt) => update({ videoUrlAlt })} />
                 )}
+                {/* 3.38 */}
+                <PictureZoomFields value={item} update={update} />
               </>
             )}
           />
@@ -5815,6 +5860,8 @@ function TypeFields({
               <OptText label="Space between bullet points" hint="one length, or rows then columns (9px 16px)" k="pointsGap" placeholder="as drawn" props={props} set={set} />
               {/* 3.37 */}
               <OptText label="Bullet text indent" k="pointsInset" placeholder="1.1em" props={props} set={set} />
+              {/* 3.38 */}
+              <PropSelect label="Bullet columns" k="pointsColumnWidth" fallback="" options={[['', 'Of equal width'], ['auto', 'Each as wide as its words']]} props={props} set={(next) => set(withOpt(next, 'pointsColumnWidth', next.pointsColumnWidth || undefined))} />
               <OptText label="Space under the number and label" k="labelGap" placeholder="as drawn" props={props} set={set} />
               <OptText label="— on phones" k="labelGapMobile" placeholder="as above" props={props} set={set} />
               <OptText label="Number, label and title set in by" k="headInset" placeholder="none" props={props} set={set} />
@@ -5980,6 +6027,7 @@ function TypeFields({
                     )}
                     {/* 3.37 */}
                     {(variant === 'overlay' || variant === 'imageCards' || variant === 'tiles') && <PictureZoomFields value={item} update={update} />}
+                    {variant === 'overlay' && <CardLayerFields item={item} update={update} />}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       {variant !== 'icons' && variant !== 'rows' && (
                         <Field label="Image description">
@@ -6451,6 +6499,8 @@ function TypeFields({
         <>
           <ImageField props={props} set={set} />
           <Text label="Alt text" k="alt" props={props} set={set} hint="describe the image for screen readers" />
+          {/* 3.38 — zoomed inside its own frame. */}
+          <PictureZoomFields value={props as PictureZoom} update={(patch) => set(Object.entries(patch).reduce<Props>((acc, [k, v]) => withOpt(acc, k, v), props))} />
           <PropSelect
             label="Caption style"
             k="captionStyle"

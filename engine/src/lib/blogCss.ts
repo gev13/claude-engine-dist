@@ -1,5 +1,6 @@
 import { ASIDE_COLUMNS, type ArchiveLook, type BlogSettings, type CardLook, type PostLook, TINT_STOPS } from './blog';
 import { typeRule } from './typeStyle';
+import { FOCUS } from './pictureZoom';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    3.28 — the blog's last details, as CSS
@@ -259,6 +260,22 @@ function postCss(p: PostLook): string[] {
   if (typeof p.asideTintStopsMobile === 'string' && TINT_STOPS.test(p.asideTintStopsMobile.trim())) out.push(media(TABLET, `.he-post-aside__card::after{background:linear-gradient(to bottom,${p.asideTintStopsMobile.trim()})}`));
   out.push(rule(`${post} .prose-edge :is(h2,h3)`, [['margin-bottom', len(p.headingGap)], ['margin-top', len(p.sectionGap)]]));
   out.push(media(PHONE, rule(`${post} .prose-edge :is(h2,h3)`, [['margin-top', len(p.sectionGapMobile)]])));
+  /* 3.38 — the space above a section is between sections: never before the
+     article's first heading, counting what rich text hides on this tier
+     (`he-hide-<tier>`) as not there. */
+  if (len(p.sectionGap) || len(p.sectionGapMobile)) {
+    const first = `${post} .prose-edge>:is(h2,h3):first-child`;
+    // One, two or three leading elements hidden on this tier, then the heading.
+    const after = (tier: string) => [0, 1, 2].map((more) => `${post} .prose-edge>.he-hide-${tier}:first-child${`+.he-hide-${tier}`.repeat(more)}+:is(h2,h3)`).join(',');
+    out.push(`${first}{margin-top:0}`);
+    for (const [tier, range] of [['base', '(width > 90rem)'], ['laptop', '(64rem < width <= 90rem)'], ['tablet', '(48rem < width <= 64rem)'], ['mobile', '(width <= 48rem)']] as const) out.push(`@media ${range}{${after(tier)}{margin-top:0}}`);
+  }
+  // 3.38 — the cover zoomed about a point, per tier; in the details layer, under a post's own framing.
+  const zoom = (z: unknown) => (typeof z === 'number' && z >= 100 && z <= 300 ? String(Math.round(z * 100) / 10000) : undefined);
+  const focus = (f: unknown) => (typeof f === 'string' && FOCUS.test(f.trim()) ? f.trim() : undefined);
+  const cover = (z: unknown, f: unknown) => rule('.he-post-aside__img', [['scale', zoom(z)], ['object-position', focus(f)], ['transform-origin', focus(f)]]);
+  const covers = [cover(p.asideCoverZoom, p.asideCoverFocus), media(TABLET, cover(p.asideCoverZoomTablet, p.asideCoverFocusTablet)), media(PHONE, cover(p.asideCoverZoomMobile, p.asideCoverFocusMobile))].join('');
+  if (covers) out.push(`@layer he-details{${covers}}`);
   // Related posts.
   out.push(rule('.he-related', [['--container-shell', len(p.relatedWidth)]]));
   out.push(rule('.he-related h2', [['font-size', len(p.relatedTitleSize)], ['font-weight', weight(p.relatedTitleWeight)], ['margin-bottom', len(p.relatedTitleGap)]]));

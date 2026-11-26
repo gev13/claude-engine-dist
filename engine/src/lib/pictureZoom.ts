@@ -30,9 +30,12 @@ export const pictureZoomFields = {
   imageFocusMobile: focus(),
   /** How the picture fills its box: cut to cover it (unset, as before), whole inside it, or stretched to it. */
   imageFit: z.enum(['cover', 'contain', 'fill']).optional(),
+  /** 3.38 — the fit on tablets and phones; each unset keeps the wider screen's. */
+  imageFitTablet: z.enum(['cover', 'contain', 'fill']).optional(),
+  imageFitMobile: z.enum(['cover', 'contain', 'fill']).optional(),
 };
 
-export type PictureZoom = { [K in keyof typeof pictureZoomFields]?: K extends `imageZoom${string}` ? number : string };
+export type PictureZoom = { [K in keyof typeof pictureZoomFields]?: K extends `imageZoom${string}` ? number : K extends `imageFit${string}` ? 'cover' | 'contain' | 'fill' : string };
 const FITS = ['cover', 'contain', 'fill'];
 
 const TIERS = [
@@ -58,9 +61,12 @@ export function pictureZoom(p: PictureZoom | undefined): { className: string[]; 
       style[`--he-pf${suffix}`] = f.trim();
     }
   }
-  if (typeof p.imageFit === 'string' && FITS.includes(p.imageFit)) {
-    className.push('has-pfit');
-    style['--he-pfit'] = p.imageFit;
+  for (const [suffix, key] of [['', 'imageFit'], ['-t', 'imageFitTablet'], ['-m', 'imageFitMobile']] as const) {
+    const fit = p[key];
+    if (typeof fit === 'string' && FITS.includes(fit)) {
+      className.push(`has-pfit${suffix}`);
+      style[`--he-pfit${suffix}`] = fit;
+    }
   }
   return { className, style };
 }

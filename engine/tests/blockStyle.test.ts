@@ -9,7 +9,7 @@ describe('section style schema', () => {
   it('rejects a length that is not a length', () => {
     expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: '40px' } } }).success).toBe(true);
     expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: '40 px' } } }).success).toBe(false);
-    expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: 'calc(100% - 2px)' } } }).success).toBe(false);
+    expect(blockStyleSchema.safeParse({ spacing: { base: { paddingTop: 'calc(var(--x) - 2px)' } } }).success).toBe(false);
   });
 
   it('constrains an anchor to something usable as an id', () => {

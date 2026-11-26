@@ -2,7 +2,7 @@ import { Fragment } from 'react';
 import type { AnyBlock, ParsedBlock, ParsedRowProps } from '@/lib/blocks';
 import { BlockNameTag } from './BlockNameTag';
 import { parseBlocks } from '@/lib/blocks';
-import { blockStyleToCss, isSafeBlockId, rowToCss } from '@/lib/blockStyle-css';
+import { blockStyleToCss, hasZoomedBackground, isSafeBlockId, rowToCss } from '@/lib/blockStyle-css';
 import { itemStyleToCss, type ItemStyle } from '@/lib/itemStyle';
 import { cn } from '@/lib/utils';
 import {
@@ -173,6 +173,8 @@ function BlockShell({ block, children }: { block: ParsedBlock; children: React.R
       {children}
       {scrollPin(style)}
       {style.background?.videoUrl && <SectionVideo background={style.background} />}
+      {/* 3.38 — a zoomed background picture's layer. */}
+      {hasZoomedBackground(style) && <span className="he-bgz" aria-hidden="true" />}
       <ShapeDividers style={style} />
       {swipeArrows(style)}
     </div>
@@ -317,6 +319,7 @@ function RowBlock({ block, ctx }: { block: ParsedBlock; ctx: RenderContext }) {
       {props.columns.some((column) => rises(column.sticky)) && <HeldRise />}
       {style && scrollPin(style)}
       {style?.background?.videoUrl && <SectionVideo background={style.background} />}
+      {hasZoomedBackground(style) && <span className="he-bgz" aria-hidden="true" />}
       {style && <ShapeDividers style={style} />}
       {style && swipeArrows(style)}
     </div>

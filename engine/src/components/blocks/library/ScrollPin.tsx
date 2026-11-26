@@ -142,7 +142,9 @@ export function ScrollPin({ at, counter, line }: { at: Tier[]; counter?: boolean
       const bottom = lines.length ? Math.max(...lines.map((r) => r.bottom)) : 0;
       let x: number;
       let y: number;
-      const left = t.right - w;
+      // 3.38 — set in from the row's end by the section's counter inset (its margin-right, in px).
+      const inset = parseFloat(getComputedStyle(progress).marginRight) || 0;
+      const left = t.right - w - inset;
       if (lines.length && !lines.some((r) => r.bottom > bottom - h && r.top < bottom && r.right > left - 24)) {
         progress.dataset.place = 'beside';
         x = left - s.left;

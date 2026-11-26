@@ -299,16 +299,22 @@
 
 /* 3.37 — a picture zoomed and placed in its box: a media band's, a card's (lib/pictureZoom.ts). Last, so it wins over the anchor keywords. */
 @layer he-details {
-  :is(.he-band.has-pz .he-band__bg, .he-ocard.has-pz .he-ocard__bg, .he-tile.has-pz .he-tile__bg, .he-fgrid__item.has-pz .he-icard__media .he-fill) { scale: var(--he-pz); transform-origin: var(--he-pf, 50% 50%); }
-  :is(.he-band.has-pf .he-band__bg, .he-ocard.has-pf .he-ocard__bg, .he-tile.has-pf .he-tile__bg, .he-fgrid__item.has-pf .he-icard__media .he-fill) { object-position: var(--he-pf); transform-origin: var(--he-pf); }
-  :is(.he-band.has-pfit .he-band__bg, .he-ocard.has-pfit .he-ocard__bg, .he-tile.has-pfit .he-tile__bg, .he-fgrid__item.has-pfit .he-icard__media .he-fill) { object-fit: var(--he-pfit); }
+  :is(.he-band.has-pz .he-band__bg, .he-ocard.has-pz .he-ocard__bg, .he-tile.has-pz .he-tile__bg, .he-fgrid__item.has-pz .he-icard__media .he-fill, .he-plst__media.has-pz .he-fill, .he-post-aside__card.has-pz .he-post-aside__img, .he-gal__item.has-pz .he-gal__media .he-fill, .he-img-zoom.has-pz img) { scale: var(--he-pz); transform-origin: var(--he-pf, 50% 50%); }
+  :is(.he-band.has-pf .he-band__bg, .he-ocard.has-pf .he-ocard__bg, .he-tile.has-pf .he-tile__bg, .he-fgrid__item.has-pf .he-icard__media .he-fill, .he-plst__media.has-pf .he-fill, .he-post-aside__card.has-pf .he-post-aside__img, .he-gal__item.has-pf .he-gal__media .he-fill, .he-img-zoom.has-pf img) { object-position: var(--he-pf); transform-origin: var(--he-pf); }
+  :is(.he-band.has-pfit .he-band__bg, .he-ocard.has-pfit .he-ocard__bg, .he-tile.has-pfit .he-tile__bg, .he-fgrid__item.has-pfit .he-icard__media .he-fill, .he-plst__media.has-pfit .he-fill, .he-post-aside__card.has-pfit .he-post-aside__img, .he-gal__item.has-pfit .he-gal__media .he-fill, .he-img-zoom.has-pfit img) { object-fit: var(--he-pfit); }
   @media (width <= 64rem) {
-    :is(.he-band.has-pz-t .he-band__bg, .he-ocard.has-pz-t .he-ocard__bg, .he-tile.has-pz-t .he-tile__bg, .he-fgrid__item.has-pz-t .he-icard__media .he-fill) { scale: var(--he-pz-t); }
-    :is(.he-band.has-pf-t .he-band__bg, .he-ocard.has-pf-t .he-ocard__bg, .he-tile.has-pf-t .he-tile__bg, .he-fgrid__item.has-pf-t .he-icard__media .he-fill) { object-position: var(--he-pf-t); transform-origin: var(--he-pf-t); }
+    :is(.he-band.has-pfit-t .he-band__bg, .he-ocard.has-pfit-t .he-ocard__bg, .he-tile.has-pfit-t .he-tile__bg, .he-fgrid__item.has-pfit-t .he-icard__media .he-fill, .he-plst__media.has-pfit-t .he-fill, .he-post-aside__card.has-pfit-t .he-post-aside__img, .he-gal__item.has-pfit-t .he-gal__media .he-fill, .he-img-zoom.has-pfit-t img) { object-fit: var(--he-pfit-t); }
   }
   @media (width <= 48rem) {
-    :is(.he-band.has-pz-m .he-band__bg, .he-ocard.has-pz-m .he-ocard__bg, .he-tile.has-pz-m .he-tile__bg, .he-fgrid__item.has-pz-m .he-icard__media .he-fill) { scale: var(--he-pz-m); }
-    :is(.he-band.has-pf-m .he-band__bg, .he-ocard.has-pf-m .he-ocard__bg, .he-tile.has-pf-m .he-tile__bg, .he-fgrid__item.has-pf-m .he-icard__media .he-fill) { object-position: var(--he-pf-m); transform-origin: var(--he-pf-m); }
+    :is(.he-band.has-pfit-m .he-band__bg, .he-ocard.has-pfit-m .he-ocard__bg, .he-tile.has-pfit-m .he-tile__bg, .he-fgrid__item.has-pfit-m .he-icard__media .he-fill, .he-plst__media.has-pfit-m .he-fill, .he-post-aside__card.has-pfit-m .he-post-aside__img, .he-gal__item.has-pfit-m .he-gal__media .he-fill, .he-img-zoom.has-pfit-m img) { object-fit: var(--he-pfit-m); }
+  }
+  @media (width <= 64rem) {
+    :is(.he-band.has-pz-t .he-band__bg, .he-ocard.has-pz-t .he-ocard__bg, .he-tile.has-pz-t .he-tile__bg, .he-fgrid__item.has-pz-t .he-icard__media .he-fill, .he-plst__media.has-pz-t .he-fill, .he-post-aside__card.has-pz-t .he-post-aside__img, .he-gal__item.has-pz-t .he-gal__media .he-fill, .he-img-zoom.has-pz-t img) { scale: var(--he-pz-t); }
+    :is(.he-band.has-pf-t .he-band__bg, .he-ocard.has-pf-t .he-ocard__bg, .he-tile.has-pf-t .he-tile__bg, .he-fgrid__item.has-pf-t .he-icard__media .he-fill, .he-plst__media.has-pf-t .he-fill, .he-post-aside__card.has-pf-t .he-post-aside__img, .he-gal__item.has-pf-t .he-gal__media .he-fill, .he-img-zoom.has-pf-t img) { object-position: var(--he-pf-t); transform-origin: var(--he-pf-t); }
+  }
+  @media (width <= 48rem) {
+    :is(.he-band.has-pz-m .he-band__bg, .he-ocard.has-pz-m .he-ocard__bg, .he-tile.has-pz-m .he-tile__bg, .he-fgrid__item.has-pz-m .he-icard__media .he-fill, .he-plst__media.has-pz-m .he-fill, .he-post-aside__card.has-pz-m .he-post-aside__img, .he-gal__item.has-pz-m .he-gal__media .he-fill, .he-img-zoom.has-pz-m img) { scale: var(--he-pz-m); }
+    :is(.he-band.has-pf-m .he-band__bg, .he-ocard.has-pf-m .he-ocard__bg, .he-tile.has-pf-m .he-tile__bg, .he-fgrid__item.has-pf-m .he-icard__media .he-fill, .he-plst__media.has-pf-m .he-fill, .he-post-aside__card.has-pf-m .he-post-aside__img, .he-gal__item.has-pf-m .he-gal__media .he-fill, .he-img-zoom.has-pf-m img) { object-position: var(--he-pf-m); transform-origin: var(--he-pf-m); }
   }
 }
 
@@ -372,3 +378,23 @@
 @media (64rem < width <= 90rem) { .prose-edge .he-hide-laptop { display: none; } }
 @media (48rem < width <= 64rem) { .prose-edge .he-hide-tablet { display: none; } }
 @media (width <= 48rem) { .prose-edge .he-hide-mobile { display: none; } }
+
+/* 3.38 — pictures with text over them: a gradient over this card's picture (its ::before, under the shade), and a colour or picture under it (the card's own background, which the picture covers). */
+@layer he-details {
+  .he-ocard:is(.has-ov, .has-ov-m)::before { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--he-ocard-ov, none); pointer-events: none; }
+  .he-ocard.has-under { background-color: var(--he-ocard-uc, var(--color-surface)); background-image: var(--he-ocard-ui, none); background-size: var(--he-ocard-us, cover); background-position: var(--he-ocard-up, 50% 50%); background-repeat: no-repeat; }
+  @media (width <= 48rem) {
+    .he-ocard.has-ov-m::before { background: var(--he-ocard-ov-m); }
+    .he-ocard.has-under { background-image: var(--he-ocard-ui-m, var(--he-ocard-ui, none)); }
+  }
+}
+
+/* 3.38 — bullet columns each as wide as their own words, at most, with the gap between. */
+@layer he-details {
+  .he-fgrid.is-points-auto .he-ocard__points { grid-template-columns: repeat(var(--he-ocard-pcols, 1), minmax(0, max-content)); justify-content: start; }
+}
+
+/* 3.38 — an image block's picture zoomed inside its own frame. */
+@layer he-details {
+  .he-img-zoom { display: block; overflow: hidden; border-radius: inherit; }
+}

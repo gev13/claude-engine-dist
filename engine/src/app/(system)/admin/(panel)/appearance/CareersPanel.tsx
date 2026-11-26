@@ -54,6 +54,7 @@ const CARDS: RowDef[] = [
   ['buttonRadius', 'Button corners', 'one to four, e.g. 0 16px 0 16px'],
   ['buttonPadding', 'Button padding', 'e.g. 14px 20px'],
   ['buttonGap', 'Space beside its arrow'],
+  ['buttonArrowSize', 'Its arrow’s size', 'the arrow’s own, apart from the site’s buttons'],
 ];
 const ADVERT: RowDef[] = [
   ['advertColumns', 'The two columns', 'e.g. 744fr 572fr'],
@@ -278,6 +279,10 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
       <Panel title="Details — the cards">
         <div className="space-y-5">
           <Rows careers={careers} set={set} defs={CARDS} />
+          {/* 3.38 */}
+          <Field label="Its arrow’s line thickness" hint="0.5–4, in its own drawing (drawn 1.4)">
+            <Input type="number" min={0.5} max={4} step={0.05} value={careers?.buttonArrowStroke ?? ''} placeholder="as drawn" onChange={(e) => set(at('buttonArrowStroke'))(e.target.value === '' ? undefined : Math.min(4, Math.max(0.5, Number(e.target.value) || 1.4)))} />
+          </Field>
           <Check label="The Explore button in the site’s filled look, rather than outlined" value={careers?.buttonLook === 'primary' ? true : undefined} onChange={(v) => set(at('buttonLook'))(v ? 'primary' : undefined)} />
           {(
             [

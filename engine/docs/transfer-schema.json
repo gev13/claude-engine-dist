@@ -664,6 +664,62 @@
                       "alt",
                       "alt2"
                     ]
+                  },
+                  "cover": {
+                    "type": "object",
+                    "properties": {
+                      "imageZoom": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageZoomTablet": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageZoomMobile": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageFocus": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFocusTablet": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFocusMobile": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFit": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      },
+                      "imageFitTablet": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      },
+                      "imageFitMobile": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      }
+                    }
                   }
                 }
               },
@@ -991,6 +1047,62 @@
                       "alt",
                       "alt2"
                     ]
+                  },
+                  "cover": {
+                    "type": "object",
+                    "properties": {
+                      "imageZoom": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageZoomTablet": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageZoomMobile": {
+                        "type": "number",
+                        "minimum": 100,
+                        "maximum": 300
+                      },
+                      "imageFocus": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFocusTablet": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFocusMobile": {
+                        "type": "string",
+                        "maxLength": 40
+                      },
+                      "imageFit": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      },
+                      "imageFitTablet": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      },
+                      "imageFitMobile": {
+                        "type": "string",
+                        "enum": [
+                          "cover",
+                          "contain",
+                          "fill"
+                        ]
+                      }
+                    }
                   }
                 }
               },

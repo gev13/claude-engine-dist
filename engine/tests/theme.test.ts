@@ -22,7 +22,7 @@ describe('theme value grammars', () => {
   });
 
   it('rejects lengths that carry anything executable', () => {
-    for (const value of ['16px;color:red', 'calc(1px + 1px)', 'attr(x)', '16 px', '']) {
+    for (const value of ['16px;color:red', 'calc(var(--x) + 1px)', 'attr(x)', '16 px', '']) {
       expect(isLength(value), value).toBe(false);
     }
   });

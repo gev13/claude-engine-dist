@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import { FONT_STACKS, SECTION_REVEALS, isColor, isLength, normaliseLength } from './theme';
 import { cornerShapeSchema } from './shape';
+import { FOCUS } from './pictureZoom';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Per-section style
@@ -283,6 +284,8 @@ export const scrollPinSchema = z.object({
   counterColor: color.optional(),
   /** The "/ 07" after the number. */
   counterTotalColor: color.optional(),
+  /** 3.38 — the counter and line set in from the row's end by this much, beside the words (unset, at the end). */
+  counterInset: length.optional(),
   line: z.boolean().optional(),
   lineWidth: length.optional(),
   lineHeight: length.optional(),
@@ -394,6 +397,9 @@ export const blockStyleSchema = z.object({
           positionCustom: bgPosition.optional(),
           /** 3.37 — a gradient of its own on phones, drawn as the wider screen's is. */
           gradient: gradientSchema.optional(),
+          /** 3.38 — the picture zoomed about a point on phones; each unset keeps the wider screen's. */
+          zoom: z.number().min(100).max(300).optional(),
+          focus: z.string().trim().max(40).refine((v) => FOCUS.test(v), 'One or two of a percentage, a length or a side').optional(),
         })
         .optional(),
       /** P3-C4 — a gradient, used when there is no image; it can drift slowly. Drawn once both ends (or its stops) are set. */
@@ -403,6 +409,13 @@ export const blockStyleSchema = z.object({
       positionCustom: bgPosition.optional(),
       /** 3.37 — with a picture, the gradient drawn as well: under it or over it. Unset, a gradient shows only without a picture. */
       gradientLayer: z.enum(['under', 'over']).optional(),
+      /**
+       * 3.38 — the picture covering the section, then zoomed (100–300 %) about
+       * a point that also anchors it, as a card's picture is. Drawn on a layer
+       * of its own, so written sizes and places give way to it.
+       */
+      zoom: z.number().min(100).max(300).optional(),
+      focus: z.string().trim().max(40).refine((v) => FOCUS.test(v), 'One or two of a percentage, a length or a side').optional(),
     })
     .optional(),
 

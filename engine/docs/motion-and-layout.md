@@ -846,3 +846,22 @@ Each of these is off until set; left empty, a page is drawn as before.
   translation under *Translations*, or `POST /api/admin/translations` with
   `{ id, locale, kind: 'savedBlock' }`, then `PUT` its `strings` (as for a
   page; `slug` is not needed). A page in that language draws the translation.
+
+## Optical sizes, a face's missing alphabets, zoomed backgrounds (3.38)
+
+- **Appearance → Typography → A face's missing alphabets:** pick a face and the
+  face it takes the letters it lacks from (for example Google Sans Flex from
+  Google Sans, which has Cyrillic and Armenian). The face stays everywhere it
+  is named; only those letters change.
+- **Design → Background → Image zoom / Zoom about** (and on phones): the
+  picture covers the section, then is zoomed about the point, which also
+  anchors it. A gradient set under or over the picture still is.
+- **Pictures with text over them → Picture layers:** a gradient over the
+  picture (and on phones), a colour or picture under it; the picture's fit
+  per screen is in its zoom panel.
+- **A post's colours panel → Picture:** its cover's zoom and focus, on its
+  cards and its cover card. Appearance → Blog → the cover card's zoom per
+  screen, for every post.
+- **Gallery pictures and the image block** have the picture zoom panel too.
+- **Any size field** takes `calc(100vw - 468px)`, also inside `max()` and
+  friends.

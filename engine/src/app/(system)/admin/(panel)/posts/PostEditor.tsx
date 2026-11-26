@@ -714,7 +714,7 @@ export function PostEditor({
 
           <SchemaSection value={value.seo} onChange={(next) => set('seo', next)} kind="post" path={viewPath} published={Boolean(postId) && value.status === 'published'} />
 
-          <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="post" />
+          <PageAppearanceFields value={value.appearance ?? {}} onChange={(next) => set('appearance', next)} what="post" cover />
           <CustomCssPanel value={value.customCss} onChange={(next) => set('customCss', next)} what="post" />
 
           {/* Only an existing post has history; a new one has nothing to show. */}

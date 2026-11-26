@@ -24,6 +24,7 @@ import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
 import { isLength } from '@/lib/theme';
+import { pictureZoom } from '@/lib/pictureZoom';
 import { BlockHead } from '../parts';
 import { Carousel } from './Carousel';
 import { BgVideo, MediaFill, orderedSources } from './media';
@@ -414,7 +415,7 @@ export function GalleryBlock(p: P<'gallery'>) {
                 </>
               );
               return (
-                <li key={`${image.url}-${i}`} className="he-gal__item">
+                <li key={`${image.url}-${i}`} className={cn('he-gal__item', ...pictureZoom(image).className)} style={pictureZoom(image).className.length ? (pictureZoom(image).style as CSSProperties) : undefined}>
                   {image.href ? (
                     <SmartLink href={image.href} className="he-gal__media">
                       {media}

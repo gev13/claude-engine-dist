@@ -1,6 +1,7 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { TIER_RANGE } from './tierRange';
 import { cutLegs, cutPolygon, hasCornerSizes, hasPhoneCorners, leafClip, leafRadii } from './shape';
+import { FOCUS } from './pictureZoom';
 import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnSticky, type ColumnOrder, type ColumnWidth, BG_POSITION, BG_SIZE, GRADIENT_ANGLES, GRADIENT_STOPS, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -67,6 +68,12 @@ function backgroundDecls(style: BlockStyle): Decl[] {
   // check: same-origin path or a full http(s) URL, and nothing that could
   // close the url() and start a new declaration.
   const url = safe(bg.imageUrl);
+  // 3.38 — a zoomed picture is drawn by its own layer (zoomedBackgroundCss); the section keeps its colour and a gradient under it.
+  if (url && isBackgroundUrl(url) && zoomOf(bg.zoom) !== null) {
+    const gradient = gradientValue(bg.gradient);
+    if (gradient && bg.gradientLayer === 'under') out.push(['background-image', gradient]);
+    return out;
+  }
   if (url && isBackgroundUrl(url)) {
     const size = customSize(bg.sizeCustom) ?? (bg.size && ['cover', 'contain', 'auto'].includes(bg.size) ? bg.size : undefined);
     const position = customPosition(bg.positionCustom) ?? (bg.position && ['center', 'top', 'bottom', 'left', 'right'].includes(bg.position) ? bg.position : undefined);
@@ -127,6 +134,12 @@ function mobileBackgroundDecls(style: BlockStyle): Decl[] {
   const out: Decl[] = [];
   if (m.clear) out.push(['background-color', 'transparent'], ['background-image', 'none']);
   push(out, 'background-color', m.color, isColor);
+  // 3.38 — a picture zoomed on phones is the layer's; the section's own background there is its colour and a gradient under it.
+  if (!m.clear && zoomOf(m.zoom ?? bg?.zoom) !== null && phonePicture(style)) {
+    const gradient = gradientValue(m.gradient ? { angle: bg?.gradient?.angle, ...m.gradient } : bg?.gradient);
+    out.push(['background-image', gradient && bg?.gradientLayer === 'under' ? gradient : 'none']);
+    return out;
+  }
   const url = safe(m.imageUrl);
   const ownUrl = url && isBackgroundUrl(url) ? url : null;
   const size = customSize(m.sizeCustom) ?? (m.size && ['cover', 'contain', 'auto'].includes(m.size) ? m.size : undefined);
@@ -149,6 +162,50 @@ function mobileBackgroundDecls(style: BlockStyle): Decl[] {
   if (size) out.push(['background-size', size]);
   if (position) out.push(['background-position', position]);
   return out;
+}
+
+const zoomOf = (z: unknown): number | null => (typeof z === 'number' && Number.isFinite(z) && z >= 100 && z <= 300 ? Math.round(z * 100) / 10000 : null);
+const focusOf = (f: unknown): string | null => (typeof f === 'string' && FOCUS.test(f.trim()) ? f.trim() : null);
+/** The picture a section shows on phones, checked; null for none. */
+function phonePicture(style: BlockStyle): string | null {
+  const bg = style.background;
+  if (bg?.mobile?.clear) return null;
+  const own = safe(bg?.mobile?.imageUrl);
+  if (own && isBackgroundUrl(own)) return own;
+  const wide = safe(bg?.imageUrl);
+  return wide && isBackgroundUrl(wide) ? wide : null;
+}
+
+/**
+ * 3.38 — a section's picture zoomed about a point: drawn on `.he-bgz`, a
+ * layer the renderer adds only then, as `::before` (cover, anchored and
+ * scaled at the focus) with a gradient laid over it as `::after`. The layer
+ * clips; the section only gains a stacking context. On a tier without a zoom
+ * (a zoom set for phones alone) the layer is not shown and the section draws
+ * its picture as before.
+ */
+export function hasZoomedBackground(style: BlockStyle | undefined): boolean {
+  const bg = style?.background;
+  return Boolean(bg && (zoomOf(bg.zoom) !== null || zoomOf(bg.mobile?.zoom) !== null));
+}
+function zoomedBackgroundCss(root: string, style: BlockStyle): string {
+  const bg = style.background;
+  if (!bg || !hasZoomedBackground(style)) return '';
+  const layer = `${root}>.he-bgz`;
+  const parts = [`${root}{position:relative;isolation:isolate}`, `${layer}{position:absolute;inset:0;z-index:-2;overflow:hidden;pointer-events:none}`, `${layer}::before,${layer}::after{content:"";position:absolute;inset:0}`];
+  const draw = (url: string | null, zoom: number | null, focus: string | null, over: string | null) =>
+    url && zoom !== null
+      ? `${layer}{display:block}${layer}::before{background:url("${url}") ${focus ?? '50% 50%'}/cover no-repeat;transform-origin:${focus ?? '50% 50%'};scale:${zoom}}${layer}::after{background:${over ?? 'none'}}`
+      : `${layer}{display:none}`;
+  const wideUrl = safe(bg.imageUrl);
+  const over = (g: string | null) => (g && bg.gradientLayer === 'over' ? g : null);
+  parts.push(draw(wideUrl && isBackgroundUrl(wideUrl) ? wideUrl : null, zoomOf(bg.zoom), focusOf(bg.focus), over(gradientValue(bg.gradient))));
+  const m = bg.mobile;
+  if (m?.zoom !== undefined || m?.focus !== undefined || m?.imageUrl || m?.clear || m?.gradient) {
+    const phoneGradient = gradientValue(m?.gradient ? { angle: bg.gradient?.angle, ...m.gradient } : bg.gradient);
+    parts.push(`@media (max-width:768px){${draw(phonePicture(style), zoomOf(m?.zoom ?? bg.zoom), focusOf(m?.focus ?? bg.focus), over(phoneGradient))}}`);
+  }
+  return parts.join('');
 }
 
 /** P3-C4 — a linear gradient from checked colours and a closed list of angles; null if anything fails. */
@@ -324,6 +381,7 @@ function scrollPinCss(root: string, pin: NonNullable<BlockStyle['scrollPin']>): 
   if (pin.counterFont === 'display') decls.push(['--he-pin-count-font', 'var(--font-display)']);
   if (pin.counterFont === 'body') decls.push(['--he-pin-count-font', 'var(--font-sans)']);
   len('--he-pin-count-size', pin.counterSize);
+  len('--he-pin-count-inset', pin.counterInset);
   colour('--he-pin-count-color', pin.counterColor);
   colour('--he-pin-count-total', pin.counterTotalColor);
   len('--he-pin-line-w', pin.lineWidth);
@@ -477,6 +535,8 @@ export function blockStyleToCss(
   const overlay = safe(style.background?.overlay);
   // A video background (2.17) sits in the same stacking context, under the overlay.
   if (video || (overlay && isColor(overlay))) parts.push(`${root}{position:relative;isolation:isolate}`);
+  // 3.38 — a zoomed picture's layer.
+  if (prefix === 'he-b') parts.push(zoomedBackgroundCss(root, style));
   if (overlay && isColor(overlay)) {
     parts.push(
       `${root}::before{content:"";position:absolute;inset:0;background:${overlay};pointer-events:none;z-index:-1}`,

@@ -167,6 +167,13 @@ const POST: FieldDef[] = [
   { key: 'headingGap', label: 'Article: space under a heading', kind: 'text' },
   { key: 'sectionGap', label: 'Article: space above a heading', kind: 'text' },
   { key: 'sectionGapMobile', label: 'Article: above a heading on phones', kind: 'text' },
+  /* 3.38 — the cover zoomed about a point; a post's own framing wins. */
+  { key: 'asideCoverZoom', label: 'Cover card: picture zoom', kind: 'number', min: 100, max: 300, hint: '% over cover' },
+  { key: 'asideCoverFocus', label: 'Cover card: zoom about', kind: 'text', hint: 'e.g. 50% 0%' },
+  { key: 'asideCoverZoomTablet', label: 'Cover card: zoom where they stack', kind: 'number', min: 100, max: 300, hint: '1024px and under' },
+  { key: 'asideCoverFocusTablet', label: 'Cover card: zoom about, where they stack', kind: 'text' },
+  { key: 'asideCoverZoomMobile', label: 'Cover card: zoom on phones', kind: 'number', min: 100, max: 300 },
+  { key: 'asideCoverFocusMobile', label: 'Cover card: zoom about, on phones', kind: 'text' },
 ];
 
 function Fields({ defs, value, set, base }: { defs: FieldDef[]; value: Record<string, unknown> | undefined; set: Setter; base: string[] }) {

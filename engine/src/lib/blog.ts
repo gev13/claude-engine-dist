@@ -1,10 +1,13 @@
 import { z } from 'zod';
+import { isUsableLength } from './lengthGrammar';
+import { FOCUS } from './pictureZoom';
 import { type CardHover, cardHoverSchema } from './cardHover';
 import { SHARE_NETWORKS, type ShareNetwork } from './share';
 import { type TypeStyle, typeStyleSchema } from './typeStyle';
 
 /** 3.22 — a plain length (80px, 5rem, 0). Kept here rather than imported: theme.ts imports this file. */
-const isLength = (value: string) => /^(0|\d*\.?\d+(px|rem|em|vw|vh|%))$/.test(value.trim());
+/* 3.38 — the theme's own length grammar (min(), max(), clamp(), calc()), shared without importing theme.ts. */
+const isLength = (value: string) => isUsableLength(value);
 /** 3.28 — a colour, as the theme writes them (hex, rgb/rgba, hsl/hsla); local, like `isLength`, to keep theme.ts out of this file's imports. */
 const isColorish = (value: string) => /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i.test(value.trim());
 
@@ -255,6 +258,13 @@ const postLookSchema = z.object({
   asideCardPaddingMobile: box(),
   /** 3.37 — the tint's stops where they stack. */
   asideTintStopsMobile: z.string().trim().max(200).refine((v) => TINT_STOPS.test(v.trim()), 'Colours and places, such as rgba(0,0,0,0.2) 25%, #000 92%').optional(),
+  /** 3.38 — the cover zoomed (100–300 %) about a point that also anchors it, and on tablets and phones (where the columns stack, ≤1024 and ≤768); a post's own cover framing wins. */
+  asideCoverZoom: z.number().min(100).max(300).optional(),
+  asideCoverZoomTablet: z.number().min(100).max(300).optional(),
+  asideCoverZoomMobile: z.number().min(100).max(300).optional(),
+  asideCoverFocus: z.string().trim().max(40).refine((v) => FOCUS.test(v.trim()), 'One or two of a percentage, a length or a side').optional(),
+  asideCoverFocusTablet: z.string().trim().max(40).refine((v) => FOCUS.test(v.trim()), 'One or two of a percentage, a length or a side').optional(),
+  asideCoverFocusMobile: z.string().trim().max(40).refine((v) => FOCUS.test(v.trim()), 'One or two of a percentage, a length or a side').optional(),
   /** 3.33 — in the article: the space under a heading, and above one (and on phones). */
   headingGap: len(),
   sectionGap: len(),

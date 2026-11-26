@@ -2,6 +2,7 @@ import { z } from 'zod';
 import type { Theme } from './theme';
 import { isColor } from './theme';
 import { colorDecls } from './theme-css';
+import { pictureZoomFields } from './pictureZoom';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    One page's own colours (T31, 2.19)
@@ -23,6 +24,8 @@ export const pageAppearanceSchema = z.object({
     .optional(),
   /** `alt` — the site's alternate palette, for this page; (3.22) `alt2` its second one. */
   scheme: z.enum(['inherit', 'alt', 'alt2']).optional(),
+  /** 3.38 — a post's cover zoomed and placed, on its cards and its own cover card; see `lib/pictureZoom.ts`. */
+  cover: z.object(pictureZoomFields).optional(),
 });
 
 export type PageAppearance = z.output<typeof pageAppearanceSchema>;

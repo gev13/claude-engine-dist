@@ -13,6 +13,7 @@ import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
 import { isLength } from '@/lib/theme';
+import { pictureZoom } from '@/lib/pictureZoom';
 import { MessageText } from '@/components/site/MessageText';
 import { BlockHead, BlockTitle, Ordinal, Tick } from './parts';
 import { ConvergeFigure } from './ConvergeFigure';
@@ -590,20 +591,29 @@ export function ImageBlock(p: P<'image'>) {
       loading="lazy"
     />
   );
+  // 3.38 — zoomed inside a frame of its own, only when asked.
+  const zoom = pictureZoom(p);
+  const framed = zoom.className.length ? (
+    <span className={cn('he-img-zoom', ...zoom.className, rounded && 'he-rounded')} style={zoom.style as React.CSSProperties}>
+      {img}
+    </span>
+  ) : (
+    img
+  );
   // 3.24 — the whole picture as a link, with nothing added around it; an unlinked picture renders as before.
   const outside = p.href ? /^https?:/i.test(p.href) : false;
   const linked = p.href ? (
     outside || p.newTab ? (
       <a href={p.href} target="_blank" rel="noopener noreferrer" className={cn('he-img-link', rounded && 'he-rounded', p.hover === 'zoom' && 'is-zoom')}>
-        {img}
+        {framed}
       </a>
     ) : (
       <Link href={p.href} className={cn('he-img-link', rounded && 'he-rounded', p.hover === 'zoom' && 'is-zoom')}>
-        {img}
+        {framed}
       </Link>
     )
   ) : (
-    img
+    framed
   );
   return (
     <Section size="md">

@@ -5,6 +5,7 @@ import { Field, Input, Select } from '@/components/admin/ui';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { CornerShapeFields } from '@/components/admin/CornerShapeFields';
 import { ChoiceField, ColorField, LengthField, PatternField } from '@/components/admin/styleFields';
+import { FOCUS } from '@/lib/pictureZoom';
 import {
   BACKGROUND_POSITIONS,
   BACKGROUND_SIZES,
@@ -440,6 +441,15 @@ export function BlockDesignPanel({
           <PatternField label="Image place, written" hint="from the left and the top, e.g. -240px 20px or 50% 20%" placeholder="as chosen" value={current.background?.positionCustom} pattern={BG_POSITION} error="One or two of a side, a length or a percentage." onChange={set(['background', 'positionCustom'])} />
           <PatternField label="Size on phones, written" hint="≤768px" placeholder="as above" value={current.background?.mobile?.sizeCustom} pattern={BG_SIZE} error="One or two of auto, a length or a percentage." onChange={set(['background', 'mobile', 'sizeCustom'])} />
           <PatternField label="Place on phones, written" hint="≤768px" placeholder="as above" value={current.background?.mobile?.positionCustom} pattern={BG_POSITION} error="One or two of a side, a length or a percentage." onChange={set(['background', 'mobile', 'positionCustom'])} />
+          {/* 3.38 — the picture zoomed about a point, on its own layer. */}
+          <Field label="Image zoom" hint="100–300 %, covering the section first">
+            <Input type="number" min={100} max={300} step={0.01} value={current.background?.zoom ?? ''} placeholder="none" onChange={(e) => set(['background', 'zoom'])(e.target.value === '' ? undefined : Math.min(300, Math.max(100, Number(e.target.value) || 100)))} />
+          </Field>
+          <PatternField label="Zoom about" hint="the point that also anchors it, e.g. 0% 0%" placeholder="the middle" value={current.background?.focus} pattern={FOCUS} error="One or two of a percentage, a length or a side." onChange={set(['background', 'focus'])} />
+          <Field label="Zoom on phones" hint="≤768px">
+            <Input type="number" min={100} max={300} step={0.01} value={current.background?.mobile?.zoom ?? ''} placeholder="as above" onChange={(e) => set(['background', 'mobile', 'zoom'])(e.target.value === '' ? undefined : Math.min(300, Math.max(100, Number(e.target.value) || 100)))} />
+          </Field>
+          <PatternField label="Zoom about, on phones" placeholder="as above" value={current.background?.mobile?.focus} pattern={FOCUS} error="One or two of a percentage, a length or a side." onChange={set(['background', 'mobile', 'focus'])} />
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -1015,6 +1025,8 @@ export function BlockDesignPanel({
                     </Select>
                   </Field>
                   <LengthField label="Counter size" value={current.scrollPin.counterSize} emptyLabel="32px" onChange={set(['scrollPin', 'counterSize'])} />
+                  {/* 3.38 */}
+                  <LengthField label="In from the row’s end" value={current.scrollPin.counterInset} emptyLabel="0" onChange={set(['scrollPin', 'counterInset'])} />
                   <ColorField label="Counter colour" value={current.scrollPin.counterColor} onChange={set(['scrollPin', 'counterColor'])} />
                   <ColorField label="Colour of “/ 07”" value={current.scrollPin.counterTotalColor} onChange={set(['scrollPin', 'counterTotalColor'])} />
                 </>

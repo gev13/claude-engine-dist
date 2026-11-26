@@ -101,6 +101,9 @@ export const careersLookSchema = z.object({
   buttonPadding: box(),
   buttonGap: len(),
   buttonType: typeStyleSchema.optional(),
+  /** 3.38 — the card button's own arrow: its box and its line (in its own 12-unit drawing), apart from the site's buttons. */
+  buttonArrowSize: len(),
+  buttonArrowStroke: z.number().min(0.5).max(4).optional(),
   /* 3.33 — the advert. */
   advertColumns: z.string().trim().max(40).refine((v) => TRACKS.test(v.trim()), 'Two widths, such as 744fr 572fr').optional(),
   columnsGap: len(),
@@ -302,6 +305,7 @@ export function careersCss(look: CareersLook | undefined): string {
   const button = '.he-jobc .he-jobc__btn,.he-jobc:hover .he-jobc__btn';
   out.push(rule(button, [['background-color', colourOf(look.buttonFill)], ['color', colourOf(look.buttonText)], ['border-radius', boxOf(look.buttonRadius)], ['padding', boxOf(look.buttonPadding)], ['gap', lenOf(look.buttonGap)], ['border-color', colourOf(look.buttonFill) ? 'transparent' : undefined]]));
   out.push(...typeRule('.he-jobc .he-jobc__btn', look.buttonType));
+  out.push(rule('.he-jobc .he-jobc__btn>svg:last-child', [['width', lenOf(look.buttonArrowSize)], ['height', lenOf(look.buttonArrowSize)], ['stroke-width', typeof look.buttonArrowStroke === 'number' && look.buttonArrowStroke >= 0.5 && look.buttonArrowStroke <= 4 ? String(look.buttonArrowStroke) : undefined]]));
 
   // 3.33 — the advert's columns, in either layout that has them.
   const grid = ':is(.he-job-aside,.he-job-c)';

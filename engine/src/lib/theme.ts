@@ -1,4 +1,7 @@
 import { z } from 'zod';
+import { SIMPLE_LENGTH, isLength, isUsableLength } from './lengthGrammar';
+
+export { isLength, isUsableLength };
 import { blogSchema } from './blog';
 import { careersLookSchema } from './careersLook';
 import { chromeSchema } from './chrome';
@@ -38,18 +41,7 @@ export const SECTION_REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur',
 const COLOR_PATTERN =
   /^(#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})|(?:rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/;
 
-/** A single length: a number with an optional unit, or a bare 0. */
-const LENGTH_UNIT = '(?:px|rem|em|%|vw|vh|vmin|vmax|ch|ex|pt)';
-const SIMPLE_LENGTH = `-?\\d*\\.?\\d+${LENGTH_UNIT}?`;
-
-/**
- * A length, or a clamp()/min()/max() of two or three simple lengths. Fluid
- * type is the whole point of the mockup's `clamp(36px, 7vw, 66px)` sizes, so
- * the grammar has to allow it — but only in that exact shape.
- */
-const LENGTH_PATTERN = new RegExp(
-  `^(?:${SIMPLE_LENGTH}|(?:clamp|min|max)\\(\\s*${SIMPLE_LENGTH}\\s*,\\s*${SIMPLE_LENGTH}\\s*(?:,\\s*${SIMPLE_LENGTH}\\s*)?\\))$`,
-);
+/* 3.38 — the length grammar lives in lengthGrammar.ts, shared with the files this one imports. */
 
 /** Line height: unitless ratio (1.62) or a length (24px). */
 const LINE_HEIGHT_PATTERN = new RegExp(`^(?:\\d*\\.?\\d+|${SIMPLE_LENGTH})$`);
@@ -62,9 +54,6 @@ export function isColor(value: string): boolean {
   return COLOR_KEYWORDS.has(trimmed) || COLOR_PATTERN.test(trimmed);
 }
 
-export function isLength(value: string): boolean {
-  return LENGTH_PATTERN.test(value.trim());
-}
 
 /**
  * A bare number means pixels.
@@ -85,12 +74,6 @@ export function normaliseLength(value: string): string {
   return Number(trimmed) === 0 ? '0' : `${trimmed}px`;
 }
 
-/** A length that has a unit, or is zero. What may actually reach a stylesheet. */
-export function isUsableLength(value: string): boolean {
-  const trimmed = value.trim();
-  if (!isLength(trimmed)) return false;
-  return Number(trimmed) === 0 || !/^-?\d*\.?\d+$/.test(trimmed);
-}
 
 /** 3.33 — a box shadow: offsets, a blur, an optional spread, a colour. */
 const SHADOW_PATTERN = /^-?\d{1,3}(?:px)?\s+-?\d{1,3}(?:px)?\s+\d{1,3}(?:px)?(\s+-?\d{1,3}px)?\s+(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
@@ -452,6 +435,18 @@ export const themeSchema = z.object({
    * Keyed by locale; a language with no entry uses the site's own fonts.
    */
   localeFonts: z.record(z.string().trim().min(2).max(5), localeFontSchema).optional(),
+  /**
+   * 3.38 — a catalogue face's missing alphabets drawn from another face, by
+   * key: `{ googleSansFlex: 'googleSans' }` gives Google Sans Flex the
+   * Cyrillic, Greek and Armenian of Google Sans, wherever it is named.
+   */
+  fontFill: z
+    .record(
+      z.string().refine((key) => FONT_CATALOGUE.some((f) => f.key === key), 'Not a font in the catalogue'),
+      z.string().refine((key) => FONT_CATALOGUE.some((f) => f.key === key), 'Not a font in the catalogue'),
+    )
+    .refine((value) => Object.keys(value).length <= 8, 'At most eight')
+    .optional(),
   /** 3.33 — a language with longer words: its headings' scale (1 is as drawn), on phones too, and hyphens at line ends. */
   localeTypography: z
     .record(

@@ -93,7 +93,7 @@ describe('the bands’ and cards’ paragraphs at the theme’s sizes', () => {
     const out = theme({ blockText: { body: '16px', card: '15.5px' } });
     expect(out).toContain('--he-block-body:16px');
     expect(out).toContain('@layer he-details{.he-lbody{font-size:var(--he-block-body)}}');
-    expect(out).toContain('@layer he-details{:is(.he-ocard__body,.he-ocard__points li,.he-plst__excerpt){font-size:var(--he-block-card)}}');
+    expect(out).toContain('@layer he-details{:is(.he-ocard__body,.he-ocard__points li,.he-plst__excerpt,.he-ucard__body){font-size:var(--he-block-card)}}');
   });
   it('on phones only, when only the phone size is set', () => {
     expect(theme({ blockTextMobile: { body: '15px' } })).toContain('@media (max-width:768px){@layer he-details{.he-lbody{font-size:var(--he-block-body)}}}');

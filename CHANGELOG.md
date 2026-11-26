@@ -10,6 +10,44 @@ improvements.
 
 ---
 
+## 3.38.0 — 2026-11-26
+
+**Google Sans Flex at its own optical sizes, one face's missing alphabets
+from another, zoomed section backgrounds, layers on a card's picture, post
+covers framed, and `calc()` in sizes.** Every option is off until set.
+
+Added:
+
+- **Appearance → Typography → A face's missing alphabets:** a catalogue face
+  takes the letters it does not have (Cyrillic, Greek, Armenian) from another
+  face, wherever it is named — so a Latin-only face can be the site's face in
+  every language.
+- **Design → Background → Image zoom:** the section's picture covers it, then
+  is zoomed about a point that also anchors it, on wide screens and phones; a
+  gradient can lie under or over it.
+- **Pictures with text over them:** a gradient over one card's picture (and
+  on phones), a colour or picture under it, and the picture's fit per screen.
+- **Post covers:** a post's own cover zoom and focus (its colours panel),
+  used on its cards and its cover card; the blog post's cover zoom per screen
+  (Appearance → Blog); post card sizes take `min()`, `max()` and `calc()`.
+- **Gallery pictures and the image block** take zoom and focus.
+- **Sizes take `calc()`** of plain lengths with `+` and `−`, also inside
+  `min()`, `max()` and `clamp()`.
+- The pinned counter set in from the row's end; bullet columns as wide as
+  their words; the careers card button's own arrow size and line; the theme's
+  card text size now reaches plain cards too.
+
+Fixed:
+
+- **Google Sans Flex** is carried with its optical-size axis, so text sets at
+  each size's own drawing — about 2–3 % wider at text sizes, a little
+  narrower at large headings, as the face is designed. Sites using it change.
+- **A blog post's first heading** no longer takes the space set above
+  headings (Appearance → Blog → space above a heading), counting rich text
+  hidden on that screen as not there.
+
+---
+
 ## 3.37.0 — 2026-11-26
 
 **A design matched without custom CSS: pictures placed per screen, the

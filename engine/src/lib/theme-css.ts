@@ -1,6 +1,8 @@
 import { blogCss } from './blogCss';
 import { careersCss } from './careersLook';
 import { headingSpaceCss } from './headingSpace';
+import { FILL_FACES, SUBSET_RANGES } from './fontFaces';
+import { FONT_CATALOGUE } from './fontCatalogue';
 import { chromeCss } from './chromeCss';
 import {
   BREAKPOINTS,
@@ -777,6 +779,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
   }
 
+  // 3.38 — a face's missing alphabets drawn from another face.
+  if (safeSelector === ':root') {
+    const fill = fontFillCss(theme.fontFill);
+    if (fill) parts.push(fill);
+  }
+
   // 3.37 — the bands' and cards' paragraphs at the theme's sizes, where set; in the details layer, so a block's own type still wins.
   if (safeSelector === ':root') {
     const sizes = blockBodyCss(theme);
@@ -839,9 +847,33 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   return parts.filter(Boolean).join('');
 }
 
+/**
+ * 3.38 — for each face given a fill, its own family name declared again over
+ * the fill face's files for each alphabet the face does not carry, each with
+ * that alphabet's unicode-range: the browser then takes those letters from
+ * the fill, wherever the face is named, and the face's own letters as before.
+ */
+const FILE = /^[a-z0-9-]+\.woff2$/;
+function fontFillCss(fill: Theme['fontFill']): string {
+  if (!fill) return '';
+  const out: string[] = [];
+  for (const [key, fillKey] of Object.entries(fill)) {
+    const face = FONT_CATALOGUE.find((f) => f.key === key);
+    const from = FONT_CATALOGUE.find((f) => f.key === fillKey);
+    if (!face || !from || face === from) continue;
+    for (const [style, weight, subset, file] of FILL_FACES[from.family] ?? []) {
+      if (face.scripts.includes(subset) || !FILE.test(file) || !/^(normal|italic)$/.test(style) || !/^\d{3}( \d{3})?$/.test(weight)) continue;
+      const range = SUBSET_RANGES[subset];
+      if (!range) continue;
+      out.push(`@font-face{font-family:'${face.family.replace(/'/g, '')}';font-style:${style};font-weight:${weight};font-display:swap;src:url('/fonts/google/${file}') format('woff2');unicode-range:${range}}`);
+    }
+  }
+  return out.join('');
+}
+
 /** 3.37 — the drawn paragraph sizes replaced by the theme's: everywhere when set, on phones only when only the phone size is. */
 const BODY_TEXT = '.he-lbody';
-const CARD_TEXT = ':is(.he-ocard__body,.he-ocard__points li,.he-plst__excerpt)';
+const CARD_TEXT = ':is(.he-ocard__body,.he-ocard__points li,.he-plst__excerpt,.he-ucard__body)';
 function blockBodyCss(theme: Theme): string {
   const out: string[] = [];
   for (const [key, selector] of [['body', BODY_TEXT], ['card', CARD_TEXT]] as const) {
