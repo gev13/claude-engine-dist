@@ -136,7 +136,7 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                       <h3 className="he-news__title">{post.title}</h3>
                       {post.publishedAt && (
                         <time className="he-news__date" dateTime={post.publishedAt.toISOString()}>
-                          {cardDate(post.publishedAt)}
+                          {cardDate(post.publishedAt, post.locale)}
                         </time>
                       )}
                       {post.excerpt && <p className="he-news__excerpt">{post.excerpt}</p>}
@@ -202,16 +202,16 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
                     // 3.23 — the category moved under the title: the line is the date alone. (3.28) And the reading time, when the card asks — in a weight of its own with the archive's cards.
                     archive?.readingWeight && post.publishedAt && p.card?.readingTime ? (
                       <>
-                        {cardDate(post.publishedAt)}
+                        {cardDate(post.publishedAt, post.locale)}
                         <span className="he-ucard__rt">{` · ${post.readingMinutes} ${t('blog.minRead')}`}</span>
                       </>
                     ) : (
-                      [post.publishedAt ? cardDate(post.publishedAt) : '', p.card?.readingTime ? `${post.readingMinutes} ${t('blog.minRead')}` : ''].filter(Boolean).join(' · ') || undefined
+                      [post.publishedAt ? cardDate(post.publishedAt, post.locale) : '', p.card?.readingTime ? `${post.readingMinutes} ${t('blog.minRead')}` : ''].filter(Boolean).join(' · ') || undefined
                     )
                   ) : (
                     <>
                       {chipFor(post, t)}
-                      {post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}
+                      {post.publishedAt ? ` — ${cardDate(post.publishedAt, post.locale)}` : ''}
                       {p.card?.readingTime ? ` · ${post.readingMinutes} ${t('blog.minRead')}` : ''}
                     </>
                   )
@@ -275,7 +275,7 @@ function postCarousel(p: P<'postList'>, posts: PostRow[], { permalinks, t }: Lis
     intro: p.intro?.slice(0, 400),
     link: p.allLink === false ? undefined : { label: t('blog.allWriting'), href: blogIndexPath(permalinks) },
     slides: posts.slice(0, 24).map((post) => ({
-      eyebrow: [chipFor(post, t), post.publishedAt ? cardDate(post.publishedAt) : ''].filter(Boolean).join(' · ').slice(0, 80),
+      eyebrow: [chipFor(post, t), post.publishedAt ? cardDate(post.publishedAt, post.locale) : ''].filter(Boolean).join(' · ').slice(0, 80),
       title: post.title.slice(0, 160),
       body: post.excerpt ? post.excerpt.slice(0, 600) : undefined,
       imageUrl: post.coverUrl ?? undefined,
@@ -294,7 +294,7 @@ function FeaturedPosts({ p, posts, ctx: { permalinks, t } }: { p: P<'postList'>;
   const date = (post: PostRow) =>
     post.publishedAt && (
       <time className="he-feat__date" dateTime={post.publishedAt.toISOString()}>
-        {cardDate(post.publishedAt)}
+        {cardDate(post.publishedAt, post.locale)}
       </time>
     );
   const cover = (post: PostRow) =>
@@ -378,7 +378,7 @@ export function PostCollection({
     const chipText = post.kind === 'research' ? labels.research : (post.categoryName ?? labels.article);
     const date = card.date !== false && post.publishedAt && (
       <time className="he-plst__date" dateTime={post.publishedAt.toISOString()}>
-        {cardDate(post.publishedAt)}
+        {cardDate(post.publishedAt, post.locale)}
       </time>
     );
     return (

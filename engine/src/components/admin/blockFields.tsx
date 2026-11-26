@@ -6129,6 +6129,13 @@ function TypeFields({
             </label>
           </div>
           {custom && <PropMedia label="Icon" k="iconUrl" hint="a small square picture, shown before every entry" props={props} set={set} />}
+          {/* 3.38.2 */}
+          {!['none', 'number', 'slash', 'custom'].includes(str(props, 'icon') || 'check') && (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <OptText label="Marker size" hint="a dot’s width, an icon’s box; the words stay put" placeholder="as drawn" k="markerSize" props={props} set={set} />
+              <OptText label="Marker colour" placeholder="the accent" k="markerColor" props={props} set={set} />
+            </div>
+          )}
           {/* 3.33 */}
           {str(props, 'layout') === 'linkRows' && (
             <div className="grid gap-3 sm:grid-cols-3">
@@ -6525,6 +6532,8 @@ function TypeFields({
             {/* 3.28 */}
             <OptText label="At most" hint="e.g. 250px — over the width" placeholder="—" k="maxWidth" props={props} set={set} />
           </div>
+          {/* 3.38.2 */}
+          <OptText label="Shadow round the picture’s outline" hint="for a cut-out: x y blur colour, up to four, comma separated" placeholder="none" k="shadow" props={props} set={set} />
           {!lead && (str(props, 'mask') || 'none') === 'none' && <PropCheck label="Rounded corners" k="rounded" props={props} set={set} />}
           {/* 3.24 — the whole picture as a link. */}
           <PropHref label="Link (optional)" k="href" props={props} set={set} hint="the whole picture links here; an outside address opens in a new tab" />

@@ -398,3 +398,15 @@
 @layer he-details {
   .he-img-zoom { display: block; overflow: hidden; border-radius: inherit; }
 }
+
+/* 3.38.2 — an icon list's marker at its own size and colour. The dot keeps
+   the 7px box it was drawn in, so the words stay where they were; an icon's
+   box is the size. Unlayered, over a list's own accent. */
+.he-ilist.has-mk-size .he-ilist__dot { width: var(--he-ilist-mk); height: var(--he-ilist-mk); margin: calc(9px + (7px - var(--he-ilist-mk)) / 2) calc(4px + (7px - var(--he-ilist-mk)) / 2) 0; }
+.he-ilist.has-mk-size :is(.he-ilist__mark, .he-tick) { width: var(--he-ilist-mk); height: var(--he-ilist-mk); }
+.he-ilist.has-mk-color .he-ilist__dot { background: var(--he-ilist-mkc); }
+.he-ilist.has-mk-color :is(.he-ilist__mark, .he-ilist__num) { color: var(--he-ilist-mkc); }
+.he-ilist.has-mk-color .he-tick { stroke: var(--he-ilist-mkc); }
+
+/* 3.38.2 — an image block's shadow, on a layer round the picture (its filter set inline). */
+.he-img-shadow { display: block; }

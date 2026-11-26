@@ -10,6 +10,41 @@ improvements.
 
 ---
 
+## 3.38.2 — 2026-11-26
+
+**Dates in the page's language, card shadows outside their corners, the
+button arrow's line in screen pixels, list markers and a picture's shadow.**
+
+Fixed:
+
+- **Dates in other languages:** post cards, a post's cover and meta line and
+  a closed job's "deadline was" wrote the month in English on every
+  language. A date is now written in its post's language (the page's for a
+  job): the month in its own words, with that language's order and
+  punctuation, in the format Settings names or the old one. English is
+  written exactly as before; the all-number formats stay as chosen.
+- **Card shadows and clipped corners:** a clip cuts a card's own shadow
+  away. A leaf-cornered card with a shadow (careers cards, plain and project
+  cards with a hover shadow, lifted floating cards) is now drawn by its
+  radius alone, clipping its contents to the same curve, so the shadow
+  shows. Cut careers cards take the shadow from their list
+  (`filter: drop-shadow`) when it has no spread.
+
+Added:
+
+- **Buttons:** `buttons.arrowLine`, the arrow's line in screen pixels at any
+  arrow size (a size alone thinned the line in proportion).
+- **Icon lists:** the marker's size and colour (`markerSize`,
+  `markerColor`); the words stay where they were.
+- **Rich text:** the bullet's size and colour (`richText.listMarkerSize`,
+  `listMarkerColor`); a disc with a size is drawn as an exact dot.
+- **Image block:** `shadow`, up to four drop shadows that follow the
+  picture's own outline, for a cut-out.
+
+Every addition is off until set.
+
+---
+
 ## 3.38.1 — 2026-11-26
 
 **A face filled from another keeps its own Latin, the footer links' letter

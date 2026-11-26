@@ -408,6 +408,28 @@ function shapeCss(theme: Theme, scope: string): string {
   const cardLeaf = leafRadii(shape.cards, LEAF_SIZES.cards);
   if (cardLeaf) parts.push(block(scope ? scope.trim() : ':root', [['--he-card-radius', cardLeaf], ['--he-box-radius', cardLeaf], ['--he-card-clip', leafClip(cardLeaf)]]));
 
+  /* 3.38.2 — a clip cuts a card's own shadow away too. Where a card has a
+     shadow, a leaf is drawn by the radius alone, the card clipping its
+     contents to the same curve, so the shadow falls outside; cut corners
+     cannot be a radius, so the careers list drops the shadow under its cut
+     cards instead. Only the cards that carry the clip themselves. */
+  const careersShadow = theme.careers?.cardShadow?.trim();
+  const shadowed = [
+    careersShadow && isShadow(careersShadow) ? '.he-jobcards>.he-jobc' : '',
+    '.he-ucard.he-ch:is(.he-ch--lift,.he-ch--grow,.he-ch--shadow,.he-ch--tilt)',
+    '.he-proj.has-body:not(.is-overlay,.is-metro) .he-proj__item.he-ch:is(.he-ch--lift,.he-ch--grow,.he-ch--shadow,.he-ch--tilt)',
+    '.he-fgrid.has-lift.is-pos-floating>.he-fgrid__item',
+  ].filter(Boolean);
+  if (cardLeaf) parts.push(block(shadowed.map(at).join(','), [['clip-path', 'none'], ['overflow', 'clip'], ['border-radius', 'var(--he-card-radius)']]));
+  // A hover shadow on a wrapper round a clipped card (a linked card, a post list's item) takes the card's curve.
+  if (cardLeaf) parts.push(block([':is(a,li).he-ch:has(>.he-ucard)', 'li.he-ch:has(>.he-news__card)'].map(at).join(','), [['border-radius', 'var(--he-card-radius)']]));
+  // A drop shadow has no spread: a shadow with one (four lengths before its colour) stays clipped.
+  const lengths = careersShadow ? careersShadow.replace(/\([^)]*\)/g, '()').split(/\s+/).length - 1 : 0;
+  if (card && careersShadow && isShadow(careersShadow) && lengths === 3) {
+    parts.push(block(at('.he-jobcards'), [['filter', `drop-shadow(${careersShadow})`]]));
+    parts.push(block(at('.he-jobcards>.he-jobc'), [['box-shadow', 'none']]));
+  }
+
   const image = cutLegs(shape.images, CUT_SIZES.images);
   const imageLeaf = leafRadii(shape.images, LEAF_SIZES.images);
   if (imageLeaf) parts.push(block(scope ? scope.trim() : ':root', [['--he-image-clip', leafClip(imageLeaf)]]));
@@ -555,6 +577,14 @@ function shapeCss(theme: Theme, scope: string): string {
   }
   if (typeof buttons.arrowStroke === 'number' && Number.isFinite(buttons.arrowStroke) && buttons.arrowStroke >= 0.5 && buttons.arrowStroke <= 4) {
     parts.push(block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)')},${at('.he-jobc__btn>svg:last-child')}`, [['stroke-width', String(buttons.arrowStroke)]]));
+  }
+  /* 3.38.2 — the line in screen pixels: a stroke in the drawing's own units
+     thins as the arrow shrinks (2.4 of 24 units is 1px at 10px). The width is
+     written on the shapes themselves, which `vector-effect` must be, as it is
+     not inherited. */
+  if (typeof buttons.arrowLine === 'number' && Number.isFinite(buttons.arrowLine) && buttons.arrowLine >= 0.5 && buttons.arrowLine <= 4) {
+    const shapes = ['.he-btn>svg:last-child>*', '.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)>*', '.he-jobc__btn>svg:last-child>*'];
+    parts.push(block(shapes.map(at).join(','), [['stroke-width', String(buttons.arrowLine)], ['vector-effect', 'non-scaling-stroke']]));
   }
   if (buttons.arrowGap && isLength(buttons.arrowGap)) parts.push(block(at(':is(.he-btn,.he-cbtn):has(>svg:last-child)'), [['gap', buttons.arrowGap]]));
   if (buttons.arrowHover === 'slide') {
@@ -1074,6 +1104,18 @@ export function richTextCss(rich: Theme['richText']): string {
     out.push(`.prose-edge ul>li{padding-left:${indent}}`);
   }
   if (indent) out.push(`.prose-edge ol{padding-left:${indent}}`);
+  // 3.38.2 — the marker's size and colour.
+  const markSize = len(rich.listMarkerSize);
+  const markColor = rich.listMarkerColor && isColor(rich.listMarkerColor) ? rich.listMarkerColor.trim() : undefined;
+  if (rich.listMarker === 'disc') {
+    if (markSize) {
+      // Drawn, so its size is exact: a dot in the middle of the indent, level with the first line's middle.
+      const pad = indent ?? '1.2em';
+      out.push(`.prose-edge ul{list-style:none}.prose-edge ul>li{position:relative}.prose-edge ul>li::before{content:'';position:absolute;left:calc(${pad} / -2 - ${markSize} / 2);top:calc(0.5lh - ${markSize} / 2);width:${markSize};height:${markSize};border-radius:50%;background:${markColor ?? 'currentColor'}}`);
+    } else if (markColor) out.push(`.prose-edge ul>li::marker{color:${markColor}}`);
+  } else if (rich.listMarker !== 'none' && (markSize || markColor)) {
+    out.push(`.prose-edge ul>li::before{${markSize ? `width:${markSize};` : ''}${markColor ? `background:${markColor}` : ''}}`);
+  }
   const listGap = len(rich.listGap);
   if (listGap) out.push(`.prose-edge li+li{margin-top:${listGap}}`);
   return out.join('');

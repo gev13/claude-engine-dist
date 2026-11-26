@@ -12,7 +12,8 @@ import { Prose } from '@/components/ui/Prose';
 import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
-import { isLength } from '@/lib/theme';
+import { isColor, isLength } from '@/lib/theme';
+import { dropShadowFilter } from '@/lib/dropShadow';
 import { pictureZoom } from '@/lib/pictureZoom';
 import { MessageText } from '@/components/site/MessageText';
 import { BlockHead, BlockTitle, Ordinal, Tick } from './parts';
@@ -320,8 +321,20 @@ function ListMarker({ icon, iconUrl, n }: { icon: P<'checkLists'>['icon']; iconU
   );
 }
 
+/** 3.38.2 — the marker's own size and colour, as classes and properties only when set. */
+function listMarkerLook(p: P<'checkLists'>): { className?: string; style?: React.CSSProperties } {
+  const size = p.markerSize && isLength(p.markerSize) ? p.markerSize.trim() : undefined;
+  const color = p.markerColor && isColor(p.markerColor) ? p.markerColor.trim() : undefined;
+  if (!size && !color) return {};
+  return {
+    className: cn(size && 'has-mk-size', color && 'has-mk-color'),
+    style: { ...(size ? { '--he-ilist-mk': size } : {}), ...(color ? { '--he-ilist-mkc': color } : {}) } as React.CSSProperties,
+  };
+}
+
 export function CheckListsBlock(p: P<'checkLists'>) {
   const rows = p.layout === 'rows';
+  const marker = listMarkerLook(p);
   return (
     <Section tone={p.tone ?? 'base'} size="lg">
       <BlockHead eyebrow={p.eyebrow} title={p.title} titleAs={p.titleAs} intro={p.intro} className="mb-9" />
@@ -336,11 +349,11 @@ export function CheckListsBlock(p: P<'checkLists'>) {
               <h3 className="he-ilist__title mb-5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{list.title}</h3>
             )}
             <ul
-              className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin', p.layout === 'linkRows' && p.rules && `is-rules-${p.rules}`, p.layout === 'linkRows' && p.textWidth && 'has-tw')}
+              className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin', p.layout === 'linkRows' && p.rules && `is-rules-${p.rules}`, p.layout === 'linkRows' && p.textWidth && 'has-tw', marker.className)}
               style={
                 p.layout === 'linkRows' && (p.ruleColor || p.rowPadding || p.linkColor || p.textWidth)
-                  ? ({ ...(p.linkColor ? { '--he-ilist-link': p.linkColor } : {}), ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}), ...(p.textWidth && isLength(p.textWidth) ? { '--he-ilist-tw': p.textWidth } : {}) } as React.CSSProperties)
-                  : undefined
+                  ? ({ ...(p.linkColor ? { '--he-ilist-link': p.linkColor } : {}), ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}), ...(p.textWidth && isLength(p.textWidth) ? { '--he-ilist-tw': p.textWidth } : {}), ...marker.style } as React.CSSProperties)
+                  : marker.style
               }
             >
               {list.items.map((raw, i) => {
@@ -615,13 +628,22 @@ export function ImageBlock(p: P<'image'>) {
   ) : (
     framed
   );
+  // 3.38.2 — a shadow that follows the picture's outline, on a layer of its own so a mask or a frame cannot clip it.
+  const shadow = dropShadowFilter(p.shadow);
+  const shaded = shadow ? (
+    <span className="he-img-shadow" style={{ filter: shadow }}>
+      {linked}
+    </span>
+  ) : (
+    linked
+  );
   return (
     <Section size="md">
       <figure
         className={cn(narrow && `he-img-size is-${p.size}`, narrow && p.align === 'center' ? 'mx-auto my-0' : narrow && p.align === 'right' ? 'my-0 ml-auto mr-0' : 'm-0')}
         style={cap ? { maxWidth: cap } : undefined}
       >
-        {linked}
+        {shaded}
         {p.captionStyle === 'lead'
           ? (p.captionLead || p.caption) && (
               <figcaption className="he-imgcap">

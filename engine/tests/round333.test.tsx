@@ -242,7 +242,7 @@ describe('careers details', () => {
     const out = careersCss(
       careersLookSchema.parse({
         sectionBackground: '#eeeeee',
-        cardShadow: '18px 17px 54px rgba(0,0,0,0.1)',
+        cardShadow: '12px 10px 40px rgba(0,0,0,0.1)',
         cardMinHeightMobile: '227px',
         excerptLines: 2,
         advertColumns: '744fr 572fr',
@@ -253,7 +253,7 @@ describe('careers details', () => {
       }),
     );
     expect(out).toContain('.he-jobs-sec{background-color:#eeeeee;border-width:0}');
-    expect(out).toContain('box-shadow:18px 17px 54px rgba(0,0,0,0.1)');
+    expect(out).toContain('box-shadow:12px 10px 40px rgba(0,0,0,0.1)');
     expect(out).toContain('.he-jobc__excerpt{-webkit-line-clamp:2;line-clamp:2}');
     expect(out).toContain('grid-template-columns:minmax(0,744fr) minmax(0,572fr)');
     expect(out).toContain('position:sticky');

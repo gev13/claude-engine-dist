@@ -503,6 +503,8 @@ export const themeSchema = z.object({
       arrowSize: length.optional(),
       /** 3.37 — the arrow's line thickness (in its own 24-unit drawing; the buttons draw 2.4). */
       arrowStroke: z.number().min(0.5).max(4).optional(),
+      /** 3.38.2 — the arrow's line in screen pixels, whatever its size (a non-scaling stroke); wins over `arrowStroke`. */
+      arrowLine: z.number().min(0.5).max(4).optional(),
       arrowGap: length.optional(),
       arrowHover: z.enum(['none', 'slide']).optional(),
       /** 3.28 — "Text" buttons under the pointer: their colour, and the line under them (unset, shown). */
@@ -646,6 +648,9 @@ export const themeSchema = z.object({
       headingColor: color.optional(),
       /** Bullet lists: a short dash (unset), a disc, or nothing; their indent and the space between items. */
       listMarker: z.enum(['dash', 'disc', 'none']).optional(),
+      /** 3.38.2 — the marker's size (a dash's length, a disc's width) and colour; unset, as drawn in the accent. A disc with a size is drawn as a dot, centred on the first line. */
+      listMarkerSize: length.optional(),
+      listMarkerColor: color.optional(),
       listIndent: length.optional(),
       listGap: length.optional(),
     })

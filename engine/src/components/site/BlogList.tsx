@@ -43,7 +43,7 @@ export function BlogList({
     const look = blog.look.card;
     const eyebrow = (p: PostRow) => {
       const reading = card.readingTime && labels?.minRead ? `${p.readingMinutes} ${labels.minRead}` : null;
-      const parts = [card.category && card.categoryPlace !== 'under' ? category(p) : null, card.date !== false && p.publishedAt ? cardDate(p.publishedAt) : null, reading].filter(Boolean);
+      const parts = [card.category && card.categoryPlace !== 'under' ? category(p) : null, card.date !== false && p.publishedAt ? cardDate(p.publishedAt, p.locale) : null, reading].filter(Boolean);
       if (!parts.length) return fallbackEyebrow;
       // 3.28 — the reading time in a weight of its own: the line in two parts.
       if (look.readingWeight && reading && parts.length > 1) {

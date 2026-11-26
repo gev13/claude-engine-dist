@@ -15,10 +15,31 @@ export function setSiteDates(format: SiteSettings['dateFormat'] | undefined, zon
   (globalThis as DateGlobal).__heDates = { format, zone };
 }
 
-export function cardDate(value: Date | string | null | undefined): string {
+/** A language other than English that Intl can be asked for, or nothing. */
+function otherLanguage(locale: string | undefined): string | undefined {
+  return locale && /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/.test(locale) && !/^en(-|$)/i.test(locale) ? locale : undefined;
+}
+
+/**
+ * 3.38.2 — `locale` is the language the date is shown in (the post's own).
+ * English, or none, writes exactly what it did; another language writes the
+ * month in its own words, in the format Settings names or the old one.
+ */
+export function cardDate(value: Date | string | null | undefined, locale?: string): string {
   if (!value) return '';
   const set = (globalThis as DateGlobal).__heDates;
-  if (!set?.format) return legacyDate(value);
   const date = typeof value === 'string' ? new Date(value) : value;
-  return siteDate(date, { dateFormat: set.format, timeZone: set.zone } as SiteSettings);
+  if (!set?.format) {
+    const other = otherLanguage(locale);
+    if (other && !Number.isNaN(date.getTime())) {
+      try {
+        return date.toLocaleDateString(other, { day: '2-digit', month: 'short', year: 'numeric' });
+      } catch {
+        // A language the runtime cannot write keeps the English below.
+      }
+    }
+    return legacyDate(value);
+  }
+  return siteDate(date, { dateFormat: set.format, timeZone: set.zone } as SiteSettings, locale);
 }
+

@@ -19,6 +19,7 @@ import { InfoIcon } from '@/components/site/InfoIcon';
 import { SiteImg } from '@/components/ui/SiteImg';
 import { getMessages } from '@/server/content/messages';
 import { getTheme } from '@/server/content/theme';
+import { cardDate } from '@/lib/dates';
 import { cn, formatDate, isoDate } from '@/lib/utils';
 import { localeConfig, type Locale } from '@/lib/locales';
 import { handleMiss } from '@/server/content/miss';
@@ -140,7 +141,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
     <div className="he-job__closed">
       <p>
         {t('careers.filledText', { title: job.title })}
-        {deadlineGone && job.deadline ? ` ${t('careers.deadlineWas', { date: formatDate(job.deadline) })}` : ''}
+        {deadlineGone && job.deadline ? ` ${t('careers.deadlineWas', { date: /^en(-|$)/.test(locale) ? formatDate(job.deadline) : cardDate(job.deadline, locale) })}` : ''}
       </p>
       <p>
         <Link href={CAREERS_PATH} className="he-link">

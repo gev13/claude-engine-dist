@@ -25,6 +25,7 @@ import { buttonPadSchema } from './buttonPad';
 import { itemStyleSchema } from './itemStyle';
 import { figureStyleSchema } from './figureStyle';
 import { isColor, isLength } from './theme';
+import { isDropShadows } from './dropShadow';
 import { SOCIAL_NETWORKS, imageUrl as mediaUrl, isSafeHref } from './navigation';
 import { parseVideoUrl } from './embeds';
 import { TIME_PATTERN, WEEKDAYS, isTimeZone } from './hours';
@@ -817,6 +818,9 @@ export const blockSchemas = {
     rules: z.enum(['between', 'below']).optional(),
     /** 2.22 — the marker on a tinted circle. */
     markerStyle: z.enum(['plain', 'circle']).optional(),
+    /** 3.38.2 — the marker's size (a dot's width, an icon's box) and colour; unset, as drawn (a 7px dot, 16px icons) in the accent. The words stay where they are. */
+    markerSize: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    markerColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
     /** 2.22 — hairline rules between rows instead of the 2px ones. */
     thinRules: z.boolean().optional(),
     /** 2.22 — each list in a card of its own. */
@@ -1039,6 +1043,8 @@ export const blockSchemas = {
     hover: z.enum(['none', 'zoom']).optional(),
     /** 3.38 — the picture zoomed about a point inside its own frame, per screen; see `lib/pictureZoom.ts`. */
     ...pictureZoomFields,
+    /** 3.38.2 — a shadow that follows the picture's own outline (a cut-out's edge): up to four `x y blur colour`, comma separated, drawn one after another. */
+    shadow: z.string().trim().max(240).refine(isDropShadows, 'Such as 4px 6px 16px rgba(0,0,0,0.3) — up to four, no spread').optional(),
   }),
 
   /**

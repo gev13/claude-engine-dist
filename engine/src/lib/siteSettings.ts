@@ -152,12 +152,39 @@ export function titleTemplate(settings: Pick<SiteSettings, 'titleSeparator' | 't
   return `%s ${settings.titleSeparator ?? '—'} ${settings.name}`;
 }
 
-/** Format a date with the configured format and zone. */
-export function formatDate(date: Date, settings: SiteSettings): string {
+/** The options each written-out pattern asks for, in a language other than English (3.38.2). */
+const NAMED_MONTHS: Record<string, Intl.DateTimeFormatOptions> = {
+  'd MMMM yyyy': { day: 'numeric', month: 'long', year: 'numeric' },
+  'MMMM d, yyyy': { day: 'numeric', month: 'long', year: 'numeric' },
+  'd MMM yyyy': { day: 'numeric', month: 'short', year: 'numeric' },
+  'MMM d, yyyy': { day: 'numeric', month: 'short', year: 'numeric' },
+};
+
+/** A language code fit for Intl: `ru`, `hy`, `pt-BR`. Anything else is no language. */
+const LANGUAGE = /^[a-z]{2,3}(-[A-Za-z0-9]{2,8})*$/;
+
+/**
+ * Format a date with the configured format and zone.
+ *
+ * 3.38.2 — `locale` is the language the date is shown in. English (or none)
+ * keeps the patterns exactly as they were. Another language writes the
+ * patterns that name a month in its own words, order and punctuation
+ * ("13 окт. 2026 г."); the all-number patterns are an order somebody chose,
+ * so they stay as written.
+ */
+export function formatDate(date: Date, settings: SiteSettings, locale?: string): string {
   const zone = settings.timeZone || 'UTC';
   const format = settings.dateFormat ?? 'd MMMM yyyy';
 
   const opts: Intl.DateTimeFormatOptions = { timeZone: zone };
+  const named = NAMED_MONTHS[format];
+  if (named && locale && LANGUAGE.test(locale) && !/^en(-|$)/i.test(locale)) {
+    try {
+      return new Intl.DateTimeFormat(locale, { ...opts, ...named }).format(date);
+    } catch {
+      // A language the runtime cannot write falls through to English below.
+    }
+  }
   switch (format) {
     case 'yyyy-MM-dd':
       return new Intl.DateTimeFormat('en-CA', { ...opts, dateStyle: 'short' }).format(date);

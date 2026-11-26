@@ -39,7 +39,7 @@ const LISTING: RowDef[] = [
 const CARDS: RowDef[] = [
   ['cardBackground', 'Card colour', 'a colour, or transparent'],
   ['cardBackgroundMobile', 'Card colour on phones'],
-  ['cardShadow', 'Shadow', 'e.g. 18px 17px 54px rgba(0,0,0,0.1)'],
+  ['cardShadow', 'Shadow', 'e.g. 12px 10px 40px rgba(0,0,0,0.1)'],
   ['cardMinHeight', 'Least height'],
   ['cardMinHeightMobile', 'Least height on phones'],
   ['cardPadding', 'Padding', 'one to four'],

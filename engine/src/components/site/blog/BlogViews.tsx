@@ -234,7 +234,7 @@ function ArchiveCrumbs({ trail }: { trail: Crumb[] }) {
 
 /** 2.22 — one post as a large card: its cover on the left, the words on the right. */
 function FeaturedPost({ post, permalinks, t }: { post: PostListItem; permalinks: Permalinks; t: T }) {
-  const meta = [post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article')), post.publishedAt ? cardDate(post.publishedAt) : null]
+  const meta = [post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article')), post.publishedAt ? cardDate(post.publishedAt, post.locale) : null]
     .filter(Boolean)
     .join(' · ');
   return (
@@ -461,7 +461,7 @@ function SearchResults({
               eyebrow={
                 <>
                   {p.kind === 'research' ? t('blog.research') : (p.categoryName ?? t('blog.article'))}
-                  {p.publishedAt ? ` — ${cardDate(p.publishedAt)}` : ''}
+                  {p.publishedAt ? ` — ${cardDate(p.publishedAt, p.locale)}` : ''}
                 </>
               }
               title={p.title}

@@ -114,10 +114,10 @@ export async function PostArticle({
   ];
 
   const categoryLabel = post.kind === 'research' ? t('blog.research') : (post.categoryName ?? t('blog.article'));
-  const eyebrowValues = { date: post.publishedAt ? cardDate(post.publishedAt) : '', minutes: post.readingMinutes, minRead: t('blog.minRead') };
+  const eyebrowValues = { date: post.publishedAt ? cardDate(post.publishedAt, post.locale) : '', minutes: post.readingMinutes, minRead: t('blog.minRead') };
   const eyebrowLine = blog.eyebrow
     ? fillEyebrow(blog.eyebrow, { ...eyebrowValues, category: categoryLabel })
-    : `${categoryLabel}${post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}`;
+    : `${categoryLabel}${post.publishedAt ? ` — ${cardDate(post.publishedAt, post.locale)}` : ''}`;
   // 3.22 — the category as a chip linking to its archive, the rest of the line beside it.
   const around = blog.eyebrowStyle === 'chip' ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
   const categoryHref = post.categorySlug ? categoryPath(permalinks, post.categorySlug) : null;
@@ -154,7 +154,7 @@ export async function PostArticle({
     <Eyebrow>
       {fillEyebrow(blog.eyebrow, {
         category: categoryLabel,
-        date: post.publishedAt ? cardDate(post.publishedAt) : '',
+        date: post.publishedAt ? cardDate(post.publishedAt, post.locale) : '',
         minutes: post.readingMinutes,
         minRead: t('blog.minRead'),
       })}
@@ -162,7 +162,7 @@ export async function PostArticle({
   ) : (
     <Eyebrow>
       {categoryLabel}
-      {post.publishedAt ? ` — ${cardDate(post.publishedAt)}` : ''}
+      {post.publishedAt ? ` — ${cardDate(post.publishedAt, post.locale)}` : ''}
     </Eyebrow>
   );
   const back = blog.backLink && <BackLink href={indexPath} t={t} />;
@@ -317,7 +317,7 @@ export async function PostArticle({
                   {excerpt}
                   {(post.publishedAt || blog.meta.readingTime) && (
                     <p className="he-post-aside__meta">
-                      {post.publishedAt && <time dateTime={post.publishedAt.toISOString()}>{cardDate(post.publishedAt)}</time>}
+                      {post.publishedAt && <time dateTime={post.publishedAt.toISOString()}>{cardDate(post.publishedAt, post.locale)}</time>}
                       {post.publishedAt && blog.meta.readingTime && (look.asideMetaDot === 'dot' ? <span className="he-post-aside__dot" aria-hidden="true" /> : <span aria-hidden="true">•</span>)}
                       {blog.meta.readingTime && <span>{`${post.readingMinutes} ${t('blog.minRead')}`}</span>}
                     </p>

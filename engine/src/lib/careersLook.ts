@@ -78,7 +78,7 @@ export const careersLookSchema = z.object({
   /* 3.33 — the cards. */
   cardBackground: clear(),
   cardBackgroundMobile: clear(),
-  cardShadow: z.string().trim().max(120).refine((v) => SHADOW.test(v.trim()), 'Such as 18px 17px 54px rgba(0,0,0,0.1)').optional(),
+  cardShadow: z.string().trim().max(120).refine((v) => SHADOW.test(v.trim()), 'Such as 12px 10px 40px rgba(0,0,0,0.1)').optional(),
   cardMinHeight: len(),
   cardMinHeightMobile: len(),
   cardPadding: box(),

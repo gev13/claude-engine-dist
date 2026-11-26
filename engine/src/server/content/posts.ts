@@ -38,6 +38,8 @@ export type PostListItem = {
   coverUrl: string | null;
   /** 3.38 — the post's own cover zoom and focus, when it has one. */
   cover?: PictureZoom;
+  /** 3.38.2 — the post's language, so its date is written in it. */
+  locale?: string;
 };
 
 export type PostDetail = PostListItem & {
@@ -140,6 +142,7 @@ export async function listPosts(opts: {
         excerpt: posts.excerpt,
         kind: posts.kind,
         publishedAt: posts.publishedAt,
+        locale: posts.locale,
         readingMinutes: posts.readingMinutes,
         categorySlug: firstCategory('slug'),
         categoryName: firstCategory('name'),
@@ -198,6 +201,7 @@ export async function adjacentPosts(post: { id: string; kind: string; publishedA
           excerpt: posts.excerpt,
           kind: posts.kind,
           publishedAt: posts.publishedAt,
+          locale: posts.locale,
           readingMinutes: posts.readingMinutes,
           categorySlug: firstCategory('slug'),
           categoryName: firstCategory('name'),
@@ -258,6 +262,7 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
         kind: posts.kind,
         seo: posts.seo,
         publishedAt: posts.publishedAt,
+        locale: posts.locale,
         updatedAt: posts.updatedAt,
         readingMinutes: posts.readingMinutes,
         categorySlug: firstCategory('slug'),
@@ -302,6 +307,7 @@ async function loadPost(where: SQL | undefined): Promise<PostDetail | null> {
       kind: row.kind,
       seo: (row.seo ?? {}) as Record<string, unknown>,
       publishedAt: row.publishedAt,
+      locale: row.locale,
       updatedAt: row.updatedAt,
       readingMinutes: row.readingMinutes,
       categorySlug: row.categorySlug,

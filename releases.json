@@ -1,6 +1,14 @@
 {
-  "latest": "3.38.1",
+  "latest": "3.38.2",
   "releases": [
+    {
+      "version": "3.38.2",
+      "date": "2026-11-26",
+      "summary": "Fixes dates in languages other than English (post cards, post covers, a closed job's deadline) and card shadows cut away by leaf or cut corners; adds the button arrow's line in screen pixels, icon-list and rich-text bullet size and colour, and a shadow round an image block's picture.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.38.1",
       "date": "2026-11-26",

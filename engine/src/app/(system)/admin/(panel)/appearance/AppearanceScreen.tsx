@@ -610,6 +610,9 @@ function AppearanceScreenInner() {
                     ]}
                     onChange={set(['richText', 'listMarker'])}
                   />
+                  {/* 3.38.2 */}
+                  <LengthField label="Bullet size" hint="a dash’s length, a disc’s width" placeholder="e.g. 4px" emptyLabel="as drawn" value={get(['richText', 'listMarkerSize'])} onChange={set(['richText', 'listMarkerSize'])} />
+                  <ColorField label="Bullet colour" value={get(['richText', 'listMarkerColor'])} inherited="the accent" onChange={set(['richText', 'listMarkerColor'])} />
                   <LengthField label="List indent" placeholder="e.g. 32px" emptyLabel="as drawn" value={get(['richText', 'listIndent'])} onChange={set(['richText', 'listIndent'])} />
                   <LengthField label="Between list items" placeholder="e.g. 4px" emptyLabel="0.5em" value={get(['richText', 'listGap'])} onChange={set(['richText', 'listGap'])} />
                 </div>
