@@ -988,6 +988,8 @@ export function LanguagesPanel({ chrome, set }: Props) {
             />
           )}
           <TextField label="Size in the open menu" value={languages?.menuSize} maxLength={40} placeholder="as drawn" onChange={set(at('menuSize'))} />
+          {/* 3.38.3 */}
+          <TextField label="Space between them in the open menu" value={languages?.menuGap} maxLength={40} placeholder="as in the header" onChange={set(at('menuGap'))} />
           {/* 3.37 */}
           <ChoiceField
             label="In the open menu"

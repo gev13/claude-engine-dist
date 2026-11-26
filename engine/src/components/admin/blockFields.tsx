@@ -5648,6 +5648,11 @@ function TypeFields({
           {/* 3.37 */}
           <OptText label="Space under the title" hint="e.g. 24px" placeholder="as drawn" k="titleGap" props={props} set={set} />
           <OptText label="— on phones" placeholder="as above" k="titleGapMobile" props={props} set={set} />
+          {/* 3.38.3 */}
+          <div className="grid gap-3 sm:grid-cols-2">
+            <PropSelect label="Eyebrow and title" k="headPlace" fallback="" options={[['', 'At the start'], ['center', 'Centred as one group, words at its start']]} props={props} set={(next) => set(withOpt(next, 'headPlace', next.headPlace || undefined))} />
+            <PropSelect label="— on phones" k="headPlaceMobile" fallback="" options={[['', 'As above'], ['start', 'At the start'], ['center', 'Centred as one group']]} props={props} set={(next) => set(withOpt(next, 'headPlaceMobile', next.headPlaceMobile || undefined))} />
+          </div>
           <StringListRepeater
             label="Paragraphs"
             hint="One box per paragraph. Enter starts a new line inside the same paragraph."

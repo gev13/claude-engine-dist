@@ -410,3 +410,11 @@
 
 /* 3.38.2 — an image block's shadow, on a layer round the picture (its filter set inline). */
 .he-img-shadow { display: block; }
+
+/* 3.38.3 — a text block's eyebrow and title as one group, centred, their words
+   still at the group's start; the text below keeps its place. */
+.he-prose__head.is-hp-center { width: fit-content; max-width: 100%; margin-inline: auto; }
+@media (width <= 48rem) {
+  .he-prose__head.is-hp-m-center { width: fit-content; max-width: 100%; margin-inline: auto; }
+  .he-prose__head.is-hp-m-start { width: auto; margin-inline: 0; }
+}

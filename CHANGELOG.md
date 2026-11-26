@@ -10,6 +10,21 @@ improvements.
 
 ---
 
+## 3.38.3 — 2026-11-26
+
+**A text block's heading placed as one group, and the language codes' gap
+in the open menu.** Both are off until set.
+
+Added:
+
+- **Text block:** `headPlace` / `headPlaceMobile` (`start` or `center`).
+  Centred, the eyebrow and title form one group in the middle, their words
+  still at the group's start; the paragraphs keep their place.
+- **Languages:** `chrome.languages.menuGap`, the space between the codes in
+  the open menu, apart from the header's `gap`.
+
+---
+
 ## 3.38.2 — 2026-11-26
 
 **Dates in the page's language, card shadows outside their corners, the

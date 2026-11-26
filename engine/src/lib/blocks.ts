@@ -365,6 +365,9 @@ export const blockSchemas = {
     /** 3.37 — the space between the title and the text under it, and on phones; unset is the block's own (the theme's heading floor still applies). */
     titleGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     titleGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.38.3 — the eyebrow and title as one group, at the start (unset, as before) or centred, their words still at the group's start; and on phones. The text below is not moved. */
+    headPlace: z.enum(['start', 'center']).optional(),
+    headPlaceMobile: z.enum(['start', 'center']).optional(),
   }),
 
   /** Heading on the left, a stack of labelled points on the right. */

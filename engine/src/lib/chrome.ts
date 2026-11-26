@@ -548,6 +548,8 @@ export const chromeSchema = z.object({
       footerPlaceMobile: z.enum(['below']).optional(),
       /** 3.33 — in the open menu: the codes' size. */
       menuSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 20px').optional(),
+      /** 3.38.3 — in the open menu: the space between the codes; unset, the header's `gap`. */
+      menuGap: z.string().trim().max(40).regex(LENGTH, 'A length such as 16px').optional(),
       /** 3.37 — the colour of the codes that are not the current one (header, open menu, footer); unset is the nav colour. */
       color: colour(),
       /** 3.37 — a face per language code for its own name, e.g. { "el": "notoSerif" } (keys from the font list). */

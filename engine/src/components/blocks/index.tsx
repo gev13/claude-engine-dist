@@ -101,6 +101,12 @@ export function StatsBlock(p: P<'stats'>) {
 }
 
 /* ── prose ────────────────────────────────────────────────────────────────── */
+/** 3.38.3 — a group round the eyebrow and title when a place is chosen; otherwise they render as before, with nothing round them. */
+function ProseHead({ place, placeMobile, has, children }: { place?: 'start' | 'center'; placeMobile?: 'start' | 'center'; has: boolean; children: React.ReactNode }) {
+  if (!has || (!place && !placeMobile)) return <>{children}</>;
+  return <div className={cn('he-prose__head', place && `is-hp-${place}`, placeMobile && `is-hp-m-${placeMobile}`)}>{children}</div>;
+}
+
 export function ProseBlock(p: P<'prose'>) {
   // 3.26 — plain paragraphs at the reading measure (as before) or the full width.
   const measure = p.measure === 'full' ? 'max-w-none' : 'max-w-[62ch]';
@@ -135,12 +141,15 @@ export function ProseBlock(p: P<'prose'>) {
         }
       >
         <div>
-          {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
-          {p.title && (
-            <BlockTitle as={p.titleAs} className={cn('mb-4 max-w-[var(--he-title-measure,24ch)]', (p.titleGap || p.titleGapMobile) && 'he-prose__title')}>
-              {p.title}
-            </BlockTitle>
-          )}
+          {/* 3.38.3 — the eyebrow and title placed as one group, only when asked. */}
+          <ProseHead place={p.headPlace} placeMobile={p.headPlaceMobile} has={Boolean(p.eyebrow || p.title)}>
+            {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
+            {p.title && (
+              <BlockTitle as={p.titleAs} className={cn('mb-4 max-w-[var(--he-title-measure,24ch)]', (p.titleGap || p.titleGapMobile) && 'he-prose__title')}>
+                {p.title}
+              </BlockTitle>
+            )}
+          </ProseHead>
           {p.columns === 'one' && p.html && <Prose html={p.html} className="mt-5" />}
           {p.columns === 'one' &&
             !p.html &&

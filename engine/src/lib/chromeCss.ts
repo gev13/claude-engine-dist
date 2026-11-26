@@ -439,6 +439,8 @@ export function chromeCss(chrome: Chrome | undefined): string {
   const parts = [...(chrome.header ? headerCss(chrome.header) : []), ...(chrome.mobileMenu ? menuCss(chrome.mobileMenu) : []), ...(chrome.footer ? footerCss(chrome.footer) : [])];
   // 3.33 — the language row in the open menu.
   if (chrome.languages?.menuSize && len(chrome.languages.menuSize)) parts.push(`.he-menu .he-menu__langs :is(.he-langs__item,a,button){font-size:${len(chrome.languages.menuSize)}}`);
+  // 3.38.3 — and the space between its codes.
+  if (chrome.languages?.menuGap && len(chrome.languages.menuGap)) parts.push(`.he-menu .he-langs.he-menu__langs{gap:${len(chrome.languages.menuGap)}}`);
   if (chrome.languages) parts.push(...languagesCss(chrome.languages));
   return parts.filter(Boolean).join('');
 }
