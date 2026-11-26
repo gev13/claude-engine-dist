@@ -15,9 +15,11 @@ import { typeRule } from './typeStyle';
    grammar its schema used, and dropped when it fails.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE } = CHROME_GRAMMAR;
+const { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE, GAP } = CHROME_GRAMMAR;
 const ok = (re: RegExp, v: unknown): v is string => typeof v === 'string' && re.test(v.trim());
 const len = (v: unknown) => (ok(LENGTH, v) ? v.trim() : undefined);
+/** 3.38.1 — a footer gap, which may be fluid. */
+const fluidGap = (v: unknown) => (ok(GAP, v) ? v.trim() : undefined);
 const col = (v: unknown) => (ok(COLOR, v) ? v.trim() : undefined);
 const box = (v: unknown) => (ok(BOX, v) ? v.trim().replace(/\s+/g, ' ') : undefined);
 const line = (v: unknown) => (ok(LINE, v) ? v.trim() : undefined);
@@ -311,11 +313,13 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   out.push(
     rule('.he-ftr .he-ftr__links a', [
       ['line-height', line(f.linkLineHeight)],
-      ['padding-block', len(f.linkGap) ? '0' : undefined],
+      ['padding-block', fluidGap(f.linkGap) ? '0' : undefined],
     ]),
   );
-  out.push(rule('.he-ftr .he-ftr__links', [['row-gap', len(f.linkGap)]]));
+  out.push(rule('.he-ftr .he-ftr__links', [['row-gap', fluidGap(f.linkGap)]]));
   out.push(rule('.he-ftr .he-ftr__coltoggle', [['letter-spacing', len(f.titleTracking)]]));
+  // 3.38.1 — the links' letter spacing.
+  out.push(rule('.he-ftr .he-ftr__links a', [['letter-spacing', len(f.linkTracking)]]));
   /* 3d — the current page's link (FooterActive marks it). */
   out.push(
     rule('.he-ftr a[aria-current=page]', [
@@ -352,9 +356,9 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   const paddedPhone = padded(f.paddingMobile);
   if (paddedPhone) out.push(`@media (max-width:768px){${paddedPhone}}`);
   /* 3.34 — set, the space between the parts on phones is that alone: the head's and the middle's own padding and the menus' margin under them come off. */
-  if (len(f.gapMobile))
+  if (fluidGap(f.gapMobile))
     out.push(
-      `@media (max-width:768px){.he-ftr .he-ftr__grid{row-gap:${len(f.gapMobile)}}` +
+      `@media (max-width:768px){.he-ftr .he-ftr__grid{row-gap:${fluidGap(f.gapMobile)}}` +
         '.he-ftr .he-ftr__grid>:is(.he-ftr__lead,.he-ftr__middle){padding-bottom:0}' +
         '.he-ftr.is-links-first .he-ftr__grid>:is(.he-ftr__col,.he-ftr__stack):is(:last-of-type,:has(+ .he-ftr__langrow)){margin-bottom:0}}',
     );
@@ -362,17 +366,17 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   if (glyph) out.push(`.he-ftr .he-ftr__social a svg{width:${glyph};height:${glyph}}`);
   out.push(rule('.he-ftr .he-ftr__social a', [['width', len(f.socialBox)], ['height', len(f.socialBox)]]));
   if (len(f.socialBox)) out.push(`.he-ftr.has-middle .he-ftr__middle .he-ftr__social a{width:${len(f.socialBox)};height:${len(f.socialBox)}}`);
-  out.push(rule('.he-ftr .he-ftr__social', [['gap', len(f.socialGap)]]));
+  out.push(rule('.he-ftr .he-ftr__social', [['gap', fluidGap(f.socialGap)]]));
   out.push(...typeRule(`${nl} .he-ftr__nltext`, f.newsletterText));
-  if (len(f.languagesGap)) out.push(`@media (min-width:1024px){.he-ftr.has-langrow .he-ftr__grid{row-gap:${len(f.languagesGap)}}}`);
+  if (fluidGap(f.languagesGap)) out.push(`@media (min-width:1024px){.he-ftr.has-langrow .he-ftr__grid{row-gap:${fluidGap(f.languagesGap)}}}`);
   /* 3.34 — the sign-up's width, the links' and the languages' spacing on phones. */
   const nlWidth = (value: unknown) => (value === 'none' ? 'none' : len(value));
   out.push(rule('.he-ftr .he-ftr__nl', [['max-width', nlWidth(f.newsletterWidth)]]));
   if (nlWidth(f.newsletterWidthMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__nl{max-width:${nlWidth(f.newsletterWidthMobile)}}}`);
-  if (len(f.linkGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__links{row-gap:${len(f.linkGapMobile)}}.he-ftr .he-ftr__links a{padding-block:0}}`);
+  if (fluidGap(f.linkGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-ftr__links{row-gap:${fluidGap(f.linkGapMobile)}}.he-ftr .he-ftr__links a{padding-block:0}}`);
   // 3.34.1 — the icons bare on every width (the middle column's own rule drops the ring from desktops up only).
   if (f.socialLook === 'plain') out.push('.he-ftr .he-ftr__social:not(.is-text) a{border:0;border-radius:0}');
-  if (len(f.languagesGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-langs{gap:${len(f.languagesGapMobile)}}}`);
+  if (fluidGap(f.languagesGapMobile)) out.push(`@media (max-width:768px){.he-ftr .he-langs{gap:${fluidGap(f.languagesGapMobile)}}}`);
   const pull = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wm{margin-top:calc(-1 * ${len(value)});pointer-events:none}` : '');
   out.push(pull(f.wordmarkPull));
   if (pull(f.wordmarkPullMobile)) out.push(`@media (max-width:768px){${pull(f.wordmarkPullMobile)}}`);
@@ -391,11 +395,11 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
      middle one are each a third (P) and the menus sit at the end of the last third, M apart; the grid's own gap is M,
      so the first two tracks carry G − M more and their items give it back as a margin. The first menu is put after an
      empty track that takes up the rest of the last third. */
-  const columnGap = len(f.columnGap);
+  const columnGap = fluidGap(f.columnGap);
   if (columnGap) out.push(`@media (width>=64rem){.he-ftr .he-ftr__grid{column-gap:${columnGap}}}`);
   if (f.layoutDesktop === 'thirds') {
     const g = columnGap ?? 'var(--he-gap,44px)';
-    const m = len(f.menusGap) ?? g;
+    const m = fluidGap(f.menusGap) ?? g;
     const third = `calc((100% - 2 * ${g}) / 3 + ${g} - ${m})`;
     const back = `calc(${g} - ${m})`;
     const grid = '.he-ftr:is(.he-ftr--sitemap,.he-ftr--brand) .he-ftr__grid';
@@ -407,10 +411,10 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
         `${grid}>.he-ftr__lead+:not(.he-ftr__middle,.he-ftr__langrow),${grid}>.he-ftr__middle+:not(.he-ftr__langrow){grid-column:4}}`,
     );
   }
-  if (len(f.menusGapMobile)) out.push(`@media (max-width:768px){.he-ftr.is-links-row .he-ftr__grid{column-gap:${len(f.menusGapMobile)}}}`);
+  if (fluidGap(f.menusGapMobile)) out.push(`@media (max-width:768px){.he-ftr.is-links-row .he-ftr__grid{column-gap:${fluidGap(f.menusGapMobile)}}}`);
 
   /* 3.37 — the space under the sign-up's heading (the sign-up's own grid gap is 6px), and its field's shadow. */
-  if (len(f.newsletterTitleGap)) out.push(`${nl} .he-ftr__nltitle{margin-bottom:calc(${len(f.newsletterTitleGap)} - 6px)}`);
+  if (fluidGap(f.newsletterTitleGap)) out.push(`${nl} .he-ftr__nltitle{margin-bottom:calc(${fluidGap(f.newsletterTitleGap)} - 6px)}`);
   const shadow = f.newsletterFieldShadow === 'none' ? 'none' : ok(SHADOW, f.newsletterFieldShadow) ? f.newsletterFieldShadow.trim().replace(/\s+/g, ' ') : undefined;
   if (shadow) out.push(`${nl} .he-ftr__nlinput.he-nl__input{box-shadow:${shadow}}`);
   return out;
@@ -423,7 +427,8 @@ function languagesCss(l: NonNullable<Chrome['languages']>): string[] {
   if (colour) out.push(`.he-langs .he-langs__item:not([aria-current='true'],:hover){color:${colour}}`);
   for (const [code, face] of Object.entries(l.faces ?? {})) {
     if (!CODE.test(code) || typeof face !== 'string' || !FACE.test(face) || !Object.prototype.hasOwnProperty.call(FONT_STACKS, face)) continue;
-    out.push(`:is(.he-langs__item,.he-lang__item):lang(${code}){font-family:${FONT_STACKS[face]}}`);
+    // 3.38.1 — firmly, and heavier than a language's one face (`localeFonts.<locale>.all`), so a code keeps its own face on every page.
+    out.push(`:root :is(.he-langs__item,.he-lang__item):lang(${code}){font-family:${FONT_STACKS[face]}!important}`);
   }
   return out;
 }

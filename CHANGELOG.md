@@ -10,6 +10,28 @@ improvements.
 
 ---
 
+## 3.38.1 — 2026-11-26
+
+**A face filled from another keeps its own Latin, the footer links' letter
+spacing, fluid footer gaps, and a language code's own face on every page.**
+
+Fixed:
+
+- **A face's missing alphabets (`theme.fontFill`):** the copies from the
+  other face were declared at that face's weights, which the browser took
+  for ordinary text, and with no Latin in them Chromium drew every Latin
+  letter in the next face of the stack. They now carry the face's own
+  weights, with no italic copy for a face without an italic.
+- **A language code's own face** (`chrome.languages.faces`) now wins over a
+  language's one face (`localeFonts.<locale>.all`).
+
+Added:
+
+- **Footer:** the links' letter spacing; its gaps take `min()`, `max()`,
+  `clamp()` and `calc()`.
+
+---
+
 ## 3.38.0 — 2026-11-26
 
 **Google Sans Flex at its own optical sizes, one face's missing alphabets

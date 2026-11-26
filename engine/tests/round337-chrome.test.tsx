@@ -128,7 +128,8 @@ describe('the language codes: colour and faces', () => {
   });
   it('sets a face for a language from the font list, by the lang the codes already carry', () => {
     const out = css({ languages: { faces: { el: 'notoSerif' } } });
-    expect(out).toMatch(/^:is\(\.he-langs__item,\.he-lang__item\):lang\(el\)\{font-family:'Noto Serif', /);
+    // 3.38.1 — firm, and heavier than a language's one face.
+    expect(out).toMatch(/^:root :is\(\.he-langs__item,\.he-lang__item\):lang\(el\)\{font-family:'Noto Serif', [^}]*!important\}/);
     expect(css({ languages: { faces: { el: 'noSuchFace' } } })).toBe('');
     expect(chromeCss({ languages: { faces: { el: 'constructor' } } } as Chrome)).toBe('');
     expect(chromeSchema.safeParse({ languages: { faces: { el: "x;}body{" } } }).success).toBe(false);

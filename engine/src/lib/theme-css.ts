@@ -1,7 +1,7 @@
 import { blogCss } from './blogCss';
 import { careersCss } from './careersLook';
 import { headingSpaceCss } from './headingSpace';
-import { FILL_FACES, SUBSET_RANGES } from './fontFaces';
+import { FILL_FACES, OWN_FACES, SUBSET_RANGES } from './fontFaces';
 import { FONT_CATALOGUE } from './fontCatalogue';
 import { chromeCss } from './chromeCss';
 import {
@@ -857,15 +857,29 @@ const FILE = /^[a-z0-9-]+\.woff2$/;
 function fontFillCss(fill: Theme['fontFill']): string {
   if (!fill) return '';
   const out: string[] = [];
+  const centre = (weight: string) => {
+    const [a, b] = weight.split(' ').map(Number);
+    return b === undefined ? a! : (a! + b) / 2;
+  };
   for (const [key, fillKey] of Object.entries(fill)) {
     const face = FONT_CATALOGUE.find((f) => f.key === key);
     const from = FONT_CATALOGUE.find((f) => f.key === fillKey);
     if (!face || !from || face === from) continue;
-    for (const [style, weight, subset, file] of FILL_FACES[from.family] ?? []) {
-      if (face.scripts.includes(subset) || !FILE.test(file) || !/^(normal|italic)$/.test(style) || !/^\d{3}( \d{3})?$/.test(weight)) continue;
-      const range = SUBSET_RANGES[subset];
-      if (!range) continue;
-      out.push(`@font-face{font-family:'${face.family.replace(/'/g, '')}';font-style:${style};font-weight:${weight};font-display:swap;src:url('/fonts/google/${file}') format('woff2');unicode-range:${range}}`);
+    const files = FILL_FACES[from.family] ?? [];
+    /* 3.38.1 — one copy for each style and weight the face itself has, under
+       its own weight range: a copy at the fill's narrower range is the closer
+       match for ordinary text, and with no Latin in it the browser then drew
+       every Latin letter from the next face in the stack. No italic copy for
+       a face without an italic. Of a static fill, the file nearest each weight. */
+    for (const [style, weight] of OWN_FACES[face.family] ?? []) {
+      if (!/^(normal|italic)$/.test(style) || !/^\d{3}( \d{3})?$/.test(weight)) continue;
+      for (const subset of Object.keys(SUBSET_RANGES)) {
+        if (face.scripts.includes(subset)) continue;
+        const candidates = files.filter(([st, , sub, file]) => st === style && sub === subset && FILE.test(file));
+        if (!candidates.length) continue;
+        const best = candidates.reduce((a, b) => (Math.abs(centre(b[1]) - centre(weight)) < Math.abs(centre(a[1]) - centre(weight)) ? b : a));
+        out.push(`@font-face{font-family:'${face.family.replace(/'/g, '')}';font-style:${style};font-weight:${weight};font-display:swap;src:url('/fonts/google/${best[3]}') format('woff2');unicode-range:${SUBSET_RANGES[subset]}}`);
+      }
     }
   }
   return out.join('');

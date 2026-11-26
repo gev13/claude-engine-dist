@@ -26,3 +26,12 @@ export function isUsableLength(value: string): boolean {
   if (!isLength(trimmed)) return false;
   return Number(trimmed) === 0 || !/^-?\d*\.?\d+$/.test(trimmed);
 }
+
+/**
+ * 3.38.1 — the same grammar with a unit on every number but 0, as a pattern,
+ * for the files that check lengths with a regular expression (the chrome's).
+ */
+const UNIT_SIMPLE = `(?:0|-?\\d*\\.?\\d+${LENGTH_UNIT})`;
+const UNIT_CALC = `calc\\(\\s*${UNIT_SIMPLE}(?:\\s+[-+]\\s+${UNIT_SIMPLE}){1,3}\\s*\\)`;
+const UNIT_TERM = `(?:${UNIT_SIMPLE}|${UNIT_CALC})`;
+export const UNIT_LENGTH_PATTERN = new RegExp(`^(?:${UNIT_TERM}|(?:clamp|min|max)\\(\\s*${UNIT_TERM}\\s*,\\s*${UNIT_TERM}\\s*(?:,\\s*${UNIT_TERM}\\s*)?\\))$`);

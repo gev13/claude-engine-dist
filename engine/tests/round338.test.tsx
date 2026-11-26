@@ -44,7 +44,10 @@ describe('a face’s missing alphabets from another face', () => {
   });
   it('declares the face again over the other face’s files, for the alphabets it lacks only', () => {
     const out = theme({ fontFill: { googleSansFlex: 'googleSans' } });
-    expect(out).toContain(`@font-face{font-family:'Google Sans Flex';font-style:normal;font-weight:400 700;font-display:swap;src:url('/fonts/google/google-sans-normal-var-cyrillic.woff2') format('woff2');unicode-range:${SUBSET_RANGES.cyrillic}}`);
+    // 3.38.1 — under the face's own weight range, so ordinary text still finds the face's Latin; no italic copies for a face without one.
+    expect(out).toContain(`@font-face{font-family:'Google Sans Flex';font-style:normal;font-weight:100 900;font-display:swap;src:url('/fonts/google/google-sans-normal-var-cyrillic.woff2') format('woff2');unicode-range:${SUBSET_RANGES.cyrillic}}`);
+    expect(out).not.toMatch(/font-family:'Google Sans Flex';font-style:italic/);
+    expect(out).not.toMatch(/font-family:'Google Sans Flex'[^}]*font-weight:400 700/);
     expect(out).not.toMatch(/font-family:'Google Sans Flex'[^}]*-latin\.woff2/);
     expect(FILL_FACES['Google Sans']!.some(([, , subset]) => subset === 'cyrillic')).toBe(true);
   });
@@ -160,3 +163,4 @@ describe('the smaller options', () => {
     expect(careersCss({})).not.toContain('stroke-width');
   });
 });
+

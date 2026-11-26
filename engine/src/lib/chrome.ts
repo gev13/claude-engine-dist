@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UNIT_LENGTH_PATTERN } from './lengthGrammar';
 import { typeStyleSchema } from './typeStyle';
 import { SOCIAL_LABEL_STYLES, SOCIAL_NETWORKS, imageUrl, isSafeHref, type SocialLabelStyle, type SocialNetwork } from './navigation';
 
@@ -20,10 +21,12 @@ const FACE = /^[A-Za-z][A-Za-z0-9]{0,47}$/;
 const CODE = /^[a-z]{2,3}$/;
 
 /** 3.28 — the grammars, for the stylesheet writer that checks every value again (`chromeCss.ts`). */
-export const CHROME_GRAMMAR = { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE } as const;
+export const CHROME_GRAMMAR = { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE, GAP: UNIT_LENGTH_PATTERN } as const;
 
 /* 3.28 — the small fields of the last round's details: each optional, each a checked value. */
 const len = (hint = 'A size such as 16px') => z.string().trim().max(40).regex(LENGTH, hint).optional();
+/** 3.38.1 — a gap that may be fluid: a size, or min()/max()/clamp()/calc() of sizes. */
+const gapLen = () => z.string().trim().max(80).regex(UNIT_LENGTH_PATTERN, 'A size such as 24px, or min(24px, calc(10vw - 20px))').optional();
 const colour = () => z.string().trim().max(60).regex(COLOR, 'A colour').optional();
 const box = () => z.string().trim().max(60).regex(BOX, 'One to four sizes, such as 7px 12px').optional();
 const ms = () => z.number().int().min(0).max(3000).optional();
@@ -419,8 +422,10 @@ export const chromeSchema = z.object({
       columns: z.enum(['auto', 'equal']).optional(),
       /** The menus' links: line height and the space between them; the column titles' letter spacing. */
       linkLineHeight: z.string().trim().max(20).regex(LINE, 'A line height such as 17px or 1.2').optional(),
-      linkGap: len(),
+      linkGap: gapLen(),
       titleTracking: len('A spacing such as -0.4px'),
+      /** 3.38.1 — the links' letter spacing. */
+      linkTracking: len('A spacing such as -0.3px'),
       /** The current page's link: its weight and colour. */
       activeWeight: weight(),
       activeColor: colour(),
@@ -474,15 +479,15 @@ export const chromeSchema = z.object({
       linkSize: len(),
       padding: z.string().trim().max(60).regex(BOX, 'One to four sizes, e.g. 60px or 40px 24px').optional(),
       paddingMobile: z.string().trim().max(60).regex(BOX, 'One to four sizes, e.g. 40px 24px').optional(),
-      gapMobile: len(),
+      gapMobile: gapLen(),
       /** The social icons: the glyph's size, its box, and the space between them. */
       socialSize: len(),
       socialBox: len(),
-      socialGap: len(),
+      socialGap: gapLen(),
       /** The sign-up's sentence. */
       newsletterText: typeStyleSchema.optional(),
       /** The space between the link columns and a language row under them. */
-      languagesGap: len(),
+      languagesGap: gapLen(),
       /** How far the wordmark rides up over what is above it, and on phones. */
       wordmarkPull: len(),
       wordmarkPullMobile: len(),
@@ -492,9 +497,9 @@ export const chromeSchema = z.object({
       newsletterWidth: z.union([z.literal('none'), z.string().trim().max(40).regex(LENGTH, 'A size such as 420px or 100%, or none')]).optional(),
       newsletterWidthMobile: z.union([z.literal('none'), z.string().trim().max(40).regex(LENGTH, 'A size such as 100%, or none')]).optional(),
       /** The space between the menus' links on phones; unset follows linkGap. */
-      linkGapMobile: len(),
+      linkGapMobile: gapLen(),
       /** The space between the language names on phones. */
-      languagesGapMobile: len(),
+      languagesGapMobile: gapLen(),
 
       /* ── 3.34.1 ── */
       /** The social icons in a ring (unset, as drawn) or bare, on every width; their box and glyph sizes still apply. */
@@ -509,12 +514,12 @@ export const chromeSchema = z.object({
       /** Wider than a tablet: the head column, the middle column and the menus as three equal parts (the menus at the end of theirs, the middle's content centred). */
       layoutDesktop: z.enum(['auto', 'thirds']).optional(),
       /** Wider than a tablet: the space between the footer's columns; with thirds, between the three parts. */
-      columnGap: len(),
+      columnGap: gapLen(),
       /** With thirds: the space between the menus; on phones, between the menus side by side (unset 16px). */
-      menusGap: len(),
-      menusGapMobile: len(),
+      menusGap: gapLen(),
+      menusGapMobile: gapLen(),
       /** The space under the sign-up's heading (unset 6px). */
-      newsletterTitleGap: len(),
+      newsletterTitleGap: gapLen(),
       /** The sign-up field's shadow: none, or its own; unset follows Fields. */
       newsletterFieldShadow: z.union([z.literal('none'), z.string().trim().max(120).regex(SHADOW, 'Such as 0 4px 20px rgba(0,0,0,0.1), or none')]).optional(),
     })

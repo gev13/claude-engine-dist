@@ -303,6 +303,8 @@ export function FooterDetailsPanel({ chrome, set }: Props) {
           <Text label="Links’ line height" hint="e.g. 17px" value={f?.linkLineHeight} onChange={set(at('linkLineHeight'))} />
           <Text label="Space between links" hint="e.g. 13px" value={f?.linkGap} onChange={set(at('linkGap'))} />
           <Text label="Column titles’ letter spacing" hint="e.g. -0.4px" value={f?.titleTracking} onChange={set(at('titleTracking'))} />
+          {/* 3.38.1 */}
+          <Text label="Links’ letter spacing" hint="e.g. -0.3px" value={f?.linkTracking} onChange={set(at('linkTracking'))} />
           <ChoiceField label="Current page’s link weight" value={f?.activeWeight} inherited="" options={WEIGHTS} onChange={set(at('activeWeight'))} />
           <Text label="Current page’s link colour" value={f?.activeColor} onChange={set(at('activeColor'))} />
           <Text label="Separators’ colour" value={f?.separatorColor} onChange={set(at('separatorColor'))} />
