@@ -28,6 +28,7 @@ Sources and full texts: https://github.com/google/fonts
 | Figtree | OFL-1.1 |
 | Fira Sans | OFL-1.1 |
 | Google Sans | OFL-1.1 |
+| Google Sans Flex | OFL-1.1 |
 | Heebo | OFL-1.1 |
 | Hind | OFL-1.1 |
 | IBM Plex Mono | OFL-1.1 |

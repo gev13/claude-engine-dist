@@ -44,7 +44,7 @@ type LanguageRow = {
 };
 
 type Loaded = {
-  kind: 'page' | 'post' | 'category';
+  kind: 'page' | 'post' | 'category' | 'savedBlock';
   source: {
     id: string;
     locale: string;
@@ -81,7 +81,7 @@ export function TranslateScreen({
 }: {
   sourceId: string;
   locale: string;
-  kind?: 'page' | 'post' | 'category';
+  kind?: 'page' | 'post' | 'category' | 'savedBlock';
 }) {
   return (
     <ToastProvider>
@@ -97,7 +97,7 @@ function TranslateScreenInner({
 }: {
   sourceId: string;
   locale: string;
-  kind: 'page' | 'post' | 'category';
+  kind: 'page' | 'post' | 'category' | 'savedBlock';
 }) {
   const { toast } = useToast();
   const { data, isLoading, mutate } = useSWR<Loaded>(
@@ -170,7 +170,7 @@ function TranslateScreenInner({
   const language = localeName(locale);
   /* "categorys" is not a word, and a category has no per-id screen — the
      manager is one page. */
-  const section = kind === 'category' ? 'categories' : `${kind}s`;
+  const section = kind === 'category' ? 'categories' : kind === 'savedBlock' ? 'saved-blocks' : `${kind}s`;
   const backHref = kind === 'category' ? '/admin/categories' : `/admin/${section}/${sourceId}`;
 
   return (
@@ -225,20 +225,23 @@ function TranslateScreenInner({
             <Badge tone={data.target.status === 'published' ? 'live' : 'draft'}>{data.target.status}</Badge>
           </Alert>
 
-          <Panel title={kind === 'post' ? 'The post itself' : 'The page itself'}>
+          <Panel title={kind === 'post' ? 'The post itself' : kind === 'savedBlock' ? 'The saved block itself' : 'The page itself'}>
             <div className="flex flex-col gap-4">
               <Pair label="Title" source={data.source.title}>
                 <Input value={fields.title} onChange={(e) => setFields({ ...fields, title: e.target.value })} />
               </Pair>
-              <Pair label="Address" source={data.source.path} hint="the last part of the address, in this language">
-                <Input value={fields.slug} onChange={(e) => setFields({ ...fields, slug: e.target.value })} />
-              </Pair>
+              {/* 3.37 — a saved block has no address of its own. */}
+              {kind !== 'savedBlock' && (
+                <Pair label="Address" source={data.source.path} hint="the last part of the address, in this language">
+                  <Input value={fields.slug} onChange={(e) => setFields({ ...fields, slug: e.target.value })} />
+                </Pair>
+              )}
               {kind === 'page' && (
                 <Pair label="Summary" source={data.source.summary}>
                   <Input value={fields.summary} onChange={(e) => setFields({ ...fields, summary: e.target.value })} />
                 </Pair>
               )}
-              <Pair label="Search description" source={data.source.excerpt}>
+              <Pair label={kind === 'savedBlock' ? 'Description' : 'Search description'} source={data.source.excerpt}>
                 <textarea
                   className="min-h-[72px] w-full border-2 border-hairline bg-surface p-3 text-[14px] text-bone"
                   value={fields.excerpt}

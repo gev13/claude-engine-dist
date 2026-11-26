@@ -33,6 +33,12 @@ const COLOUR_TEXT = '(?:#[0-9a-f]{3,8}|(?:rgb|rgba|hsl|hsla)\\([0-9.,%\\s/deg-]+
 /** 3.33 — a gradient's stops: `rgba(0,0,0,0.2) 25%, rgba(0,0,0,0.8) 73%, #000 92%`. */
 export const TINT_STOPS = new RegExp(`^${COLOUR_TEXT}\\s+\\d{1,3}(?:\\.\\d{1,3})?%(?:\\s*,\\s*${COLOUR_TEXT}\\s+\\d{1,3}(?:\\.\\d{1,3})?%){1,4}$`, 'i');
 
+/** 3.37 — the four tiers, widest first. */
+export const CARD_TIERS = ['base', 'laptop', 'tablet', 'mobile'] as const;
+export type CardTier = (typeof CARD_TIERS)[number];
+/** 3.37 — a picture's own box: a width and a height, lengths or percentages; either unset is the card's. */
+const imageBox = () => z.object({ width: len(), height: len() });
+
 /* 3.33 — what a post card can add, in the post list block and the blog's own cards alike. */
 export const postCardExtras = {
   /** The overlay cards: a round arrow with the words (true), or (`pointer`) the pointer itself becomes the arrow over a card, drawn from a colour and a size; nothing on the card, nothing on touch. */
@@ -48,6 +54,26 @@ export const postCardExtras = {
   heightMobile: len(),
   textPadding: box(),
   textPaddingMobile: box(),
+  /* 3.37 */
+  /** The space between the words' parts (unset 8px; 4px in the compact layout), and on phones. */
+  textGap: len(),
+  textGapMobile: len(),
+  /** The excerpt cut to a number of lines, with an ellipsis; its own width at most. */
+  excerptLines: z.number().int().min(1).max(6).optional(),
+  excerptWidth: len(),
+  /** The overlay cards: the tint as stops from the top over the whole card, replacing the fade from the bottom. */
+  tintStops: z.string().trim().max(200).refine((v) => TINT_STOPS.test(v.trim()), 'Colours and places, such as rgba(0,0,0,0.2) 25%, #000 92%').optional(),
+  /** The overlay cards with `reveal`: the tiers where the words wait for the pointer; on the others they always show (unset, every tier). */
+  revealAt: z
+    .array(z.enum(CARD_TIERS))
+    .max(4)
+    .refine((list) => new Set(list).size === list.length, 'A tier is listed twice')
+    .optional(),
+  /** The overlay cards: the picture in a box of its own size, anchored top left, the card clipping it (and on phones). */
+  imageBox: imageBox().optional(),
+  imageBoxMobile: imageBox().optional(),
+  /** The overlay cards on phones: a height for each card in turn; cards past the end take the last. */
+  heightsMobile: z.array(z.string().trim().max(40).refine(isLength, 'Not a valid CSS length')).min(1).max(12).optional(),
 };
 
 /** 3.28 — the archive cards (blog index, categories, a post list showing the archive's card, related posts). */
@@ -213,6 +239,22 @@ const postLookSchema = z.object({
   asidePanelMargin: box(),
   asidePanelPadding: box(),
   asidePanelPaddingMobile: box(),
+  /** 3.37 — the panel's margin where the columns stack (≤1024px): a box, every side. */
+  asidePanelMarginMobile: box(),
+  /** 3.37 — the space between the card and the article where they stack; the article's own padding (and there). */
+  asideGapMobile: len(),
+  asideBodyPadding: box(),
+  asideBodyPaddingMobile: box(),
+  /** 3.37 — the card's words: one space between the title, the excerpt and the date line; the excerpt's and that line's type; the space in that line and its mark between the date and the reading time; the card's padding (and where they stack). */
+  asideTextGap: len(),
+  asideLead: typeStyleSchema.optional(),
+  asideMeta: typeStyleSchema.optional(),
+  asideMetaGap: len(),
+  asideMetaDot: z.enum(['bullet', 'dot']).optional(),
+  asideCardPadding: box(),
+  asideCardPaddingMobile: box(),
+  /** 3.37 — the tint's stops where they stack. */
+  asideTintStopsMobile: z.string().trim().max(200).refine((v) => TINT_STOPS.test(v.trim()), 'Colours and places, such as rgba(0,0,0,0.2) 25%, #000 92%').optional(),
   /** 3.33 — in the article: the space under a heading, and above one (and on phones). */
   headingGap: len(),
   sectionGap: len(),
@@ -450,7 +492,7 @@ export type BlogSettings = z.infer<typeof blogSchema>;
  * the card grid a date, the list layouts a category chip and a date — so the
  * options change a card only once somebody sets one.
  */
-export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3; reveal: boolean; tint: string; arrow: boolean | 'pointer'; arrowColor: string; arrowGlyph: string; arrowSize: number; height: string; heightMobile: string; textPadding: string; textPaddingMobile: string; titleType: TypeStyle; chipType: TypeStyle; excerptType: TypeStyle }>;
+export type PostCardOptions = Partial<{ date: boolean; readingTime: boolean; category: boolean; readMore: boolean; ratio: '16/9' | '4/3' | '3/2' | '1/1'; hover: CardHover; image: boolean; excerpt: boolean; categoryPlace: 'line' | 'under'; titleLines: 2 | 3; reveal: boolean; tint: string; arrow: boolean | 'pointer'; arrowColor: string; arrowGlyph: string; arrowSize: number; height: string; heightMobile: string; textPadding: string; textPaddingMobile: string; titleType: TypeStyle; chipType: TypeStyle; excerptType: TypeStyle; textGap: string; textGapMobile: string; excerptLines: number; excerptWidth: string; tintStops: string; revealAt: CardTier[]; imageBox: { width?: string; height?: string }; imageBoxMobile: { width?: string; height?: string }; heightsMobile: string[] }>;
 export type ResolvedBlog = {
   index: BlogIndexLayout;
   pagination: 'none' | 'more' | 'pages';

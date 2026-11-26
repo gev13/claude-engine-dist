@@ -153,6 +153,16 @@ export function LengthField({
   );
 }
 
+/** 3.37 — a written value checked against a pattern (a picture's size or place, a gradient's stops); empty removes it. */
+export function PatternField({ label, hint, placeholder, value, pattern, error, onChange }: { label: string; hint?: string; placeholder?: string; value: string | undefined; pattern: RegExp; error: string; onChange: (next: string | undefined) => void }) {
+  const current = value ?? '';
+  return (
+    <Field label={label} hint={hint} error={current !== '' && !pattern.test(current.trim()) ? error : undefined}>
+      <Input value={current} placeholder={placeholder} spellCheck={false} onChange={(e) => onChange(e.target.value.trim() || undefined)} />
+    </Field>
+  );
+}
+
 export function ChoiceField<T extends string>({
   label,
   hint,

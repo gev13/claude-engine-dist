@@ -10,6 +10,7 @@ import type { blockSchemas } from '@/lib/blocks';
 import { type FormField, formSteps, validateAnswers, visibleFields } from '@/lib/forms';
 import { cn } from '@/lib/utils';
 import { buttonPadProps } from '@/lib/buttonPad';
+import { formSpacing } from '@/lib/formSpacing';
 import { ArrowRight } from '@/components/ui/Button';
 import { FileDrop } from '@/components/site/FileDrop';
 import Link from '@/components/ui/SiteLink';
@@ -391,6 +392,8 @@ export function FormBlock(p: P) {
   }
 
   const center = p.align === 'center';
+  // 3.37 — the space under the heading and above the send button.
+  const spacing = formSpacing(p);
   const body =
     state === 'sent' ? (
       <div className={cn('he-fb__done', p.successPlain && 'is-plain')} role="status">
@@ -498,11 +501,13 @@ export function FormBlock(p: P) {
         // 3.33 — the space between questions, the send button's width on phones.
         p.fieldGap && 'has-field-gap',
         p.submitWidthMobile === 'own' && 'is-submit-own-m',
+        ...spacing.classes,
       )}
       style={
-        p.cardBleed || p.fieldInset || p.submitBorder || typeof p.submitBorderWidth === 'number' || p.fieldGap
+        p.cardBleed || p.fieldInset || p.submitBorder || typeof p.submitBorderWidth === 'number' || p.fieldGap || spacing.classes.length
           ? ({
               ...(p.fieldGap ? { '--he-fb-gap': p.fieldGap } : {}),
+              ...spacing.style,
               ...(p.cardBleed ? { '--he-fb-bleed': p.cardBleed } : {}),
               ...(p.fieldInset ? { '--he-fb-inset': p.fieldInset } : {}),
               ...(p.submitBorder ? { '--he-fb-submit-edge': p.submitBorder } : {}),

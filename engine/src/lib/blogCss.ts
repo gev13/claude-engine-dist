@@ -239,10 +239,24 @@ function postCss(p: PostLook): string[] {
   if (typeof p.asideTintStops === 'string' && TINT_STOPS.test(p.asideTintStops.trim())) out.push(`.he-post-aside__card::after{background:linear-gradient(to bottom,${p.asideTintStops.trim()})}`);
   out.push(...typeRule('.he-post-aside__text :is(h1,h2)', p.asideTitle));
   const sec = '.he-post-aside-sec';
-  out.push(rule(sec, [['background-color', colOrClear(p.asidePanel)], ['border-radius', box(p.asidePanelRadius)], ['margin-inline', box(p.asidePanelMargin)], ['border-width', colOrClear(p.asidePanel) ? '0' : undefined]]));
+  /* (3.37) One or two lengths are the side margins, as before; three or four were invalid as `margin-inline`
+     and dropped, so they are now the whole box. */
+  const margin = box(p.asidePanelMargin);
+  const marginProperty = margin && margin.split(' ').length > 2 ? 'margin' : 'margin-inline';
+  out.push(rule(sec, [['background-color', colOrClear(p.asidePanel)], ['border-radius', box(p.asidePanelRadius)], [marginProperty, margin], ['border-width', colOrClear(p.asidePanel) ? '0' : undefined]]));
   out.push(rule(`${sec}>.shell`, [['padding', box(p.asidePanelPadding)]]));
-  out.push(media(TABLET, rule(sec, [['background-color', colOrClear(p.asidePanelMobile)]])));
+  out.push(media(TABLET, rule(sec, [['background-color', colOrClear(p.asidePanelMobile)], ['margin', box(p.asidePanelMarginMobile)]])));
   out.push(media(TABLET, rule(`${sec}>.shell`, [['padding', box(p.asidePanelPaddingMobile)]])));
+  // 3.37 — where the columns stack, the space between them; the article's own padding; the card's words and padding.
+  out.push(media(TABLET, rule('.he-post-aside', [['gap', len(p.asideGapMobile)]])));
+  out.push(rule('.he-post-aside__body', [['padding', box(p.asideBodyPadding)]]));
+  out.push(media(TABLET, rule('.he-post-aside__body', [['padding', box(p.asideBodyPaddingMobile)]])));
+  out.push(...typeRule('.he-post-aside__text>:is(h1,h2)+p:not(.he-post-aside__meta)', p.asideLead));
+  out.push(...typeRule('.he-post-aside__meta', p.asideMeta));
+  out.push(rule('.he-post-aside__meta', [['gap', len(p.asideMetaGap)]]));
+  out.push(rule('.he-post-aside__card', [['padding', box(p.asideCardPadding)]]));
+  out.push(media(TABLET, rule('.he-post-aside__card', [['padding', box(p.asideCardPaddingMobile)]])));
+  if (typeof p.asideTintStopsMobile === 'string' && TINT_STOPS.test(p.asideTintStopsMobile.trim())) out.push(media(TABLET, `.he-post-aside__card::after{background:linear-gradient(to bottom,${p.asideTintStopsMobile.trim()})}`));
   out.push(rule(`${post} .prose-edge :is(h2,h3)`, [['margin-bottom', len(p.headingGap)], ['margin-top', len(p.sectionGap)]]));
   out.push(media(PHONE, rule(`${post} .prose-edge :is(h2,h3)`, [['margin-top', len(p.sectionGapMobile)]])));
   // Related posts.

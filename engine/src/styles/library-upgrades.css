@@ -269,7 +269,8 @@
 .he-pic { display: contents; }
 /* 3.15 — a band's phone picture is drawn to be seen whole: no fade over it there. */
 @media (width <= 768px) {
-  .he-band.has-mobile-media.has-fade::after { background: none; }
+  /* 3.37 — unless the band has a fade of its own on phones. */
+  .he-band.has-mobile-media.has-fade:not(.has-fade-m)::after { background: none; }
 }
 /* 3.15 — ruled figures on phones: two by two, a cross of lines between them. */
 @media (width <= 768px) {
@@ -315,6 +316,8 @@
 .he-menu.is-close-first .he-menu__top { justify-content: flex-start; gap: 12px; }
 .he-menu.is-close-first .he-menu__close { order: -1; margin: 0 0 0 -10px; }
 .he-menu__top.is-mirrored { position: relative; display: block; min-height: 0; }
+/* 3.37 — and it keeps its measured height when the menu is taller than the screen (it shrank, and the links jumped up). */
+.he-menu__top.is-mirrored { flex-shrink: 0; }
 /* 3.17 — the service links in the menu's own type and colour. */
 .he-menu.is-services-rows .he-menu__services a { font-family: var(--he-h4-family); font-size: 17px; font-weight: 600; line-height: 1.3; color: var(--color-bone); }
 .he-menu.is-services-rows .he-menu__services a:hover { color: var(--color-flare-soft); }

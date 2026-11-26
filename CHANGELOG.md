@@ -10,6 +10,84 @@ improvements.
 
 ---
 
+## 3.37.0 — 2026-11-26
+
+**A design matched without custom CSS: pictures placed per screen, the
+theme's paragraph sizes, Google Sans Flex, a header and footer to the pixel,
+and a long list of smaller options.** Every option is off until set; the
+fixes are listed apart.
+
+Added:
+
+- **Pictures placed per screen:** a media band's picture and a card's
+  (pictures with text over them, image cards, tiles) take a zoom (100–300 %)
+  about a focus point, and a fit, on wide screens, tablets and phones. A
+  section background takes a written size and place (`1200px auto`,
+  `-240px 20px`), on phones too, and a gradient laid under or over its
+  picture, with written stops and a phone gradient of its own.
+- **Text sizes:** Appearance → Typography → Text inside blocks gains the
+  bands' and panels' paragraphs and the cards' words, each with a phone size.
+- **Google Sans Flex** in the font catalogue (Latin; Google Fonts carries no
+  Cyrillic or Armenian for it).
+- **Header and menus:** the space after the links, exact edges (no empty
+  track or edge), top and bottom padding per screen, the phone logo drawn,
+  the close mark's size, thickness and colour; the language codes' colour,
+  a face per language name, and the open menu's languages straight after
+  the links.
+- **Footer:** columns in thirds with the menus at the end, the gaps between
+  menus (and on phones), the wordmark's crop on phones and a sideways nudge,
+  the sign-up heading's gap and field shadow; a footer link's own colour and
+  place on phones; a social network's own uploaded mark.
+- **Type:** word spacing and line breaking per screen, `normal` line height,
+  the eyebrow's space per screen, every type style's face from the whole
+  catalogue (or the system's), buttons' arrow thickness, a section's button
+  colours on phones.
+- **Blocks:** a media band's inset, paragraph width and button gap on phones,
+  and paragraphs split at blank lines; pictures with text over them get the
+  part gap inside the words, a label gap, a head inset, a bullet indent and
+  two-length bullet gaps; one card's own title size, spacing and width; a
+  sliding row's exact card width and side arrows' inset; link rows' word
+  width and rules between or below; a heading's subtitle gap on phones and a
+  section's heading width per screen; a text block's title gap; the team's
+  show-all gap and turned arrow; the gallery magnifier's offsets apart.
+- **Contact, forms and fields:** the info panel list's icon tile, glyph,
+  corners, label and value type, gaps and alignment; the form's title and
+  send-button gaps; every field's placeholder colour and spacing, and a text
+  box's corners, top padding and grip.
+- **Careers advert:** the eyebrow gap, heading inset, detail icons and gaps,
+  the cover picture placed and faded, dates side by side on phones, the
+  application card's top and bleed, field order and shadow, drop zone sizes,
+  the send button's arrow and gap, a spaced date suffix.
+- **Blog post (cover beside the article):** the panel's margin as a whole box
+  and on phones, the gap and the article's padding where they stack, the
+  cover card's text gap, lead and meta type, dot and padding, the tint on
+  phones; rich text shown on some screens only (`he-hide-<tier>` classes);
+  two more date formats.
+- **Post cards:** the gap between their words, the excerpt's lines and width,
+  a tint from stops, the screens where words wait for the pointer, the
+  picture's own box, heights in turn on phones.
+- **Saved blocks in other languages:** a synced saved block is translated
+  like a page (the translations API's `savedBlock` kind, and the block's
+  editor); a page draws the version in its own language.
+
+Fixed:
+
+- Post and project lists on a translated page listed the main language's
+  posts; translated posts now also count in their originals' categories.
+- A phone fade over a band with a phone picture was wiped.
+- A band's own eyebrow gap lost to the site-wide one.
+- A card's own height lost to the grid's card height.
+- A card's phone corner sizes were ignored.
+- The card number did not take Card labels' type.
+- Buttons stacked on phones in a centred band went to the left.
+- The open menu's top bar shrank on short screens; an untitled footer column
+  drew an empty heading; the cookie notice's button padding never applied;
+  the mobile logo was never drawn.
+- The cover-beside-article post: a three- or four-value panel margin was
+  dropped, and the article's first block kept a 48px top margin.
+
+---
+
 ## 3.36.0 — 2026-11-18
 
 **A held column that rises into the middle, a floor under headings, and line

@@ -1,0 +1,41 @@
+/* ══════════════════════════════════════════════════════════════════════════
+   3.37 — the info panel's rows and the form block's spacing. Every rule is
+   keyed to a class that exists only when its option is set
+   (lib/infoPanelLook.ts, lib/formSpacing.ts), so an untouched site is drawn
+   by none of it.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/* The info panel's rows: after the utilities, so an unset type value can fall back with `revert-layer`. */
+@layer he-details {
+  .he-info.has-tile .he-info__icon { background: var(--he-info-tile); }
+  .he-info.has-icon-color .he-info__icon { color: var(--he-info-icon); }
+  .he-info.has-glyph .he-info__icon svg { width: var(--he-info-glyph); height: var(--he-info-glyph); }
+  .he-info.has-stroke .he-info__icon svg { stroke-width: var(--he-info-stroke); }
+  .he-info.has-tile-shape .he-info__icon { border-radius: var(--he-info-radius); clip-path: var(--he-info-clip); }
+  .he-info.has-label-gap .he-info__value { margin-top: var(--he-info-lgap); }
+  .he-info.has-row-gap { gap: var(--he-info-gap); }
+  .he-info.is-row-center .he-info__row { align-items: center; }
+  .he-info.has-label-type .he-info__label { font-family: var(--he-info-l-font, revert-layer); font-size: var(--he-info-l-size, revert-layer); font-weight: var(--he-info-l-weight, revert-layer); line-height: var(--he-info-l-line, revert-layer); letter-spacing: var(--he-info-l-tracking, revert-layer); color: var(--he-info-l-color, revert-layer); }
+  .he-info.has-value-type .he-info__value { font-family: var(--he-info-v-font, revert-layer); font-size: var(--he-info-v-size, revert-layer); font-weight: var(--he-info-v-weight, revert-layer); line-height: var(--he-info-v-line, revert-layer); letter-spacing: var(--he-info-v-tracking, revert-layer); color: var(--he-info-v-color, revert-layer); }
+  @media (width <= 64rem) {
+    .he-info.has-label-type .he-info__label { line-height: var(--he-info-l-line-t, var(--he-info-l-line, revert-layer)); }
+    .he-info.has-value-type .he-info__value { line-height: var(--he-info-v-line-t, var(--he-info-v-line, revert-layer)); }
+  }
+  @media (width <= 48rem) {
+    .he-info.has-tile-shape-m .he-info__icon { border-radius: var(--he-info-radius-m); clip-path: var(--he-info-clip-m); }
+    .he-info.has-row-gap-m { gap: var(--he-info-gap-m); }
+    .he-info.has-label-type .he-info__label { font-size: var(--he-info-l-size-m, var(--he-info-l-size, revert-layer)); line-height: var(--he-info-l-line-m, var(--he-info-l-line-t, var(--he-info-l-line, revert-layer))); }
+    .he-info.has-value-type .he-info__value { font-size: var(--he-info-v-size-m, var(--he-info-v-size, revert-layer)); line-height: var(--he-info-v-line-m, var(--he-info-v-line-t, var(--he-info-v-line, revert-layer))); }
+  }
+}
+
+/* The form block: the space under its heading and above the send button. Unlayered, because the heading's own
+   space is a utility (`mb-9`) and the theme's phone spacing writes `.he-head+*` unlayered too. */
+.he-fb.has-title-gap .he-head { margin-bottom: 0; }
+.he-fb.has-title-gap .he-head + .he-fb__box { margin-top: var(--he-fb-tgap); }
+.he-fb.has-submit-gap .he-fb__actions { margin-top: var(--he-fb-sgap); }
+@media (width <= 48rem) {
+  .he-fb.has-title-gap-m .he-head { margin-bottom: 0; }
+  .he-fb.has-title-gap-m .he-head + .he-fb__box { margin-top: var(--he-fb-tgap-m); }
+  .he-fb.has-submit-gap-m .he-fb__actions { margin-top: var(--he-fb-sgap-m); }
+}

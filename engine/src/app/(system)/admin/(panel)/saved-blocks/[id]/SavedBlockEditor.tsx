@@ -7,6 +7,7 @@ import { BlockBuilder } from '@/components/admin/BlockBuilder';
 import { DuplicateButton } from '@/components/admin/DuplicateButton';
 import { PageHeader } from '@/components/admin/PageHeader';
 import { RevisionPanel } from '@/components/admin/RevisionPanel';
+import { TranslationsPanel } from '@/components/admin/TranslationsPanel';
 import { AdminButton, AdminLinkButton, Alert, Field, Input, Panel, Select, Spinner, Textarea } from '@/components/admin/ui';
 import { useToast } from '@/components/admin/useToast';
 import { api, fetcher } from '@/lib/admin/client';
@@ -173,6 +174,9 @@ export function SavedBlockEditor({ id }: { id: string }) {
               <p className="m-0 text-[13px] text-ash">Nothing uses it yet.</p>
             )}
           </Panel>
+
+          {/* 3.37 — its words in the site's other languages; a page in that language shows them. */}
+          <TranslationsPanel pageId={id} kind="savedBlock" />
 
           <RevisionPanel entityType="saved_block" entityId={id} onRestored={() => void mutate()} />
 

@@ -150,9 +150,20 @@ const POST: FieldDef[] = [
   { key: 'asidePanel', label: 'Section panel colour', kind: 'text', hint: 'a colour, or transparent' },
   { key: 'asidePanelMobile', label: 'Panel colour on phones', kind: 'text', hint: 'a colour, or transparent' },
   { key: 'asidePanelRadius', label: 'Panel corners', kind: 'text', hint: 'one to four' },
-  { key: 'asidePanelMargin', label: 'Panel side margins', kind: 'text', hint: 'e.g. 10px' },
+  { key: 'asidePanelMargin', label: 'Panel margins', kind: 'text', hint: 'one or two: the sides (e.g. 10px); three or four: every side (e.g. 10px 10px 0)' },
+  { key: 'asidePanelMarginMobile', label: 'Panel margins where the columns stack', kind: 'text', hint: '1024px and under; one to four, every side' },
   { key: 'asidePanelPadding', label: 'Panel padding', kind: 'text', hint: 'e.g. 80px 10px' },
   { key: 'asidePanelPaddingMobile', label: 'Panel padding on phones', kind: 'text' },
+  /* 3.37 */
+  { key: 'asideGapMobile', label: 'Cover card: space under it where they stack', kind: 'text', hint: '1024px and under' },
+  { key: 'asideCardPadding', label: 'Cover card: padding', kind: 'text', hint: 'one to four' },
+  { key: 'asideCardPaddingMobile', label: 'Cover card: padding where they stack', kind: 'text' },
+  { key: 'asideTintStopsMobile', label: 'Cover card: tint where they stack', kind: 'text', hint: 'top to bottom' },
+  { key: 'asideTextGap', label: 'Cover card: space between its words', kind: 'text', hint: 'one space between the title, the excerpt and the date line' },
+  { key: 'asideMetaGap', label: 'Cover card: space in the date line', kind: 'text' },
+  { key: 'asideMetaDot', label: 'Cover card: between the date and the reading time', kind: 'select', options: [['bullet', 'A bullet character'], ['dot', 'A round dot']] },
+  { key: 'asideBodyPadding', label: 'The article’s padding beside the card', kind: 'text', hint: 'one to four' },
+  { key: 'asideBodyPaddingMobile', label: 'The article’s padding where they stack', kind: 'text', hint: 'e.g. 0 12px' },
   { key: 'headingGap', label: 'Article: space under a heading', kind: 'text' },
   { key: 'sectionGap', label: 'Article: space above a heading', kind: 'text' },
   { key: 'sectionGapMobile', label: 'Article: above a heading on phones', kind: 'text' },
@@ -220,6 +231,15 @@ export function BlogDetailsPanel({ blog, set }: { blog: BlogSettings | undefined
         <div className="mt-4 border-t-2 border-hairline pt-3">
           <p className="m-0 mb-2 text-[13px] text-ash">Cover card beside the article: the title</p>
           <TypeStyleFields type={look?.post?.asideTitle} set={(key) => set(['blog', 'look', 'post', 'asideTitle', key])} />
+        </div>
+        {/* 3.37 */}
+        <div className="mt-4 border-t-2 border-hairline pt-3">
+          <p className="m-0 mb-2 text-[13px] text-ash">Cover card beside the article: the excerpt</p>
+          <TypeStyleFields type={look?.post?.asideLead} set={(key) => set(['blog', 'look', 'post', 'asideLead', key])} />
+        </div>
+        <div className="mt-4 border-t-2 border-hairline pt-3">
+          <p className="m-0 mb-2 text-[13px] text-ash">Cover card beside the article: the date and reading time</p>
+          <TypeStyleFields type={look?.post?.asideMeta} set={(key) => set(['blog', 'look', 'post', 'asideMeta', key])} />
         </div>
         <div className="mt-4 border-t-2 border-hairline pt-3">
           <p className="m-0 mb-2 text-[13px] text-ash">Related posts drawn as archive cards, pointed at</p>

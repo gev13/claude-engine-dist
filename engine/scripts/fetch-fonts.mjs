@@ -78,6 +78,8 @@ const FAMILIES = [
   // 3.29 — a soft serif for display type, with Cyrillic; Google's own sans, Armenian included.
   ['Alice', 'serif'],
   ['Google Sans', 'sans'],
+  // 3.37 — the variable Google Sans Flex, which sets a little wider than Google Sans.
+  ['Google Sans Flex', 'sans'],
 ];
 
 const ROOT = path.resolve(import.meta.dirname, '..');

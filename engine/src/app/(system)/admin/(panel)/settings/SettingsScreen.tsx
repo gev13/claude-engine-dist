@@ -56,6 +56,9 @@ const KNOWN: KnownField[] = [
       { value: 'yyyy-MM-dd', label: '2026-09-09' },
       { value: 'dd/MM/yyyy', label: '09/09/2026' },
       { value: 'MM/dd/yyyy', label: '09/09/2026 (US)' },
+      // 3.37
+      { value: 'd MMM yyyy', label: '9 Sept 2026' },
+      { value: 'MMM d, yyyy', label: 'Sep 9, 2026' },
     ],
   },
   { key: 'site.timeZone', label: 'Time zone', kind: 'text', hint: 'IANA name, e.g. Europe/London' },

@@ -100,6 +100,26 @@ export const DIVIDER_SHAPES = ['wave', 'curve', 'tilt', 'triangle', 'zigzag', 'a
 /** 3.0 — the glitch effects a block's heading can carry (library-glitch.css). */
 export const GLITCH_EFFECTS = ['noise', 'psycho', 'split'] as const;
 export const GRADIENT_ANGLES = ['0', '45', '90', '135', '180', '225', '270', '315'] as const;
+/* 3.37 — a picture's size and place as written lengths, and a gradient's own stops. */
+const BG_TOKEN = '(?:-?(?:\\d+|\\d*\\.\\d+)(?:px|%|rem|em|vw|vh|svh)|0)';
+/** One or two of auto, a length or a percentage: `1200px auto`, `150% auto`. */
+export const BG_SIZE = new RegExp(`^(?:auto|${BG_TOKEN})(?:\\s+(?:auto|${BG_TOKEN}))?$`);
+/** One or two of a side keyword, a length or a percentage, negatives allowed: `-240px 20px`, `left 40%`. */
+export const BG_POSITION = new RegExp(`^(?:left|right|center|top|bottom|${BG_TOKEN})(?:\\s+(?:left|right|center|top|bottom|${BG_TOKEN}))?$`);
+const STOP_COLOUR = '(?:#[0-9a-f]{3,8}|rgba?\\(\\s*[0-9.]+\\s*,\\s*[0-9.]+\\s*,\\s*[0-9.]+\\s*(?:,\\s*[0-9.]+\\s*)?\\)|transparent)';
+/** Two to six colours, each at a place: `#445566 25%, #8899aa 75%`. */
+export const GRADIENT_STOPS = new RegExp(`^${STOP_COLOUR}\\s+\\d{1,3}(?:\\.\\d{1,4})?%(?:\\s*,\\s*${STOP_COLOUR}\\s+\\d{1,3}(?:\\.\\d{1,4})?%){1,5}$`, 'i');
+const bgSize = z.string().trim().max(60).refine((v) => BG_SIZE.test(v), 'One or two of auto, a length or a percentage');
+const bgPosition = z.string().trim().max(60).refine((v) => BG_POSITION.test(v), 'One or two of a side, a length or a percentage');
+const gradientSchema = z.object({
+  from: color.optional(),
+  to: color.optional(),
+  via: color.optional(),
+  angle: z.enum(GRADIENT_ANGLES).optional(),
+  animate: z.boolean().optional(),
+  /** 3.37 — colours at places, over from/via/to: `#445566 25%, #8899aa 75%`. */
+  stops: z.string().trim().max(300).refine((v) => GRADIENT_STOPS.test(v), 'Colours and places, such as #445566 25%, #8899aa 75%').optional(),
+});
 
 /** P3-C3 — a shape drawn over the top or bottom edge, in the neighbouring section's colour. */
 const dividerShape = z.object({
@@ -168,6 +188,17 @@ const typeOverride = z.object({
   lineHeightMobile: z.string().trim().optional(),
   letterSpacingTablet: length.optional(),
   letterSpacingMobile: length.optional(),
+  /** 3.37 — the space between words, and on tablets and phones; unset keeps the font's. */
+  wordSpacing: length.optional(),
+  wordSpacingTablet: length.optional(),
+  wordSpacingMobile: length.optional(),
+  /** 3.37 — how lines break: plainly, avoiding a lone last word (the theme's for paragraphs), or balanced (its headings'); and on tablets and phones. */
+  wrap: z.enum(['wrap', 'pretty', 'balance']).optional(),
+  wrapTablet: z.enum(['wrap', 'pretty', 'balance']).optional(),
+  wrapMobile: z.enum(['wrap', 'pretty', 'balance']).optional(),
+  /** 3.37 — eyebrow only: the space under it on tablets and on phones; each unset keeps the wider screen's. */
+  spaceBelowTablet: length.optional(),
+  spaceBelowMobile: length.optional(),
 });
 
 export type TypeOverride = z.infer<typeof typeOverride>;
@@ -358,18 +389,20 @@ export const blockStyleSchema = z.object({
           imageUrl: z.string().max(500).optional(),
           size: z.enum(BACKGROUND_SIZES).optional(),
           position: z.enum(BACKGROUND_POSITIONS).optional(),
+          /** 3.37 — the picture's size and place on phones as written values, over `size`/`position`. */
+          sizeCustom: bgSize.optional(),
+          positionCustom: bgPosition.optional(),
+          /** 3.37 — a gradient of its own on phones, drawn as the wider screen's is. */
+          gradient: gradientSchema.optional(),
         })
         .optional(),
-      /** P3-C4 — a gradient, used when there is no image; it can drift slowly. Drawn once both ends are set. */
-      gradient: z
-        .object({
-          from: color.optional(),
-          to: color.optional(),
-          via: color.optional(),
-          angle: z.enum(GRADIENT_ANGLES).optional(),
-          animate: z.boolean().optional(),
-        })
-        .optional(),
+      /** P3-C4 — a gradient, used when there is no image; it can drift slowly. Drawn once both ends (or its stops) are set. */
+      gradient: gradientSchema.optional(),
+      /** 3.37 — the picture's size and place as written values (`1200px auto`, `-240px 20px`), over `size`/`position`. */
+      sizeCustom: bgSize.optional(),
+      positionCustom: bgPosition.optional(),
+      /** 3.37 — with a picture, the gradient drawn as well: under it or over it. Unset, a gradient shows only without a picture. */
+      gradientLayer: z.enum(['under', 'over']).optional(),
     })
     .optional(),
 
@@ -432,6 +465,9 @@ export const blockStyleSchema = z.object({
 
   /** 3.8 — how far this section's heading runs before it wraps; the site's (Appearance) when unset. */
   titleWidth: length.optional(),
+  /** 3.37 — that width on tablets and on phones; each unset keeps the wider screen's. */
+  titleWidthTablet: length.optional(),
+  titleWidthMobile: length.optional(),
   /** 3.12 — the section no wider than this, centred: a document card on a wide page. */
   maxWidth: length.optional(),
   /** 3.33 — where a section narrower than its place sits (unset, centred), and its width on phones. */
@@ -493,6 +529,10 @@ export const blockStyleSchema = z.object({
   /** 3.28 — each card's share on tablets and on phones, over the one above. */
   swipeWidthTablet: z.number().int().min(20).max(100).optional(),
   swipeWidthMobile: z.number().int().min(20).max(100).optional(),
+  /** 3.37 — each card's width as a length (e.g. 400px), over the share; and on tablets and phones. */
+  swipeCardWidth: length.optional(),
+  swipeCardWidthTablet: length.optional(),
+  swipeCardWidthMobile: length.optional(),
   /** 3.22 — ‹ › buttons for the swipe: none (unset, as before), under the cards on the right, or either side of them. Hidden when the cards fit. */
   swipeArrows: z.enum(['none', 'belowRight', 'sides']).optional(),
   /** 3.33 — `none`: phones swipe without the buttons, wider screens keep them. */
@@ -500,6 +540,10 @@ export const blockStyleSchema = z.object({
   /** 3.28 — those buttons in circles (unset, as before) or as bare chevrons, and their box in px. */
   swipeArrowLook: z.enum(['circle', 'plain']).optional(),
   swipeArrowBox: z.number().int().min(20).max(80).optional(),
+  /** 3.37 — the side buttons' distance in from the row's ends (unset 6px); and on tablets and phones. */
+  swipeArrowInset: length.optional(),
+  swipeArrowInsetTablet: length.optional(),
+  swipeArrowInsetMobile: length.optional(),
   /** 3.29 — an arrow out of sight at its end (unset, dimmed, as before); the arrows filled in the main button's colours. */
   swipeArrowEnds: z.enum(['dim', 'hide']).optional(),
   swipeArrowFill: z.enum(['surface', 'primary']).optional(),
@@ -529,6 +573,13 @@ export const blockStyleSchema = z.object({
    * follows the theme's; set it to the resting colour for no change.
    */
   buttonColors: z
+    .object({
+      primary: sectionButtonColors.optional(),
+      outline: sectionButtonColors.optional(),
+    })
+    .optional(),
+  /** 3.37 — the same on phones (≤768px); each colour unset keeps the one above. */
+  buttonColorsMobile: z
     .object({
       primary: sectionButtonColors.optional(),
       outline: sectionButtonColors.optional(),

@@ -443,13 +443,33 @@ export function TeamSplit({ members, hover }: { members: Member[]; hover: string
  * hidden by `is-later`; the button marks its section `is-all` and steps
  * away, and the keyboard lands on the first of them.
  */
-export function ShowAll({ label, look, arrow, tier }: { label?: string; /** 3.33 — the button's look, an arrow on it, and the screens that have anything to show. */ look?: 'outline' | 'primary'; arrow?: boolean; tier?: 'phones' | 'wide' }) {
+export function ShowAll({
+  label,
+  look,
+  arrow,
+  arrowMobile,
+  gap,
+  gapMobile,
+  tier,
+}: {
+  label?: string;
+  /** 3.33 — the button's look, an arrow on it, and the screens that have anything to show. */
+  look?: 'outline' | 'primary';
+  /** 3.37 — the arrow turned up and right, on or off on phones, and the button's distance below the members (checked by the caller). */
+  arrow?: boolean | 'upRight';
+  arrowMobile?: boolean;
+  gap?: string;
+  gapMobile?: string;
+  tier?: 'phones' | 'wide';
+}) {
   const t = useMessages();
   const ref = useRef<HTMLDivElement>(null);
   const [done, setDone] = useState(false);
   if (done) return null;
+  const drawn = Boolean(arrow) || arrowMobile === true;
+  const style = gap || gapMobile ? ({ ...(gap ? { '--he-show-gap': gap } : {}), ...(gapMobile ? { '--he-show-gap-m': gapMobile } : {}) } as React.CSSProperties) : undefined;
   return (
-    <div className={cn('he-show__more', tier && `is-only-${tier}`)} ref={ref}>
+    <div className={cn('he-show__more', tier && `is-only-${tier}`, gap && 'has-gap', gapMobile && 'has-gap-m')} ref={ref} style={style}>
       <button
         type="button"
         className={cn('he-cbtn is-medium', look === 'primary' ? 'is-primary' : 'is-outline')}
@@ -465,7 +485,7 @@ export function ShowAll({ label, look, arrow, tier }: { label?: string; /** 3.33
         }}
       >
         {label || t('block.showAll')}
-        {arrow && <Icon.ArrowRight size={16} />}
+        {drawn && <Icon.ArrowRight size={16} className={cn(arrow === 'upRight' && 'he-show__up', !arrow && 'he-show__arrow-m', arrowMobile === false && 'he-show__arrow-d')} />}
       </button>
     </div>
   );

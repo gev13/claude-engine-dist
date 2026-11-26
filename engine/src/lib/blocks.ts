@@ -1,5 +1,7 @@
 import { z } from 'zod';
 import { INFO_ICONS } from './infoIcons';
+import { infoPanelListFields } from './infoPanelLook';
+import { formSpacingFields } from './formSpacing';
 import { cardHoverSchema } from './cardHover';
 import { postCardExtras } from './blog';
 
@@ -28,6 +30,7 @@ import { formAfterSchema, formAutoresponderSchema, formFieldSchema, formHiddenSc
 import { LOTTIE_PATH, LOTTIE_PLAY } from './lottie';
 import { projectCardSchema } from './projectCard';
 import { cardMotionFields } from './cardMotion';
+import { pictureZoomFields } from './pictureZoom';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Block vocabulary
@@ -349,6 +352,9 @@ export const blockSchemas = {
     /** 3.33 — the paragraphs' own width, and on phones; over the measure above. */
     textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     textWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.37 — the space between the title and the text under it, and on phones; unset is the block's own (the theme's heading floor still applies). */
+    titleGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    titleGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
   }),
 
   /** Heading on the left, a stack of labelled points on the right. */
@@ -449,7 +455,14 @@ export const blockSchemas = {
     rowTracks: z.array(z.string().trim().max(60).regex(/^\d{1,5}(?:\.\d{1,3})?fr(?:\s+\d{1,5}(?:\.\d{1,3})?fr){0,3}$/, 'Fractions separated by spaces, e.g. 668fr 508fr')).max(12).optional(),
     /** 3.33 — pictures with text over them: the bullet lists under the words, in one or two columns, and the space between entries. */
     pointsColumns: z.union([z.literal(1), z.literal(2)]).optional(),
-    pointsGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.37 — one length, or two: between rows, then between the columns. */
+    pointsGap: z.string().trim().max(60).refine((v) => { const parts = v.split(/\s+/); return parts.length <= 2 && parts.every((part) => isLength(part)); }, 'One or two lengths, e.g. 9px 16px').optional(),
+    /** 3.37 — pictures with text over them: the space under the card's number and label (and on phones), how far in the number, label and title sit from the words' edge (and on phones), and the bullet text's indent. */
+    labelGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    labelGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    headInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    headInsetMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    pointsInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.34 — the lift tuned (`hover: 'lift'`), and a row of pictures with text over them that widen; see `lib/cardMotion.ts`. */
     ...cardMotionFields,
     cards: z.array(
@@ -468,6 +481,8 @@ export const blockSchemas = {
         heightMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         textWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.37 — the card's picture zoomed and placed (pictures with text over them, image cards, tiles); see `lib/pictureZoom.ts`. */
+        ...pictureZoomFields,
         span: z.number().int().min(1).max(12).optional(),
         rowSpan: z.number().int().min(1).max(3).optional(),
         eyebrow: z.string().optional(),
@@ -608,6 +623,9 @@ export const blockSchemas = {
     /** 3.33 — with `touch`: which corner, how far in from it, and its size in px. */
     zoomCorner: z.enum(['topRight', 'topLeft', 'bottomRight', 'bottomLeft']).optional(),
     zoomOffset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.37 — that distance from the side and from the top or bottom apart, each over the one above. */
+    zoomOffsetX: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    zoomOffsetY: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     zoomSize: z.number().int().min(24).max(96).optional(),
     /** 3.29 — the pictures' corners as the site's cards are (Appearance → Shape), instead of the radius above. */
     cardCorners: z.boolean().optional(),
@@ -770,6 +788,9 @@ export const blockSchemas = {
     /** 3.33.1 — the link's colour; unset is the accent. */
     linkColor: z.string().trim().refine(isColor, 'Not a colour').optional(),
     rowPadding: boxLengths.optional(),
+    /** 3.37 — link rows: the entry's words this wide at most; the rules between rows only (no line above the first), or under every row. */
+    textWidth: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    rules: z.enum(['between', 'below']).optional(),
     /** 2.22 — the marker on a tinted circle. */
     markerStyle: z.enum(['plain', 'circle']).optional(),
     /** 2.22 — hairline rules between rows instead of the 2px ones. */
@@ -963,6 +984,8 @@ export const blockSchemas = {
         href: safeHref.optional(),
       }),
     ),
+    /** 3.37 — the list's icon, words and spacing (lib/infoPanelLook.ts). */
+    ...infoPanelListFields,
   }),
 
   /** Editorial image with caption. */
@@ -1257,6 +1280,8 @@ export const blockSchemas = {
     positionMobile: z.enum(['bottomLeft', 'bottomCenter', 'center', 'top']).optional(),
     /** 3.33 — the picture's anchor on phones. */
     imagePositionMobile: z.enum(['center', 'top', 'bottom', 'left', 'right']).optional(),
+    /** 3.37 — the picture zoomed and placed, per screen; see `lib/pictureZoom.ts`. */
+    ...pictureZoomFields,
     /** 3.33 — a colour fading down from the top on phones, and how far it reaches. */
     fadeMobile: z.object({ color: z.string().trim().refine(isColor, 'Not a valid colour'), height: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional() }).optional(),
     /** 3.33 — every line of the title after the first set in by this much; the title's typed line breaks dropped on phones. */
@@ -1298,6 +1323,12 @@ export const blockSchemas = {
         width: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         widthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
         eyebrowGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.37 — on phones: the words' inset from the band's edge, the paragraph's width and the space above the buttons; each unset keeps the wider screen's (the inset: none). */
+        insetMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        bodyWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        actionsGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+        /** 3.37 — a blank line in the text starts a new paragraph, this far below the last. */
+        paragraphGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
       })
       .optional(),
     fade: z
@@ -1566,6 +1597,8 @@ export const blockSchemas = {
     subtitleWidthMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.33 — the space above the subtitle; unset is the block's own. */
     subtitleGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    /** 3.37 — that space on phones; unset keeps the one above. */
+    subtitleGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** `lede` is large body text, the old statement block's size; (3.22) `theme` is the tag's own size from Appearance → Typography. */
     size: z.enum(['medium', 'large', 'display', 'lede', 'theme']).default('large'),
     /** `split` puts the subtitle beside the heading, as the old statement block did. */
@@ -1745,7 +1778,12 @@ export const blockSchemas = {
     /** 3.33 — how many on phones; the button's look and an arrow on it. */
     initialMobile: z.number().int().min(1).max(48).optional(),
     moreStyle: z.enum(['outline', 'primary']).optional(),
-    moreArrow: z.boolean().optional(),
+    /** 3.37 — `upRight` turns the arrow up and to the right; `moreArrowMobile` puts it on, or takes it off, on phones. */
+    moreArrow: z.union([z.boolean(), z.literal('upRight')]).optional(),
+    moreArrowMobile: z.boolean().optional(),
+    /** 3.37 — the button's distance below the members (unset 36px), and on phones. */
+    moreGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
+    moreGapMobile: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     /** 3.33 — portrait cards: the card's padding, the space above the photo (each with a phone value), the photo's fit and anchor, the card's shape. */
     cardPadding: boxLengths.optional(),
     cardPaddingMobile: boxLengths.optional(),
@@ -2143,6 +2181,8 @@ export const blockSchemas = {
     /** 3.33 — the space between the questions; the send button as wide as its words on phones. */
     fieldGap: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     submitWidthMobile: z.enum(['own']).optional(),
+    /** 3.37 — the space under the heading and above the send button, and on phones (lib/formSpacing.ts). */
+    ...formSpacingFields,
     /** 3.28 — the card wider than the column by this much each side (into the gutter), the fields past the card's padding by this much, the card edge to edge on phones, and the outline send button's edge. */
     cardBleed: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),
     fieldInset: z.string().trim().max(40).refine(isLength, 'Not a valid CSS length').optional(),

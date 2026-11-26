@@ -4,12 +4,15 @@ import { useState } from 'react';
 import { Field, Input, Select } from '@/components/admin/ui';
 import { MediaPicker } from '@/components/admin/MediaPicker';
 import { CornerShapeFields } from '@/components/admin/CornerShapeFields';
-import { ChoiceField, ColorField, LengthField } from '@/components/admin/styleFields';
+import { ChoiceField, ColorField, LengthField, PatternField } from '@/components/admin/styleFields';
 import {
   BACKGROUND_POSITIONS,
   BACKGROUND_SIZES,
   BOX_SIDES,
+  BG_POSITION,
+  BG_SIZE,
   GRADIENT_ANGLES,
+  GRADIENT_STOPS,
   REVEAL_DELAYS,
   SECTION_WIDTHS,
   SECTION_WIDTH_LABELS,
@@ -64,6 +67,12 @@ const SPACING_TABS = [
 
 /* Sixty faces: grouped, or the picker stops being a menu. */
 const FONT_OPTIONS = FONT_GROUPS;
+/** 3.37 — how a role's lines break. */
+const WRAP_OPTIONS = [
+  { value: 'wrap', label: 'Plainly, as the words fall' },
+  { value: 'pretty', label: 'Avoiding a lone last word' },
+  { value: 'balance', label: 'Balanced across the lines' },
+];
 const ALIGN_OPTIONS = (['left', 'center', 'right'] as const).map((value) => ({ value, label: value }));
 const WEIGHT_OPTIONS = (['300', '400', '500', '600', '700', '800', '900'] as const).map((value) => ({
   value,
@@ -212,6 +221,9 @@ export function BlockDesignPanel({
           </Field>
 
           <LengthField label="Heading width" hint="how far this section’s heading runs before it wraps" value={current.titleWidth} emptyLabel="the site’s" onChange={set(['titleWidth'])} />
+          {/* 3.37 */}
+          <LengthField label="Heading width on tablets" hint="≤1024px" value={current.titleWidthTablet} emptyLabel="as above" onChange={set(['titleWidthTablet'])} />
+          <LengthField label="Heading width on phones" hint="≤768px" value={current.titleWidthMobile} emptyLabel="as above" onChange={set(['titleWidthMobile'])} />
           <LengthField label="Most width" hint="the section no wider than this, centred — a document card" value={current.maxWidth} emptyLabel="full" onChange={set(['maxWidth'])} />
           {/* 3.33 */}
           {current.maxWidth && (
@@ -423,6 +435,11 @@ export function BlockDesignPanel({
             />
             Parallax — the picture stays put as the section scrolls
           </label>
+          {/* 3.37 — the picture's size and place as written values. */}
+          <PatternField label="Image size, written" hint="over the choice above, e.g. 1200px auto or 140% auto" placeholder="as chosen" value={current.background?.sizeCustom} pattern={BG_SIZE} error="One or two of auto, a length or a percentage." onChange={set(['background', 'sizeCustom'])} />
+          <PatternField label="Image place, written" hint="from the left and the top, e.g. -240px 20px or 50% 20%" placeholder="as chosen" value={current.background?.positionCustom} pattern={BG_POSITION} error="One or two of a side, a length or a percentage." onChange={set(['background', 'positionCustom'])} />
+          <PatternField label="Size on phones, written" hint="≤768px" placeholder="as above" value={current.background?.mobile?.sizeCustom} pattern={BG_SIZE} error="One or two of auto, a length or a percentage." onChange={set(['background', 'mobile', 'sizeCustom'])} />
+          <PatternField label="Place on phones, written" hint="≤768px" placeholder="as above" value={current.background?.mobile?.positionCustom} pattern={BG_POSITION} error="One or two of a side, a length or a percentage." onChange={set(['background', 'mobile', 'positionCustom'])} />
         </div>
 
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
@@ -444,9 +461,21 @@ export function BlockDesignPanel({
             />
             Let it drift slowly
           </label>
+          {/* 3.37 */}
+          <PatternField label="Gradient stops, written" hint="colours at places, over the three above" placeholder="e.g. #445566 25%, #8899aa 75%" value={current.background?.gradient?.stops} pattern={GRADIENT_STOPS} error="Colours each followed by a place, such as #445566 25%, #8899aa 75%." onChange={set(['background', 'gradient', 'stops'])} />
+          <ChoiceField
+            label="With a picture"
+            value={current.background?.gradientLayer}
+            options={[
+              { value: 'under', label: 'Gradient under it' },
+              { value: 'over', label: 'Gradient over it' },
+            ]}
+            onChange={set(['background', 'gradientLayer'])}
+          />
+          <PatternField label="Gradient stops on phones" hint="≤768px; the direction above" placeholder="as above" value={current.background?.mobile?.gradient?.stops} pattern={GRADIENT_STOPS} error="Colours each followed by a place, such as #445566 25%, #8899aa 75%." onChange={set(['background', 'mobile', 'gradient', 'stops'])} />
         </div>
         <p className="m-0 mt-1 text-[12px] text-smoke">
-          A gradient is drawn once it has both ends, and only when there is no image. A background chosen here replaces the block’s own.
+          A gradient is drawn once it has both ends (or its stops), and only when there is no image unless it is laid under or over the picture. A background chosen here replaces the block’s own.
         </p>
 
         <Field label="Image" className="mt-4">
@@ -717,6 +746,21 @@ export function BlockDesignPanel({
                 </label>
               )}
               {role === 'eyebrow' && <LengthField label="Space under it" value={get(['typography', 'eyebrow', 'spaceBelow'])} placeholder="as drawn" onChange={set(['typography', 'eyebrow', 'spaceBelow'])} />}
+              {/* 3.37 */}
+              {role === 'eyebrow' && <LengthField label="Space under it on tablets" hint="≤1024px" value={get(['typography', 'eyebrow', 'spaceBelowTablet'])} placeholder="as above" onChange={set(['typography', 'eyebrow', 'spaceBelowTablet'])} />}
+              {role === 'eyebrow' && <LengthField label="Space under it on phones" hint="≤768px" value={get(['typography', 'eyebrow', 'spaceBelowMobile'])} placeholder="as above" onChange={set(['typography', 'eyebrow', 'spaceBelowMobile'])} />}
+              <LengthField label="Word spacing" value={get(['typography', role, 'wordSpacing'])} placeholder="the font’s" onChange={set(['typography', role, 'wordSpacing'])} />
+              <LengthField label="Word spacing on tablets" hint="≤1024px" value={get(['typography', role, 'wordSpacingTablet'])} placeholder="as above" onChange={set(['typography', role, 'wordSpacingTablet'])} />
+              <LengthField label="Word spacing on phones" hint="≤768px" value={get(['typography', role, 'wordSpacingMobile'])} placeholder="as above" onChange={set(['typography', role, 'wordSpacingMobile'])} />
+              {(['wrap', 'wrapTablet', 'wrapMobile'] as const).map((key) => (
+                <ChoiceField
+                  key={key}
+                  label={key === 'wrap' ? 'Line breaks' : key === 'wrapTablet' ? 'Line breaks on tablets' : 'Line breaks on phones'}
+                  value={get(['typography', role, key]) as never}
+                  options={WRAP_OPTIONS}
+                  onChange={set(['typography', role, key])}
+                />
+              ))}
             </div>
           </div>
         ))}
@@ -875,6 +919,10 @@ export function BlockDesignPanel({
                 />
               </Field>
             ))}
+            {/* 3.37 — a width as a length, over the share. */}
+            <LengthField label="Card width, exactly" hint="e.g. 400px, over the share" value={current.swipeCardWidth} placeholder="the share" onChange={set(['swipeCardWidth'])} />
+            <LengthField label="— on tablets" value={current.swipeCardWidthTablet} placeholder="as above" onChange={set(['swipeCardWidthTablet'])} />
+            <LengthField label="— on phones" value={current.swipeCardWidthMobile} placeholder="as above" onChange={set(['swipeCardWidthMobile'])} />
             <Field label="Arrows" hint="shown only while the cards scroll">
               <Select value={current.swipeArrows ?? ''} onChange={(e) => set(['swipeArrows'])(e.target.value || undefined)}>
                 <option value="">None</option>
@@ -895,6 +943,14 @@ export function BlockDesignPanel({
                     <option value="plain">Bare chevrons</option>
                   </Select>
                 </Field>
+                {current.swipeArrows === 'sides' && (
+                  <>
+                    {/* 3.37 */}
+                    <LengthField label="Arrows in from the ends" value={current.swipeArrowInset} placeholder="6px" onChange={set(['swipeArrowInset'])} />
+                    <LengthField label="— on tablets" value={current.swipeArrowInsetTablet} placeholder="as above" onChange={set(['swipeArrowInsetTablet'])} />
+                    <LengthField label="— on phones" value={current.swipeArrowInsetMobile} placeholder="as above" onChange={set(['swipeArrowInsetMobile'])} />
+                  </>
+                )}
                 <Field label="Arrow box" hint="px — empty is 44">
                   <Input type="number" min={20} max={80} value={current.swipeArrowBox ?? ''} onChange={(e) => set(['swipeArrowBox'])(e.target.value === '' ? undefined : Math.round(Math.min(80, Math.max(20, Number(e.target.value)))))} />
                 </Field>
@@ -1039,6 +1095,27 @@ export function BlockDesignPanel({
                     value={current.buttonColors?.[variant]?.[key] ?? ''}
                     placeholder="the theme’s"
                     onChange={(e) => set(['buttonColors', variant, key])(e.target.value.trim() || undefined)}
+                  />
+                </Field>
+              )),
+            )}
+          </div>
+          {/* 3.37 — the same on phones. */}
+          <p className="m-0 mt-4 text-[12px] text-smoke">On phones (≤768px) — each empty keeps the colour above</p>
+          <div className="mt-2 grid gap-3 sm:grid-cols-3">
+            {(['primary', 'outline'] as const).flatMap((variant) =>
+              (
+                [
+                  ['background', 'fill'],
+                  ['text', 'text'],
+                  ['border', 'edge'],
+                ] as const
+              ).map(([key, label]) => (
+                <Field key={`m-${variant}-${key}`} label={`${variant === 'primary' ? 'Main' : 'Outline'}: ${label} on phones`}>
+                  <Input
+                    value={current.buttonColorsMobile?.[variant]?.[key] ?? ''}
+                    placeholder="as above"
+                    onChange={(e) => set(['buttonColorsMobile', variant, key])(e.target.value.trim() || undefined)}
                   />
                 </Field>
               )),

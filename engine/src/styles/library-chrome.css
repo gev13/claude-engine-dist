@@ -518,3 +518,42 @@
     .he-ftr__wm.is-name .he-ftr__wmbox { width: var(--he-wm-w-m, 92%); }
   }
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   3.37 — the close X in lines, the language row after the links, a social
+   link's own mark, a footer link's colour and its place on phones. Each is
+   keyed to a class or a property that only its option writes.
+   ══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* The phone logo's <source> takes no place (or the logo's gap) in the logo's flex row. */
+  .he-hdr__logo source { display: none; }
+
+  /* Two lines crossed in a square; their length, thickness and colour from the theme (chromeCss). */
+  .he-menu__x { position: relative; display: block; width: calc(var(--he-x-s, 16px) * 0.7071); height: calc(var(--he-x-s, 16px) * 0.7071); }
+  .he-menu__x i { position: absolute; top: 50%; left: 50%; width: var(--he-x-s, 16px); height: var(--he-x-t, 2px); margin: calc(var(--he-x-t, 2px) / -2) 0 0 calc(var(--he-x-s, 16px) / -2); background: var(--he-x-c, currentColor); rotate: 45deg; }
+  .he-menu__x i + i { rotate: -45deg; }
+
+  /* The language row straight after the links: the free space goes under it, so buttons set at the foot stay there. */
+  .he-menu.is-langs-after .he-menu__body { flex: 0 0 auto; }
+  .he-menu.is-langs-after > .he-menu__langs { margin-bottom: auto; }
+
+  /* A social link's own mark: its SVG as a mask in the link's colour, at the file's own size, centred in the icon's box. */
+  .he-soc-own {
+    display: block;
+    align-self: stretch;
+    justify-self: stretch;
+    min-width: 1em;
+    min-height: 1em;
+    background-color: currentColor;
+    mask-image: var(--he-soc-mask);
+    mask-position: center;
+    mask-size: auto;
+    mask-repeat: no-repeat;
+  }
+
+  /* A footer link's own colour (pointed at, it takes the footer's), and its place in its column on phones. */
+  .he-ftr a[style*='--he-ftr-link-c']:not(:hover) { color: var(--he-ftr-link-c); }
+  @media (width <= 768px) {
+    .he-ftr__links > li[style*='--he-ftr-order-m'] { order: var(--he-ftr-order-m); }
+  }
+}

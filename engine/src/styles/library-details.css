@@ -15,13 +15,15 @@
   .he-hd__sub.has-gap { margin-top: var(--he-hd-sub-gap); }
   @media (width <= 48rem) {
     .he-hd__sub.has-w-m { max-width: var(--he-hd-sub-w-m); }
+    .he-hd__sub.has-gap-m { margin-top: var(--he-hd-sub-gap-m); }
   }
 
   /* Pictures with text over them. */
   .he-fgrid.is-overlay.has-text-pad .he-ocard__text { padding: var(--he-ocard-pad); }
-  .he-ocard.has-own-h { min-height: var(--he-ocard-own-h); }
+  /* 3.37 — a card's own height wins over the grid's (`cardHeight`), on every screen. */
+  .he-fgrid.is-overlay .he-ocard.he-ocard.has-own-h { min-height: var(--he-ocard-own-h); }
   .he-ocard.has-tw .he-ocard__text { width: min(100%, var(--he-ocard-tw)); max-width: 100%; }
-  .he-ocard__points { display: grid; grid-template-columns: repeat(var(--he-ocard-pcols, 1), minmax(0, 1fr)); gap: var(--he-ocard-pgap, 6px 16px); margin: 12px 0 0; padding: 0 0 0 1.1em; list-style: disc; font-size: 15px; }
+  .he-ocard__points { display: grid; grid-template-columns: repeat(var(--he-ocard-pcols, 1), minmax(0, 1fr)); gap: var(--he-ocard-pgap, 6px 16px); margin: 12px 0 0; padding: 0 0 0 var(--he-ocard-pin, 1.1em); list-style: disc; font-size: 15px; }
   .he-ocard__bg:is(.is-at-m-center, .is-at-m-top, .is-at-m-bottom, .is-at-m-left, .is-at-m-right, .is-at-m-top-left, .is-at-m-top-right, .is-at-m-bottom-left, .is-at-m-bottom-right) { object-fit: cover; }
   @media (width > 48rem) {
     .he-fgrid.has-row-tracks { display: flex; flex-wrap: wrap; }
@@ -32,7 +34,7 @@
   }
   @media (width <= 48rem) {
     .he-fgrid.is-overlay.has-text-pad-m .he-ocard__text { padding: var(--he-ocard-pad-m); }
-    .he-ocard.has-own-h-m { min-height: var(--he-ocard-own-h-m); }
+    .he-fgrid.is-overlay .he-ocard.he-ocard.has-own-h-m { min-height: var(--he-ocard-own-h-m); }
     .he-ocard.has-tw-m .he-ocard__text { width: min(100%, var(--he-ocard-tw-m)); }
     .he-ocard__bg.is-at-m-center { object-position: center; }
     .he-ocard__bg.is-at-m-top { object-position: center top; }
@@ -54,10 +56,10 @@
   /* Gallery: a magnifier for touch screens only, at a corner, always shown. */
   .he-gal__zoom.is-touch { display: none; top: auto; right: auto; bottom: auto; left: auto; width: var(--he-gal-zoom, 60px); height: var(--he-gal-zoom, 60px); opacity: 1; transform: none; transition: none; }
   .he-gal__media.is-zoomable:is(:hover, :focus-visible) .he-gal__zoom.is-touch { transform: none; }
-  .he-gal__zoom.is-touch.is-topLeft { top: var(--he-gal-zoom-at, 12px); left: var(--he-gal-zoom-at, 12px); }
-  .he-gal__zoom.is-touch.is-topRight { top: var(--he-gal-zoom-at, 12px); right: var(--he-gal-zoom-at, 12px); }
-  .he-gal__zoom.is-touch.is-bottomLeft { bottom: var(--he-gal-zoom-at, 12px); left: var(--he-gal-zoom-at, 12px); }
-  .he-gal__zoom.is-touch.is-bottomRight { bottom: var(--he-gal-zoom-at, 12px); right: var(--he-gal-zoom-at, 12px); }
+  .he-gal__zoom.is-touch.is-topLeft { top: var(--he-gal-zoom-y, var(--he-gal-zoom-at, 12px)); left: var(--he-gal-zoom-x, var(--he-gal-zoom-at, 12px)); }
+  .he-gal__zoom.is-touch.is-topRight { top: var(--he-gal-zoom-y, var(--he-gal-zoom-at, 12px)); right: var(--he-gal-zoom-x, var(--he-gal-zoom-at, 12px)); }
+  .he-gal__zoom.is-touch.is-bottomLeft { bottom: var(--he-gal-zoom-y, var(--he-gal-zoom-at, 12px)); left: var(--he-gal-zoom-x, var(--he-gal-zoom-at, 12px)); }
+  .he-gal__zoom.is-touch.is-bottomRight { bottom: var(--he-gal-zoom-y, var(--he-gal-zoom-at, 12px)); right: var(--he-gal-zoom-x, var(--he-gal-zoom-at, 12px)); }
   @media (hover: none) {
     .he-gal__zoom.is-touch { display: grid; }
   }
@@ -103,7 +105,7 @@
 @layer he-details {
   .he-plst.has-title-type .he-plst__title { font-family: var(--he-plst-t-font, revert-layer); font-size: var(--he-plst-t-size, revert-layer); font-weight: var(--he-plst-t-weight, revert-layer); line-height: var(--he-plst-t-line, revert-layer); letter-spacing: var(--he-plst-t-tracking, revert-layer); color: var(--he-plst-t-color, revert-layer); }
   .he-plst.has-chip-type .he-plst__chip { font-family: var(--he-plst-c-font, revert-layer); font-size: var(--he-plst-c-size, revert-layer); font-weight: var(--he-plst-c-weight, revert-layer); line-height: var(--he-plst-c-line, revert-layer); letter-spacing: var(--he-plst-c-tracking, revert-layer); color: var(--he-plst-c-color, revert-layer); }
-  .he-plst.has-excerpt-type .he-plst__excerpt { font-family: var(--he-plst-e-font, revert-layer); font-size: var(--he-plst-e-size, revert-layer); font-weight: var(--he-plst-e-weight, revert-layer); line-height: var(--he-plst-e-line, revert-layer); letter-spacing: var(--he-plst-e-tracking, revert-layer); color: var(--he-plst-e-color, revert-layer); }
+  .he-plst.has-excerpt-type .he-plst__excerpt { font-family: var(--he-plst-e-font, revert-layer); font-size: var(--he-plst-e-size, var(--he-block-card, revert-layer)); font-weight: var(--he-plst-e-weight, revert-layer); line-height: var(--he-plst-e-line, revert-layer); letter-spacing: var(--he-plst-e-tracking, revert-layer); color: var(--he-plst-e-color, revert-layer); }
   /* A line height per tier (3.36): unset falls back to the wider tier's, so these resolve to the rule above. */
   @media (width <= 64rem) {
     .he-plst.has-title-type .he-plst__title { line-height: var(--he-plst-t-line-t, var(--he-plst-t-line, revert-layer)); }
@@ -118,7 +120,7 @@
   @media (width <= 48rem) {
     .he-plst.has-title-type .he-plst__title { font-size: var(--he-plst-t-size-m, var(--he-plst-t-size, revert-layer)); }
     .he-plst.has-chip-type .he-plst__chip { font-size: var(--he-plst-c-size-m, var(--he-plst-c-size, revert-layer)); }
-    .he-plst.has-excerpt-type .he-plst__excerpt { font-size: var(--he-plst-e-size-m, var(--he-plst-e-size, revert-layer)); }
+    .he-plst.has-excerpt-type .he-plst__excerpt { font-size: var(--he-plst-e-size-m, var(--he-plst-e-size, var(--he-block-card, revert-layer))); }
   }
   .he-plst.is-overlay.has-pad .he-plst__link { padding: var(--he-plst-pad); }
   @media (width <= 48rem) {
@@ -127,6 +129,35 @@
   }
   @media (hover: hover) and (pointer: fine) {
     .he-plst.has-arrow-pointer .he-plst__link { cursor: var(--he-plst-cursor); }
+  }
+  /* 3.37 — the space between the words' parts (and on phones), the excerpt's lines and width. */
+  .he-plst.has-tg .he-plst__text { gap: var(--he-plst-tg); }
+  .he-plst.has-excerpt-lines .he-plst__excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: var(--he-plst-el); line-clamp: var(--he-plst-el); overflow: hidden; }
+  .he-plst.has-excerpt-w .he-plst__excerpt { max-width: var(--he-plst-ew); }
+  /* 3.37 — the overlay as stops from the top over the whole card; the picture in a box of its own, anchored top left. */
+  .he-plst.is-overlay.has-stops .he-plst__link::after { background: linear-gradient(to bottom, var(--he-plst-stops)); }
+  .he-plst.is-overlay.has-ibox .he-plst__media { inset: 0 auto auto 0; width: var(--he-plst-iw, 100%); height: var(--he-plst-ih, 100%); }
+  @media (width <= 48rem) {
+    .he-plst.has-tg-m .he-plst__text { gap: var(--he-plst-tg-m); }
+    .he-plst.is-overlay.has-ibox-m .he-plst__media { inset: 0 auto auto 0; width: var(--he-plst-iw-m, var(--he-plst-iw, 100%)); height: var(--he-plst-ih-m, var(--he-plst-ih, 100%)); }
+    .he-plst.is-overlay.has-hs-m .he-plst__item .he-plst__link { min-height: var(--he-plst-hi); }
+  }
+  /* 3.37 — the tiers where the revealed words show at rest, whatever the pointer. */
+  @media (hover: hover) and (width > 90rem) {
+    .he-plst.is-reveal.is-shown-base .he-plst__link::after, .he-plst.is-reveal.is-shown-base .he-plst__go { opacity: 1; }
+    .he-plst.is-reveal.is-shown-base .he-plst__text { opacity: 1; transform: none; }
+  }
+  @media (hover: hover) and (64rem < width <= 90rem) {
+    .he-plst.is-reveal.is-shown-laptop .he-plst__link::after, .he-plst.is-reveal.is-shown-laptop .he-plst__go { opacity: 1; }
+    .he-plst.is-reveal.is-shown-laptop .he-plst__text { opacity: 1; transform: none; }
+  }
+  @media (hover: hover) and (48rem < width <= 64rem) {
+    .he-plst.is-reveal.is-shown-tablet .he-plst__link::after, .he-plst.is-reveal.is-shown-tablet .he-plst__go { opacity: 1; }
+    .he-plst.is-reveal.is-shown-tablet .he-plst__text { opacity: 1; transform: none; }
+  }
+  @media (hover: hover) and (width <= 48rem) {
+    .he-plst.is-reveal.is-shown-mobile .he-plst__link::after, .he-plst.is-reveal.is-shown-mobile .he-plst__go { opacity: 1; }
+    .he-plst.is-reveal.is-shown-mobile .he-plst__text { opacity: 1; transform: none; }
   }
 }
 
@@ -151,10 +182,8 @@
   .he-cookie[style*='--he-cookie-line'] .he-cookie__body { line-height: var(--he-cookie-line); }
   .he-cookie[style*='--he-cookie-gap'] { gap: var(--he-cookie-gap); }
   .he-cookie[style*='--he-cookie-btn-r'] .he-btn { border-radius: var(--he-cookie-btn-r); }
-  .he-cookie[style*='--he-cookie-btn-pad'] .he-btn { height: auto; min-height: 0; padding: var(--he-cookie-btn-pad); }
   .he-cookie[style*='--he-cookie-btn-size'] .he-btn { font-size: var(--he-cookie-btn-size); }
   .he-cookie[style*='--he-cookie-btn-w'] .he-btn { font-weight: var(--he-cookie-btn-w); }
-  .he-cookie[style*='--he-cookie-btn-line'] .he-btn { line-height: var(--he-cookie-btn-line); }
   .he-cookie[style*='--he-cookie-btn-track'] .he-btn { letter-spacing: var(--he-cookie-btn-track); }
   .he-cookie[style*='--he-cookie-w']:is(.is-bottom-left, .is-bottom-right) { width: min(var(--he-cookie-w), calc(100vw - 20px)); max-width: none; }
   @media (width <= 48rem) {
@@ -164,6 +193,9 @@
 
 /* The cookie notice on one line: in the later layer, over a pill's own wrapping on phones. */
 @layer he-details {
+  /* 3.37 — the buttons' own padding and line height, in the later layer: in the components layer they lost to the button utility's, so they never applied. */
+  .he-cookie[style*='--he-cookie-btn-pad'] .he-btn { height: auto; min-height: 0; padding: var(--he-cookie-btn-pad); }
+  .he-cookie[style*='--he-cookie-btn-line'] .he-btn { line-height: var(--he-cookie-btn-line); }
   .he-cookie.is-nowrap { flex-wrap: nowrap; align-items: center; }
   .he-cookie.is-nowrap .he-cookie__text { flex: 1 1 auto; }
   @media (width <= 48rem) {
@@ -218,7 +250,6 @@
 @layer he-details {
   .he-band__inner.has-w .he-band__text { max-width: var(--he-band-w); }
   .he-band__inner.has-w :is(h1, h2) { max-width: none; }
-  .he-band__inner.has-eyebrow-gap .he-eyebrow { margin-bottom: var(--he-band-eyebrow-gap); }
   .he-band.has-title-indent :is(h1, h2) { padding-left: var(--he-band-indent); text-indent: calc(-1 * var(--he-band-indent)); }
   @media (width > 48rem) {
     .he-band.is-group-center .he-band__text { display: flex; flex-direction: column; align-items: center; max-width: none; text-align: center; }
@@ -265,3 +296,79 @@
   .he-eyebrow .type-eyebrow { white-space: normal; }
   .he-ftr a { overflow-wrap: anywhere; }
 }
+
+/* 3.37 — a picture zoomed and placed in its box: a media band's, a card's (lib/pictureZoom.ts). Last, so it wins over the anchor keywords. */
+@layer he-details {
+  :is(.he-band.has-pz .he-band__bg, .he-ocard.has-pz .he-ocard__bg, .he-tile.has-pz .he-tile__bg, .he-fgrid__item.has-pz .he-icard__media .he-fill) { scale: var(--he-pz); transform-origin: var(--he-pf, 50% 50%); }
+  :is(.he-band.has-pf .he-band__bg, .he-ocard.has-pf .he-ocard__bg, .he-tile.has-pf .he-tile__bg, .he-fgrid__item.has-pf .he-icard__media .he-fill) { object-position: var(--he-pf); transform-origin: var(--he-pf); }
+  :is(.he-band.has-pfit .he-band__bg, .he-ocard.has-pfit .he-ocard__bg, .he-tile.has-pfit .he-tile__bg, .he-fgrid__item.has-pfit .he-icard__media .he-fill) { object-fit: var(--he-pfit); }
+  @media (width <= 64rem) {
+    :is(.he-band.has-pz-t .he-band__bg, .he-ocard.has-pz-t .he-ocard__bg, .he-tile.has-pz-t .he-tile__bg, .he-fgrid__item.has-pz-t .he-icard__media .he-fill) { scale: var(--he-pz-t); }
+    :is(.he-band.has-pf-t .he-band__bg, .he-ocard.has-pf-t .he-ocard__bg, .he-tile.has-pf-t .he-tile__bg, .he-fgrid__item.has-pf-t .he-icard__media .he-fill) { object-position: var(--he-pf-t); transform-origin: var(--he-pf-t); }
+  }
+  @media (width <= 48rem) {
+    :is(.he-band.has-pz-m .he-band__bg, .he-ocard.has-pz-m .he-ocard__bg, .he-tile.has-pz-m .he-tile__bg, .he-fgrid__item.has-pz-m .he-icard__media .he-fill) { scale: var(--he-pz-m); }
+    :is(.he-band.has-pf-m .he-band__bg, .he-ocard.has-pf-m .he-ocard__bg, .he-tile.has-pf-m .he-tile__bg, .he-fgrid__item.has-pf-m .he-icard__media .he-fill) { object-position: var(--he-pf-m); transform-origin: var(--he-pf-m); }
+  }
+}
+
+/* 3.37 — the band's own space under its eyebrow, unlayered so it wins over the site-wide space (Appearance → Layout), which is unlayered too. */
+.he-band__inner.has-eyebrow-gap .he-eyebrow { margin-bottom: var(--he-band-eyebrow-gap); }
+
+/* 3.37 — pictures with text over them: the space between the parts of the words (the grid's part gap, per tier), under the number and label, and the head's inset. */
+@layer he-details {
+  .he-fgrid.is-overlay.has-pg .he-ocard__text > * { margin-block: 0; }
+  .he-fgrid.is-overlay.has-pg .he-ocard__text > * + * { margin-top: var(--he-fgrid-pg); }
+  .he-fgrid.is-overlay.has-lg .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow) { margin-bottom: var(--he-ocard-lg); }
+  .he-fgrid.is-overlay.has-lg .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow) + * { margin-top: 0; }
+  .he-fgrid.is-overlay.has-hi .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow, .he-ocard__title) { margin-inline-start: var(--he-ocard-hi); }
+  @media (width <= 64rem) {
+    .he-fgrid.is-overlay.has-pg-t .he-ocard__text > * { margin-block: 0; }
+    .he-fgrid.is-overlay.has-pg-t .he-ocard__text > * + * { margin-top: var(--he-fgrid-pg-t); }
+    .he-fgrid.is-overlay.has-lg .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow) + * { margin-top: 0; }
+  }
+  @media (width <= 48rem) {
+    .he-fgrid.is-overlay.has-pg-m .he-ocard__text > * { margin-block: 0; }
+    .he-fgrid.is-overlay.has-pg-m .he-ocard__text > * + * { margin-top: var(--he-fgrid-pg-m); }
+    .he-fgrid.is-overlay.has-lg-m .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow) { margin-bottom: var(--he-ocard-lg-m); }
+    .he-fgrid.is-overlay:is(.has-lg, .has-lg-m) .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow) + * { margin-top: 0; }
+    .he-fgrid.is-overlay.has-hi-m .he-ocard__text > :is(.he-ocard__num, .he-ocard__eyebrow, .he-ocard__title) { margin-inline-start: var(--he-ocard-hi-m); }
+  }
+}
+
+/* 3.37 — link rows: the words' width, and where the rules go. */
+@layer he-details {
+  .he-ilist.is-linkRows.has-tw .he-ilist__text { max-width: var(--he-ilist-tw); }
+  .he-ilist.is-linkRows.is-rules-between .he-ilist__item:first-child { border-top: 0; }
+  .he-ilist.is-linkRows.is-rules-between .he-ilist__item:last-child { border-bottom: 0; }
+  .he-ilist.is-linkRows.is-rules-below .he-ilist__item { border-top: 0; border-bottom: 1px solid var(--he-ilist-rule, var(--color-hairline)); }
+}
+
+/* 3.37 — a text block's own space under its title, and on phones (one column; the title's margin, the text's own set aside). */
+@layer he-details {
+  .he-prose-tg .he-prose__title { margin-bottom: var(--he-prose-tg); }
+  .he-prose-tg .he-prose__title + * { margin-top: 0; }
+  @media (width <= 48rem) {
+    .he-prose-tg-m .he-prose__title { margin-bottom: var(--he-prose-tg-m); }
+    .he-prose-tg-m .he-prose__title + * { margin-top: 0; }
+  }
+}
+
+/* 3.37 — the team's "show all" button: its distance below the members, its arrow turned up and right, the arrow on phones only or off there. */
+@layer he-details {
+  .he-show__more.has-gap { margin-top: var(--he-show-gap); }
+  .he-show__up > path { transform-box: fill-box; transform-origin: center; transform: rotate(-45deg); }
+  @media (width > 48rem) {
+    .he-show__arrow-m { display: none; }
+  }
+  @media (width <= 48rem) {
+    .he-show__more.has-gap-m { margin-top: var(--he-show-gap-m); }
+    .he-show__arrow-d { display: none; }
+  }
+}
+
+/* 3.37 — rich text shown on some tiers only: an element in the editor's HTML carrying he-hide-<tier> is hidden on that tier, like a block's hideAt. Unlayered, so no display rule on the element outranks it. */
+@media (width > 90rem) { .prose-edge .he-hide-base { display: none; } }
+@media (64rem < width <= 90rem) { .prose-edge .he-hide-laptop { display: none; } }
+@media (48rem < width <= 64rem) { .prose-edge .he-hide-tablet { display: none; } }
+@media (width <= 48rem) { .prose-edge .he-hide-mobile { display: none; } }

@@ -9,6 +9,7 @@ import { isColor, isLength } from '@/lib/theme';
 import { cn } from '@/lib/utils';
 import { itemClass } from '@/lib/itemStyle';
 import { cardMotion } from '@/lib/cardMotion';
+import { pictureZoom } from '@/lib/pictureZoom';
 import { BlockHead, BlockTitle } from '../parts';
 import { CountUp } from './CountUp';
 import { MediaFill } from './media';
@@ -95,6 +96,8 @@ export function MediaBand(p: P<'mediaBand'>) {
   // Checked again: the colour lands in a style attribute.
   const fade = p.fade && (!p.fade.color || isColor(p.fade.color)) ? p.fade : undefined;
   const fadeMobile = p.fadeMobile && isColor(p.fadeMobile.color) && (!p.fadeMobile.height || isLength(p.fadeMobile.height)) ? p.fadeMobile : undefined;
+  // 3.37 — the picture zoomed and placed, per screen.
+  const zoom = pictureZoom(p);
   return (
     <section
       className={cn(
@@ -125,10 +128,12 @@ export function MediaBand(p: P<'mediaBand'>) {
         p.titleFlowMobile && 'is-title-flow-m',
         p.textGroup === 'center' && 'is-group-center',
         p.textEnd && 'has-text-end',
+        ...zoom.className,
       )}
       style={
-        fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize) || fadeMobile || p.titleIndent || p.textEnd
+        fade || p.heightCustom || p.heightCustomMobile || (p.parallax !== 'none' && p.parallaxSize) || fadeMobile || p.titleIndent || p.textEnd || zoom.className.length
           ? ({
+              ...zoom.style,
               ...(fadeMobile ? { '--he-band-fade-m': fadeMobile.color, ...(fadeMobile.height ? { '--he-band-fade-m-h': fadeMobile.height } : {}) } : {}),
               ...(p.titleIndent ? { '--he-band-indent': p.titleIndent } : {}),
               ...(p.textEnd ? { '--he-band-end': p.textEnd } : {}),
@@ -153,7 +158,7 @@ export function MediaBand(p: P<'mediaBand'>) {
                 {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
               </div>
               <div className="he-band__side">
-                {p.body && <p className="he-lbody">{p.body}</p>}
+                {bandBody(p)}
                 <Actions links={p.links} />
               </div>
             </div>
@@ -161,7 +166,7 @@ export function MediaBand(p: P<'mediaBand'>) {
             <div className="he-band__text">
               {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
               {p.title && <BlockTitle as={p.titleAs}>{p.title}</BlockTitle>}
-              {p.body && <p className="he-lbody">{p.body}</p>}
+              {bandBody(p)}
               <Actions links={p.links} />
             </div>
           )}
@@ -181,6 +186,21 @@ function panelStyle(p: P<'mediaBand'>): React.CSSProperties {
   return style as React.CSSProperties;
 }
 
+/** A media band's text: one paragraph, as before, or (3.37, with a paragraph gap) one for each block of lines between blank lines. */
+function bandBody(p: P<'mediaBand'>) {
+  if (!p.body) return null;
+  if (!p.textBox?.paragraphGap) return <p className="he-lbody">{p.body}</p>;
+  return p.body
+    .split(/\n[ \t]*\n/)
+    .map((text) => text.trim())
+    .filter(Boolean)
+    .map((text, i) => (
+      <p key={i} className="he-lbody">
+        {text}
+      </p>
+    ));
+}
+
 /** 3.11 — a media band's text box as custom properties; only what was set. */
 function textBoxStyle(box: P<'mediaBand'>['textBox']): React.CSSProperties | undefined {
   if (!box) return undefined;
@@ -194,6 +214,11 @@ function textBoxStyle(box: P<'mediaBand'>['textBox']): React.CSSProperties | und
   if (box.width) style['--he-band-w'] = box.width;
   if (box.widthMobile) style['--he-band-w-m'] = box.widthMobile;
   if (box.eyebrowGap) style['--he-band-eyebrow-gap'] = box.eyebrowGap;
+  // 3.37 — on phones, and the space between paragraphs.
+  if (box.insetMobile) style['--he-band-inset-m'] = box.insetMobile;
+  if (box.bodyWidthMobile) style['--he-band-body-m'] = box.bodyWidthMobile;
+  if (box.actionsGapMobile) style['--he-band-actions-gap-m'] = box.actionsGapMobile;
+  if (box.paragraphGap) style['--he-band-pgap'] = box.paragraphGap;
   return style as React.CSSProperties;
 }
 
@@ -258,6 +283,12 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     ...(p.variant === 'overlay' && p.textPaddingMobile ? { '--he-ocard-pad-m': p.textPaddingMobile } : {}),
     ...(p.variant === 'overlay' && p.pointsColumns ? { '--he-ocard-pcols': p.pointsColumns } : {}),
     ...(p.variant === 'overlay' && p.pointsGap ? { '--he-ocard-pgap': p.pointsGap } : {}),
+    // 3.37 — the space under the card's number and label, the inset of its head, the bullet text's indent.
+    ...(p.variant === 'overlay' && p.labelGap && isLength(p.labelGap) ? { '--he-ocard-lg': p.labelGap } : {}),
+    ...(p.variant === 'overlay' && p.labelGapMobile && isLength(p.labelGapMobile) ? { '--he-ocard-lg-m': p.labelGapMobile } : {}),
+    ...(p.variant === 'overlay' && p.headInset && isLength(p.headInset) ? { '--he-ocard-hi': p.headInset } : {}),
+    ...(p.variant === 'overlay' && p.headInsetMobile && isLength(p.headInsetMobile) ? { '--he-ocard-hi-m': p.headInsetMobile } : {}),
+    ...(p.variant === 'overlay' && p.pointsInset && isLength(p.pointsInset) ? { '--he-ocard-pin': p.pointsInset } : {}),
     ...(p.variant === 'overlay' && p.rowTracks?.length && p.gap ? { '--he-rt-gap': p.gap } : {}),
     ...(p.variant === 'overlay' && p.rowTracks?.length && p.gapTablet ? { '--he-rt-gap-t': p.gapTablet } : {}),
   } as React.CSSProperties;
@@ -284,6 +315,9 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
           style={cols}
         >
           {p.cards.map((c, i) => {
+            // 3.37 — the tile's picture zoomed and placed, per screen.
+            const zoom = pictureZoom(c);
+            const zoomStyle = zoom.className.length ? (zoom.style as React.CSSProperties) : undefined;
             const inner = (
               <>
                 <MediaFill imageUrl={c.imageUrl} alt={c.alt} className="he-tile__bg" sizes="third" />
@@ -297,11 +331,11 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
               </>
             );
             return c.href ? (
-              <Link key={c.title + i} href={c.href} className={cn('he-tile', itemClass(p.blockId, i, c.style))}>
+              <Link key={c.title + i} href={c.href} className={cn('he-tile', ...zoom.className, itemClass(p.blockId, i, c.style))} style={zoomStyle}>
                 {inner}
               </Link>
             ) : (
-              <div key={c.title + i} className={cn('he-tile', itemClass(p.blockId, i, c.style))}>
+              <div key={c.title + i} className={cn('he-tile', ...zoom.className, itemClass(p.blockId, i, c.style))} style={zoomStyle}>
                 {inner}
               </div>
             );
@@ -424,6 +458,10 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
     p.mediaGap && 'has-mg',
     p.mediaGapTablet && 'has-mg-t',
     p.mediaGapMobile && 'has-mg-m',
+    overlay && p.labelGap && 'has-lg',
+    overlay && p.labelGapMobile && 'has-lg-m',
+    overlay && p.headInset && 'has-hi',
+    overlay && p.headInsetMobile && 'has-hi-m',
     p.titleHover === 'none' && 'no-title-line',
     p.linkArea === 'links' && 'is-links-own',
     // 3.29
@@ -454,6 +492,8 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 {` ${c.titleAfter}`}
               </span>
             );
+            // 3.37 — the card's picture zoomed and placed, per screen.
+            const zoom = pictureZoom(c);
             const title = c.href ? (
               <Link href={c.href} className="he-fgrid__link">
                 {c.title}
@@ -485,11 +525,12 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
                 ...(c.heightMobile && isLength(c.heightMobile) ? { '--he-ocard-own-h-m': c.heightMobile } : {}),
                 ...(c.textWidth && isLength(c.textWidth) ? { '--he-ocard-tw': c.textWidth } : {}),
                 ...(c.textWidthMobile && isLength(c.textWidthMobile) ? { '--he-ocard-tw-m': c.textWidthMobile } : {}),
+                ...zoom.style,
               } as React.CSSProperties;
               return (
                 <li
                   key={c.title + i}
-                  className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', itemClass(p.blockId, i, c.style))}
+                  className={cn('he-fgrid__item he-ocard', place, placeTablet, placeMobile, c.height && 'has-own-h', c.heightMobile && 'has-own-h-m', c.textWidth && 'has-tw', c.textWidthMobile && 'has-tw-m', ...zoom.className, itemClass(p.blockId, i, c.style))}
                   style={Object.keys(own).length ? own : undefined}
                   // 3.34 — a tap widens a card in a row that widens: focusable by the pointer, and by the keyboard only when its words wait to be revealed.
                   tabIndex={motion.className.includes('is-expand') && !c.href ? (p.expandText === 'reveal' ? 0 : -1) : undefined}
@@ -519,7 +560,7 @@ export function CardGridVariant(p: P<'cardGrid'> & { blockId?: string }) {
               );
             }
             return (
-              <li key={c.title + i} className={cn('he-fgrid__item', itemClass(p.blockId, i, c.style))}>
+              <li key={c.title + i} className={cn('he-fgrid__item', ...zoom.className, itemClass(p.blockId, i, c.style))} style={zoom.className.length ? (zoom.style as React.CSSProperties) : undefined}>
                 {c.badge && <span className="he-badge">{c.badge}</span>}
                 <div className={icons ? 'he-feat__icon' : 'he-icard__media'}>
                   <MediaFill imageUrl={c.imageUrl} alt={icons ? '' : c.alt} className={icons ? 'he-feat__img' : 'he-fill'} sizes={icons ? 'thumb' : 'third'} />

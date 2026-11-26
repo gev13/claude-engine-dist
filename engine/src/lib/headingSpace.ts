@@ -67,6 +67,9 @@ function columns(tier: Tier, careersPartGap: string | undefined): Column[] {
   return [
     { heading: '.he-plst__text>.he-plst__title', text: '.he-plst__excerpt', between: '8px' },
     { heading: '.he-plst.is-compact .he-plst__text>.he-plst__title', text: '.he-plst__excerpt', between: '4px' },
+    // The cards' own space between their parts (3.37), on phones too.
+    { heading: '.he-plst.has-tg .he-plst__text>.he-plst__title', text: '.he-plst__excerpt', between: 'var(--he-plst-tg)' },
+    ...(tier === 'mobile' ? [{ heading: '.he-plst.has-tg-m .he-plst__text>.he-plst__title', text: '.he-plst__excerpt', between: 'var(--he-plst-tg-m)' }] : []),
     { heading: '.he-jobc>.he-jobc__title', text: '.he-jobc__excerpt', between: careersPartGap ?? '8px' },
     { heading: '.he-team__grid.is-portrait .he-team__member>.he-team__name', text: '.he-team__role', between: '10px' },
     { heading: '.he-team__profile>.he-team__name', text: '.he-team__role', between: '4px' },
@@ -81,6 +84,8 @@ function columns(tier: Tier, careersPartGap: string | undefined): Column[] {
     ...(tier === 'tablet' || tier === 'mobile' ? [{ heading: '.he-fgrid.has-pg-t .he-fgrid__item>.he-fgrid__title', text: '.he-fgrid__body', between: 'var(--he-fgrid-pg-t)' }] : []),
     ...(tier === 'mobile' ? [{ heading: '.he-fgrid.has-pg-m .he-fgrid__item>.he-fgrid__title', text: '.he-fgrid__body', between: 'var(--he-fgrid-pg-m)' }] : []),
     { heading: `.he-post-aside__text>:is(${HEADS})`, text: 'p', between: '28px' },
+    // One space between the cover card's words (3.37), the margins gone.
+    { heading: `.he-post-aside__text.has-tg>:is(${HEADS})`, text: 'p', between: 'var(--he-aside-tg)' },
     { heading: '.he-catidx__card>.he-catidx__name', text: '.he-catidx__desc', between: '12px' },
     { heading: '.he-story__item>.he-story__title', text: '.he-story__body', between: '14px' },
     { heading: `.he-ucard>:is(${HEADS})`, text: '.he-ucard__body', between: '12px' },

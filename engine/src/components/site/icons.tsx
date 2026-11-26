@@ -229,6 +229,11 @@ const SOCIAL_FILLED: Partial<Record<SocialNetwork, string>> = {
   phone: 'M5.5 3.5h3.3l1.7 4.3-2.3 1.4a11 11 0 0 0 6.6 6.6l1.4-2.3 4.3 1.7v3.3a2 2 0 0 1-2.2 2A17 17 0 0 1 3.5 5.7a2 2 0 0 1 2-2.2z',
 };
 
+/** 3.37 — a social link's own uploaded mark (an SVG under /media, checked by the caller), drawn as a mask in the link's colour at its own size. */
+export function OwnSocialIcon({ url }: { url: string }) {
+  return <span className="he-soc-own" style={{ '--he-soc-mask': `url("${url}")` } as React.CSSProperties} aria-hidden="true" />;
+}
+
 export function SocialIcon({ network, className, size = 18, filled = false }: P & { network: SocialNetwork; filled?: boolean }) {
   const solid = filled ? SOCIAL_FILLED[network] : undefined;
   if (solid) {

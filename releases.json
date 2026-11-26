@@ -1,6 +1,14 @@
 {
-  "latest": "3.36.0",
+  "latest": "3.37.0",
   "releases": [
+    {
+      "version": "3.37.0",
+      "date": "2026-11-26",
+      "summary": "Opt-in options to match a design without custom CSS: pictures zoomed and placed per screen, layered section backgrounds, theme paragraph sizes, Google Sans Flex, header, menu and footer details, careers, post and form spacing; translated saved blocks; fixes, including post lists in the page's language.",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.36.0",
       "date": "2026-11-18",

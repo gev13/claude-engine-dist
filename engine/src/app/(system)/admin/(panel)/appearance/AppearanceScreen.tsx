@@ -27,6 +27,7 @@ import {
 import { themeToCss } from '@/lib/theme-css';
 import { cn } from '@/lib/utils';
 import { ChoiceField, ColorField, LengthField } from '@/components/admin/styleFields';
+import { FieldsExtraFields } from './FieldsExtraFields';
 import { FONT_GROUPS, SCRIPT_LABELS, fontWarning, scriptFor, warningText } from '@/lib/fonts';
 import { localeConfig, localeName } from '@/lib/locales';
 import { colorVar, typeVar, useThemeDefaults } from '@/components/admin/themeDefaults';
@@ -336,6 +337,7 @@ function AppearanceScreenInner() {
                   <Field label="Shadow under the fields" hint="e.g. 0 4px 20px rgba(0,0,0,0.1)">
                     <Input value={theme.fields?.shadow ?? ''} placeholder="none" spellCheck={false} onChange={(e) => set(['fields', 'shadow'])(e.target.value.trim() || undefined)} />
                   </Field>
+                  <FieldsExtraFields get={get} set={set} />
                 </div>
               </Panel>
 
@@ -529,6 +531,12 @@ function AppearanceScreenInner() {
                   <LengthField label="Intro and lead text — phones" value={get(['blockTextMobile', 'lead'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'lead'])} />
                   <LengthField label="Standard — phones" value={get(['blockTextMobile', 'text'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'text'])} />
                   <LengthField label="Secondary — phones" value={get(['blockTextMobile', 'small'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'small'])} />
+                  {/* 3.37 */}
+                  <LengthField label="Band and panel paragraphs" hint="a band’s, a call to action’s, a panel’s text" emptyLabel="as drawn (17px, 16px on phones)" value={get(['blockText', 'body'])} onChange={set(['blockText', 'body'])} />
+                  <LengthField label="Card text" hint="words over pictures, their points, post excerpts" emptyLabel="as drawn (15px)" value={get(['blockText', 'card'])} onChange={set(['blockText', 'card'])} />
+                  <div />
+                  <LengthField label="Band and panel paragraphs — phones" value={get(['blockTextMobile', 'body'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'body'])} />
+                  <LengthField label="Card text — phones" value={get(['blockTextMobile', 'card'])} emptyLabel="as above" onChange={set(['blockTextMobile', 'card'])} />
                 </div>
               </Panel>
 

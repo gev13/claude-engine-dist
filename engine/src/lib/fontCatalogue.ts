@@ -174,6 +174,15 @@ export const FONT_CATALOGUE: readonly CatalogueEntry[] = [
     "licence": "OFL-1.1"
   },
   {
+    "key": "googleSansFlex",
+    "family": "Google Sans Flex",
+    "role": "sans",
+    "scripts": [
+      "latin"
+    ],
+    "licence": "OFL-1.1"
+  },
+  {
     "key": "heebo",
     "family": "Heebo",
     "role": "sans",

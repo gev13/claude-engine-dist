@@ -3,7 +3,7 @@
 import Link from '@/components/ui/SiteLink';
 import { useEffect, useId, useState } from 'react';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
-import { type NavChild, linkAttrs } from '@/lib/navigation';
+import { type FooterItem, footerLinkStyle, linkAttrs } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 import { Icon } from './icons';
 
@@ -218,13 +218,49 @@ function ShareGlyph({ network }: { network: 'x' | 'linkedin' | 'facebook' }) {
 }
 
 /**
+ * 3.37 — the links' places on phones. Only when one of them has one: then
+ * every link gets one (its own, or its place in the list), so the links
+ * without a place of their own keep theirs rather than all jumping ahead.
+ */
+function phoneOrder(items: FooterItem[]): (number | undefined)[] {
+  if (!items.some((item) => typeof item.orderMobile === 'number')) return items.map(() => undefined);
+  return items.map((item, i) => (typeof item.orderMobile === 'number' ? item.orderMobile : i + 1));
+}
+
+function FooterLinks({ items, id }: { items: FooterItem[]; id?: string }) {
+  const order = phoneOrder(items);
+  return (
+    <ul id={id} className="he-ftr__links">
+      {items.map((item, i) => (
+        <li key={item.id} style={order[i] !== undefined ? ({ '--he-ftr-order-m': order[i] } as React.CSSProperties) : undefined}>
+          <Link href={item.href} {...linkAttrs(item)} style={footerLinkStyle(item)}>
+            {item.label}
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * A footer link column. On desktop the heading is just a heading; below
  * 768px it becomes the button that opens the column, so a long footer
  * collapses into a short list of headings on a phone.
+ *
+ * 3.37 — a column without a title draws no heading (an empty one still took
+ * its margin), and so has nothing to press on a phone: its list stays open.
  */
-export function FooterColumn({ title, items, collapsible = true }: { title: string; items: NavChild[]; collapsible?: boolean }) {
+export function FooterColumn({ title, items, collapsible = true }: { title: string; items: FooterItem[]; collapsible?: boolean }) {
   const [open, setOpen] = useState(false);
   const id = useId();
+
+  if (!title.trim()) {
+    return (
+      <div className="he-ftr__col is-static">
+        <FooterLinks items={items} />
+      </div>
+    );
+  }
 
   // 3.27 — an open list on phones too: a plain heading, no button to press.
   if (!collapsible) {
@@ -233,15 +269,7 @@ export function FooterColumn({ title, items, collapsible = true }: { title: stri
         <h2 className="he-ftr__coltitle">
           <span className="he-ftr__coltoggle">{title}</span>
         </h2>
-        <ul className="he-ftr__links">
-          {items.map((item) => (
-            <li key={item.id}>
-              <Link href={item.href} {...linkAttrs(item)}>
-                {item.label}
-              </Link>
-            </li>
-          ))}
-        </ul>
+        <FooterLinks items={items} />
       </div>
     );
   }
@@ -254,15 +282,7 @@ export function FooterColumn({ title, items, collapsible = true }: { title: stri
           <Icon.Chevron size={16} className="he-ftr__colchev" />
         </button>
       </h2>
-      <ul id={id} className="he-ftr__links">
-        {items.map((item) => (
-          <li key={item.id}>
-            <Link href={item.href} {...linkAttrs(item)}>
-              {item.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <FooterLinks items={items} id={id} />
     </div>
   );
 }

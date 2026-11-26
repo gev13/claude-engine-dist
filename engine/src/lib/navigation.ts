@@ -42,6 +42,12 @@ export function isSafeImageUrl(value: string): boolean {
   return IMAGE_URL_PATTERN.test(v) && !v.includes(')') && !v.includes('..');
 }
 
+/** 3.37 — a social link's own mark: an SVG under /media, nothing that could leave a CSS url(). */
+const ICON_URL_PATTERN = /^\/media\/[A-Za-z0-9._~\-/%]+\.svg$/i;
+export function isSafeIconUrl(value: unknown): value is string {
+  return typeof value === 'string' && ICON_URL_PATTERN.test(value.trim()) && !value.includes('..');
+}
+
 export const imageUrl = z.string().trim().max(500).refine(isSafeImageUrl, 'Choose an image from the media library');
 
 const baseItem = {
@@ -84,6 +90,24 @@ const navItem = z.object({
 
 export type NavItem = z.infer<typeof navItem>;
 
+/** 3.37 — a colour for a footer link: hex, or rgb()/hsl() with numbers only. It lands in a style attribute. */
+const COLOR_PATTERN = /^(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
+export const isLinkColor = (value: unknown): value is string => typeof value === 'string' && COLOR_PATTERN.test(value.trim());
+
+/** 3.37 — a footer link: a dropdown link's fields, plus its own colour and its place on phones. */
+const footerItem = childItem.extend({
+  /** Its own colour, instead of the footer links' (pointed at, it takes theirs). */
+  color: z.string().trim().max(60).regex(COLOR_PATTERN, 'A colour').optional(),
+  /** Its place in its column on phones (768px and narrower); the column's other links keep theirs. */
+  orderMobile: z.number().int().min(0).max(99).optional(),
+});
+export type FooterItem = z.infer<typeof footerItem>;
+
+/** 3.37 — a footer link's own colour, as a property its rule reads (so pointing at it still takes the footer's hover colour); nothing when it has none. */
+export function footerLinkStyle(item: { color?: string }): Record<string, string> | undefined {
+  return isLinkColor(item.color) ? { '--he-ftr-link-c': item.color.trim() } : undefined;
+}
+
 const footerColumn = z.object({
   id: z.string().min(1).max(64),
   title: z.string().trim().max(60),
@@ -94,7 +118,7 @@ const footerColumn = z.object({
   placement: z.enum(['main', 'legal']).optional(),
   /** 3.27 — stacked under the column before it (one footer column holding two menus) rather than a column of its own. */
   stack: z.boolean().optional(),
-  items: z.array(childItem).max(20),
+  items: z.array(footerItem).max(20),
 });
 
 export type FooterColumn = z.infer<typeof footerColumn>;
@@ -165,6 +189,8 @@ const socialLink = z.object({
   short: z.string().trim().max(8).optional(),
   /** 3.22 — its own name where one is written out (the footer's contact list): "Call us", a number. */
   label: z.string().trim().max(40).optional(),
+  /** 3.37 — its own mark: an uploaded SVG (a /media/… address), drawn in the icons' colour at its own size. */
+  iconUrl: z.string().trim().max(500).refine(isSafeIconUrl, 'An SVG from the media library').optional(),
 });
 export type SocialLink = z.infer<typeof socialLink>;
 

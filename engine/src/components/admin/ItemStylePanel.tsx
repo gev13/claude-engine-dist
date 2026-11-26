@@ -99,6 +99,19 @@ export function ItemStylePanel({
             </div>
           </details>
 
+          {/* 3.37 — this card's own title, apart from the rest of the block's. */}
+          <details>
+            <summary className="cursor-pointer text-[13px] text-ash">Its title — size, letter spacing, width</summary>
+            <div className="mt-3 grid gap-3 sm:grid-cols-3">
+              <LengthField label="Title size" value={style.titleSize} emptyLabel="the block’s" onChange={set('titleSize')} />
+              <LengthField label="Letter spacing" value={style.titleTracking} emptyLabel="the block’s" onChange={set('titleTracking')} />
+              <LengthField label="Title width" value={style.titleWidth} emptyLabel="the card’s" onChange={set('titleWidth')} />
+              <LengthField label="Size on phones" value={style.titleSizeMobile} emptyLabel="as above" onChange={set('titleSizeMobile')} />
+              <LengthField label="Spacing on phones" value={style.titleTrackingMobile} emptyLabel="as above" onChange={set('titleTrackingMobile')} />
+              <LengthField label="Width on phones" value={style.titleWidthMobile} emptyLabel="as above" onChange={set('titleWidthMobile')} />
+            </div>
+          </details>
+
           <div className="grid gap-3 sm:grid-cols-4">
             <LengthField label="Border" value={style.borderWidth} emptyLabel="none" onChange={set('borderWidth')} />
             <ChoiceField

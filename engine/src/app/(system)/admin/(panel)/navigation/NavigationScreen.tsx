@@ -17,7 +17,9 @@ import {
   SOCIAL_SHORT,
   type SocialLabelStyle,
   type SocialLink,
+  isLinkColor,
   isSafeHref,
+  isSafeIconUrl,
 } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
 
@@ -113,6 +115,12 @@ function NavigationScreenInner() {
     const badSocial = social.find((s) => !isSafeHref(s.href));
     if (badSocial) {
       toast(`The ${SOCIAL_LABELS[badSocial.network]} link needs a full https:// address — or mailto: / tel: for email and phone.`, 'error');
+      return;
+    }
+    // 3.37 — a link's own mark is an SVG from the media library.
+    const badMark = social.find((s) => s.iconUrl && !isSafeIconUrl(s.iconUrl));
+    if (badMark) {
+      toast(`The ${SOCIAL_LABELS[badMark.network]} mark must be an SVG from the media library (/media/….svg).`, 'error');
       return;
     }
 
@@ -339,6 +347,7 @@ function NavigationScreenInner() {
                     items={column.items as NavItem[]}
                     onChange={(items) => setFooter(footer.map((c, i) => (i === ci ? { ...c, items } : c)))}
                     pages={pages?.items ?? []}
+                    footerItem
                   />
                 </div>
               ))}
@@ -375,7 +384,7 @@ function NavigationScreenInner() {
             </Field>
             <div className="space-y-2">
               {social.map((link, i) => (
-                <div key={i} className="grid gap-2 sm:grid-cols-[160px_1fr_90px_140px_auto]">
+                <div key={i} className="grid gap-2 sm:grid-cols-[160px_1fr_90px_140px_200px_auto]">
                   <Select
                     value={link.network}
                     onChange={(e) =>
@@ -409,6 +418,12 @@ function NavigationScreenInner() {
                     aria-label={`Name for ${SOCIAL_LABELS[link.network]}`}
                     onChange={(e) => setSocial(social.map((s, j) => (j === i ? { ...s, label: e.target.value || undefined } : s)))}
                   />
+                  {/* 3.37 — its own mark, an uploaded SVG drawn in the icons' colour. */}
+                  <OwnMark
+                    value={link.iconUrl}
+                    name={SOCIAL_LABELS[link.network]}
+                    onChange={(iconUrl) => setSocial(social.map((s, j) => (j === i ? { ...s, iconUrl } : s)))}
+                  />
                   <AdminButton
                     variant="ghost"
                     onClick={() => setSocial(social.filter((_, j) => j !== i))}
@@ -427,6 +442,51 @@ function NavigationScreenInner() {
   );
 }
 
+/** 3.37 — what a footer link carries beside a menu link's fields. */
+type FooterExtras = NavItem & { color?: string; orderMobile?: number };
+
+function FooterItemFields({ item, onChange }: { item: FooterExtras; onChange: (patch: Partial<FooterExtras>) => void }) {
+  const invalid = Boolean(item.color) && !isLinkColor(item.color);
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      <Field label="Its own colour" hint="e.g. rgba(0,0,0,0.5) — empty keeps the footer links’" error={invalid ? 'Not a colour.' : undefined}>
+        <Input value={item.color ?? ''} maxLength={60} spellCheck={false} onChange={(e) => onChange({ color: e.target.value.trim() || undefined })} />
+      </Field>
+      <Field label="Its place on phones" hint="1, 2, 3… in this column, 768px wide and narrower — empty keeps its place">
+        <Input
+          type="number"
+          min={0}
+          max={99}
+          value={item.orderMobile ?? ''}
+          onChange={(e) => onChange({ orderMobile: e.target.value === '' ? undefined : Math.min(99, Math.max(0, Math.round(Number(e.target.value) || 0))) })}
+        />
+      </Field>
+    </div>
+  );
+}
+
+/** 3.37 — a social link's own mark: an SVG from the media library, or none (the built-in icon). */
+function OwnMark({ value, name, onChange }: { value?: string; name: string; onChange: (next: string | undefined) => void }) {
+  const [picking, setPicking] = useState(false);
+  return (
+    <div className="flex items-center gap-1">
+      <Input value={value ?? ''} placeholder="own mark (SVG)" spellCheck={false} aria-label={`Own mark for ${name}`} onChange={(e) => onChange(e.target.value.trim() || undefined)} />
+      <AdminButton type="button" variant="ghost" className="px-2 py-1" onClick={() => setPicking(true)} aria-label={`Choose a mark for ${name}`}>
+        …
+      </AdminButton>
+      <MediaPicker
+        open={picking}
+        accept="image"
+        onClose={() => setPicking(false)}
+        onSelect={(media) => {
+          onChange(media.url);
+          setPicking(false);
+        }}
+      />
+    </div>
+  );
+}
+
 function swap<T>(list: T[], from: number, to: number): T[] {
   if (to < 0 || to >= list.length) return list;
   const next = [...list];
@@ -442,6 +502,7 @@ function ItemList({
   pages,
   allowChildren = false,
   withImage = false,
+  footerItem = false,
 }: {
   items: NavItem[];
   onChange: (next: NavItem[]) => void;
@@ -449,11 +510,22 @@ function ItemList({
   allowChildren?: boolean;
   /** 2.19 — a picture per item, for the overlay menu's hover image. */
   withImage?: boolean;
+  /** 3.37 — a footer link: its own colour and its place on phones. */
+  footerItem?: boolean;
 }) {
   const [open, setOpen] = useState<string | null>(null);
 
-  const set = (i: number, patch: Partial<NavItem>) =>
-    onChange(items.map((item, j) => (j === i ? { ...item, ...patch } : item)));
+  const set = (i: number, patch: Partial<FooterExtras>) =>
+    onChange(
+      items.map((item, j) => {
+        if (j !== i) return item;
+        const next: NavItem & FooterExtras = { ...item, ...patch };
+        // Cleared, a footer link's extras leave nothing behind.
+        if (next.color === undefined) delete next.color;
+        if (next.orderMobile === undefined) delete next.orderMobile;
+        return next;
+      }),
+    );
 
   return (
     <div className="space-y-2">
@@ -497,6 +569,7 @@ function ItemList({
 
               <HrefField value={item.href} onChange={(href) => set(i, { href })} pages={pages} />
               {withImage && <ItemImage value={item.imageUrl} onChange={(imageUrl) => set(i, { imageUrl })} />}
+              {footerItem && <FooterItemFields item={item as NavItem & FooterExtras} onChange={(patch) => set(i, patch)} />}
 
               <label className="flex items-center gap-2.5 text-[13px] text-ash">
                 <input

@@ -23,6 +23,7 @@ import { ArrowRight } from '@/components/ui/Button';
 import { MOTION_EVENT, motionReduced } from '@/lib/motion';
 import { CardTilt } from '@/components/site/CardTilt';
 import { cn } from '@/lib/utils';
+import { isLength } from '@/lib/theme';
 import { BlockHead } from '../parts';
 import { Carousel } from './Carousel';
 import { BgVideo, MediaFill, orderedSources } from './media';
@@ -392,6 +393,8 @@ export function GalleryBlock(p: P<'gallery'>) {
                 ...(p.height ? { '--he-gal-h': p.height } : {}),
                 ...(p.heightMobile ? { '--he-gal-h-m': p.heightMobile } : {}),
                 ...(p.zoomIcon === 'touch' && p.zoomOffset ? { '--he-gal-zoom-at': p.zoomOffset } : {}),
+                ...(p.zoomIcon === 'touch' && p.zoomOffsetX && isLength(p.zoomOffsetX) ? { '--he-gal-zoom-x': p.zoomOffsetX } : {}),
+                ...(p.zoomIcon === 'touch' && p.zoomOffsetY && isLength(p.zoomOffsetY) ? { '--he-gal-zoom-y': p.zoomOffsetY } : {}),
                 ...(p.zoomIcon === 'touch' && p.zoomSize ? { '--he-gal-zoom': `${p.zoomSize}px` } : {}),
               } as CSSProperties
             }

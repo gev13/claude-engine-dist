@@ -6,6 +6,21 @@ import { Alert, Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, ColorField } from '@/components/admin/styleFields';
 import { MOBILE_MENU_LABELS, MOBILE_MENU_VARIANTS, type Chrome } from '@/lib/chrome';
 import { SOCIAL_LABELS, SOCIAL_NETWORKS, type SocialNetwork } from '@/lib/navigation';
+import { FONT_CATALOGUE } from '@/lib/fontCatalogue';
+import { FONT_LABELS, FONT_STACKS } from '@/lib/theme';
+
+/** 3.37 — a face named in plain words (its family, or its key) to its key in the font list, and back. */
+const squash = (text: string) => text.toLowerCase().replace(/[^a-z0-9]/g, '');
+function faceKey(text: string): string | undefined {
+  const wanted = squash(text);
+  if (!wanted) return undefined;
+  const found = FONT_CATALOGUE.find((f) => squash(f.family) === wanted || squash(f.key) === wanted);
+  if (found) return found.key;
+  return Object.keys(FONT_STACKS).find((key) => squash(key) === wanted);
+}
+function faceName(key: string): string {
+  return FONT_CATALOGUE.find((f) => f.key === key)?.family ?? FONT_LABELS[key] ?? key;
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Appearance: the 2.19 header, menu, footer and site-wide motion options
@@ -757,6 +772,9 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
               <TextField label="Button arrow" value={footer?.newsletterSendText} maxLength={60} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendText'])} />
               <TextField label="Button corners" hint="one to four, e.g. 0 16px 0 16px" value={footer?.newsletterSendRadius} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendRadius'])} />
               <TextField label="Button width" value={footer?.newsletterSendWidth} maxLength={40} placeholder="as drawn" onChange={set(['chrome', 'footer', 'newsletterSendWidth'])} />
+              {/* 3.37 */}
+              <TextField label="Space under the heading" value={footer?.newsletterTitleGap} maxLength={40} placeholder="6px" onChange={set(['chrome', 'footer', 'newsletterTitleGap'])} />
+              <TextField label="Field shadow" hint="none, or e.g. 0 4px 20px rgba(0,0,0,0.1)" value={footer?.newsletterFieldShadow} maxLength={120} placeholder="as Fields" onChange={set(['chrome', 'footer', 'newsletterFieldShadow'])} />
             </div>
             <p className="m-0 text-[13px] text-bone">The sign-up’s heading</p>
             <TypeStyleFields type={footer?.newsletterTitle} set={(key) => set(['chrome', 'footer', 'newsletterTitle', key])} />
@@ -833,6 +851,20 @@ export function FooterExtrasPanel({ chrome, set }: Props) {
                   onChange={(e) => set(['chrome', 'footer', 'wordmarkCrop'])(e.target.value === '' ? undefined : Math.min(90, Math.max(0, Math.round(Number(e.target.value) || 0))))}
                 />
               </Field>
+              {/* 3.37 */}
+              <Field label="— cut off on phones" hint="% of its height" htmlFor={`${id}-wm-crop-m`}>
+                <Input
+                  id={`${id}-wm-crop-m`}
+                  type="number"
+                  min={0}
+                  max={90}
+                  placeholder="as above"
+                  value={footer?.wordmarkCropMobile ?? ''}
+                  onChange={(e) => set(['chrome', 'footer', 'wordmarkCropMobile'])(e.target.value === '' ? undefined : Math.min(90, Math.max(0, Math.round(Number(e.target.value) || 0))))}
+                />
+              </Field>
+              <TextField label="Moved right by" hint="negative moves it left, e.g. 12px" value={footer?.wordmarkOffset} maxLength={40} placeholder="0" onChange={set(['chrome', 'footer', 'wordmarkOffset'])} />
+              <TextField label="— on phones" value={footer?.wordmarkOffsetMobile} maxLength={40} placeholder="as above" onChange={set(['chrome', 'footer', 'wordmarkOffsetMobile'])} />
               <ChoiceField
                 label="Its place"
                 value={footer?.wordmarkAlign}
@@ -956,6 +988,34 @@ export function LanguagesPanel({ chrome, set }: Props) {
             />
           )}
           <TextField label="Size in the open menu" value={languages?.menuSize} maxLength={40} placeholder="as drawn" onChange={set(at('menuSize'))} />
+          {/* 3.37 */}
+          <ChoiceField
+            label="In the open menu"
+            value={languages?.menuPlace}
+            inherited="foot"
+            options={[
+              { value: 'foot', label: 'At the menu’s foot' },
+              { value: 'afterLinks', label: 'Straight after the links' },
+            ]}
+            onChange={set(at('menuPlace'))}
+          />
+          <TextField label="The other codes’ colour" hint="the ones that are not the current language" value={languages?.color} maxLength={60} placeholder="the links’" onChange={set(at('color'))} />
+          <ParsedField
+            label="A face for a language’s own name"
+            hint="code=face, comma between — e.g. el=Noto Serif"
+            shown={Object.entries(languages?.faces ?? {}).map(([code, key]) => `${code}=${faceName(key)}`).join(', ')}
+            maxLength={300}
+            onCommit={(text) => {
+              const next: Record<string, string> = {};
+              for (const pair of (text ?? '').split(',')) {
+                const [code, ...rest] = pair.split('=');
+                const key = code?.trim().toLowerCase();
+                const face = faceKey(rest.join('='));
+                if (key && /^[a-z]{2,3}$/.test(key) && face) next[key] = face;
+              }
+              set(at('faces'))(Object.keys(next).length ? next : undefined);
+            }}
+          />
         </div>
         <Check label="In the open menu, under the links (the header bar's copy then folds away with the links)" value={languages?.inMenu} onChange={set(at('inMenu'))} />
         <p className="m-0 text-[12px] text-smoke">The languages themselves are set in Settings. A site with one language shows no switcher.</p>

@@ -2,9 +2,9 @@ import Link from '@/components/ui/SiteLink';
 import { SiteMark } from '@/components/ui/Logo';
 import { SiteImg } from '@/components/ui/SiteImg';
 import type { FooterVariant } from '@/lib/chrome';
-import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
+import { type FooterColumn as Column, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, footerLinkStyle, isSafeIconUrl, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import { cn } from '@/lib/utils';
-import { SocialIcon } from './icons';
+import { OwnSocialIcon, SocialIcon } from './icons';
 import { FooterNewsletter } from './FooterNewsletter';
 import { FooterColumn, MotionToggle, ShareChip, ThemeToggle } from './SiteExtras';
 
@@ -140,7 +140,7 @@ function Socials({
                 </span>
               )}
               <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
-                {socialText(s, style) ?? <SocialIcon network={s.network} filled={filled} />}
+                {socialText(s, style) ?? (isSafeIconUrl(s.iconUrl) ? <OwnSocialIcon url={s.iconUrl.trim()} /> : <SocialIcon network={s.network} filled={filled} />)}
               </a>
             </li>
           ))}
@@ -215,7 +215,7 @@ export function Footer(props: FooterProps) {
         <ul className={cn('he-ftr__legal', props.legalSeparator && props.legalSeparator !== 'none' && `has-sep is-sep-${props.legalSeparator}`)}>
           {legal.map((item) => (
             <li key={item.id}>
-              <Link href={item.href} {...linkAttrs(item)}>
+              <Link href={item.href} {...linkAttrs(item)} style={footerLinkStyle(item)}>
                 {item.label}
               </Link>
             </li>
@@ -255,7 +255,7 @@ export function Footer(props: FooterProps) {
             <ul className="he-ftr__row">
               {links.map((item) => (
                 <li key={item.id}>
-                  <Link href={item.href} {...linkAttrs(item)}>
+                  <Link href={item.href} {...linkAttrs(item)} style={footerLinkStyle(item)}>
                     {item.label}
                   </Link>
                 </li>
@@ -272,7 +272,7 @@ export function Footer(props: FooterProps) {
               <ul className={cn('he-ftr__legal', props.legalSeparator && props.legalSeparator !== 'none' && `has-sep is-sep-${props.legalSeparator}`)}>
                 {legal.map((item) => (
                   <li key={item.id}>
-                    <Link href={item.href} {...linkAttrs(item)}>
+                    <Link href={item.href} {...linkAttrs(item)} style={footerLinkStyle(item)}>
                       {item.label}
                     </Link>
                   </li>

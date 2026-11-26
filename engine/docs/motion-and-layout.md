@@ -814,3 +814,35 @@ Each of these is off until set; left empty, a page is drawn as before.
   (careers, blog asides, post cards, the footer's sign-up, …) takes a line
   height for tablets (1024px and below) and for phones (768px and below);
   each unset keeps the wider screen's.
+
+## Pictures placed per screen, theme paragraph sizes, and the 3.37 details
+
+- **A picture zoomed and placed:** a media band's picture and a card's
+  (pictures with text over them, image cards, tiles) take *Zoom* (100–300 %),
+  a *Focus point* (`50% 0%`, `left 30%`) and a *Fit* (cover, whole, stretched),
+  with values for tablets and phones. The picture covers its box, then is
+  zoomed about the focus point, which also anchors it. To match a design that
+  draws the picture W % wide from L % at the left: zoom W, focus
+  −L ÷ (W − 100) × 100 %.
+- **A section background, written:** *Image size, written* and *Image place,
+  written* take one or two values each (`1200px auto`, `-240px 20px`), and on
+  phones. *Gradient stops, written* takes colours at places; *With a picture*
+  lays the gradient under or over the picture, filling the section; phones
+  can have stops of their own in the same direction.
+- **Appearance → Typography → Text inside blocks:** the bands' and panels'
+  paragraphs (drawn 17px, 16px on phones) and the cards' words (drawn 15px),
+  each with a phone size. A block's own typography still wins.
+- **Smaller options:** a media band's inset, paragraph width and button gap on
+  phones, and paragraphs at blank lines; overlay cards' part gap inside the
+  words, label gap, head inset and bullet indent; one card's title size,
+  spacing and width (its *Style*); a sliding row's exact card width and side
+  arrows' inset; link rows' word width and rules; word spacing and line
+  breaking per screen; the eyebrow's space per screen; a section's heading
+  width per screen and button colours on phones; the buttons' arrow line
+  thickness.
+- **Header, menus and footer:** see Appearance → Header, Menus, Footer and
+  Languages; every option there is off until set.
+- **Saved blocks in other languages:** open a synced saved block and start a
+  translation under *Translations*, or `POST /api/admin/translations` with
+  `{ id, locale, kind: 'savedBlock' }`, then `PUT` its `strings` (as for a
+  page; `slug` is not needed). A page in that language draws the translation.

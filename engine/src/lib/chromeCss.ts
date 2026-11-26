@@ -1,4 +1,5 @@
 import { CHROME_GRAMMAR, type Chrome } from './chrome';
+import { FONT_STACKS } from './theme';
 import { typeRule } from './typeStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -14,7 +15,7 @@ import { typeRule } from './typeStyle';
    grammar its schema used, and dropped when it fails.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-const { COLOR, LENGTH, LINE, BOX } = CHROME_GRAMMAR;
+const { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE } = CHROME_GRAMMAR;
 const ok = (re: RegExp, v: unknown): v is string => typeof v === 'string' && re.test(v.trim());
 const len = (v: unknown) => (ok(LENGTH, v) ? v.trim() : undefined);
 const col = (v: unknown) => (ok(COLOR, v) ? v.trim() : undefined);
@@ -125,16 +126,38 @@ function headerCss(h: NonNullable<Chrome['header']>): string[] {
     if (h.menuIconHover === 'grow') out.push('.he-hdr__toggle:hover .he-hdr__bars{transform:scale(1.06);opacity:0.75}');
   }
 
-  /* 2.2c — side padding per tier. */
+  /* 2.2c — side padding per tier; (3.37) top and bottom too, inside the bar's height (its box is border-box). */
   if (h.padding) {
     for (const [tier, query] of TIERS) {
       const s = h.padding[tier];
       const r = rule('.he-hdr .he-hdr__inner', [
         ['padding-left', len(s?.left)],
         ['padding-right', len(s?.right)],
+        ['padding-top', len(s?.top)],
+        ['padding-bottom', len(s?.bottom)],
       ]);
       if (r) out.push(query ? `@media ${query}{${r}}` : r);
     }
+  }
+
+  const classic = (h.variant ?? 'classic') === 'classic';
+  /* 3.37 — the classic header: the space from the last link's words to what follows the links, where the links show.
+     Today that space is the bar's column gap (--he-gap, unset 24px) and the link's own end padding (12px); the
+     actions take the difference as a margin. Above the collapse width only, and on desktops ≤1440 its own. */
+  if (classic) {
+    const from = { laptop: 1441, tablet: 1025, mobile: 769 }[h.collapseAt ?? 'tablet'];
+    const gap = (value: string) => `.he-hdr--classic .he-hdr__actions{margin-inline-start:calc(${value} - var(--he-gap,24px) - 12px)}`;
+    const base = len(h.actionsGap);
+    const laptop = h.collapseAt === 'laptop' ? undefined : len(h.actionsGapLaptop);
+    if (base) out.push(`@media (min-width:${from}px){${gap(base)}}`);
+    if (laptop) out.push(`@media (min-width:${from}px) and (max-width:1440px){${gap(laptop)}}`);
+  }
+  /* 3.37 — no empty track for the part hidden at a width (the menu button above the collapse, the links below it):
+     each item takes a column of its own, so the side padding is the distance to the last thing in the bar. And with
+     no line under the bar, no edge either, so the bar is exactly its height. A centred phone logo places its own. */
+  if (h.exactEdges && classic) {
+    out.push('.he-hdr--classic:not(.is-logo-center) .he-hdr__inner{grid-template-columns:auto minmax(0,1fr);grid-auto-flow:column;grid-auto-columns:auto}');
+    if (h.border === false) out.push('.he-hdr--classic .he-hdr__bar{border-bottom-width:0}');
   }
 
   /* 2.2d — the header button, the same on phones (the phones' own padding is in library.css). */
@@ -224,6 +247,17 @@ function menuCss(m: NonNullable<Chrome['mobileMenu']>): string[] {
   out.push(rule('.he-menu .he-menu__row', [['color', col(m.itemColor)]]));
   if (m.noCurrentMark) out.push(`.he-menu .he-menu__row[aria-current]{color:${col(m.itemColor) ?? 'inherit'};font-weight:inherit;text-decoration:none}.he-menu .he-menu__row[aria-current]::after,.he-menu .he-menu__row[aria-current]::before{content:none}`);
   if (col(m.barColor)) out.push(`html:has(#he-menu:not([hidden])) .he-hdr__bar{background-color:${col(m.barColor)}}`);
+
+  /* 3.37 — the close X in two lines (Header.tsx draws them). */
+  if (m.closeIcon) {
+    out.push(
+      rule('.he-menu .he-menu__x', [
+        ['--he-x-s', len(m.closeIcon.size)],
+        ['--he-x-t', len(m.closeIcon.thickness)],
+        ['--he-x-c', col(m.closeIcon.color)],
+      ]),
+    );
+  }
 
   /* 2.4 — the drawer. */
   const d = m.drawer;
@@ -342,6 +376,55 @@ function footerCss(f: NonNullable<Chrome['footer']>): string[] {
   const pull = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wm{margin-top:calc(-1 * ${len(value)});pointer-events:none}` : '');
   out.push(pull(f.wordmarkPull));
   if (pull(f.wordmarkPullMobile)) out.push(`@media (max-width:768px){${pull(f.wordmarkPullMobile)}}`);
+
+  /* 3.37 — the wordmark: its own crop on phones (the share that shows), moved sideways from its place. */
+  const cropMobile = num(f.wordmarkCropMobile, 0, 90);
+  if (cropMobile !== undefined && Number.isInteger(cropMobile)) {
+    const show = String(Math.round((100 - cropMobile)) / 100);
+    out.push(`@media (max-width:768px){.he-ftr .he-ftr__wm.is-image .he-ftr__wmbox{aspect-ratio:calc(var(--he-wm-ratio) / ${show})}.he-ftr .he-ftr__wmname{height:calc(1em * ${show})}}`);
+  }
+  const offset = (value: unknown) => (len(value) ? `.he-ftr .he-ftr__wmbox{translate:${len(value)} 0}` : '');
+  out.push(offset(f.wordmarkOffset));
+  if (offset(f.wordmarkOffsetMobile)) out.push(`@media (max-width:768px){${offset(f.wordmarkOffsetMobile)}}`);
+
+  /* 3.37 — wider than a tablet: the space between the columns, and the thirds. In thirds the head column and the
+     middle one are each a third (P) and the menus sit at the end of the last third, M apart; the grid's own gap is M,
+     so the first two tracks carry G − M more and their items give it back as a margin. The first menu is put after an
+     empty track that takes up the rest of the last third. */
+  const columnGap = len(f.columnGap);
+  if (columnGap) out.push(`@media (width>=64rem){.he-ftr .he-ftr__grid{column-gap:${columnGap}}}`);
+  if (f.layoutDesktop === 'thirds') {
+    const g = columnGap ?? 'var(--he-gap,44px)';
+    const m = len(f.menusGap) ?? g;
+    const third = `calc((100% - 2 * ${g}) / 3 + ${g} - ${m})`;
+    const back = `calc(${g} - ${m})`;
+    const grid = '.he-ftr:is(.he-ftr--sitemap,.he-ftr--brand) .he-ftr__grid';
+    out.push(
+      `@media (width>=64rem){` +
+        `${grid}{column-gap:${m};grid-template-columns:minmax(0,${third}) minmax(0,${third}) minmax(0,1fr) repeat(var(--he-footer-cols),max-content)}` +
+        `${grid}>.he-ftr__lead{grid-column:1;margin-inline-end:${back}}` +
+        `${grid}>.he-ftr__middle{grid-column:2;margin-inline-end:${back};justify-items:center}` +
+        `${grid}>.he-ftr__lead+:not(.he-ftr__middle,.he-ftr__langrow),${grid}>.he-ftr__middle+:not(.he-ftr__langrow){grid-column:4}}`,
+    );
+  }
+  if (len(f.menusGapMobile)) out.push(`@media (max-width:768px){.he-ftr.is-links-row .he-ftr__grid{column-gap:${len(f.menusGapMobile)}}}`);
+
+  /* 3.37 — the space under the sign-up's heading (the sign-up's own grid gap is 6px), and its field's shadow. */
+  if (len(f.newsletterTitleGap)) out.push(`${nl} .he-ftr__nltitle{margin-bottom:calc(${len(f.newsletterTitleGap)} - 6px)}`);
+  const shadow = f.newsletterFieldShadow === 'none' ? 'none' : ok(SHADOW, f.newsletterFieldShadow) ? f.newsletterFieldShadow.trim().replace(/\s+/g, ' ') : undefined;
+  if (shadow) out.push(`${nl} .he-ftr__nlinput.he-nl__input{box-shadow:${shadow}}`);
+  return out;
+}
+
+/** 3.37 — the language codes: the colour of those that are not the current one, and a face per language for its own name. */
+function languagesCss(l: NonNullable<Chrome['languages']>): string[] {
+  const out: string[] = [];
+  const colour = col(l.color);
+  if (colour) out.push(`.he-langs .he-langs__item:not([aria-current='true'],:hover){color:${colour}}`);
+  for (const [code, face] of Object.entries(l.faces ?? {})) {
+    if (!CODE.test(code) || typeof face !== 'string' || !FACE.test(face) || !Object.prototype.hasOwnProperty.call(FONT_STACKS, face)) continue;
+    out.push(`:is(.he-langs__item,.he-lang__item):lang(${code}){font-family:${FONT_STACKS[face]}}`);
+  }
   return out;
 }
 
@@ -351,5 +434,6 @@ export function chromeCss(chrome: Chrome | undefined): string {
   const parts = [...(chrome.header ? headerCss(chrome.header) : []), ...(chrome.mobileMenu ? menuCss(chrome.mobileMenu) : []), ...(chrome.footer ? footerCss(chrome.footer) : [])];
   // 3.33 — the language row in the open menu.
   if (chrome.languages?.menuSize && len(chrome.languages.menuSize)) parts.push(`.he-menu .he-menu__langs :is(.he-langs__item,a,button){font-size:${len(chrome.languages.menuSize)}}`);
+  if (chrome.languages) parts.push(...languagesCss(chrome.languages));
   return parts.filter(Boolean).join('');
 }

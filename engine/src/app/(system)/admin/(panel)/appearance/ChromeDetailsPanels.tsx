@@ -172,7 +172,7 @@ export function HeaderDetailsPanel({ chrome, set }: Props) {
             )}
           </Grid>
           <div>
-            <p className="m-0 mb-2 text-[13px] text-ash">Side padding, left / right</p>
+            <p className="m-0 mb-2 text-[13px] text-ash">Padding — left / right, and top / bottom inside the bar’s height (more at the top moves the logo and links down)</p>
             <div className="grid gap-3 sm:grid-cols-4">
               {(
                 [
@@ -185,10 +185,17 @@ export function HeaderDetailsPanel({ chrome, set }: Props) {
                 <div key={tier} className="grid grid-cols-2 gap-2">
                   <Text label={`${name} L`} placeholder="—" value={h?.padding?.[tier]?.left} onChange={set(['chrome', 'header', 'padding', tier, 'left'])} />
                   <Text label="R" placeholder="—" value={h?.padding?.[tier]?.right} onChange={set(['chrome', 'header', 'padding', tier, 'right'])} />
+                  <Text label="Top" placeholder="—" value={h?.padding?.[tier]?.top} onChange={set(['chrome', 'header', 'padding', tier, 'top'])} />
+                  <Text label="Bottom" placeholder="—" value={h?.padding?.[tier]?.bottom} onChange={set(['chrome', 'header', 'padding', tier, 'bottom'])} />
                 </div>
               ))}
             </div>
           </div>
+          <Grid>
+            <Text label="Space after the links" hint="from the last link’s words to the languages, search or buttons — classic header" value={h?.actionsGap} placeholder="36px" onChange={set(at('actionsGap'))} />
+            <Text label="— on desktops up to 1440px" value={h?.actionsGapLaptop} placeholder="as above" onChange={set(at('actionsGapLaptop'))} />
+            <Check label="Exact edges: no hidden part leaves a gap at the side, no edge under a bar without a line (classic header)" value={h?.exactEdges} onChange={set(at('exactEdges'))} />
+          </Grid>
           <Grid>
             <Text label="Header button height" hint="e.g. 36px — phones too" value={h?.ctaHeight} onChange={set(at('ctaHeight'))} />
             <Text label="Header button padding" hint="e.g. 0 16px" value={h?.ctaPadding} onChange={set(at('ctaPadding'))} />
@@ -244,6 +251,11 @@ export function MenuDetailsPanel({ chrome, set }: Props) {
           <Text label="Contact text colour" hint="e.g. rgba(255,255,255,0.5)" value={m?.contactColor} onChange={set(at('contactColor'))} />
         </Grid>
         <Grid>
+          <Text label="Close X: line length" hint="two thin lines instead of the drawn X, e.g. 20px" value={m?.closeIcon?.size} placeholder="as drawn" onChange={set(['chrome', 'mobileMenu', 'closeIcon', 'size'])} />
+          <Text label="Close X: thickness" hint="e.g. 2px" value={m?.closeIcon?.thickness} placeholder="as drawn" onChange={set(['chrome', 'mobileMenu', 'closeIcon', 'thickness'])} />
+          <Text label="Close X: colour" hint="e.g. rgba(0,0,0,0.8)" value={m?.closeIcon?.color} placeholder="the menu’s text" onChange={set(['chrome', 'mobileMenu', 'closeIcon', 'color'])} />
+        </Grid>
+        <Grid>
           <Text label="Drawer: current page" hint="a colour" value={d?.activeColor} onChange={set(dr('activeColor'))} />
           <Text label="Drawer: open item tint" hint="e.g. rgba(255,255,255,0.06)" value={d?.openBackground} onChange={set(dr('openBackground'))} />
           <Text label="Drawer: open item corners" hint="e.g. 8px" value={d?.openRadius} onChange={set(dr('openRadius'))} />
@@ -296,6 +308,19 @@ export function FooterDetailsPanel({ chrome, set }: Props) {
           <Text label="Separators’ colour" value={f?.separatorColor} onChange={set(at('separatorColor'))} />
           <Text label="Space at the separators" hint="e.g. 6px" value={f?.separatorGap} onChange={set(at('separatorGap'))} />
           <Text label="Line above the bottom row" hint="a colour" value={f?.dividerColor} onChange={set(at('dividerColor'))} />
+          <ChoiceField
+            label="Columns wider than a tablet"
+            value={f?.layoutDesktop}
+            inherited="auto"
+            options={[
+              { value: 'auto', label: 'As drawn' },
+              { value: 'thirds', label: 'Three equal parts — head, middle, menus at the end' },
+            ]}
+            onChange={set(at('layoutDesktop'))}
+          />
+          <Text label="Space between the columns" hint="wider than a tablet; with thirds, between the parts" value={f?.columnGap} placeholder="44px" onChange={set(at('columnGap'))} />
+          {f?.layoutDesktop === 'thirds' && <Text label="Space between the menus" value={f?.menusGap} placeholder="as above" onChange={set(at('menusGap'))} />}
+          <Text label="Space between the menus on phones" hint="when they sit side by side" value={f?.menusGapMobile} placeholder="16px" onChange={set(at('menusGapMobile'))} />
           {f?.reveal && (
             <Num
               label="Reveal from"

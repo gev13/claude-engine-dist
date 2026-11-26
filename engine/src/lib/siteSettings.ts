@@ -34,7 +34,8 @@ export const siteSettingsSchema = z.object({
   contactEmail: z.string().trim().email().max(200).optional(),
 
   /** How dates render on posts and in the admin's public-facing output. */
-  dateFormat: z.enum(['d MMMM yyyy', 'MMMM d, yyyy', 'yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy']).optional(),
+  /** 3.37 — also the short month, day first or month first ("26 Nov 2026", "Nov 26, 2026"). */
+  dateFormat: z.enum(['d MMMM yyyy', 'MMMM d, yyyy', 'yyyy-MM-dd', 'dd/MM/yyyy', 'MM/dd/yyyy', 'd MMM yyyy', 'MMM d, yyyy']).optional(),
   /** IANA zone used when formatting those dates. */
   timeZone: z.string().trim().max(60).optional(),
 
@@ -166,6 +167,10 @@ export function formatDate(date: Date, settings: SiteSettings): string {
       return new Intl.DateTimeFormat('en-US', { ...opts, day: '2-digit', month: '2-digit', year: 'numeric' }).format(date);
     case 'MMMM d, yyyy':
       return new Intl.DateTimeFormat('en-US', { ...opts, day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+    case 'd MMM yyyy':
+      return new Intl.DateTimeFormat('en-GB', { ...opts, day: 'numeric', month: 'short', year: 'numeric' }).format(date);
+    case 'MMM d, yyyy':
+      return new Intl.DateTimeFormat('en-US', { ...opts, day: 'numeric', month: 'short', year: 'numeric' }).format(date);
     default:
       return new Intl.DateTimeFormat('en-GB', { ...opts, day: 'numeric', month: 'long', year: 'numeric' }).format(date);
   }

@@ -1,7 +1,7 @@
 import { BREAKPOINTS, FONT_STACKS, isColor, isUsableLength as isLength } from './theme';
 import { TIER_RANGE } from './tierRange';
 import { cutLegs, cutPolygon, hasCornerSizes, hasPhoneCorners, leafClip, leafRadii } from './shape';
-import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnSticky, type ColumnOrder, type ColumnWidth, GRADIENT_ANGLES, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
+import { type BlockStyle, type ColumnAlign, type ColumnJustify, type ColumnSticky, type ColumnOrder, type ColumnWidth, BG_POSITION, BG_SIZE, GRADIENT_ANGLES, GRADIENT_STOPS, type RowTracks, SECTION_VIDEO, type SpacingBox, type TypeOverride, isTrackList } from './blockStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section style → CSS
@@ -68,10 +68,17 @@ function backgroundDecls(style: BlockStyle): Decl[] {
   // close the url() and start a new declaration.
   const url = safe(bg.imageUrl);
   if (url && isBackgroundUrl(url)) {
-    out.push(['background-image', `url("${url}")`]);
-    push(out, 'background-size', bg.size, isKeyword(['cover', 'contain', 'auto']));
-    push(out, 'background-position', bg.position, isKeyword(['center', 'top', 'bottom', 'left', 'right']));
-    push(out, 'background-repeat', bg.repeat, isKeyword(['no-repeat', 'repeat', 'repeat-x', 'repeat-y']));
+    const size = customSize(bg.sizeCustom) ?? (bg.size && ['cover', 'contain', 'auto'].includes(bg.size) ? bg.size : undefined);
+    const position = customPosition(bg.positionCustom) ?? (bg.position && ['center', 'top', 'bottom', 'left', 'right'].includes(bg.position) ? bg.position : undefined);
+    const repeat = bg.repeat && ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'].includes(bg.repeat) ? bg.repeat : undefined;
+    const layered = layeredDecls(`url("${url}")`, size, position, repeat, bg.gradientLayer, gradientValue(bg.gradient));
+    if (layered) out.push(...layered);
+    else {
+      out.push(['background-image', `url("${url}")`]);
+      if (size) out.push(['background-size', size]);
+      if (position) out.push(['background-position', position]);
+      if (repeat) out.push(['background-repeat', repeat]);
+    }
     push(out, 'background-attachment', bg.attachment, isKeyword(['scroll', 'fixed']));
   } else {
     const gradient = gradientValue(bg.gradient);
@@ -87,26 +94,70 @@ function backgroundDecls(style: BlockStyle): Decl[] {
   return out;
 }
 
+const customSize = (v: string | undefined) => (v && BG_SIZE.test(v.trim()) ? v.trim() : undefined);
+const customPosition = (v: string | undefined) => (v && BG_POSITION.test(v.trim()) ? v.trim() : undefined);
+
+/**
+ * 3.37 — a picture and a gradient in one background: the gradient under the
+ * picture or over it, filling the section, while the picture keeps its own
+ * size, place and repeat. Null without both, or without a layer asked for.
+ */
+function layeredDecls(image: string, size: string | undefined, position: string | undefined, repeat: string | undefined, layer: string | undefined, gradient: string | null): Decl[] | null {
+  if (!gradient || (layer !== 'under' && layer !== 'over')) return null;
+  const pic = { image, size: size ?? 'auto', position: position ?? '0% 0%', repeat: repeat ?? 'repeat' };
+  const fill = { image: gradient, size: '100% 100%', position: '0% 0%', repeat: 'no-repeat' };
+  const [top, bottom] = layer === 'over' ? [fill, pic] : [pic, fill];
+  return [
+    ['background-image', `${top.image},${bottom.image}`],
+    ['background-size', `${top.size},${bottom.size}`],
+    ['background-position', `${top.position},${bottom.position}`],
+    ['background-repeat', `${top.repeat},${bottom.repeat}`],
+  ];
+}
+
 function isBackgroundUrl(url: string): boolean {
   return /^(\/[A-Za-z0-9._~\-/%]*|https?:\/\/[A-Za-z0-9._~\-/%?=&:]+)$/.test(url) && !url.includes(')');
 }
 
 /** 3.33 — the background on phones; only what was set, so the rest stays the wider screen's. */
 function mobileBackgroundDecls(style: BlockStyle): Decl[] {
-  const m = style.background?.mobile;
+  const bg = style.background;
+  const m = bg?.mobile;
   if (!m) return [];
   const out: Decl[] = [];
   if (m.clear) out.push(['background-color', 'transparent'], ['background-image', 'none']);
   push(out, 'background-color', m.color, isColor);
   const url = safe(m.imageUrl);
-  if (url && isBackgroundUrl(url)) out.push(['background-image', `url("${url}")`]);
-  push(out, 'background-size', m.size, isKeyword(['cover', 'contain', 'auto']));
-  push(out, 'background-position', m.position, isKeyword(['center', 'top', 'bottom', 'left', 'right']));
+  const ownUrl = url && isBackgroundUrl(url) ? url : null;
+  const size = customSize(m.sizeCustom) ?? (m.size && ['cover', 'contain', 'auto'].includes(m.size) ? m.size : undefined);
+  const position = customPosition(m.positionCustom) ?? (m.position && ['center', 'top', 'bottom', 'left', 'right'].includes(m.position) ? m.position : undefined);
+  // 3.37 — a gradient on phones, or a layered one whose picture or place changes there: the whole list again.
+  const wide = safe(bg?.imageUrl);
+  const picture = m.clear ? null : (ownUrl ?? (wide && isBackgroundUrl(wide) ? wide : null));
+  // A phone gradient keeps the wider screen's direction unless it has its own.
+  const gradient = gradientValue(m.gradient ? { angle: bg?.gradient?.angle, ...m.gradient } : bg?.gradient);
+  if (!m.clear && (m.gradient || ((ownUrl || size || position) && picture && bg?.gradientLayer && gradient))) {
+    if (picture) {
+      const wideSize = customSize(bg?.sizeCustom) ?? (bg?.size && ['cover', 'contain', 'auto'].includes(bg.size) ? bg.size : undefined);
+      const widePosition = customPosition(bg?.positionCustom) ?? (bg?.position && ['center', 'top', 'bottom', 'left', 'right'].includes(bg.position) ? bg.position : undefined);
+      const repeat = bg?.repeat && ['no-repeat', 'repeat', 'repeat-x', 'repeat-y'].includes(bg.repeat) ? bg.repeat : undefined;
+      const layered = layeredDecls(`url("${picture}")`, size ?? wideSize, position ?? widePosition, repeat, bg?.gradientLayer, gradient);
+      if (layered) return [...out, ...layered];
+    } else if (gradient) return [...out, ['background-image', gradient]];
+  }
+  if (ownUrl) out.push(['background-image', `url("${ownUrl}")`]);
+  if (size) out.push(['background-size', size]);
+  if (position) out.push(['background-position', position]);
   return out;
 }
 
 /** P3-C4 — a linear gradient from checked colours and a closed list of angles; null if anything fails. */
 function gradientValue(g: NonNullable<BlockStyle['background']>['gradient']): string | null {
+  // 3.37 — written stops, checked again, over the two or three colours.
+  if (g?.stops && GRADIENT_STOPS.test(g.stops.trim())) {
+    const angle = g.angle && (GRADIENT_ANGLES as readonly string[]).includes(g.angle) ? g.angle : '135';
+    return `linear-gradient(${angle}deg,${g.stops.trim().replace(/\s*,\s*/g, ',')})`;
+  }
   if (!g?.from || !g.to) return null;
   const stops = [g.from, g.via, g.to].filter((c): c is string => c !== undefined).map((c) => safe(c));
   if (stops.some((c) => !c || !isColor(c))) return null;
@@ -176,11 +227,16 @@ function typeDecls(override: TypeOverride | undefined): Decl[] {
   push(out, 'letter-spacing', override.letterSpacing, isLength);
   push(out, 'text-transform', override.transform, isKeyword(['none', 'uppercase', 'lowercase', 'capitalize']));
   push(out, 'text-align', override.align, isKeyword(['left', 'center', 'right']));
+  // 3.37
+  push(out, 'word-spacing', override.wordSpacing, isLength);
+  push(out, 'text-wrap', override.wrap, isKeyword(WRAPS));
 
   return out;
 }
 
-const isLineHeight = (v: string) => /^(?:\d*\.?\d+|\d*\.?\d+(?:px|rem|em))$/.test(v);
+const WRAPS = ['wrap', 'pretty', 'balance'];
+/** 3.37 — `normal` too, which the schema always took and the stylesheet dropped. */
+const isLineHeight = (v: string) => v === 'normal' || /^(?:\d*\.?\d+|\d*\.?\d+(?:px|rem|em))$/.test(v);
 
 /** A role's size, line height and letter spacing on one tier (3.3; the last two 3.13.1). */
 function tierDecls(override: TypeOverride | undefined, tier: 'tablet' | 'mobile'): Decl[] {
@@ -191,6 +247,8 @@ function tierDecls(override: TypeOverride | undefined, tier: 'tablet' | 'mobile'
   push(out, 'letter-spacing', tier === 'tablet' ? override.letterSpacingTablet : override.letterSpacingMobile, isLength);
   push(out, 'text-align', tier === 'tablet' ? override.alignTablet : override.alignMobile, isKeyword(['left', 'center', 'right']));
   if (tier === 'mobile') push(out, 'color', override.colorMobile, isColor);
+  push(out, 'word-spacing', tier === 'tablet' ? override.wordSpacingTablet : override.wordSpacingMobile, isLength);
+  push(out, 'text-wrap', tier === 'tablet' ? override.wrapTablet : override.wrapMobile, isKeyword(WRAPS));
   return out;
 }
 
@@ -291,7 +349,7 @@ export const EYEBROWS = ':is(.he-eyebrow .type-eyebrow,.he-hero__kicker,.he-ucar
 /** Cards' small labels and "/01" numbers — as heavy as the eyebrow rule, written after it. */
 /** 3.26 — the cards' link lines, written after body (which also reaches a span) so they can differ from it. */
 export const CARD_LINKS = ':is(.he-more,.he-fgrid__more,.he-ocard__more,.he-card__more,.he-plst__more):not(.he-show__more)';
-export const CARD_LABELS = ':is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow):not(.type-eyebrow)';
+export const CARD_LABELS = ':is(.he-ucard__eyebrow,.he-mrows__num,.he-fgrid__eyebrow,.he-tile__eyebrow,.he-ocard__eyebrow,.he-ocard__num):not(.type-eyebrow)';
 
 export function blockStyleToCss(
   id: string,
@@ -444,6 +502,8 @@ export function blockStyleToCss(
   const cardLabel = typeDecls(style.typography?.cardLabel);
   // `:not(.type-eyebrow)` lifts it to the eyebrow rule's weight, so being written later is enough to win.
   if (cardLabel.length) parts.push(block(`${root} ${CARD_LABELS}`, cardLabel));
+  // 3.37 — a card number given a colour shows it as set, not faded.
+  if (style.typography?.cardLabel?.color && isColor(style.typography.cardLabel.color)) parts.push(`${root} .he-ocard__num{opacity:1}`);
   const cardLink = typeDecls(style.typography?.cardLink);
   if (cardLink.length) parts.push(block(`${root} ${CARD_LINKS}`, cardLink));
   const eyebrowColor = safe(style.typography?.eyebrow?.color);
@@ -470,6 +530,11 @@ export function blockStyleToCss(
       block(`${root} ${CARD_LINKS}`, tierDecls(style.typography?.cardLink, tier)),
       // 3.13 — the section's gap on this tier.
       block(root, tierGap && isLength(tierGap) ? [['--he-gap', tierGap]] : []),
+      // 3.37 — the space under the eyebrow on this tier.
+      block(`${root} .he-eyebrow`, (() => {
+        const below = safe(tier === 'tablet' ? style.typography?.eyebrow?.spaceBelowTablet : style.typography?.eyebrow?.spaceBelowMobile);
+        return below && isLength(below) ? ([['margin-bottom', below]] as Decl[]) : [];
+      })()),
       // 3.33 — the eyebrow's row, when its alignment changes on this tier.
       block(`${root} .he-eyebrow`, eyebrowJustify(tier === 'tablet' ? style.typography?.eyebrow?.alignTablet : style.typography?.eyebrow?.alignMobile) ? [['justify-content', eyebrowJustify(tier === 'tablet' ? style.typography?.eyebrow?.alignTablet : style.typography?.eyebrow?.alignMobile)!]] : []),
     ].join('');
@@ -483,6 +548,11 @@ export function blockStyleToCss(
     parts.push(`@media (max-width:768px){${block(root, phoneBackground)}${ownsBand ? `${root}>*{background:transparent}` : ''}}`);
   }
   if (style.maxWidthMobile && isLength(style.maxWidthMobile)) parts.push(`@media (max-width:768px){${root}{max-width:${style.maxWidthMobile}}}`);
+  // 3.37 — the heading's measure on tablets and phones.
+  const titleTablet = safe(style.titleWidthTablet);
+  if (titleTablet && isLength(titleTablet)) parts.push(`@media (max-width:1024px){${root}{--he-title-measure:${titleTablet}}}`);
+  const titlePhone = safe(style.titleWidthMobile);
+  if (titlePhone && isLength(titlePhone)) parts.push(`@media (max-width:768px){${root}{--he-title-measure:${titlePhone}}}`);
 
   for (const { key, maxWidth } of BREAKPOINTS) {
     const decls = boxDecls(style.spacing?.[key]);
@@ -512,6 +582,26 @@ export function blockStyleToCss(
     ] as const) {
       if (typeof share === 'number' && Number.isInteger(share) && share >= 20 && share <= 100) parts.push(`@media (max-width:${max}px){${target}>*{flex:0 0 ${share}%}}`);
     }
+    // 3.37 — a card width as a length, over the share (a grid that is not swiping ignores a flex basis).
+    for (const [width, max] of [
+      [style.swipeCardWidth, 0],
+      [style.swipeCardWidthTablet, 1024],
+      [style.swipeCardWidthMobile, 768],
+    ] as const) {
+      const w = safe(width);
+      if (w && isLength(w)) parts.push(max ? `@media (max-width:${max}px){${target}>*{flex:0 0 ${w}}}` : `${target}>*{flex:0 0 ${w}}`);
+    }
+    // 3.37 — the side buttons' distance in from the row's ends.
+    if (style.swipeArrows === 'sides') {
+      for (const [inset, max] of [
+        [style.swipeArrowInset, 0],
+        [style.swipeArrowInsetTablet, 1024],
+        [style.swipeArrowInsetMobile, 768],
+      ] as const) {
+        const v = safe(inset);
+        if (v && isLength(v)) parts.push(max ? `@media (max-width:${max}px){${root} .he-swipe-nav.is-sides{padding-inline:${v}}}` : `${root} .he-swipe-nav.is-sides{padding-inline:${v}}`);
+      }
+    }
   }
 
   /* 2.19 (T32) — hidden on exactly the tiers chosen, each its own range, so
@@ -530,14 +620,19 @@ export function blockStyleToCss(
     parts.push(
       style.buttonsMobile === 'fit'
         ? // 3.33 — `.he-btns` asks to be centred or at the right; a stack has to honour that across, where its row did along.
-          `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}${root} .he-btns.is-center{align-items:center}${root} .he-btns.is-right{align-items:flex-end}}`
+          // 3.37 — and so does a band whose words are centred on phones: its buttons stay centred, each at its own width.
+          `@media (max-width:768px){${row}{flex-direction:column;align-items:flex-start;gap:12px}${button}{flex:0 0 auto;width:auto;max-width:100%}${root} .he-btns.is-center{align-items:center}${root} .he-btns.is-right{align-items:flex-end}${root} .he-band:is(.is-m-center,.is-m-bottomCenter) .he-actions{align-items:center}}`
         : `@media (max-width:768px){${row}{flex-direction:column;align-items:stretch;gap:12px}${button}{flex:0 0 auto;width:100%;justify-content:space-between;text-align:left;white-space:normal;line-height:1.35}}`,
     );
   }
 
   /* 3.28 — the section's own button colours, as the properties every button reads. */
-  const colours = style.buttonColors;
-  if (colours) {
+  // 3.37 — and on phones.
+  for (const [colours, phone] of [
+    [style.buttonColors, false],
+    [style.buttonColorsMobile, true],
+  ] as const) {
+    if (!colours) continue;
     const decls: string[] = [];
     for (const variant of ['primary', 'outline'] as const) {
       const c = colours[variant];
@@ -552,7 +647,7 @@ export function blockStyleToCss(
       ];
       for (const [name, value] of pairs) if (value && isColor(value)) decls.push(`--he-btn-${variant}-${name}:${value}`);
     }
-    if (decls.length) parts.push(`${root}{${decls.join(';')}}`);
+    if (decls.length) parts.push(phone ? `@media (max-width:768px){${root}{${decls.join(';')}}}` : `${root}{${decls.join(';')}}`);
   }
 
   /* A fixed background is the parallax effect, and it has two well-known

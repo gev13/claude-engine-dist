@@ -4,6 +4,7 @@ import { careersLookSchema } from './careersLook';
 import { chromeSchema } from './chrome';
 import { cornerShapeSchema } from './shape';
 import { FONT_CATALOGUE, type CatalogueRole } from './fontCatalogue';
+import { BRAND_STACKS, FONT_STACKS } from './fontStacks';
 
 /** The entrances a section can play as it scrolls into view (SC4); blockStyle's REVEALS is this list. */
 export const SECTION_REVEALS = ['fade', 'rise', 'zoom', 'left', 'right', 'blur', 'fadeSlow'] as const;
@@ -112,43 +113,7 @@ const lineHeight = z.string().trim().refine(isLineHeight, 'Not a valid line heig
    Adding a face means adding it to public/fonts, to fonts.css, and here.
    ──────────────────────────────────────────────────────────────────────────── */
 
-/**
- * The five the engine was built with: three self-hosted brand faces and two
- * that resolve to whatever the reader's device has.
- *
- * These keep their short names because they are stored in every theme and
- * every block style already written — `display` means Bricolage Grotesque and
- * always will.
- */
-export const BRAND_STACKS = {
-  display: "'Bricolage Grotesque', 'Archivo', system-ui, sans-serif",
-  sans: "'Archivo', system-ui, -apple-system, sans-serif",
-  mono: "'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace",
-  system: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  serif: "Georgia, 'Times New Roman', Times, serif",
-} as const;
-
-/** What a catalogue family falls back to while its file loads, or if it fails. */
-const FALLBACK: Record<CatalogueRole, string> = {
-  sans: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  serif: "Georgia, 'Times New Roman', Times, serif",
-  display: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
-  mono: "ui-monospace, 'SFMono-Regular', monospace",
-};
-
-/**
- * Every face an editor may choose: the five above plus the self-hosted Google
- * Fonts catalogue.
- *
- * Built from `fontCatalogue.ts`, which `scripts/fetch-fonts.mjs` generates
- * beside the files themselves — so a family cannot be offered unless its
- * `.woff2` is actually on disk, which is the mistake this arrangement exists
- * to make impossible.
- */
-export const FONT_STACKS: Record<string, string> = {
-  ...BRAND_STACKS,
-  ...Object.fromEntries(FONT_CATALOGUE.map((f) => [f.key, `'${f.family}', ${FALLBACK[f.role]}`])),
-};
+export { BRAND_STACKS, FONT_STACKS } from './fontStacks';
 
 export type FontKey = string;
 
@@ -406,12 +371,13 @@ export const themeSchema = z.object({
    * deliberately not pointed at the body role, because doing so would move
    * every intro paragraph on every existing site by a pixel.
    */
+  /** 3.37 — `body`: the paragraphs of bands, panels and sections' own text (drawn 17px, 16px on phones); `card`: a card's words — pictures with text over them, their bullet points, post card excerpts (drawn 15px). Each unset keeps the drawn size. */
   blockText: z
-    .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
+    .object({ lead: length.optional(), text: length.optional(), small: length.optional(), body: length.optional(), card: length.optional() })
     .optional(),
-  /** 3.13 — the same three on phones; each unset keeps the size above. */
+  /** 3.13 — the same on phones; each unset keeps the size above. */
   blockTextMobile: z
-    .object({ lead: length.optional(), text: length.optional(), small: length.optional() })
+    .object({ lead: length.optional(), text: length.optional(), small: length.optional(), body: length.optional(), card: length.optional() })
     .optional(),
 
   /**
@@ -540,6 +506,8 @@ export const themeSchema = z.object({
       /** 3.28 — the buttons' arrow drawn in a line (as before) or with a solid head; its size; the space before it; under the pointer it stays (as before) or slides out and back in. */
       arrowStyle: z.enum(['stroke', 'filled']).optional(),
       arrowSize: length.optional(),
+      /** 3.37 — the arrow's line thickness (in its own 24-unit drawing; the buttons draw 2.4). */
+      arrowStroke: z.number().min(0.5).max(4).optional(),
       arrowGap: length.optional(),
       arrowHover: z.enum(['none', 'slide']).optional(),
       /** 3.28 — "Text" buttons under the pointer: their colour, and the line under them (unset, shown). */
@@ -722,6 +690,12 @@ export const themeSchema = z.object({
       /** 3.33 — frosted fields (blur behind, px) and a shadow under them. */
       blur: z.number().int().min(0).max(40).optional(),
       shadow: z.string().trim().max(120).refine(isShadow, 'Such as 0 4px 20px rgba(0,0,0,0.1)').optional(),
+      /** 3.37 — the placeholder's colour and letter spacing; a text box's corners (unset: `radius`), its padding at the top and its resize grip. Written by lib/fieldsCss.ts. */
+      placeholder: color.optional(),
+      placeholderTracking: length.optional(),
+      textareaRadius: length.optional(),
+      textareaPaddingTop: length.optional(),
+      textareaResize: z.enum(['none', 'vertical']).optional(),
     })
     .optional(),
 

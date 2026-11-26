@@ -130,6 +130,8 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
       placeholders={look.form === 'placeholders'}
       dropZone={look.dropZone}
       doneLinks={look.doneButtons ? { home: '/', careers: CAREERS_PATH } : undefined}
+      fieldOrder={look.applyFieldOrder}
+      arrow={look.applyArrow}
     />
   );
   const closedNote = (
@@ -162,13 +164,22 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
     </dl>
   );
   const left = job.deadline ? formatAmount(new Date(job.deadline), locale) : '';
+  // 3.37 — "( 1 month ago )" with a space inside the brackets, when chosen. The plain form keeps its three text nodes, as before.
+  const suffix = (words: string) =>
+    look.dateSuffix === 'spaced' ? (
+      `( ${words} )`
+    ) : (
+      <>
+        ({words})
+      </>
+    );
   const dates = (job.postedAt || job.deadline) && (
     <dl className="he-job__dates">
       {job.postedAt && (
         <div>
           <dt>{t('careers.postedLabel')}</dt>
           <dd>
-            {formatAbsolute(new Date(job.postedAt), locale)} <span className="he-job__ago">({formatRelative(new Date(job.postedAt), locale)})</span>
+            {formatAbsolute(new Date(job.postedAt), locale)} <span className="he-job__ago">{suffix(formatRelative(new Date(job.postedAt), locale))}</span>
           </dd>
         </div>
       )}
@@ -177,7 +188,7 @@ export default async function JobPage({ params }: { params: Promise<Params> }) {
           <dt>{t('careers.deadlineLabel')}</dt>
           <dd>
             {formatAbsolute(new Date(job.deadline), locale)}{' '}
-            <span className="he-job__ago">({deadlineGone || !left ? t('careers.closed') : t('careers.left', { time: left })})</span>
+            <span className="he-job__ago">{suffix(deadlineGone || !left ? t('careers.closed') : t('careers.left', { time: left }))}</span>
           </dd>
         </div>
       )}

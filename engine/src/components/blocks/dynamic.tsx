@@ -14,11 +14,12 @@ import type { Paging } from '@/server/content/resolve';
 import { getServiceCatalogue } from '@/server/content/services';
 import { cardDate } from '@/lib/dates';
 import { listPosts } from '@/server/content/posts';
+import type { Locale } from '@/lib/locales';
 import { BlockHead } from './parts';
 import { PostPager } from './library/PostPager';
 import { Carousel } from './library/Carousel';
 import { SiteImg } from '@/components/ui/SiteImg';
-import { resolveBlog, titleClamp, type PostCardOptions } from '@/lib/blog';
+import { CARD_TIERS, resolveBlog, TINT_STOPS, titleClamp, type PostCardOptions } from '@/lib/blog';
 import { getTheme } from '@/server/content/theme';
 import { isColor, isLength } from '@/lib/theme';
 import { cardHoverProps, wantsTilt } from '@/lib/cardHover';
@@ -66,7 +67,7 @@ type ListContext = { permalinks: Permalinks; t: T };
  * pages on the server (`pagination: 'server'`): it says which page this is,
  * so the list reads that slice and prints real links to the others.
  */
-export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockId?: string }) {
+export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockId?: string; locale?: Locale }) {
   const [permalinks, messages] = await Promise.all([getPermalinks(), getMessages()]);
   const t = messageReader(messages);
   const ctx: ListContext = { permalinks, t };
@@ -77,6 +78,8 @@ export async function PostListBlock(p: P<'postList'> & { paging?: Paging; blockI
     categorySlug: p.categorySlug,
     limit: p.limit,
     offset: paging ? (paging.number - 1) * p.limit : 0,
+    // 3.37 — the page's language: a translated page lists its own language's posts.
+    locale: p.locale,
   });
   const listId = paging ? `he-list-${p.blockId ?? 'posts'}` : undefined;
   const pager = paging && (
@@ -368,7 +371,9 @@ export function PostCollection({
   const moves = cardHoverProps(card.hover);
   const withExcerpt = variant === 'list' || variant === 'wide' || variant === 'overlay';
 
-  const items = posts.map((post) => {
+  // 3.37 — the overlay cards on phones: a height for each card in turn, the last for the rest; checked again, as they land in a style attribute.
+  const heights = variant === 'overlay' && Array.isArray(card.heightsMobile) ? card.heightsMobile.filter((h) => typeof h === 'string' && isLength(h)).map((h) => h.trim()) : [];
+  const items = posts.map((post, index) => {
     const chipText = post.kind === 'research' ? labels.research : (post.categoryName ?? labels.article);
     const date = card.date !== false && post.publishedAt && (
       <time className="he-plst__date" dateTime={post.publishedAt.toISOString()}>
@@ -376,7 +381,7 @@ export function PostCollection({
       </time>
     );
     return (
-      <li key={post.id} className={cn('he-plst__item', moves.className)} style={moves.style}>
+      <li key={post.id} className={cn('he-plst__item', moves.className)} style={heights.length ? ({ ...moves.style, '--he-plst-hi': heights[Math.min(index, heights.length - 1)] } as React.CSSProperties) : moves.style}>
         <Link href={postPath(permalinks, post)} className="he-plst__link">
           {!minimal && (
             <div className="he-plst__media">
@@ -424,6 +429,17 @@ export function PostCollection({
   const height = overlay && card.height && isLength(card.height) ? card.height : undefined;
   // 3.33 — the words' own types, the phone height and padding, and the pointer as the arrow.
   const heightMobile = overlay && card.heightMobile && isLength(card.heightMobile) ? card.heightMobile : undefined;
+  // 3.37 — the words' spacing and the excerpt's lines and width; the overlay's stops, the tiers that wait for the pointer, the picture's own box.
+  const okLength = (v: unknown) => (typeof v === 'string' && isLength(v) ? v.trim() : undefined);
+  const textGap = okLength(card.textGap);
+  const textGapMobile = okLength(card.textGapMobile);
+  const excerptLines = typeof card.excerptLines === 'number' && Number.isInteger(card.excerptLines) && card.excerptLines >= 1 && card.excerptLines <= 6 ? card.excerptLines : undefined;
+  const excerptWidth = okLength(card.excerptWidth);
+  const stops = overlay && typeof card.tintStops === 'string' && TINT_STOPS.test(card.tintStops.trim()) ? card.tintStops.trim() : undefined;
+  const revealShown = overlay && card.reveal && Array.isArray(card.revealAt) ? CARD_TIERS.filter((tier) => !card.revealAt!.includes(tier)) : [];
+  const box = (b: { width?: string; height?: string } | undefined) => (b && (okLength(b.width) || okLength(b.height)) ? { width: okLength(b.width), height: okLength(b.height) } : undefined);
+  const imageBox = overlay ? box(card.imageBox) : undefined;
+  const imageBoxMobile = overlay ? box(card.imageBoxMobile) : undefined;
   const listClass = cn(
     'he-plst he-swipe-track',
     `is-${variant}`,
@@ -438,6 +454,15 @@ export function PostCollection({
     overlay && card.textPadding && 'has-pad',
     overlay && card.textPaddingMobile && 'has-pad-m',
     card.arrow === 'pointer' && 'has-arrow-pointer',
+    textGap && 'has-tg',
+    textGapMobile && 'has-tg-m',
+    excerptLines && 'has-excerpt-lines',
+    excerptWidth && 'has-excerpt-w',
+    stops && 'has-stops',
+    ...revealShown.map((tier) => `is-shown-${tier}`),
+    imageBox && 'has-ibox',
+    imageBoxMobile && 'has-ibox-m',
+    heights.length > 0 && 'has-hs-m',
   );
   const style = {
     '--cols': columns,
@@ -452,6 +477,15 @@ export function PostCollection({
     ...(overlay && card.textPadding ? { '--he-plst-pad': card.textPadding } : {}),
     ...(overlay && card.textPaddingMobile ? { '--he-plst-pad-m': card.textPaddingMobile } : {}),
     ...(card.arrow === 'pointer' ? { '--he-plst-cursor': arrowCursor(card.arrowColor, card.arrowGlyph, card.arrowSize) } : {}),
+    ...(textGap ? { '--he-plst-tg': textGap } : {}),
+    ...(textGapMobile ? { '--he-plst-tg-m': textGapMobile } : {}),
+    ...(excerptLines ? { '--he-plst-el': excerptLines } : {}),
+    ...(excerptWidth ? { '--he-plst-ew': excerptWidth } : {}),
+    ...(stops ? { '--he-plst-stops': stops } : {}),
+    ...(imageBox?.width ? { '--he-plst-iw': imageBox.width } : {}),
+    ...(imageBox?.height ? { '--he-plst-ih': imageBox.height } : {}),
+    ...(imageBoxMobile?.width ? { '--he-plst-iw-m': imageBoxMobile.width } : {}),
+    ...(imageBoxMobile?.height ? { '--he-plst-ih-m': imageBoxMobile.height } : {}),
   } as React.CSSProperties;
 
   const tilt = wantsTilt(card.hover) && <CardTilt />;

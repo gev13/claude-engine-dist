@@ -20,7 +20,7 @@ import { articleNode, breadcrumbs, customNodes, faqFromBlocks, graph, webPage, t
 import { site } from '@/lib/site';
 import { cn, isoDate } from '@/lib/utils';
 import { cardDate } from '@/lib/dates';
-import { isColor } from '@/lib/theme';
+import { isColor, isLength } from '@/lib/theme';
 import { getMessages } from '@/server/content/messages';
 import { adjacentPosts, listPosts, postUrl, type PostDetail, type PostListItem } from '@/server/content/posts';
 import { AuthorBox, BackLink, PostShare, PostToc, PrevNext, RelatedPosts } from './PostExtras';
@@ -121,6 +121,8 @@ export async function PostArticle({
   const around = blog.eyebrowStyle === 'chip' ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
   const categoryHref = post.categorySlug ? categoryPath(permalinks, post.categorySlug) : null;
   const look = blog.look.post;
+  // 3.37 — one space between the cover card's words, checked again: it lands in a style attribute.
+  const asideTextGap = look.asideTextGap && isLength(look.asideTextGap) ? look.asideTextGap.trim() : undefined;
   // 3.28 — the line with only the category in the accent, the rest in its own colour.
   const split = look.categoryOnly && !around ? eyebrowAroundCategory(blog.eyebrow, eyebrowValues) : null;
   const eyebrow = split ? (
@@ -305,7 +307,7 @@ export async function PostArticle({
             <div className="he-post-aside" style={blog.coverTint && isColor(blog.coverTint) ? ({ '--he-aside-tint': blog.coverTint } as React.CSSProperties) : undefined}>
               <header className="he-post-aside__card">
                 <SiteImg src={post.coverUrl!} alt="" className="he-post-aside__img" sizes="half" priority />
-                <div className="he-post-aside__text">
+                <div className={asideTextGap ? 'he-post-aside__text has-tg' : 'he-post-aside__text'} style={asideTextGap ? ({ '--he-aside-tg': asideTextGap } as React.CSSProperties) : undefined}>
                   {back}
                   {blog.eyebrow && eyebrow}
                   {title}
@@ -313,7 +315,7 @@ export async function PostArticle({
                   {(post.publishedAt || blog.meta.readingTime) && (
                     <p className="he-post-aside__meta">
                       {post.publishedAt && <time dateTime={post.publishedAt.toISOString()}>{cardDate(post.publishedAt)}</time>}
-                      {post.publishedAt && blog.meta.readingTime && <span aria-hidden="true">•</span>}
+                      {post.publishedAt && blog.meta.readingTime && (look.asideMetaDot === 'dot' ? <span className="he-post-aside__dot" aria-hidden="true" /> : <span aria-hidden="true">•</span>)}
                       {blog.meta.readingTime && <span>{`${post.readingMinutes} ${t('blog.minRead')}`}</span>}
                     </p>
                   )}

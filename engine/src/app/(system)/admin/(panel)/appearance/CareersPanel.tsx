@@ -4,7 +4,7 @@ import { Field, Input, Panel } from '@/components/admin/ui';
 import { ChoiceField, LengthField } from '@/components/admin/styleFields';
 import { TypeStyleFields as TypeFields } from '@/components/admin/TypeStyleFields';
 import { useSavedBlocks } from '@/components/admin/SavedBlocksTools';
-import { DETAIL_KEYS, type CareersLook, type DetailKey } from '@/lib/careersLook';
+import { APPLY_FIELDS, DETAIL_KEYS, type ApplyField, type CareersLook, type DetailKey } from '@/lib/careersLook';
 
 /**
  * 3.29 — Appearance → Careers: how the listing, the advert and the
@@ -84,6 +84,20 @@ const ADVERT: RowDef[] = [
   ['coverRadius', 'Cover’s corners', 'one to four'],
   ['coverRadiusMobile', 'Cover’s corners on phones'],
   ['coverGap', 'Space above the cover'],
+  /* 3.37 */
+  ['eyebrowGap', 'Space under the line above the title'],
+  ['titleGapMobile', 'Space under the title on phones'],
+  ['headInsetMobile', 'Heading inset at the sides on phones', 'the line above and the title'],
+  ['iconSize', 'Icon size', 'e.g. 22px; empty is 20px'],
+  ['iconGap', 'Space beside an icon'],
+  ['detailsRowGap', 'Space between rows of details'],
+  ['detailsRowGapMobile', 'Between rows on phones'],
+  ['detailsColumnGap', 'Space between columns of details'],
+  ['detailsColumnGapMobile', 'Between columns on phones'],
+  ['detailsInsetMobile', 'Details inset at the sides on phones'],
+  ['coverOverlay', 'A fade over the cover', 'top to bottom, e.g. #123456 30%, rgba(0,0,0,0) 50%'],
+  ['coverOverlayMobile', 'The fade on phones'],
+  ['datesGapMobile', 'Space above the dates on phones'],
 ];
 const APPLY: RowDef[] = [
   ['applyBackground', 'Card colour', 'a colour, or transparent'],
@@ -99,7 +113,44 @@ const APPLY: RowDef[] = [
   ['dropFill', 'Drop zone’s fill', 'a colour, or transparent'],
   ['dropText', 'Drop zone’s words'],
   ['dropRadius', 'Drop zone’s corners', 'one to four'],
+  /* 3.37 */
+  ['applyTopMobile', 'Space above it on phones'],
+  ['applyBleedMobile', 'How far it reaches past the panel’s padding on phones', 'e.g. 12px; empty is 10px'],
+  ['applyActionsGap', 'Space above the send button'],
+  ['dropPadding', 'Drop zone’s padding', 'one to four'],
+  ['dropGap', 'Space between the drop zone’s parts'],
+  ['dropLabelGap', 'Space under the drop zone’s label'],
 ];
+
+/** 3.37 — the cover's picture at a size and place of its own: four lengths, each empty keeping the frame's. */
+function CoverPlace({ label, value, onChange }: { label: string; value: CareersLook['coverPlace']; onChange: (next: CareersLook['coverPlace']) => void }) {
+  const sides = [
+    ['width', 'width, e.g. 150%'],
+    ['height', 'height, e.g. 110%'],
+    ['left', 'left, e.g. -10%'],
+    ['top', 'top, e.g. 0'],
+  ] as const;
+  return (
+    <Field label={label} hint="the frame clips it; empty fills the frame">
+      <div className="grid grid-cols-4 gap-2">
+        {sides.map(([side, placeholder]) => (
+          <Input
+            key={side}
+            aria-label={`${label}: ${side}`}
+            value={value?.[side] ?? ''}
+            placeholder={placeholder}
+            spellCheck={false}
+            onChange={(e) => {
+              const next = { ...value, [side]: e.target.value.trim() || undefined };
+              for (const key of Object.keys(next) as (keyof typeof next)[]) if (!next[key]) delete next[key];
+              onChange(Object.keys(next).length ? next : undefined);
+            }}
+          />
+        ))}
+      </div>
+    </Field>
+  );
+}
 
 /** 3.33 — many small fields, all alike: a value typed in, checked when saved. */
 function Rows({ careers, set, defs }: { careers: CareersLook | undefined; set: Setter; defs: RowDef[] }) {
@@ -269,6 +320,30 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
             ]}
             onChange={(value) => set(at('detailsColumnsMobile'))(value === '1' ? 1 : value === '2' ? 2 : undefined)}
           />
+          {/* 3.37 */}
+          <div className="grid gap-4 sm:grid-cols-2">
+            <CoverPlace label="The cover’s picture placed" value={careers?.coverPlace} onChange={set(at('coverPlace'))} />
+            <CoverPlace label="— on phones" value={careers?.coverPlaceMobile} onChange={set(at('coverPlaceMobile'))} />
+            <ChoiceField
+              label="Posted and deadline on phones"
+              value={careers?.datesColumnsMobile ? String(careers.datesColumnsMobile) : undefined}
+              options={[
+                { value: '1', label: 'One under the other' },
+                { value: '2', label: 'Side by side' },
+              ]}
+              onChange={(value) => set(at('datesColumnsMobile'))(value === '1' ? 1 : value === '2' ? 2 : undefined)}
+            />
+            <ChoiceField
+              label="How long ago, how long left"
+              value={careers?.dateSuffix}
+              inherited="plain"
+              options={[
+                { value: 'plain', label: '(1 month ago)' },
+                { value: 'spaced', label: '( 1 month ago )' },
+              ]}
+              onChange={set(at('dateSuffix'))}
+            />
+          </div>
           {(
             [
               ['titleType', 'The title'],
@@ -291,6 +366,21 @@ export function CareersPanel({ careers, set }: { careers: CareersLook | undefine
           <Rows careers={careers} set={set} defs={APPLY} />
           {/* 3.33.1 */}
           <Check label="On phones the send button is as wide as its words, at the right" value={careers?.applySubmitWidthMobile === 'own' ? true : undefined} onChange={(v) => set(at('applySubmitWidthMobile'))(v ? 'own' : undefined)} />
+          {/* 3.37 */}
+          <Check label="The site’s arrow on the send button" value={careers?.applyArrow} onChange={set(at('applyArrow'))} />
+          <Check label="No shadow under the form’s fields (whatever Appearance → Fields sets)" value={careers?.applyFieldShadow === 'none' ? true : undefined} onChange={(v) => set(at('applyFieldShadow'))(v ? 'none' : undefined)} />
+          <Check label="The drop zone’s button at the site’s own button size, not the small one" value={careers?.dropButton === 'standard' ? true : undefined} onChange={(v) => set(at('dropButton'))(v ? 'standard' : undefined)} />
+          <Field label="The short fields’ order" hint={`separated by commas, any of: ${APPLY_FIELDS.join(', ')}; any left out follow`}>
+            <Input
+              defaultValue={careers?.applyFieldOrder?.join(', ') ?? ''}
+              placeholder="the usual order"
+              spellCheck={false}
+              onBlur={(e) => {
+                const list = [...new Set(e.target.value.split(',').map((key) => key.trim()))].filter((key): key is ApplyField => (APPLY_FIELDS as readonly string[]).includes(key));
+                set(at('applyFieldOrder'))(list.length ? list : undefined);
+              }}
+            />
+          </Field>
           {(
             [
               ['applyTitle', 'Its heading'],

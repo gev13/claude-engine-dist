@@ -180,6 +180,10 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           onChange={set(['buttons', 'arrowStyle'])}
         />
         <LengthField label="Arrow size" placeholder="e.g. 24px" emptyLabel="as drawn (15–16px)" value={buttons.arrowSize} onChange={set(['buttons', 'arrowSize'])} />
+        {/* 3.37 */}
+        <Field label="Arrow line thickness" hint="0.5–4; the buttons draw 2.4">
+          <Input type="number" min={0.5} max={4} step={0.1} value={buttons.arrowStroke ?? ''} placeholder="as drawn" onChange={(e) => set(['buttons', 'arrowStroke'])(e.target.value === '' ? undefined : Math.min(4, Math.max(0.5, Number(e.target.value) || 2.4)))} />
+        </Field>
         <LengthField label="Space before the arrow" placeholder="e.g. 4px" emptyLabel="as drawn (10px)" value={buttons.arrowGap} onChange={set(['buttons', 'arrowGap'])} />
         <ChoiceField
           label="The arrow, pointed at"

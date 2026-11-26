@@ -49,7 +49,7 @@ describe('a picture of its own on phones', () => {
     expect(rows).toContain('srcSet="/media/p.webp"');
     const band = render([{ id: 'b', type: 'mediaBand', props: { imageUrl: '/media/a.webp', imageUrlMobile: '/media/p.webp', title: 'T', fade: { side: 'left', text: 'dark' } } }]);
     expect(band).toContain('has-mobile-media');
-    expect(css('library-upgrades.css')).toContain('.he-band.has-mobile-media.has-fade::after { background: none; }');
+    expect(css('library-upgrades.css')).toContain('.he-band.has-mobile-media.has-fade:not(.has-fade-m)::after { background: none; }');
   });
 });
 

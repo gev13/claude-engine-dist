@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { TINT_STOPS } from './blog';
 import { type TypeStyle, typeRule, typeStyleSchema } from './typeStyle';
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -26,6 +27,16 @@ const box = () => z.string().trim().max(60).refine((v) => BOX.test(v.trim()), 'O
 const colour = () => z.string().trim().max(60).refine((v) => COLOUR.test(v.trim()), 'Not a colour').optional();
 const clear = () => z.string().trim().max(60).refine(isClear, 'A colour, or transparent').optional();
 const position = () => z.string().trim().max(30).refine((v) => POSITION.test(v.trim()), 'Such as 72% 50%, or center top').optional();
+/* 3.37 */
+/** A length that may be negative, for a picture placed past its frame's edge. */
+const SIGNED = /^(0|-?\d*\.?\d+(px|rem|em|%))$/;
+const signed = () => z.string().trim().max(40).refine((v) => SIGNED.test(v.trim()), 'A length, such as -20% or 40px').optional();
+/** The cover's picture at a size and place of its own inside its frame, which clips it. */
+const coverPlace = () => z.object({ width: len(), height: len(), left: signed(), top: signed() }).optional();
+const stops = () => z.string().trim().max(200).refine((v) => TINT_STOPS.test(v.trim()), 'Colours and places, such as rgba(0,0,0,0.2) 25%, #000 92%').optional();
+/** The application form's three short fields. */
+export const APPLY_FIELDS = ['name', 'email', 'phone'] as const;
+export type ApplyField = (typeof APPLY_FIELDS)[number];
 
 /** 3.30 — a run of words drawn in a face, size, weight and colour of its own; each unset keeps the drawn one. */
 export const careersTypeSchema = typeStyleSchema;
@@ -152,6 +163,43 @@ export const careersLookSchema = z.object({
   dropText: colour(),
   dropRadius: box(),
   dropLabelType: typeStyleSchema.optional(),
+
+  /* 3.37 — the advert's heading. */
+  /** The space between the line above the title and the title; under the title on phones; the heading's side padding on phones (in place of the title's own inset there). */
+  eyebrowGap: len(),
+  titleGapMobile: len(),
+  headInsetMobile: len(),
+  /* 3.37 — the details: the icons' size and the space beside them; the space between rows and between columns (and on phones); the inset on phones. */
+  iconSize: len(),
+  iconGap: len(),
+  detailsRowGap: len(),
+  detailsRowGapMobile: len(),
+  detailsColumnGap: len(),
+  detailsColumnGapMobile: len(),
+  detailsInsetMobile: len(),
+  /* 3.37 — the cover: its picture at a size and place of its own (and on phones); a fade over it, top to bottom (and on phones). */
+  coverPlace: coverPlace(),
+  coverPlaceMobile: coverPlace(),
+  coverOverlay: stops(),
+  coverOverlayMobile: stops(),
+  /* 3.37 — the dates: side by side or one under the other on phones, and the space above them there. */
+  datesColumnsMobile: z.union([z.literal(1), z.literal(2)]).optional(),
+  datesGapMobile: len(),
+  /** How long ago or how long left: in brackets as before (`plain`), or with a space inside them (`spaced`). */
+  dateSuffix: z.enum(['plain', 'spaced']).optional(),
+  /* 3.37 — the application card: the space above it on phones, and how far it reaches into the panel's padding there. */
+  applyTopMobile: len(),
+  applyBleedMobile: len(),
+  /* 3.37 — the form: the short fields in an order of their own (any left out follow); no field shadow; the site's arrow on the send button and the space above it. */
+  applyFieldOrder: z.array(z.enum(APPLY_FIELDS)).max(3).refine((list) => new Set(list).size === list.length, 'A field is listed twice').optional(),
+  applyFieldShadow: z.enum(['none']).optional(),
+  applyArrow: z.boolean().optional(),
+  applyActionsGap: len(),
+  /* 3.37 — the drop zone: its padding, the space between its parts and under its label; its button at the site's own size. */
+  dropPadding: box(),
+  dropGap: len(),
+  dropLabelGap: len(),
+  dropButton: z.enum(['small', 'standard']).optional(),
 });
 
 export type CareersLook = z.infer<typeof careersLookSchema>;
@@ -169,6 +217,10 @@ export type ResolvedCareersLook = {
   afterSavedBlock?: string;
   buttonLook: 'outline' | 'primary';
   detailsOrder?: DetailKey[];
+  /** 3.37 */
+  dateSuffix: 'plain' | 'spaced';
+  applyFieldOrder?: ApplyField[];
+  applyArrow: boolean;
 };
 
 /** 3.33.1 — the details in the order asked, then any left out in the order they came. */
@@ -195,6 +247,9 @@ export function resolveCareersLook(look: CareersLook | undefined): ResolvedCaree
     afterSavedBlock: look?.afterSavedBlock,
     buttonLook: look?.buttonLook ?? 'outline',
     detailsOrder: look?.detailsOrder,
+    dateSuffix: look?.dateSuffix ?? 'plain',
+    applyFieldOrder: look?.applyFieldOrder,
+    applyArrow: look?.applyArrow === true,
   };
 }
 
@@ -301,5 +356,44 @@ export function careersCss(look: CareersLook | undefined): string {
   out.push(rule('.he-apply__cv :is(.he-fdrop__lead,.he-fdrop__name)', [['color', colourOf(look.dropText)]]));
   out.push(...typeRule('.he-apply__cv .he-fb__label', look.dropLabelType));
   if (look.dropLabelType?.size) out.push('.he-apply__cv .he-fb__label{text-transform:none;letter-spacing:0}');
+
+  // 3.37 — the heading: the line above the title, the space under the title on phones, the heading's inset there.
+  out.push(rule('.he-job :is(.he-job-c__head,section>.shell)>.he-eyebrow', [['margin-bottom', lenOf(look.eyebrowGap)]]));
+  out.push(phone(rule('.he-job-aside__title', [['margin-bottom', lenOf(look.titleGapMobile)]]) + rule('.he-job-c__head', [['margin-bottom', lenOf(look.titleGapMobile)]])));
+  const inset = lenOf(look.headInsetMobile);
+  if (inset) out.push(phone(`.he-job-c__head{padding-inline:${inset}}.he-job-c__head .he-job-c__title{padding-inline:0}.he-job-aside__title{padding-inline:${inset}}`));
+  // 3.37 — the details: icons, rows and columns, the inset on phones.
+  out.push(rule('.he-job__icon', [['width', lenOf(look.iconSize)], ['height', lenOf(look.iconSize)]]));
+  out.push(rule('.he-job__meta.has-icons>div', [['gap', lenOf(look.iconGap)]]));
+  out.push(rule('.he-job__meta', [['row-gap', lenOf(look.detailsRowGap)], ['column-gap', lenOf(look.detailsColumnGap)]]));
+  out.push(phone(rule('.he-job__meta', [['row-gap', lenOf(look.detailsRowGapMobile)], ['column-gap', lenOf(look.detailsColumnGapMobile)], ['padding-inline', lenOf(look.detailsInsetMobile)]])));
+  // 3.37 — the cover's picture placed in its frame, and a fade over it.
+  const place = (p: CareersLook['coverPlace']) => {
+    if (!p) return '';
+    const left = ok(SIGNED, p.left) ? p.left!.trim() : undefined;
+    const top = ok(SIGNED, p.top) ? p.top!.trim() : undefined;
+    const width = lenOf(p.width);
+    const height = lenOf(p.height);
+    if (!left && !top && !width && !height) return '';
+    return rule(`${cover} .he-fill`, [['inset', 'auto'], ['left', left ?? '0'], ['top', top ?? '0'], ['width', width ?? '100%'], ['height', height ?? '100%'], ['max-width', 'none']]);
+  };
+  out.push(place(look.coverPlace));
+  out.push(phone(place(look.coverPlaceMobile)));
+  const fade = (v: unknown) => (typeof v === 'string' && TINT_STOPS.test(v.trim()) ? `${cover}::after{content:'';position:absolute;inset:0;pointer-events:none;background:linear-gradient(to bottom,${v.trim()})}` : '');
+  out.push(fade(look.coverOverlay));
+  out.push(phone(fade(look.coverOverlayMobile)));
+  // 3.37 — the dates on phones.
+  if (look.datesColumnsMobile === 1 || look.datesColumnsMobile === 2) out.push(phone(`.he-job__dates{display:grid;grid-template-columns:repeat(${look.datesColumnsMobile},minmax(0,1fr))}`));
+  out.push(phone(rule('.he-job__dates', [['margin-top', lenOf(look.datesGapMobile)]])));
+  // 3.37 — the application card on phones.
+  const bleed = lenOf(look.applyBleedMobile);
+  out.push(phone(rule(apply, [['margin-top', lenOf(look.applyTopMobile)], ['margin-inline', bleed ? `calc(-1 * ${bleed})` : undefined]])));
+  // 3.37 — the form: no shadow under its fields; the space above the send button.
+  if (look.applyFieldShadow === 'none') out.push('.he-job .he-fb__form .he-fb__input{box-shadow:none}');
+  out.push(rule('.he-job .he-fb__form>.he-fb__actions', [['margin-top', lenOf(look.applyActionsGap)]]));
+  // 3.37 — the drop zone.
+  out.push(rule('.he-apply__cv .he-fdrop', [['padding', boxOf(look.dropPadding)], ['gap', lenOf(look.dropGap)]]));
+  out.push(rule('.he-apply__cv>.he-fb__label', [['margin-bottom', lenOf(look.dropLabelGap)]]));
+  if (look.dropButton === 'standard') out.push('.he-apply__cv .he-fdrop__btn{padding:var(--he-btn-py) var(--he-btn-px);font-size:var(--he-btn-size)}');
   return out.filter(Boolean).join('');
 }

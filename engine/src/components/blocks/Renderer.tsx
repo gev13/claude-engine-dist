@@ -348,7 +348,7 @@ function renderBlock(block: ParsedBlock, ctx: RenderContext): React.ReactNode {
           : {})}
         {...((block.type === 'postList' || block.type === 'projects') && ctx.paging?.blockId === block.id ? { paging: ctx.paging } : {})}
         {...(block.type === 'projects' && ctx.currentProjectId ? { currentProjectId: ctx.currentProjectId } : {})}
-        {...(block.type === 'categoryIndex' ? { locale: ctx.locale } : {})}
+        {...(block.type === 'categoryIndex' || block.type === 'postList' || block.type === 'projects' ? { locale: ctx.locale } : {})}
       />
     </BlockShell>
   );

@@ -12,9 +12,15 @@ const LENGTH = /^(0|-?\d*\.?\d+(px|rem|em|vw|vh|%))$/;
 const LINE = /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/;
 /** 3.28 — one to four lengths, as padding is written (7px 12px). */
 const BOX = /^(0|-?\d*\.?\d+(px|rem|em|%))(\s+(0|-?\d*\.?\d+(px|rem|em|%))){0,3}$/;
+/** 3.37 — a box shadow: offsets, a blur, an optional spread, a colour (the theme's grammar, repeated: the theme imports this file). */
+const SHADOW = /^-?\d{1,3}(?:px)?\s+-?\d{1,3}(?:px)?\s+\d{1,3}(?:px)?(\s+-?\d{1,3}px)?\s+(#([0-9a-f]{3,4}|[0-9a-f]{6}|[0-9a-f]{8})|(rgb|rgba|hsl|hsla)\(\s*[0-9.,%\s/deg-]+\))$/i;
+/** 3.37 — a face's key in the font list (it reaches a stylesheet only through that list). */
+const FACE = /^[A-Za-z][A-Za-z0-9]{0,47}$/;
+/** 3.37 — a language code, as it is written in a `lang` attribute and a selector. */
+const CODE = /^[a-z]{2,3}$/;
 
 /** 3.28 — the grammars, for the stylesheet writer that checks every value again (`chromeCss.ts`). */
-export const CHROME_GRAMMAR = { COLOR, LENGTH, LINE, BOX } as const;
+export const CHROME_GRAMMAR = { COLOR, LENGTH, LINE, BOX, SHADOW, FACE, CODE } as const;
 
 /* 3.28 — the small fields of the last round's details: each optional, each a checked value. */
 const len = (hint = 'A size such as 16px') => z.string().trim().max(40).regex(LENGTH, hint).optional();
@@ -22,7 +28,8 @@ const colour = () => z.string().trim().max(60).regex(COLOR, 'A colour').optional
 const box = () => z.string().trim().max(60).regex(BOX, 'One to four sizes, such as 7px 12px').optional();
 const ms = () => z.number().int().min(0).max(3000).optional();
 const weight = () => z.enum(['300', '400', '500', '600', '700', '800']).optional();
-const sides = () => z.object({ left: len(), right: len() }).optional();
+/** 3.37 — top and bottom too, beside the sides. */
+const sides = () => z.object({ left: len(), right: len(), top: len(), bottom: len() }).optional();
 
 /** 3.28 — the desktop dropdown (the compact panel); every part unset keeps the drawn one. */
 const dropdownSchema = z.object({
@@ -193,7 +200,7 @@ export const chromeSchema = z.object({
       menuIconGap: len(),
       menuIconColor: colour(),
       menuIconHover: z.enum(['none', 'grow']).optional(),
-      /** 3.28 — the bar's side padding per tier; each side unset keeps the stylesheet's. */
+      /** 3.28 — the bar's side padding per tier; each side unset keeps the stylesheet's. (3.37) Top and bottom too, inside the bar's height. */
       padding: z.object({ base: sides(), laptop: sides(), tablet: sides(), mobile: sides() }).optional(),
       /** 3.28 — the header button: height, padding, type, and how long its hover takes (ms); the same on phones. */
       ctaHeight: len(),
@@ -212,6 +219,11 @@ export const chromeSchema = z.object({
       behaviour: z.enum(['always', 'hide', 'shrink']).optional(),
       /** Phones: the logo at the left (as before), centred between the buttons, or (3.6) just after the menu button. */
       logoMobile: z.enum(['left', 'center', 'afterMenu']).optional(),
+      /** 3.37 — the classic header: the space from the last link's words to what follows the links (languages, search, buttons), where the links show; on desktops up to 1440px its own. */
+      actionsGap: len(),
+      actionsGapLaptop: len(),
+      /** 3.37 — the classic header: no empty grid track for a part that is hidden at a width, and (with no line under the bar) no edge left under it, so the side padding and the height are exact. */
+      exactEdges: z.boolean().optional(),
       /** The bar's height per tier, in px; empty keeps the stylesheet's. */
       height: z
         .object({
@@ -326,6 +338,8 @@ export const chromeSchema = z.object({
       contactColor: colour(),
       /** The side drawer's details (side and push drawers, and the phones' drawer). */
       drawer: drawerSchema.optional(),
+      /** 3.37 — the close button's X drawn in two lines: their length, thickness and colour (unset, the drawn 22px icon). */
+      closeIcon: z.object({ size: len(), thickness: len(), color: colour() }).optional(),
 
       /* ── 3.24 — phones: a menu of their own ── */
       onPhones: z
@@ -485,6 +499,24 @@ export const chromeSchema = z.object({
       /* ── 3.34.1 ── */
       /** The social icons in a ring (unset, as drawn) or bare, on every width; their box and glyph sizes still apply. */
       socialLook: z.enum(['circle', 'plain']).optional(),
+
+      /* ── 3.37 ── */
+      /** How much of the wordmark the page's end cuts off on phones, % of its height; unset keeps wordmarkCrop. */
+      wordmarkCropMobile: z.number().int().min(0).max(90).optional(),
+      /** The wordmark moved right (negative: left) from its aligned place, and on phones. */
+      wordmarkOffset: len('A size such as 12px or -12px'),
+      wordmarkOffsetMobile: len('A size such as 12px or -12px'),
+      /** Wider than a tablet: the head column, the middle column and the menus as three equal parts (the menus at the end of theirs, the middle's content centred). */
+      layoutDesktop: z.enum(['auto', 'thirds']).optional(),
+      /** Wider than a tablet: the space between the footer's columns; with thirds, between the three parts. */
+      columnGap: len(),
+      /** With thirds: the space between the menus; on phones, between the menus side by side (unset 16px). */
+      menusGap: len(),
+      menusGapMobile: len(),
+      /** The space under the sign-up's heading (unset 6px). */
+      newsletterTitleGap: len(),
+      /** The sign-up field's shadow: none, or its own; unset follows Fields. */
+      newsletterFieldShadow: z.union([z.literal('none'), z.string().trim().max(120).regex(SHADOW, 'Such as 0 4px 20px rgba(0,0,0,0.1), or none')]).optional(),
     })
     .optional(),
 
@@ -511,6 +543,12 @@ export const chromeSchema = z.object({
       footerPlaceMobile: z.enum(['below']).optional(),
       /** 3.33 — in the open menu: the codes' size. */
       menuSize: z.string().trim().max(40).regex(LENGTH, 'A size such as 20px').optional(),
+      /** 3.37 — the colour of the codes that are not the current one (header, open menu, footer); unset is the nav colour. */
+      color: colour(),
+      /** 3.37 — a face per language code for its own name, e.g. { "el": "notoSerif" } (keys from the font list). */
+      faces: z.record(z.string().regex(CODE), z.string().trim().regex(FACE, 'A face from the font list')).optional(),
+      /** 3.37 — in the open full-screen menu: at the menu's foot (unset) or straight after the links. */
+      menuPlace: z.enum(['foot', 'afterLinks']).optional(),
     })
     .optional(),
 
@@ -719,6 +757,8 @@ export type ResolvedChrome = {
     itemHover: 'colour' | 'shift';
     duration?: number;
     drawer?: DrawerLook;
+    /** 3.37 — the close X drawn in two lines (its sizes are written by `chromeCss`). */
+    closeIcon: boolean;
     onPhones?: {
       variant: MobileMenuVariant;
       upTo: 'mobile' | 'tablet';
@@ -784,6 +824,7 @@ export type ResolvedChrome = {
     inFooter: 'off' | 'always' | 'phones';
     footerPlace: 'head' | 'links';
     footerPlaceMobile?: 'below';
+    menuPlace: 'foot' | 'afterLinks';
   };
   cursor: {
     style: 'off' | 'dotRing' | 'dot' | 'ring' | 'blend';
@@ -939,6 +980,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       itemHover: c.mobileMenu?.itemHover ?? 'colour',
       duration: c.mobileMenu?.duration,
       drawer: c.mobileMenu?.drawer,
+      closeIcon: Boolean(c.mobileMenu?.closeIcon && Object.values(c.mobileMenu.closeIcon).some((v) => typeof v === 'string' && v !== '')),
       onPhones: c.mobileMenu?.onPhones?.variant
         ? {
             variant: c.mobileMenu.onPhones.variant,
@@ -1068,6 +1110,7 @@ export function resolveChrome(chrome: Chrome | undefined): ResolvedChrome {
       inFooter: c.languages?.inFooter ?? 'off',
       footerPlace: c.languages?.footerPlace ?? 'head',
       footerPlaceMobile: c.languages?.footerPlaceMobile,
+      menuPlace: c.languages?.menuPlace ?? 'foot',
     },
     backToTop: c.backToTop ?? false,
     videoControls: c.videoControls !== false,

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { cornerShapeSchema, cutLegs, cutPolygon, leafClip, leafRadii } from './shape';
+import { cornerShapeSchema, cutLegs, cutPolygon, hasPhoneCorners, leafClip, leafRadii } from './shape';
 import { BORDER_STYLES, box, color, length, type SpacingBox } from './blockStyle';
 import { isColor, isLength } from './theme';
 
@@ -41,6 +41,13 @@ export const itemStyleSchema = z.object({
   /** 3.13 — on phones: the card's padding and text inset; each unset keeps the wider screen's. */
   spacingMobile: box.optional(),
   textInsetMobile: length.optional(),
+  /** 3.37 — this card's title: its size, letter spacing and width, each with a value on phones; unset keeps the block's. */
+  titleSize: length.optional(),
+  titleSizeMobile: length.optional(),
+  titleTracking: length.optional(),
+  titleTrackingMobile: length.optional(),
+  titleWidth: length.optional(),
+  titleWidthMobile: length.optional(),
   /**
    * A name to aim your own CSS at, the same escape hatch a block has.
    *
@@ -122,7 +129,25 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
   // 3.13 — the padding and text inset on phones.
   const phone: Decl[] = [...spacingDecls(style.spacingMobile)];
   if (style.textInsetMobile && isLength(style.textInsetMobile)) phone.push(['--he-item-text-inset', style.textInsetMobile]);
+  // 3.37 — a phone size for the corners (3.34.2's sizeMobile/sizesMobile), as a block's are.
+  if (hasPhoneCorners(style.corners)) {
+    const phoneLegs = cutLegs(style.corners, 20, true);
+    const phoneLeaf = leafRadii(style.corners, 40, true);
+    if (phoneLegs) phone.push(['clip-path', cutPolygon(phoneLegs)], ['--he-card-clip', cutPolygon(phoneLegs)]);
+    else if (phoneLeaf) phone.push(['border-radius', phoneLeaf], ['--he-card-radius', phoneLeaf], ['clip-path', leafClip(phoneLeaf)], ['--he-card-clip', leafClip(phoneLeaf)]);
+  }
   const onPhones = phone.length ? `@media (max-width:768px){${selector}{${phone.map(([k, v]) => `${k}:${v}`).join(';')}}}` : '';
+
+  /* 3.37 — the card's title, heavier than the block's own subheading type
+     (the class twice), so one card can differ from the rest. */
+  const heading = `${selector}${selector} :is(h1,h2,h3,h4,h5,h6):not(.type-eyebrow)`;
+  const titleDecls = (size?: string, tracking?: string, width?: string) =>
+    ([['font-size', size], ['letter-spacing', tracking], ['max-width', width]] as [string, string | undefined][]).filter((d): d is Decl => typeof d[1] === 'string' && isLength(d[1]));
+  const titleOwn = titleDecls(style.titleSize, style.titleTracking, style.titleWidth);
+  const titlePhone = titleDecls(style.titleSizeMobile, style.titleTrackingMobile, style.titleWidthMobile);
+  const title =
+    (titleOwn.length ? `${heading}{${titleOwn.map(([k, v]) => `${k}:${v}`).join(';')}}` : '') +
+    (titlePhone.length ? `@media (max-width:768px){${heading}{${titlePhone.map(([k, v]) => `${k}:${v}`).join(';')}}}` : '');
 
   /* Text colour has to reach the heading too. A card paints its title from
      the theme, so setting the item's colour and watching the title stay dark
@@ -132,7 +157,7 @@ export function itemStyleToCss(selector: string, style: ItemStyle | undefined): 
       ? `${selector},${selector} :is(h1,h2,h3,h4,h5,h6,p,li,span,a){color:${style.color}}`
       : '';
 
-  return own + text + onPhones;
+  return own + text + onPhones + title;
 }
 
 /**

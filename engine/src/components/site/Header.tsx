@@ -5,12 +5,12 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import { SiteMark, Wordmark } from '@/components/ui/Logo';
 import type { ResolvedChrome } from '@/lib/chrome';
-import { type NavChild, type NavItem, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
+import { type NavChild, type NavItem, SOCIAL_LABELS, type SocialLabelStyle, type SocialLink, isSafeIconUrl, isSafeImageUrl, linkAttrs, opensElsewhere, socialText } from '@/lib/navigation';
 import type { ServiceRef } from '@/lib/site';
 import type { Theme } from '@/lib/theme';
 import { motionReduced } from '@/lib/motion';
 import { cn } from '@/lib/utils';
-import { Icon, SocialIcon } from './icons';
+import { Icon, OwnSocialIcon, SocialIcon } from './icons';
 import { LanguageSwitcher } from './LanguageSwitcher';
 import { ThemeToggle } from './SiteExtras';
 import { useMessages } from './Messages';
@@ -104,7 +104,8 @@ function Brand({ siteName, brand, onClick }: { siteName: string; brand?: Theme['
   return (
     <Link href="/" className="he-hdr__logo" aria-label={`${brand?.wordmark ?? siteName} — home`} onClick={onClick}>
       {brand?.logoType === 'image' && brand.logoUrl ? (
-        <SiteImg src={brand.logoUrl} alt="" className="he-hdr__img" sizes="thumb" />
+        // 3.37 — the phone logo (Brand → Logo image (mobile)) on screens up to 768px, when there is one.
+        <SiteImg src={brand.logoUrl} alt="" className="he-hdr__img" sizes="thumb" mobileSrc={brand.logoMobileUrl && isSafeImageUrl(brand.logoMobileUrl) ? brand.logoMobileUrl.trim() : undefined} />
       ) : (
         <span className="he-hdr__mark">
           <SiteMark />
@@ -642,6 +643,7 @@ export function Header(props: HeaderProps) {
         brand={brand}
         contact={props.contact ?? { social: [] }}
         markCurrent={props.markCurrent}
+        languagesAfter={chrome.languages?.menuPlace === 'afterLinks'}
         languages={
           chrome.languages?.inMenu && props.locales && props.locales.length > 1 ? (
             <LanguageSwitcher
@@ -911,10 +913,13 @@ function MobileMenu({
   toggleRef,
   isActive,
   languages,
+  languagesAfter = false,
   markCurrent = false,
 }: {
   /** 3.29 — the language switcher under the links. */
   languages?: React.ReactNode;
+  /** 3.37 — straight after the links rather than at the menu's foot. */
+  languagesAfter?: boolean;
   /** 3.29 — mark the current page's link (the site underlines it). */
   markCurrent?: boolean;
   open: boolean;
@@ -1182,6 +1187,8 @@ function MobileMenu({
           // 3.28 — sub-items beside the list; leaving.
           beside && 'is-sub-beside',
           leaving && 'is-leaving',
+          // 3.37 — the language row straight after the links.
+          languagesAfter && languages && 'is-langs-after',
         )}
         style={
           config.opacity < 100 || config.background || config.itemSize || config.itemSizeMobile || config.itemWeight || config.itemTracking || config.itemLineHeight || config.itemPadding || column || phone
@@ -1226,7 +1233,15 @@ function MobileMenu({
                 : undefined
             }
           >
-            <Icon.Close size={22} />
+            {config.closeIcon ? (
+              // 3.37 — two lines, sized and coloured by the theme (chromeCss).
+              <span className="he-menu__x" aria-hidden="true">
+                <i />
+                <i />
+              </span>
+            ) : (
+              <Icon.Close size={22} />
+            )}
           </button>
         </div>
 
@@ -1335,6 +1350,9 @@ function MobileMenu({
             ))}
         </div>
 
+        {/* 3.37 — the language row straight after the links. */}
+        {languagesAfter && languages}
+
         {picture && (
           // The pointed item's own picture, beside the list (2.19).
           <div className="he-menu__picture" aria-hidden="true">
@@ -1372,7 +1390,7 @@ function MobileMenu({
                 {social.map((s) => (
                   <li key={s.network + s.href}>
                     <a href={s.href} {...(opensElsewhere(s) ? { target: '_blank', rel: 'noopener noreferrer' } : {})} aria-label={SOCIAL_LABELS[s.network]}>
-                      {socialText(s, socialStyle) ?? <SocialIcon network={s.network} />}
+                      {socialText(s, socialStyle) ?? (isSafeIconUrl(s.iconUrl) ? <OwnSocialIcon url={s.iconUrl.trim()} /> : <SocialIcon network={s.network} />)}
                     </a>
                   </li>
                 ))}
@@ -1381,7 +1399,7 @@ function MobileMenu({
           </aside>
         )}
 
-        {languages}
+        {!languagesAfter && languages}
         {config.ctaPosition === 'bottom' && ctas}
       </div>
     </>

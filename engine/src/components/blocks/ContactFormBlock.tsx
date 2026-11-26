@@ -16,7 +16,7 @@ type Props = z.output<(typeof blockSchemas)['contactForm']>;
 
 const businessTypes = ['Operator', 'Sportsbook', 'Game studio', 'Aggregator', 'Platform provider', 'Payments', 'Other'];
 
-const fieldClass =
+const FIELD_CLASS =
   'w-full border-2 border-hairline bg-surface px-4 py-3 text-[length:var(--he-block-text,16px)] text-bone transition-colors placeholder:text-smoke focus:border-flare focus:outline-none';
 
 const labelClass = 'mb-2 block text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.12em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl';
@@ -26,13 +26,15 @@ const labelClass = 'mb-2 block text-[length:var(--he-label-size,11px)] tracking-
  * now comes from the database and this component is a client component — the
  * server wrapper in `ContactForm.tsx` fetches them.
  */
-export function ContactFormClient(p: Props & { serviceOptions: readonly string[] }) {
+export function ContactFormClient(p: Props & { serviceOptions: readonly string[]; themedFields?: boolean }) {
   // Unique per form, so two forms on one page never share field ids.
   const uid = useId();
   const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
   const [error, setError] = useState<string>('');
   const t = useMessages();
   const challenge = useChallenge('contactForm');
+  // 3.37 — a hook for the theme's placeholder and text-box options, only while one is set.
+  const fieldClass = p.themedFields ? `${FIELD_CLASS} he-cf__input` : FIELD_CLASS;
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();

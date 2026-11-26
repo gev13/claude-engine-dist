@@ -9,6 +9,7 @@ import type { Paging } from '@/server/content/resolve';
 import { getPermalinks } from '@/server/routing/config';
 import { Pagination } from '@/components/site/Pagination';
 import { ProjectsBlock } from './showcase';
+import { localeConfig } from '@/lib/locales';
 
 type Props = z.output<(typeof blockSchemas)['projects']> & {
   blockId?: string;
@@ -16,6 +17,8 @@ type Props = z.output<(typeof blockSchemas)['projects']> & {
   currentProjectId?: string;
   /** Which page this is, when the block pages on the server. */
   paging?: Paging;
+  /** 3.37 — the page's language: a translated page lists its own language's projects. */
+  locale?: string;
 };
 
 /**
@@ -24,7 +27,7 @@ type Props = z.output<(typeof blockSchemas)['projects']> & {
  * the HTML — then handed to the same client grid, carousel and filters.
  */
 export async function ProjectsSource(p: Props) {
-  const { currentProjectId, paging, blockId: _blockId, ...block } = p;
+  const { currentProjectId, paging, blockId: _blockId, locale, ...block } = p;
   if (block.source !== 'collection') return <ProjectsBlock {...block} />;
 
   const [permalinks, messages] = await Promise.all([getPermalinks(), getMessages()]);
@@ -37,6 +40,8 @@ export async function ProjectsSource(p: Props) {
     order: block.order,
     limit: block.limit,
     offset: paging ? (paging.number - 1) * block.limit : 0,
+    // Only another language: the main one is what the query always meant, and its "load more" link stays as it was.
+    ...(locale && locale !== localeConfig().defaultLocale ? { locale } : {}),
   };
   const [cards, total] = await Promise.all([
     listProjectCards(query, permalinks),

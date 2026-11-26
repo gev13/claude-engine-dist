@@ -1,9 +1,10 @@
 import { z } from 'zod';
+import { FONT_STACKS } from './fontStacks';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    A run of words drawn in a face, size, weight and colour of their own (3.30,
-   shared since 3.33). Imports only zod: theme.ts reaches this file through
-   careersLook.ts and blog.ts. Written two ways, every value checked again:
+   shared since 3.33). Imports only zod and the font stacks: theme.ts reaches
+   this file through careersLook.ts and blog.ts. Written two ways, every value checked again:
    as a rule (`typeRule`, for a CSS writer) or as custom properties in a style
    attribute (`typeVars`, read by a rule in library-details.css).
    ═══════════════════════════════════════════════════════════════════════════ */
@@ -14,9 +15,17 @@ const LINE = /^(\d*\.?\d+|\d*\.?\d+(px|rem|em))$/;
 const TRACKING = /^(0|-?\d*\.?\d+(px|rem|em))$/;
 const len = () => z.string().trim().max(40).refine((v) => LENGTH.test(v), 'Not a valid CSS length').optional();
 
+/**
+ * 3.37 — a face: the text's (`body`) or the headings' (`display`), as before,
+ * or any other face the site has (`system`, `serif`, a catalogue key). Checked
+ * against the list, never typed: it lands in a <style> element. `display` keeps
+ * meaning the headings' face, not the brand stack of that name.
+ */
+export const isTypeFace = (value: unknown): value is string => typeof value === 'string' && (value === 'body' || value === 'display' || Object.prototype.hasOwnProperty.call(FONT_STACKS, value));
+
 export const typeStyleSchema = z.object({
-  /** The text's face or the headings'. */
-  font: z.enum(['body', 'display']).optional(),
+  /** The text's face or the headings' (3.37: or any face the site has). */
+  font: z.string().trim().max(60).refine(isTypeFace, 'Not a face this site has').optional(),
   size: len(),
   sizeMobile: len(),
   weight: z.enum(['300', '400', '500', '600', '700', '800']).optional(),
@@ -30,13 +39,15 @@ export const typeStyleSchema = z.object({
 export type TypeStyle = z.infer<typeof typeStyleSchema>;
 
 const ok = (re: RegExp, v: unknown): v is string => typeof v === 'string' && re.test(v.trim());
-const FACES = { body: 'var(--he-body-family)', display: 'var(--font-display)' } as const;
+const FACES: Record<string, string> = { body: 'var(--he-body-family)', display: 'var(--font-display)' };
+/** A face's stack, checked again; unknown is nothing. */
+const faceOf = (font: unknown): string | undefined => (isTypeFace(font) ? (FACES[font] ?? FONT_STACKS[font]) : undefined);
 
 /** The checked declarations of a type style, the size on phones apart. */
 function declarations(type: TypeStyle): [string, string][] {
   return (
     [
-      ['font-family', type.font ? FACES[type.font] : undefined],
+      ['font-family', faceOf(type.font)],
       ['font-size', ok(LENGTH, type.size) ? type.size.trim() : undefined],
       ['font-weight', typeof type.weight === 'string' && /^[3-8]00$/.test(type.weight) ? type.weight : undefined],
       ['line-height', ok(LINE, type.line) ? type.line.trim() : undefined],

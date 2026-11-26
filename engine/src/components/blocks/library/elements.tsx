@@ -59,9 +59,10 @@ export function HeadingBlock(p: P<'heading'>) {
     ...(p.subtitleWidth && isLength(p.subtitleWidth) ? { '--he-hd-sub-w': p.subtitleWidth } : {}),
     ...(p.subtitleWidthMobile && isLength(p.subtitleWidthMobile) ? { '--he-hd-sub-w-m': p.subtitleWidthMobile } : {}),
     ...(p.subtitleGap && isLength(p.subtitleGap) ? { '--he-hd-sub-gap': p.subtitleGap } : {}),
+    ...(p.subtitleGapMobile && isLength(p.subtitleGapMobile) ? { '--he-hd-sub-gap-m': p.subtitleGapMobile } : {}),
   } as React.CSSProperties;
   const subtitle = p.subtitle && (
-    <p className={cn('he-lbody he-hd__sub', p.subtitleWidth && 'has-w', p.subtitleWidthMobile && 'has-w-m', p.subtitleGap && 'has-gap')} style={Object.keys(subStyle).length ? subStyle : undefined}>
+    <p className={cn('he-lbody he-hd__sub', p.subtitleWidth && 'has-w', p.subtitleWidthMobile && 'has-w-m', p.subtitleGap && 'has-gap', p.subtitleGapMobile && 'has-gap-m')} style={Object.keys(subStyle).length ? subStyle : undefined}>
       {p.subtitle}
     </p>
   );
@@ -165,7 +166,7 @@ export function TeamBlock(p: P<'team'>) {
   const hidesSome = tiered ? initial !== undefined || initialPhone !== undefined : initial !== undefined;
   const laterClass = (i: number) =>
     tiered ? cn(initial !== undefined && i >= initial && 'is-later-d', initialPhone !== undefined && i >= initialPhone && 'is-later-m') : initial !== undefined && i >= initial && 'is-later';
-  const showAll = hidesSome && <ShowAll label={p.moreLabel} look={p.moreStyle} arrow={p.moreArrow} tier={tiered ? (initial === undefined ? 'phones' : initialPhone === undefined ? 'wide' : undefined) : undefined} />;
+  const showAll = hidesSome && <ShowAll label={p.moreLabel} look={p.moreStyle} arrow={p.moreArrow} arrowMobile={p.moreArrowMobile} gap={p.moreGap && isLength(p.moreGap) ? p.moreGap : undefined} gapMobile={p.moreGapMobile && isLength(p.moreGapMobile) ? p.moreGapMobile : undefined} tier={tiered ? (initial === undefined ? 'phones' : initialPhone === undefined ? 'wide' : undefined) : undefined} />;
   const moreClass = cn(hidesSome && 'has-more', tiered && 'has-tier-more');
 
   if (p.variant === 'portrait') {

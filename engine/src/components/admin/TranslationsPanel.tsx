@@ -29,7 +29,7 @@ export function TranslationsPanel({
   kind = 'page',
 }: {
   pageId: string;
-  kind?: 'page' | 'post' | 'category';
+  kind?: 'page' | 'post' | 'category' | 'savedBlock';
 }) {
   const { data } = useSWR<{ languages: Language[] }>(
     `/api/admin/translations?id=${encodeURIComponent(pageId)}&kind=${kind}`,
@@ -46,7 +46,7 @@ export function TranslationsPanel({
           return (
             <Link
               key={language.locale}
-              href={`/admin/${kind === 'category' ? 'categories' : `${kind}s`}/${pageId}/translate/${language.locale}`}
+              href={`/admin/${kind === 'category' ? 'categories' : kind === 'savedBlock' ? 'saved-blocks' : `${kind}s`}/${pageId}/translate/${language.locale}`}
               className="flex items-center justify-between gap-3 border-b-2 border-hairline py-2.5 last:border-b-0 hover:text-bone"
             >
               <span className="text-[14px] text-ash">{localeName(language.locale)}</span>

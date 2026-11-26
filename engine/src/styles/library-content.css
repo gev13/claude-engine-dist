@@ -103,8 +103,13 @@
   .he-band__inner.has-text-box .he-band__text { margin-inline-start: var(--he-band-inset, 0); }
   .he-band__inner.has-text-box .he-lbody { max-width: var(--he-band-body, 60ch); margin-top: var(--he-band-body-gap, 16px); }
   .he-band__inner.has-text-box .he-actions { margin-top: var(--he-band-actions-gap, 28px); }
+  /* 3.37 — paragraphs split at blank lines, this far apart. */
+  .he-band__inner.has-text-box .he-lbody + .he-lbody { margin-top: var(--he-band-pgap, var(--he-band-body-gap, 16px)); }
   @media (width <= 48rem) {
-    .he-band__inner.has-text-box .he-band__text { margin-inline-start: 0; }
+    /* 3.37 — an inset, a paragraph width and a space above the buttons of their own on phones; each unset as before. */
+    .he-band__inner.has-text-box .he-band__text { margin-inline-start: var(--he-band-inset-m, 0); }
+    .he-band__inner.has-text-box .he-lbody { max-width: var(--he-band-body-m, var(--he-band-body, 60ch)); }
+    .he-band__inner.has-text-box .he-actions { margin-top: var(--he-band-actions-gap-m, var(--he-band-actions-gap, 28px)); }
     .he-band__inner.has-text-box { padding-block: var(--he-band-py-m, var(--he-band-py, 72px)); }
   }
   .he-band.is-center .he-band__inner { align-items: center; justify-content: center; text-align: center; }
@@ -848,6 +853,7 @@
     max-width: none;
   }
   .he-band.is-split .he-band__side .he-lbody { margin-top: 0; }
+  .he-band.is-split .he-band__inner.has-text-box .he-band__side .he-lbody + .he-lbody { margin-top: var(--he-band-pgap, 16px); }
   /* A split panel runs nearly the band's width, a small inset from its edges. */
   .he-band.is-split.has-panel .he-band__inner { max-width: none; padding: var(--he-band-panel-inset, 8px); }
   @media (width <= 768px) {

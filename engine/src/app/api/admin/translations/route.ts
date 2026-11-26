@@ -1,4 +1,4 @@
-import { and, eq, ne } from 'drizzle-orm';
+import { and, eq, isNull, ne } from 'drizzle-orm';
 import { z } from 'zod';
 import { type AnyBlock, collectInvalidBlocks, parseBlocks } from '@/lib/blocks';
 import { localeConfig } from '@/lib/locales';
@@ -13,9 +13,10 @@ import { captureRevision } from '@/server/content/revisions';
 import { getPermalinks } from '@/server/routing/config';
 import { postPathById } from '@/server/content/posts';
 import { DEFAULT_PERMALINKS, categoryPath, postPath } from '@/lib/permalinks';
-import { revalidateContent } from '@/server/content/revalidate';
+import { revalidateContent, revalidateEverything } from '@/server/content/revalidate';
 import { db } from '@/server/db';
-import { categories, pages, posts } from '@/server/db/schema';
+import { categories, pages, posts, savedBlocks } from '@/server/db/schema';
+import { revalidateSavedBlockUsers, validateSavedTree } from '@/server/content/savedBlockWrites';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -42,9 +43,13 @@ export const dynamic = 'force-dynamic';
        author.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-type Kind = 'page' | 'post' | 'category';
+/* 3.37 — and a saved block, which calls its title `name`, its excerpt
+   `description` and its blocks `tree`; it has no address and no draft state,
+   is gated by `savedBlocks:write`, and a page showing it in that language
+   draws the translation (`getSavedTree`). */
+type Kind = 'page' | 'post' | 'category' | 'savedBlock';
 
-const kindSchema = z.enum(['page', 'post', 'category']).default('page');
+const kindSchema = z.enum(['page', 'post', 'category', 'savedBlock']).default('page');
 
 /** Swap the last segment of a path, so /about/team becomes /about/mer-tim. */
 function pathWithSlug(sourcePath: string, slug: string): string {
@@ -75,6 +80,22 @@ function normalise(kind: Kind, row: Record<string, unknown>): Row {
      neither blocks nor a draft state. Mapping it here is what lets everything
      below stop caring which of the three it is holding. */
   const isCategory = kind === 'category';
+  if (kind === 'savedBlock') {
+    return {
+      id: row.id as string,
+      locale: row.locale as string,
+      translationGroupId: row.translationGroupId as string,
+      title: (row.name as string) ?? '',
+      slug: '',
+      excerpt: (row.description as string) ?? '',
+      summary: null,
+      body: null,
+      blocks: ((row.tree as AnyBlock[]) ?? []) as AnyBlock[],
+      status: 'published',
+      authorId: (row.createdById as string | null) ?? null,
+      publicPath: '',
+    };
+  }
 
   return {
     id: row.id as string,
@@ -101,13 +122,17 @@ function normalise(kind: Kind, row: Record<string, unknown>): Row {
 
 /** A row's real address under this site's permalinks — a post's depends on its category. */
 async function withAddress(kind: Kind, row: Row): Promise<Row> {
-  if (kind === 'page') return row;
+  if (kind === 'page' || kind === 'savedBlock') return row;
   const permalinks = await getPermalinks();
   if (kind === 'category') return { ...row, publicPath: categoryPath(permalinks, row.slug) };
   return { ...row, publicPath: (await postPathById(permalinks, row.id)) ?? row.publicPath };
 }
 
 async function loadOne(kind: Kind, id: string): Promise<Row | null> {
+  if (kind === 'savedBlock') {
+    const [row] = await db.select().from(savedBlocks).where(and(eq(savedBlocks.id, id), isNull(savedBlocks.deletedAt))).limit(1);
+    return row ? normalise('savedBlock', row) : null;
+  }
   if (kind === 'page') {
     const [row] = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
     return row ? normalise('page', row) : null;
@@ -121,6 +146,13 @@ async function loadOne(kind: Kind, id: string): Promise<Row | null> {
 }
 
 async function loadSiblings(kind: Kind, groupId: string, exceptId: string): Promise<Row[]> {
+  if (kind === 'savedBlock') {
+    const rows = await db
+      .select()
+      .from(savedBlocks)
+      .where(and(eq(savedBlocks.translationGroupId, groupId), ne(savedBlocks.id, exceptId), isNull(savedBlocks.deletedAt)));
+    return rows.map((row) => normalise('savedBlock', row));
+  }
   if (kind === 'page') {
     const rows = await db
       .select()
@@ -243,6 +275,7 @@ export async function POST(request: Request) {
     const parsed = await readJson(request, createSchema);
     if (!parsed.ok) return parsed.response;
     const { id, locale, kind } = parsed.data;
+    if (kind === 'savedBlock' && !can(guard.user, 'savedBlocks:write')) return forbidden();
 
     const config = localeConfig();
     if (!config.locales.includes(locale)) return badRequest('That language is not configured for this site.');
@@ -258,7 +291,24 @@ export async function POST(request: Request) {
        slug) — so a translation starts at the original's address and the
        translator changes it when they are ready. */
     let createdId: string;
-    if (kind === 'page') {
+    if (kind === 'savedBlock') {
+      const [original] = await db.select().from(savedBlocks).where(eq(savedBlocks.id, id)).limit(1);
+      const [created] = await db
+        .insert(savedBlocks)
+        .values({
+          name: original!.name,
+          description: original!.description,
+          category: original!.category,
+          mode: original!.mode,
+          tree: original!.tree,
+          locale,
+          translationGroupId: original!.translationGroupId,
+          createdById: guard.user.id,
+          updatedById: guard.user.id,
+        })
+        .returning({ id: savedBlocks.id });
+      createdId = created!.id;
+    } else if (kind === 'page') {
       const [original] = await db.select().from(pages).where(eq(pages.id, id)).limit(1);
       const [created] = await db
         .insert(pages)
@@ -347,7 +397,10 @@ const saveSchema = z.object({
     .trim()
     .min(1)
     .max(200)
-    .regex(/^[a-z0-9À-\u{10FFFF}]+(?:-[a-z0-9À-\u{10FFFF}]+)*$/u, 'Lower case, words joined by dashes.'),
+    .regex(/^[a-z0-9À-\u{10FFFF}]+(?:-[a-z0-9À-\u{10FFFF}]+)*$/u, 'Lower case, words joined by dashes.')
+    /* 3.37 — every kind but a saved block, which has no address (empty or left out). */
+    .or(z.literal(''))
+    .optional(),
   excerpt: z.string().trim().max(500).default(''),
   summary: z.string().trim().max(300).default(''),
   /** Posts only. Empty means "not translated yet" and keeps the original's. */
@@ -376,8 +429,11 @@ export async function PUT(request: Request) {
        `ownsOrAdmin` would refuse a null author for anybody but an admin or a
        manager, which would lock editors out of translating categories they are
        allowed to edit. Categories are gated by the permission instead. */
+    if (input.kind !== 'savedBlock' && !input.slug) return badRequest('A translation needs its address.');
     if (input.kind === 'category') {
       if (!can(guard.user, 'categories:write')) return forbidden();
+    } else if (input.kind === 'savedBlock') {
+      if (!can(guard.user, 'savedBlocks:write')) return forbidden();
     } else if (!ownsOrAdmin(guard.user, target.authorId)) {
       return badRequest('That is not yours to edit.');
     }
@@ -389,15 +445,41 @@ export async function PUT(request: Request) {
       return badRequest(`Some blocks would not save: ${problems.slice(0, 3).join(', ')}`);
     }
     const parsedBlocks = parseBlocks(blocks) as AnyBlock[];
+    const slug = input.slug ?? '';
+
+    // 3.37 — a saved block: its name, description and tree, then every page that shows it.
+    if (input.kind === 'savedBlock') {
+      const validated = await validateSavedTree(input.id, parsedBlocks);
+      if (!validated.ok) return validated.response;
+      await db
+        .update(savedBlocks)
+        .set({ name: input.title, description: input.excerpt, tree: validated.tree, updatedById: guard.user.id, updatedAt: new Date() })
+        .where(eq(savedBlocks.id, input.id));
+      await audit({
+        actorId: guard.user.id,
+        actorEmail: guard.user.email,
+        action: 'savedBlock.translation.update',
+        targetType: 'savedBlock',
+        targetId: input.id,
+        summary: `Edited the ${target.locale} translation of "${source.title}"`,
+        ip: clientIp(request.headers),
+      });
+      /* Every page that shows it — and, since a saved block can also be shown
+         by a setting no usage index records (the careers adverts' block), the
+         whole site: a translation is saved rarely. */
+      await revalidateSavedBlockUsers(source.id);
+      revalidateEverything();
+      return ok({ translation: { id: input.id, path: '', slug: '' }, progress: translationProgress(source.blocks, parsedBlocks) });
+    }
 
     let newPath: string;
     if (input.kind === 'page') {
-      newPath = pathWithSlug(source.publicPath, input.slug);
+      newPath = pathWithSlug(source.publicPath, slug);
       await db
         .update(pages)
         .set({
           title: input.title,
-          slug: input.slug,
+          slug,
           path: newPath,
           excerpt: input.excerpt,
           summary: input.summary,
@@ -406,24 +488,24 @@ export async function PUT(request: Request) {
         })
         .where(eq(pages.id, input.id));
     } else if (input.kind === 'category') {
-      newPath = categoryPath(await getPermalinks(), input.slug);
+      newPath = categoryPath(await getPermalinks(), slug);
       await db
         .update(categories)
         .set({
           // A category's title is its `name` and its excerpt its `description`.
           name: input.title,
-          slug: input.slug,
+          slug,
           description: input.excerpt,
           updatedAt: new Date(),
         })
         .where(eq(categories.id, input.id));
     } else {
-      newPath = postPath(await getPermalinks(), { slug: input.slug });
+      newPath = postPath(await getPermalinks(), { slug });
       await db
         .update(posts)
         .set({
           title: input.title,
-          slug: input.slug,
+          slug,
           excerpt: input.excerpt,
           // Sanitised on write, exactly as the post editor does it — this is
           // another path that accepts HTML, so it gets the same treatment.
@@ -440,7 +522,7 @@ export async function PUT(request: Request) {
        is nothing to capture for one. */
     if (input.kind !== 'category') {
       await captureRevision({
-        entityType: input.kind,
+        entityType: input.kind as 'page' | 'post',
         entityId: input.id,
         row: (updated ?? {}) as Record<string, unknown>,
         reason: 'update',
@@ -464,7 +546,7 @@ export async function PUT(request: Request) {
     revalidateContent([newPath, target.publicPath]);
 
     return ok({
-      translation: { id: input.id, path: newPath, slug: input.slug },
+      translation: { id: input.id, path: newPath, slug },
       progress: translationProgress(source.blocks, parsedBlocks),
     });
   });

@@ -5,12 +5,14 @@ import { Accordion } from '@/components/ui/Accordion';
 import { ArrowRight, Button } from '@/components/ui/Button';
 import { Card, CardGrid, StatCard } from '@/components/ui/Card';
 import { itemClass } from '@/lib/itemStyle';
+import { infoPanelLook } from '@/lib/infoPanelLook';
 import { Eyebrow } from '@/components/ui/Eyebrow';
 import { Lede } from '@/components/ui/Heading';
 import { Prose } from '@/components/ui/Prose';
 import { Section } from '@/components/ui/Section';
 import type { blockSchemas } from '@/lib/blocks';
 import { cn } from '@/lib/utils';
+import { isLength } from '@/lib/theme';
 import { MessageText } from '@/components/site/MessageText';
 import { BlockHead, BlockTitle, Ordinal, Tick } from './parts';
 import { ConvergeFigure } from './ConvergeFigure';
@@ -114,13 +116,18 @@ export function ProseBlock(p: P<'prose'>) {
           // 3.33 — the paragraphs' own width, and on phones.
           p.textWidth && 'he-prose-w',
           p.textWidthMobile && 'he-prose-w-m',
+          // 3.37 — the space under the title, and on phones.
+          p.titleGap && 'he-prose-tg',
+          p.titleGapMobile && 'he-prose-tg-m',
         )}
         style={
-          p.paragraphGap || p.textWidth || p.textWidthMobile
+          p.paragraphGap || p.textWidth || p.textWidthMobile || p.titleGap || p.titleGapMobile
             ? ({
                 ...(p.paragraphGap ? { '--he-prose-gap': p.paragraphGap } : {}),
                 ...(p.textWidth ? { '--he-prose-w': p.textWidth } : {}),
                 ...(p.textWidthMobile ? { '--he-prose-w-m': p.textWidthMobile } : {}),
+                ...(p.titleGap && isLength(p.titleGap) ? { '--he-prose-tg': p.titleGap } : {}),
+                ...(p.titleGapMobile && isLength(p.titleGapMobile) ? { '--he-prose-tg-m': p.titleGapMobile } : {}),
               } as React.CSSProperties)
             : undefined
         }
@@ -128,7 +135,7 @@ export function ProseBlock(p: P<'prose'>) {
         <div>
           {p.eyebrow && <Eyebrow>{p.eyebrow}</Eyebrow>}
           {p.title && (
-            <BlockTitle as={p.titleAs} className="mb-4 max-w-[var(--he-title-measure,24ch)]">
+            <BlockTitle as={p.titleAs} className={cn('mb-4 max-w-[var(--he-title-measure,24ch)]', (p.titleGap || p.titleGapMobile) && 'he-prose__title')}>
               {p.title}
             </BlockTitle>
           )}
@@ -328,10 +335,10 @@ export function CheckListsBlock(p: P<'checkLists'>) {
               <h3 className="he-ilist__title mb-5 text-[length:var(--he-label-size,11px)] tracking-[var(--he-label-tracking,0.14em)] text-[color:var(--he-label-color,var(--color-smoke))] he-lbl">{list.title}</h3>
             )}
             <ul
-              className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin')}
+              className={cn('m-0 list-none p-0', `he-ilist is-${p.layout}`, p.markerStyle === 'circle' && 'is-marker-circle', p.thinRules && 'is-thin', p.layout === 'linkRows' && p.rules && `is-rules-${p.rules}`, p.layout === 'linkRows' && p.textWidth && 'has-tw')}
               style={
-                p.layout === 'linkRows' && (p.ruleColor || p.rowPadding || p.linkColor)
-                  ? ({ ...(p.linkColor ? { '--he-ilist-link': p.linkColor } : {}), ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}) } as React.CSSProperties)
+                p.layout === 'linkRows' && (p.ruleColor || p.rowPadding || p.linkColor || p.textWidth)
+                  ? ({ ...(p.linkColor ? { '--he-ilist-link': p.linkColor } : {}), ...(p.ruleColor ? { '--he-ilist-rule': p.ruleColor } : {}), ...(p.rowPadding ? { '--he-ilist-pad': p.rowPadding } : {}), ...(p.textWidth && isLength(p.textWidth) ? { '--he-ilist-tw': p.textWidth } : {}) } as React.CSSProperties)
                   : undefined
               }
             >
@@ -665,6 +672,8 @@ export function TableBlock(p: P<'table'>) {
 export function InfoPanelBlock(p: P<'infoPanel'>) {
   // 3.29 — one row a detail, an icon in a tile beside the label and the value.
   if (p.layout === 'list') {
+    // 3.37 — the icon, words and spacing of its own; nothing set, the markup as before.
+    const look = infoPanelLook(p);
     return (
       <Section tone={p.tone ?? 'raised'} size="md">
         {p.title && (
@@ -672,7 +681,7 @@ export function InfoPanelBlock(p: P<'infoPanel'>) {
             {p.title}
           </BlockTitle>
         )}
-        <dl className="he-info">
+        <dl className={cn('he-info', ...look.classes)} style={look.style as React.CSSProperties | undefined}>
           {p.items.map((item, i) => (
             <div key={item.label + i} className="he-info__row">
               {item.icon && (

@@ -3,6 +3,7 @@
 import { useId, useRef, useState } from 'react';
 import { useChallenge } from '@/components/site/Captcha';
 import { FileDrop } from '@/components/site/FileDrop';
+import { ArrowRight } from '@/components/ui/Button';
 import { useMessages } from '@/components/site/Messages';
 import { useLocaleHref } from '@/components/ui/LocaleLinks';
 import Link from '@/components/ui/SiteLink';
@@ -33,6 +34,13 @@ const ACCEPT = '.pdf,.docx,application/pdf,application/vnd.openxmlformats-office
 
 type State = 'idle' | 'sending' | 'sent';
 
+const SHORT_FIELDS = ['name', 'email', 'phone'] as const;
+/** 3.37 — the order asked for, then any left out in the usual order. */
+function orderFields(order: readonly string[] | undefined): (typeof SHORT_FIELDS)[number][] {
+  const asked = (order ?? []).filter((key): key is (typeof SHORT_FIELDS)[number] => (SHORT_FIELDS as readonly string[]).includes(key));
+  return [...new Set([...asked, ...SHORT_FIELDS])];
+}
+
 export function ApplicationForm({
   jobId,
   jobTitle,
@@ -40,6 +48,8 @@ export function ApplicationForm({
   placeholders = false,
   dropZone = false,
   doneLinks,
+  fieldOrder,
+  arrow = false,
 }: {
   jobId: string;
   jobTitle: string;
@@ -51,6 +61,10 @@ export function ApplicationForm({
   dropZone?: boolean;
   /** 3.29 — "Back to the homepage" and "Explore other jobs" under the thanks. */
   doneLinks?: { home: string; careers: string };
+  /** 3.37 — the three short fields in an order of their own; any left out follow in the usual order. */
+  fieldOrder?: readonly ('name' | 'email' | 'phone')[];
+  /** 3.37 — the site's arrow after the send button's words. */
+  arrow?: boolean;
 }) {
   const uid = useId();
   const [state, setState] = useState<State>('idle');
@@ -154,6 +168,26 @@ export function ApplicationForm({
     </label>
   );
   const hint = (text: string) => (placeholders ? text : undefined);
+  const short = {
+    name: (
+      <div key="name" className="he-fb__field is-half">
+        {label('name', t('careers.name'))}
+        <input id={`${uid}-name`} name="name" required autoComplete="name" className="he-fb__input" placeholder={hint(t('careers.name'))} />
+      </div>
+    ),
+    email: (
+      <div key="email" className="he-fb__field is-half">
+        {label('email', t('careers.email'))}
+        <input id={`${uid}-email`} name="email" type="email" required autoComplete="email" className="he-fb__input" placeholder={hint(t('careers.email'))} />
+      </div>
+    ),
+    phone: (
+      <div key="phone" className="he-fb__field is-half">
+        {label('phone', t('careers.phone'), true)}
+        <input id={`${uid}-phone`} name="phone" type="tel" autoComplete="tel" className="he-fb__input" placeholder={hint(t('careers.phone'))} />
+      </div>
+    ),
+  };
 
   return (
     <form
@@ -166,20 +200,7 @@ export function ApplicationForm({
     >
       {placeholders && <p className="he-fb__label he-apply__group">{t('careers.contact')}</p>}
       <div className={cn('he-fb__grid', placeholders && 'he-apply__grid')}>
-        <div className="he-fb__field is-half">
-          {label('name', t('careers.name'))}
-          <input id={`${uid}-name`} name="name" required autoComplete="name" className="he-fb__input" placeholder={hint(t('careers.name'))} />
-        </div>
-
-        <div className="he-fb__field is-half">
-          {label('email', t('careers.email'))}
-          <input id={`${uid}-email`} name="email" type="email" required autoComplete="email" className="he-fb__input" placeholder={hint(t('careers.email'))} />
-        </div>
-
-        <div className="he-fb__field is-half">
-          {label('phone', t('careers.phone'), true)}
-          <input id={`${uid}-phone`} name="phone" type="tel" autoComplete="tel" className="he-fb__input" placeholder={hint(t('careers.phone'))} />
-        </div>
+        {orderFields(fieldOrder).map((key) => short[key])}
 
         {!dropZone && (
           <div className="he-fb__field is-half">
@@ -234,6 +255,7 @@ export function ApplicationForm({
       <div className={cn('he-fb__actions', placeholders && 'he-apply__actions')}>
         <button type="submit" className="he-btn he-btn-primary" disabled={state === 'sending'}>
           {state === 'sending' ? t('form.sending') : t('careers.send')}
+          {arrow && <ArrowRight />}
         </button>
       </div>
 

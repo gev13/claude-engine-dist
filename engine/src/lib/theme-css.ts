@@ -17,6 +17,7 @@ import {
   roleVar,
 } from './theme';
 import { CUT_BUTTON_FILL, CUT_BUTTON_RING, cutLegs, cutLines, cutPolygon, cutVars, leafClip, leafRadii } from './shape';
+import { fieldsExtraCss } from './fieldsCss';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Theme → CSS
@@ -106,6 +107,8 @@ function statusDecls(theme: Theme): Decl[] {
   push(out, '--he-block-lead', blockText.lead, isLength);
   push(out, '--he-block-text', blockText.text, isLength);
   push(out, '--he-block-small', blockText.small, isLength);
+  push(out, '--he-block-body', blockText.body, isLength);
+  push(out, '--he-block-card', blockText.card, isLength);
 
   push(out, '--he-status-success', status.success, isColor);
   push(out, '--he-status-warning', status.warning, isColor);
@@ -214,6 +217,8 @@ function adaptiveDecls(theme: Theme, breakpoint: BreakpointKey): Decl[] {
     push(out, '--he-block-lead', theme.blockTextMobile?.lead, isLength);
     push(out, '--he-block-text', theme.blockTextMobile?.text, isLength);
     push(out, '--he-block-small', theme.blockTextMobile?.small, isLength);
+    push(out, '--he-block-body', theme.blockTextMobile?.body, isLength);
+    push(out, '--he-block-card', theme.blockTextMobile?.card, isLength);
   }
 
   // 3.13 — the site's gap on this tier.
@@ -375,6 +380,8 @@ function fieldCss(theme: Theme, scope: string): string {
   if (typeof f.blur === 'number' && f.blur >= 0 && f.blur <= 40) frost.push(['backdrop-filter', `blur(${f.blur}px)`]);
   push(frost, 'box-shadow', f.shadow, isShadow);
   if (frost.length) sized.push(block(box, frost));
+  // 3.37 — the placeholder, and a text box's own corners, top padding and grip.
+  sized.push(fieldsExtraCss(f, scope));
   if (field.length === 0) return sized.join('');
   const chip = field.filter(([property]) => property !== 'color');
   return block(`${scope}${INPUT_SELECTOR}`, field) + (chip.length ? block(`${scope}.he-fb__choice input:not(:checked)+span`, chip) : '') + sized.join('');
@@ -541,7 +548,11 @@ function shapeCss(theme: Theme, scope: string): string {
   if (buttons.arrowStyle === 'filled') parts.push(block(`${at('.he-btn>svg:last-child>path')},${at('.he-cbtn>svg:last-child:not(:first-child)>path')}`, [['fill', 'currentColor'], ['stroke-linejoin', 'round']]));
   if (buttons.arrowSize && isLength(buttons.arrowSize)) {
     // Every button's arrow, the text buttons' too.
-    parts.push(block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)')}`, [['width', buttons.arrowSize], ['height', buttons.arrowSize]]));
+    // 3.37 — and the careers cards' button, whose arrow is its only drawing.
+    parts.push(block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)')},${at('.he-jobc__btn>svg:last-child')}`, [['width', buttons.arrowSize], ['height', buttons.arrowSize]]));
+  }
+  if (typeof buttons.arrowStroke === 'number' && Number.isFinite(buttons.arrowStroke) && buttons.arrowStroke >= 0.5 && buttons.arrowStroke <= 4) {
+    parts.push(block(`${at('.he-btn>svg:last-child')},${at('.he-cbtn:not(.is-icon-only)>svg:last-child:not(:first-child)')},${at('.he-jobc__btn>svg:last-child')}`, [['stroke-width', String(buttons.arrowStroke)]]));
   }
   if (buttons.arrowGap && isLength(buttons.arrowGap)) parts.push(block(at(':is(.he-btn,.he-cbtn):has(>svg:last-child)'), [['gap', buttons.arrowGap]]));
   if (buttons.arrowHover === 'slide') {
@@ -766,6 +777,12 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
     parts.push(`.he-site .he-eyebrow{margin-bottom:${theme.layout.eyebrowGap}}`);
   }
 
+  // 3.37 — the bands' and cards' paragraphs at the theme's sizes, where set; in the details layer, so a block's own type still wins.
+  if (safeSelector === ':root') {
+    const sizes = blockBodyCss(theme);
+    if (sizes) parts.push(sizes);
+  }
+
   // 3.36 — at least this much between a heading and the text after it, on the tiers asked for.
   if (safeSelector === ':root') {
     const floor = headingSpaceCss(theme.layout?.headingSpace, theme.careers?.cardPartGap);
@@ -820,6 +837,21 @@ export function themeToCss(theme: Theme, options: ThemeCssOptions = {}): string 
   }
 
   return parts.filter(Boolean).join('');
+}
+
+/** 3.37 — the drawn paragraph sizes replaced by the theme's: everywhere when set, on phones only when only the phone size is. */
+const BODY_TEXT = '.he-lbody';
+const CARD_TEXT = ':is(.he-ocard__body,.he-ocard__points li,.he-plst__excerpt)';
+function blockBodyCss(theme: Theme): string {
+  const out: string[] = [];
+  for (const [key, selector] of [['body', BODY_TEXT], ['card', CARD_TEXT]] as const) {
+    const wide = theme.blockText?.[key];
+    const phone = theme.blockTextMobile?.[key];
+    const rule = `@layer he-details{${selector}{font-size:var(--he-block-${key})}}`;
+    if (wide && isLength(wide)) out.push(rule);
+    else if (phone && isLength(phone)) out.push(`@media (max-width:768px){${rule}}`);
+  }
+  return out.join('');
 }
 
 /**

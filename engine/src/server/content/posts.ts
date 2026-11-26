@@ -1,6 +1,7 @@
 import 'server-only';
 import { and, desc, eq, gt, ilike, inArray, isNull, lt, or, sql, type SQL } from 'drizzle-orm';
 import { localeConfig, type Locale } from '@/lib/locales';
+import { alias } from 'drizzle-orm/pg-core';
 import { db } from '@/server/db';
 import { categories, media, postCategories, posts, users } from '@/server/db/schema';
 import type { AnyBlock } from '@/lib/blocks';
@@ -63,6 +64,33 @@ const isPublic = and(
   sql`${posts.publishedAt} is not null and ${posts.publishedAt} <= now()`,
 );
 
+/**
+ * Posts in any of these categories. In the site's main language, as always:
+ * the post's own category links. In another language (3.37), a translation
+ * has no links of its own — translating a post copies its words, not its
+ * categories — so a post counts as in a category when any post of its
+ * translation group is in it, or in that category's translation.
+ */
+function inCategories(slugs: string[], locale: Locale): SQL {
+  if (locale === localeConfig().defaultLocale) {
+    const ids = db
+      .select({ id: postCategories.postId })
+      .from(postCategories)
+      .innerJoin(categories, eq(categories.id, postCategories.categoryId))
+      .where(slugs.length === 1 ? eq(categories.slug, slugs[0]!) : inArray(categories.slug, slugs));
+    return inArray(posts.id, ids);
+  }
+  const named = alias(categories, 'named');
+  const member = alias(posts, 'member');
+  const groups = db
+    .select({ id: member.translationGroupId })
+    .from(postCategories)
+    .innerJoin(member, eq(member.id, postCategories.postId))
+    .innerJoin(categories, eq(categories.id, postCategories.categoryId))
+    .where(inArray(categories.translationGroupId, db.select({ id: named.translationGroupId }).from(named).where(inArray(named.slug, slugs))));
+  return inArray(posts.translationGroupId, groups);
+}
+
 export async function listPosts(opts: {
   kind?: 'article' | 'research';
   categorySlug?: string;
@@ -87,22 +115,18 @@ export async function listPosts(opts: {
       const like = `%${query}%`;
       conditions.push(or(ilike(posts.title, like), ilike(posts.excerpt, like))!);
     }
-    if (categorySlug) {
-      const ids = db
-        .select({ id: postCategories.postId })
-        .from(postCategories)
-        .innerJoin(categories, eq(categories.id, postCategories.categoryId))
-        .where(eq(categories.slug, categorySlug));
-      conditions.push(inArray(posts.id, ids));
-    }
+    if (categorySlug) conditions.push(inCategories([categorySlug], locale));
     if (opts.categorySlugs) {
       if (opts.categorySlugs.length === 0) return [];
-      const ids = db
-        .select({ id: postCategories.postId })
-        .from(postCategories)
-        .innerJoin(categories, eq(categories.id, postCategories.categoryId))
-        .where(inArray(categories.slug, opts.categorySlugs));
-      conditions.push(inArray(posts.id, ids));
+      // Kept as the one-list query it always was in the main language.
+      if (locale === localeConfig().defaultLocale) {
+        const ids = db
+          .select({ id: postCategories.postId })
+          .from(postCategories)
+          .innerJoin(categories, eq(categories.id, postCategories.categoryId))
+          .where(inArray(categories.slug, opts.categorySlugs));
+        conditions.push(inArray(posts.id, ids));
+      } else conditions.push(inCategories(opts.categorySlugs, locale));
     }
 
     const rows = await db
@@ -138,16 +162,10 @@ export async function countPosts(
   opts: { kind?: 'article' | 'research'; categorySlug?: string; locale?: Locale } = {},
 ) {
   try {
-    const conditions = [isPublic, eq(posts.locale, opts.locale ?? localeConfig().defaultLocale)];
+    const locale = opts.locale ?? localeConfig().defaultLocale;
+    const conditions = [isPublic, eq(posts.locale, locale)];
     if (opts.kind) conditions.push(eq(posts.kind, opts.kind));
-    if (opts.categorySlug) {
-      const ids = db
-        .select({ id: postCategories.postId })
-        .from(postCategories)
-        .innerJoin(categories, eq(categories.id, postCategories.categoryId))
-        .where(eq(categories.slug, opts.categorySlug));
-      conditions.push(inArray(posts.id, ids));
-    }
+    if (opts.categorySlug) conditions.push(inCategories([opts.categorySlug], locale));
     const [row] = await db.select({ n: sql<number>`count(*)::int` }).from(posts).where(and(...conditions));
     return row?.n ?? 0;
   } catch {

@@ -230,9 +230,16 @@
   .he-post-aside__text :is(h1, h2) { max-width: none; }
   .he-post-aside__text p { margin-top: 12px; }
   .he-post-aside__meta { display: flex; flex-wrap: wrap; gap: 12px; margin: 22px 0 0; font-size: 14px; letter-spacing: 0.02em; text-transform: uppercase; color: rgb(255 255 255 / 0.85); }
-  .he-post-aside__body > :first-child { margin-top: 0; }
   @media (width <= 1024px) {
     .he-post-aside { grid-template-columns: minmax(0, 1fr); gap: var(--he-gap, 32px); }
     .he-post-aside__card { position: relative; top: auto; min-height: 420px; padding: 32px 24px; }
   }
 }
+/* 3.37 — outside the layer: the article's first block came with the `mt-12` utility, which beat the layered rule,
+   so the text started 48px below the card's top (a fix). */
+.he-post-aside__body > :first-child { margin-top: 0; }
+/* 3.37 — one space between the card's words (the drawn gap, the excerpt's utility margin and the date line's
+   margin give way to it), and a round mark between the date and the reading time. */
+.he-post-aside__text.has-tg { gap: var(--he-aside-tg); }
+.he-post-aside__text.has-tg > * { margin-block: 0; }
+.he-post-aside__dot { flex: none; align-self: center; width: 0.36em; height: 0.36em; border-radius: 50%; background: currentColor; }

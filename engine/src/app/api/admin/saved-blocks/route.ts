@@ -1,4 +1,4 @@
-import { asc, isNull, sql } from 'drizzle-orm';
+import { and, asc, isNull, sql } from 'drizzle-orm';
 import { localeConfig } from '@/lib/locales';
 import { created, handle, ok, readJson } from '@/server/api/respond';
 import { requireUser } from '@/server/api/guard';
@@ -37,7 +37,13 @@ export async function GET(request: Request) {
         usage: sql<number>`(select count(*)::int from ${savedBlockUsage} where ${savedBlockUsage.savedBlockId} = ${savedBlocks.id})`,
       })
       .from(savedBlocks)
-      .where(isNull(savedBlocks.deletedAt))
+      // 3.37 — a translation is reached from its original, not listed beside it.
+      .where(
+        and(
+          isNull(savedBlocks.deletedAt),
+          sql`(${savedBlocks.locale} = ${localeConfig().defaultLocale} or not exists (select 1 from ${savedBlocks} as o where o.translation_group_id = ${savedBlocks.translationGroupId} and o.locale = ${localeConfig().defaultLocale} and o.deleted_at is null and o.id <> ${savedBlocks.id}))`,
+        ),
+      )
       .orderBy(asc(savedBlocks.category), asc(savedBlocks.name));
     // The builder offers "Save as saved block" only to a role that may make one.
     return ok({ items, canWrite: can(guard.user, 'savedBlocks:write') });
