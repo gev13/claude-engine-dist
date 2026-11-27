@@ -10,6 +10,22 @@ improvements.
 
 ---
 
+## 3.38.4 — 2026-11-27
+
+**A button arrow that turns.** Off until set.
+
+Added:
+
+- **Buttons:** `buttons.arrowHover: 'turn'`. Under the pointer and on
+  keyboard focus, a diagonal arrow (`arrow: 'diagonal'`) turns to point
+  right, on every arrow button and the careers card's (whose arrow is drawn
+  diagonal, so it turns with any arrow setting). A short turn, at once with
+  less motion; the arrow's size and line (3.38.2) are kept. The turned
+  arrow is drawn at the diagonal's size (1.3 times its drawing) unless
+  `buttons.arrowTurnScale` (0.5–3) says otherwise.
+
+---
+
 ## 3.38.3 — 2026-11-26
 
 **A text block's heading placed as one group, and the language codes' gap

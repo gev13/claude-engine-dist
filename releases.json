@@ -1,6 +1,14 @@
 {
-  "latest": "3.38.3",
+  "latest": "3.38.4",
   "releases": [
+    {
+      "version": "3.38.4",
+      "date": "2026-11-27",
+      "summary": "Opt-in: a diagonal button arrow that turns to point right under the pointer and on keyboard focus (buttons.arrowHover 'turn'), with the turned arrow's size (buttons.arrowTurnScale).",
+      "requiresMigration": false,
+      "minNode": "22.12.0",
+      "url": "https://github.com/gev13/claude-engine-dist/blob/main/CHANGELOG.md"
+    },
     {
       "version": "3.38.3",
       "date": "2026-11-26",

@@ -506,7 +506,10 @@ export const themeSchema = z.object({
       /** 3.38.2 — the arrow's line in screen pixels, whatever its size (a non-scaling stroke); wins over `arrowStroke`. */
       arrowLine: z.number().min(0.5).max(4).optional(),
       arrowGap: length.optional(),
-      arrowHover: z.enum(['none', 'slide']).optional(),
+      /** 3.38.4 — `turn`: a diagonal arrow (↗) turns to point right (→) under the pointer and on keyboard focus. */
+      arrowHover: z.enum(['none', 'slide', 'turn']).optional(),
+      /** 3.38.4 — with `turn`: the turned arrow's size against its drawing; unset, 1.3, the size the diagonal is drawn at. */
+      arrowTurnScale: z.number().min(0.5).max(3).optional(),
       /** 3.28 — "Text" buttons under the pointer: their colour, and the line under them (unset, shown). */
       textHoverColor: color.optional(),
       textUnderline: z.boolean().optional(),

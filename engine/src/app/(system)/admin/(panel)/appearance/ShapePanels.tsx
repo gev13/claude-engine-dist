@@ -196,9 +196,16 @@ export function ButtonExtrasPanel({ theme, set }: Props) {
           options={[
             { value: 'none', label: 'Stays' },
             { value: 'slide', label: 'Slides out and back in' },
+            { value: 'turn', label: 'A diagonal arrow turns to point right' },
           ]}
           onChange={set(['buttons', 'arrowHover'])}
         />
+        {/* 3.38.4 */}
+        {buttons.arrowHover === 'turn' && (
+          <Field label="The turned arrow’s size" hint="0.5–3 times its drawing; the diagonal is drawn at 1.3">
+            <Input type="number" min={0.5} max={3} step={0.05} value={buttons.arrowTurnScale ?? ''} placeholder="1.3" onChange={(e) => set(['buttons', 'arrowTurnScale'])(e.target.value === '' ? undefined : Math.min(3, Math.max(0.5, Number(e.target.value) || 1.3)))} />
+          </Field>
+        )}
         <ColorField label="“Text” buttons, pointed at" value={buttons.textHoverColor} placeholder="the link hover colour" onChange={set(['buttons', 'textHoverColor'])} />
         <label className="flex items-center gap-2.5 self-end pb-2 text-[14px] text-ash">
           <input type="checkbox" className="h-4 w-4 accent-flare" checked={buttons.textUnderline !== false} onChange={(e) => set(['buttons', 'textUnderline'])(e.target.checked ? undefined : false)} />

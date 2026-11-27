@@ -594,6 +594,23 @@ function shapeCss(theme: Theme, scope: string): string {
       `@media (prefers-reduced-motion:reduce){${arrows}{animation:none!important}}`,
     );
   }
+  /* 3.38.4 — a diagonal arrow turns to point right under the pointer and on
+     keyboard focus: the buttons' arrow is drawn pointing right and turned by
+     the diagonal rule above, so it goes back to its drawing; the careers
+     card's is drawn diagonal, so it turns a quarter. The turned arrow keeps
+     the diagonal's 1.3 unless a scale is set. Only the turn moves;
+     with less motion it is there at once. */
+  if (buttons.arrowHover === 'turn') {
+    const turned = ['.he-btn:is(:hover,:focus-visible)>svg:last-child>path', '.he-cbtn:not(.is-text):not(.is-icon-only):is(:hover,:focus-visible)>svg:last-child:not(:first-child)>path'];
+    const card = '.he-jobc:is(:hover,:focus-within) .he-jobc__btn>svg:last-child>path';
+    const moving = ['.he-btn>svg:last-child>path', '.he-cbtn:not(.is-text):not(.is-icon-only)>svg:last-child:not(:first-child)>path', '.he-jobc__btn>svg:last-child>path'];
+    parts.push(block(moving.map(at).join(','), [['transition', 'transform calc(200ms * var(--he-motion,1)) ease']]));
+    const scale = typeof buttons.arrowTurnScale === 'number' && Number.isFinite(buttons.arrowTurnScale) && buttons.arrowTurnScale >= 0.5 && buttons.arrowTurnScale <= 3 ? buttons.arrowTurnScale : 1.3;
+    if (buttons.arrow === 'diagonal') parts.push(block(turned.map(at).join(','), [['transform', `rotate(0deg) scale(${scale})`]]));
+    parts.push(block(at('.he-jobc__btn>svg:last-child>path'), [['transform-box', 'fill-box'], ['transform-origin', 'center']]));
+    parts.push(block(at(card), [['transform', 'rotate(45deg)']]));
+    parts.push(`@media (prefers-reduced-motion:reduce){${moving.map(at).join(',')}{transition:none}}`, `${moving.map((s) => at(`.he-reduce-motion ${s}`)).join(',')}{transition:none}`);
+  }
   // 3.28 — "Text" buttons under the pointer.
   if ((buttons.textHoverColor && isColor(buttons.textHoverColor)) || buttons.textUnderline === false) {
     parts.push(
